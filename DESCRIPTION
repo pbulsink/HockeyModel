@@ -7,3 +7,7 @@ Depends: R (>= 3.5.0)
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Imports: HockeyScrapR,
+    devtools
+Remotes:
+  pbulsink/HockeyScrapR
