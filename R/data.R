@@ -32,11 +32,35 @@
 #'   \item{Date}{Date of the game played/to be played}
 #'   \item{Visitor}{Name of the visiting team}
 #'   \item{Home}{Name of the home team}
-#'   ...
 #' }
 #' @source \url{http://www.hockey-reference.com/}
 "schedule"
 
+#' NHL Divisions
+#'
+#' A list of divisions with teams in each vector.
+#'
+#' @format A list of vectors:
+#' \describe{
+#'   \item{Atlantic}{Teams in the Atlantic division}
+#'   \item{Central}{Teams in the Central division}
+#'   \item{Metropolitan}{Teams in the Metropolitan division}
+#'   \item{Pacific}{Teams in the Pacific division}
+#' }
+#' @source \url{http://www.nhl.com/}
+"nhl_divisions"
+
+#' NHL Conferences
+#'
+#' A list of Conferences with teams in each vector.
+#'
+#' @format A list of vectors:
+#' \describe{
+#'   \item{East}{Teams in the East conference}
+#'   \item{West}{Teams in the West conference}
+#' }
+#' @source \url{http://www.nhl.com/}
+"nhl_conferences"
 
 #' Update Schedule
 #'

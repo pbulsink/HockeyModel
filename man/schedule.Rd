@@ -9,7 +9,6 @@
   \item{Date}{Date of the game played/to be played}
   \item{Visitor}{Name of the visiting team}
   \item{Home}{Name of the home team}
-  ...
 }}
 \source{
 \url{http://www.hockey-reference.com/}
