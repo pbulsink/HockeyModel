@@ -8,7 +8,9 @@ License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: HockeyScrapR,
-    devtools
+    devtools,
+    utils,
+    stats
 Remotes:
   pbulsink/HockeyScrapR
 URL: https://github.com/pbulsink/HockeyModel
