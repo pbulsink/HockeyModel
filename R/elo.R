@@ -19,7 +19,9 @@ updateELO <- function(){
 
 }
 
-plotELO <- function(){NULL}
+plotELO <- function(){
+
+}
 
 todayELO <- function(){NULL}
 
@@ -48,7 +50,20 @@ newRankings<-function(home_rank, away_rank, result, diff=NULL, h_adv=35, k=8){
   return(c(h_rank, a_rank))
 }
 
-#calculate many seasons of elo
+#' Calculate ELO for multiple seasons
+#'
+#' @description Calculate many seasons of elo. Repeatedly calls .eloSeason and does mean regression.
+#' @param schedule The schedule with game results
+#' @param ratings_history Any ratings that we know exist.
+#' @param k The elo k value
+#' @param mean_value The mean value to regress towards
+#' @param new_teams Elo strength of new teams
+#' @param regress_strength regression amount (1/n)
+#' @param home_adv The home ice advantage
+#'
+#' @return Elo at each date for each team
+#'
+#' @keywords internal
 calculateEloRatings <- function(schedule, ratings_history = elos, k = 8, mean_value = 1505, new_teams = 1300,  regress_strength=3, home_adv=35) {
   # Ensuring Opts are ok.
   stopifnot(ncol(schedule) == 5, nrow(schedule) > 0)
@@ -103,7 +118,20 @@ calculateEloRatings <- function(schedule, ratings_history = elos, k = 8, mean_va
   return(ratings_history)
 }
 
-#calculate 1 season worth of elo
+#' Calculate ELO for one season
+#'
+#' @description Calculate Elo for one season only. Doesn't include regression to mean
+#'
+#' @param schedule The seasons's schedule (of completed games)
+#' @param dates The dates of each game
+#' @param ratings The beginning ratings
+#' @param new_teams Any new teams
+#' @param k The ELO k factor
+#' @param home_adv THe home ice advantage
+#'
+#' @return Elo at each date for each team
+#'
+#' @keywords internal
 .eloSeason <- function(schedule, dates, ratings, new_teams, k, home_adv) {
   newteam<-FALSE
   teams<-character()
