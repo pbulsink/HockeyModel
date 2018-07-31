@@ -6,13 +6,20 @@
 #' @param scores scores, if not then data(scores)
 #'
 #' @export
-updateDC <- function(scores=scores){
+updateDC <- function(scores){
   scoresdc<-scores[scores$Date > as.Date("2008-08-01"),]
   m <- getM(scores=scoresdc)
   rho <- getRho(m = m, scores = scoresdc)
   devtools::use_data(m, rho, overwrite = TRUE)
 }
 
+#' Produce a plot of each team's offence and defence scores
+#'
+#' @param m m from data(m)
+#' @param teamlist Teams to plot.
+#'
+#' @return a ggplot object
+#' @export
 plotDC <- function(m, teamlist = NULL){
   if(is.null(teamlist)){
     teamlist<-as.character(unique(m$data$Home))
@@ -32,9 +39,36 @@ plotDC <- function(m, teamlist = NULL){
   return(p)
 }
 
-todayDC <- function(){NULL}
+#' DC Predictions Today
+#'
+#' @param today Generate predictions for this date. Defaults to today
+#'
+#' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw
+#' @export
+todayDC <- function(today = Sys.Date()){
+  NULL
+}
 
-playoffDC <- function(){NULL}
+#' DC Playoff Odds
+#' @description Odds for each team to get to playoffs.
+#'
+#' @return data frame of Team, playoff odds.
+#' @export
+playoffDC <- function(){
+  NULL
+}
+
+#' DC Season Points/Ranking
+#'
+#' @return data frame of 'league table', including predicted points
+#' @export
+seasonRankDC <- function(){
+  NULL
+}
+
+playoffOpponentDC <- function(){
+  NULL
+}
 
 tau_singular <- function(xx, yy, lambda, mu, rho) {
   if (xx == 0 & yy == 0) {
@@ -79,6 +113,7 @@ getM <- function(scores=scores) {
                   start = rep(0.01, length(unique(df.indep$Team))*2),
                   model = FALSE
   )
+  m<-cleanModel(m)  #reduce M size
   return(m)
 }
 
@@ -175,4 +210,19 @@ DClogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
   } else {
     return(sum(loglik * weights, na.rm = TRUE))
   }
+}
+
+cleanModel <- function(cm) {
+  #from http://www.win-vector.com/blog/2014/05/trimming-the-fat-from-glm-models-in-r/
+  cm$y <- c()
+  cm$model <- c()
+
+  cm$residuals <- c()
+  cm$effects <- c()
+  cm$qr$qr <- c()
+  cm$linear.predictors <- c()
+  cm$weights <- c()
+  cm$prior.weights <- c()
+
+  cm
 }
