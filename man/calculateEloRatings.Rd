@@ -4,12 +4,12 @@
 \alias{calculateEloRatings}
 \title{Calculate ELO for multiple seasons}
 \usage{
-calculateEloRatings(schedule, ratings_history = elos, k = 8,
+calculateEloRatings(schedule, ratings_history = NULL, k = 8,
   mean_value = 1505, new_teams = 1300, regress_strength = 3,
   home_adv = 35)
 }
 \arguments{
-\item{schedule}{The schedule with game results}
+\item{schedule}{The schedule with game results, format as a df with Date, HomeTeam, AwayTeam, Result, Diff}
 
 \item{ratings_history}{Any ratings that we know exist.}
 
@@ -27,6 +27,6 @@ calculateEloRatings(schedule, ratings_history = elos, k = 8,
 Elo at each date for each team
 }
 \description{
-Calculate many seasons of elo. Repeatedly calls .eloSeason and does mean regression.
+Calculate many seasons of elo. Repeatedly calls eloSeason and does mean regression.
 }
 \keyword{internal}

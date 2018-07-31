@@ -2,7 +2,7 @@
 % Please edit documentation in R/dixon-coles.R
 \name{DCweights}
 \alias{DCweights}
-\title{dc weight}
+\title{DC Weight}
 \usage{
 DCweights(dates, currentDate = Sys.Date(), xi = 0)
 }
@@ -17,6 +17,6 @@ DCweights(dates, currentDate = Sys.Date(), xi = 0)
 list of weights coresponding to dates
 }
 \description{
-dc weight
+DC Weight
 }
 \keyword{internal}

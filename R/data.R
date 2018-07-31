@@ -62,7 +62,26 @@
 #' @source \url{http://www.nhl.com/}
 "nhl_conferences"
 
-#Current elo: k=8, homeadv=35, mean_value=1505, no kadj for win amount
+#' Elo History
+#'
+#' Elo rankings for each team through time.
+#'
+#' @format A sparse dataframe with columns for each historical and active team (WHL and NHL) and each row a date
+"elos"
+
+#' Dixon Coles' `m`
+#'
+#' Model fit for each team's attack and defend strength, as well as home ice advantage.
+#'
+#' @format a glm model fit
+"m"
+
+#' Dixon Coles' `rho`
+#'
+#' Rho for low score correction to Dixon Coles
+#'
+#' @format a single numerical value
+"rho"
 
 #' Update Schedule
 #'
@@ -98,4 +117,3 @@ updateScores <- function(data_dir = "./data-raw"){
   }
   return(TRUE)
 }
-

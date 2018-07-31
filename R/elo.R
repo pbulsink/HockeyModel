@@ -15,8 +15,16 @@
 # try k = k*(1-2^(-(elodiff*0.01)*mov))
 #win percent includes win plus half of draw/ot percent (15% of games historically, 23.6 % of games since 20072008, set at 11.8% per team).
 
-updateELO <- function(){
-
+#' Update Elo rankings
+#'
+#' @param scores scores, if not data(scores)
+#'
+#' @export
+updateELO <- function(scores=scores){
+  s<-scores[c('Date','HomeTeam','AwayTeam','Result')]
+  s$Diff<-scores$HomeGoals - scores$AwayGoals
+  elos=calculateEloRatings(schedule=s, ratings_history = elos)
+  devtools::use_data(elos, overwrite = TRUE)
 }
 
 plotELO <- function(){
@@ -52,8 +60,8 @@ newRankings<-function(home_rank, away_rank, result, diff=NULL, h_adv=35, k=8){
 
 #' Calculate ELO for multiple seasons
 #'
-#' @description Calculate many seasons of elo. Repeatedly calls .eloSeason and does mean regression.
-#' @param schedule The schedule with game results
+#' @description Calculate many seasons of elo. Repeatedly calls eloSeason and does mean regression.
+#' @param schedule The schedule with game results, format as a df with Date, HomeTeam, AwayTeam, Result, Diff
 #' @param ratings_history Any ratings that we know exist.
 #' @param k The elo k value
 #' @param mean_value The mean value to regress towards
@@ -64,7 +72,7 @@ newRankings<-function(home_rank, away_rank, result, diff=NULL, h_adv=35, k=8){
 #' @return Elo at each date for each team
 #'
 #' @keywords internal
-calculateEloRatings <- function(schedule, ratings_history = elos, k = 8, mean_value = 1505, new_teams = 1300,  regress_strength=3, home_adv=35) {
+calculateEloRatings <- function(schedule, ratings_history = NULL, k = 8, mean_value = 1505, new_teams = 1300,  regress_strength=3, home_adv=35) {
   # Ensuring Opts are ok.
   stopifnot(ncol(schedule) == 5, nrow(schedule) > 0)
 
@@ -95,7 +103,7 @@ calculateEloRatings <- function(schedule, ratings_history = elos, k = 8, mean_va
     for (i in c(1:(length(split_dates)-1))) {
 
 
-      newseason<-.eloSeason(schedule=schedule, dates=split_dates[[i]], ratings = ratings_history[nrow(ratings_history),,drop=FALSE], new_teams = new_teams, k=k, home_adv = home_adv)
+      newseason<-eloSeason(schedule=schedule, dates=split_dates[[i]], ratings = ratings_history[nrow(ratings_history),,drop=FALSE], new_teams = new_teams, k=k, home_adv = home_adv)
 
       ifelse (newseason$newteam, ratings_history <- merge(ratings_history, newseason$ratings, all=TRUE), ratings_history<-rbind(ratings_history, newseason$ratings, make.row.names=FALSE))
 
@@ -111,7 +119,7 @@ calculateEloRatings <- function(schedule, ratings_history = elos, k = 8, mean_va
   }
 
   #One (last) season
-  newseason<-.eloSeason(schedule=schedule, dates=split_dates[[length(split_dates)]], ratings = ratings_history[nrow(ratings_history),,drop=FALSE], new_teams = new_teams, k=k, home_adv = home_adv)
+  newseason<-eloSeason(schedule=schedule, dates=split_dates[[length(split_dates)]], ratings = ratings_history[nrow(ratings_history),,drop=FALSE], new_teams = new_teams, k=k, home_adv = home_adv)
   ifelse (newseason$newteam, ratings_history <- merge(ratings_history, newseason$ratings, all=TRUE), ratings_history<-rbind(ratings_history, newseason$ratings, make.row.names=FALSE))
 
 
@@ -132,7 +140,7 @@ calculateEloRatings <- function(schedule, ratings_history = elos, k = 8, mean_va
 #' @return Elo at each date for each team
 #'
 #' @keywords internal
-.eloSeason <- function(schedule, dates, ratings, new_teams, k, home_adv) {
+eloSeason <- function(schedule, dates, ratings, new_teams, k, home_adv) {
   newteam<-FALSE
   teams<-character()
   for (i in c(1:length(unique(dates)))){

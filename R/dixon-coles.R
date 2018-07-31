@@ -1,9 +1,36 @@
 #Hosts dixon-coles specific functions. Many copied from my work from pbulsink.github.io
 # see http://opisthokonta.net/?p=913
 
-updateDC <- function(){NULL}
+#' Update Dixon Coles parameters
+#'
+#' @param scores scores, if not then data(scores)
+#'
+#' @export
+updateDC <- function(scores=scores){
+  scoresdc<-scores[scores$Date > as.Date("2008-08-01"),]
+  m <- getM(scores=scoresdc)
+  rho <- getRho(m = m, scores = scoresdc)
+  devtools::use_data(m, rho, overwrite = TRUE)
+}
 
-plotDC <- function(){NULL}
+plotDC <- function(m, teamlist = NULL){
+  if(is.null(teamlist)){
+    teamlist<-as.character(unique(m$data$Home))
+  }
+  team_params <- data.frame(Attack = as.numeric(m$coefficients[1:length(teamlist)]),
+                            Defence = c(0, m$coefficients[(length(teamlist)+1):(length(teamlist)*2-1)]),
+                            Team = sort(teamlist))
+
+  p<-ggplot2::ggplot(team_params, ggplot2::aes_(x=quote(Attack), y=quote(Defence), color=quote(Team), label=quote(Team))) +
+    ggplot2::ggtitle("Attack and Defence Parameters") +
+    ggplot2::xlab("Attack") +
+    ggplot2::ylab("Defence (lower = better)") +
+    ggplot2::geom_point() +
+    ggrepel::geom_text_repel(force=2, max.iter=5000) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position="none")
+  return(p)
+}
 
 todayDC <- function(){NULL}
 
@@ -34,8 +61,8 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 #' @param scores the historical scores to evaluate
 #'
 #' @return a model 'm' of dixon coles type parameters.
-#' @export
-doFastFit <- function(scores=scores) {
+#' @keywords internal
+getM <- function(scores=scores) {
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
     Weight = c(DCweights(dates = scores$Date, currentDate = Sys.Date(), xi = 0.002), DCweights(dates = scores$Date, currentDate = Sys.Date(), xi = 0.002)),
@@ -44,26 +71,27 @@ doFastFit <- function(scores=scores) {
     Goals = c(scores$HomeGoals, scores$AwayGoals),
     Home = c(rep(1, nrow(scores)), rep(0, nrow(scores)))
   )
-  #df.indep[df.indep$Weight < 1e-15, ]$Weight <- 0
-  m <- stats::glm(Goals ~ Team + Opponent + Home,
+  #Using a (+0) to remove intercept and give a value for each team instead of assuming 'Anaheim Ducks' = 0 (reference)
+  m <- stats::glm(Goals ~ Team + Opponent + Home + 0,
                   data = df.indep,
                   weights = df.indep$Weight,
                   family = stats::poisson(link = log),
-                  start = rep(0.01, length(unique(df.indep$Team))*2)
+                  start = rep(0.01, length(unique(df.indep$Team))*2),
+                  model = FALSE
   )
   return(m)
 }
 
-#' Fast DC model
+#' Generate a 'rho' factor for low scoring games
 #'
-#' @param m result from doFastFit
+#' @param m result from getM
 #' @param scores the historical scores to evaluate
 #'
-#' @return a res object
-#' @export
-doFastDC <- function(m = NULL, scores=scores) {
+#' @return a numeric value (typically -0.5 to 0)
+#' @keywords internal
+getRho <- function(m = NULL, scores=scores) {
   if (is.null(m)){
-    doFastFit(scores)
+    getM(scores)
   }
   expected <- stats::fitted(m)
   home.expected <- as.vector(expected[1:nrow(scores)])
@@ -79,27 +107,30 @@ doFastDC <- function(m = NULL, scores=scores) {
                       fn = DCoptimRhoFn.fast,
                       #control = list(fnscale = -1),
                       method = "BFGS")
-  return(res)
+  return(res$par)
+
+  #of course, res$par is rho. Ranges from -0.2779 for last decade, -0.175 for 20152016 or 0.09 fo the whole league's history
 }
 
 #' DC Predict home/draw/away win
 #'
 #' @description Using Dixon Coles technique, predict odds each of home win, draw, and away win.
 #'
-#' @param m result from doFastFit
-#' @param res result from doFastDC
+#' @param m result from getM
+#' @param rho rho from getRho
 #' @param home home team
 #' @param away away team
 #' @param maxgoal max number of goals per team
+#' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #'
 #' @return a list of home win, draw, and away win probability
-#' @export
-fastDCPredict <- function(home, away, m = NULL, res = NULL, maxgoal = 8, scores = scores) {
+#' @keywords internal
+DCPredict <- function(home, away, m = NULL, rho = NULL, maxgoal = 8, scores = scores) {
   if(is.null(m)){
-    m <- doFastFit(scores = scores)
+    m <- getM(scores = scores)
   }
-  if(is.null(res)){
-    res <- doFastDC(m=m, scores=scores)
+  if(is.null(rho)){
+    rho <- getRho(m=m, scores=scores)
   }
   # Expected goals home
   lambda <- stats::predict(m, data.frame(Home = 1, Team = home, Opponent = away), type = "response")
@@ -109,7 +140,7 @@ fastDCPredict <- function(home, away, m = NULL, res = NULL, maxgoal = 8, scores 
 
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
 
-  scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, res$par), nrow = 2)
+  scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
   probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
 
   HomeWinProbability <- sum(probability_matrix[lower.tri(probability_matrix)])
@@ -119,7 +150,7 @@ fastDCPredict <- function(home, away, m = NULL, res = NULL, maxgoal = 8, scores 
   return(c(HomeWinProbability, DrawProbability, AwayWinProbability))
 }
 
-#' dc weight
+#' DC Weight
 #'
 #' @param dates list of dates to calculate weights.
 #' @param currentDate date from which to calculate weight

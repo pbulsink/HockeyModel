@@ -10,7 +10,9 @@ LazyData: true
 Imports: HockeyScrapR,
     devtools,
     utils,
-    stats
+    stats,
+    ggplot2,
+    ggrepel
 Remotes:
   pbulsink/HockeyScrapR
 URL: https://github.com/pbulsink/HockeyModel
