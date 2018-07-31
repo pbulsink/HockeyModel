@@ -44,12 +44,12 @@ doFastFit <- function(scores=scores) {
     Goals = c(scores$HomeGoals, scores$AwayGoals),
     Home = c(rep(1, nrow(scores)), rep(0, nrow(scores)))
   )
-  df.indep[df.indep$Weight < 1e-15, ]$Weight <- 0
+  #df.indep[df.indep$Weight < 1e-15, ]$Weight <- 0
   m <- stats::glm(Goals ~ Team + Opponent + Home,
                   data = df.indep,
                   weights = df.indep$Weight,
-                  family = stats::poisson(),
-                  start = c(0.8, rep(0, 96), 0.1)
+                  family = stats::poisson(link = log),
+                  start = rep(0.01, length(unique(df.indep$Team))*2)
   )
   return(m)
 }
@@ -61,13 +61,13 @@ doFastFit <- function(scores=scores) {
 #'
 #' @return a res object
 #' @export
-doFastDC <- function(m = NULL, scores=scores) {rm(m)
+doFastDC <- function(m = NULL, scores=scores) {
   if (is.null(m)){
     doFastFit(scores)
   }
   expected <- stats::fitted(m)
-  home.expected <- expected[1:nrow(scores)]
-  away.expected <- expected[(nrow(scores) + 1):(nrow(scores) * 2)]
+  home.expected <- as.vector(expected[1:nrow(scores)])
+  away.expected <- as.vector(expected[(nrow(scores) + 1):(nrow(scores) * 2)])
   weights<-m$data$Weight[1:nrow(scores)]
 
   DCoptimRhoFn.fast <- function(par) {
@@ -75,7 +75,10 @@ doFastDC <- function(m = NULL, scores=scores) {rm(m)
     DClogLik(y1 = scores$HomeGoals, y2 = scores$AwayGoals, mu = home.expected, lambda = away.expected, rho = rho, weights = weights)
   }
 
-  res <- stats::optim(par = c(0.1), fn = DCoptimRhoFn.fast, control = list(fnscale = -1), method = "L-BFGS-B", lower = 0, upper = 1)
+  res <- stats::optim(par = c(0.1),
+                      fn = DCoptimRhoFn.fast,
+                      #control = list(fnscale = -1),
+                      method = "BFGS")
   return(res)
 }
 
