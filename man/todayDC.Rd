@@ -10,7 +10,7 @@ todayDC(today = Sys.Date())
 \item{today}{Generate predictions for this date. Defaults to today}
 }
 \value{
-a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw
+a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
 }
 \description{
 DC Predictions Today

@@ -4,7 +4,7 @@
 \alias{updateDC}
 \title{Update Dixon Coles parameters}
 \usage{
-updateDC(scores = scores)
+updateDC(scores)
 }
 \arguments{
 \item{scores}{scores, if not then data(scores)}

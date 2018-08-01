@@ -4,9 +4,11 @@
 \alias{plotDC}
 \title{Produce a plot of each team's offence and defence scores}
 \usage{
-plotDC(m = m, teamlist = NULL)
+plotDC(m, teamlist = NULL)
 }
 \arguments{
+\item{m}{m from data(m)}
+
 \item{teamlist}{Teams to plot.}
 }
 \value{

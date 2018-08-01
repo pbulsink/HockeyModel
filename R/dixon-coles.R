@@ -43,19 +43,67 @@ plotDC <- function(m, teamlist = NULL){
 #'
 #' @param today Generate predictions for this date. Defaults to today
 #'
-#' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw
+#' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
 #' @export
 todayDC <- function(today = Sys.Date()){
-  NULL
+  games<-schedule[schedule$Date == today, ]
+  if(nrow(games) == 0){
+    return(NULL)
+  }
+
+  preds<-data.frame(HomeTeam=games$Home, AwayTeam=games$Visitor,
+                    HomeWin=0, AwayWin = 0, Draw = 0,
+                    stringsAsFactors = FALSE)
+  for(i in 1:nrow(preds)){
+    p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], m=m, rho=rho)
+    preds$HomeWin[[i]]<-p[[1]]
+    preds$AwayWin[[i]]<-p[[3]]
+    preds$Draw[[i]]<-p[[2]]
+  }
+
+  return(preds)
 }
 
-#' DC Playoff Odds
+#' DC remainder of season
 #' @description Odds for each team to get to playoffs.
+#'
+#' @param nsims Number of simulations
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-playoffDC <- function(){
-  NULL
+remainderSeasonDC <- function(nsims=10000){
+  season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+  teamlist<-sort(unique(c(season_sofar$HomeTeam, season_sofar$AwayTeam,schedule$Home, schedule$Away)))
+  games<-data.frame(HomeTeam = character(), AwayTeam=character(),
+                    HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
+                    stringsAsFactors = FALSE)
+  for(d in unique(schedule$Date)){
+    preds<-todayDC(today=d)
+    preds$Date <- d
+    games<-rbind(games, preds)
+  }
+  games$Date<-schedule$Date
+
+  n<-length(teamlist)
+
+  all_results <- data.frame(Team = rep(sTeams, nsims),
+                       SimNo = rep(1:iSim, each = n),
+                       Pts = rep(NA, n * nsims),
+                       W = rep(NA, n*nsims),
+                       OTW = rep(NA, n * nsims),
+                       SOW = rep(NA, n * nsims),
+                       Rank = rep(NA, n * nsims))
+  for(i in 1:nsims){
+    tmp<-games
+    tmp$res1<-runif(n = nrow(games))
+    tmp$res2<-runif(n = nrow(games))
+    tmp$D<-(tmp$res1>tmp$HomeWin && tmp$res1<(tmp$HomeWin + tmp$Draw))
+    tmp$H<-2*as.numeric((tmp$res1<tmp$HomeWin)) +
+      1*as.numeric((tmp$D)) +
+      1*as.numeric((tmp$D)*tmp$res2<0.5) + 0
+    tmp$A<-2*(tmp$res1>(tmp$HomeWin+tmp$Draw)) + 1*(tmp$D) + 1*(tmp$D)*tmp$res2>0.5+0
+  }
+  return(games)
 }
 
 #' DC Season Points/Ranking
