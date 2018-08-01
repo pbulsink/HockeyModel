@@ -4,10 +4,17 @@
 \alias{todayDC}
 \title{DC Predictions Today}
 \usage{
-todayDC(today = Sys.Date())
+todayDC(today = Sys.Date(), rho = HockeyModel::rho, m = HockeyModel::m,
+  schedule = HockeyModel::schedule)
 }
 \arguments{
 \item{today}{Generate predictions for this date. Defaults to today}
+
+\item{rho}{DC Rho}
+
+\item{m}{DC m}
+
+\item{schedule}{shcedule to use, if not the builtin}
 }
 \value{
 a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today

@@ -7,12 +7,16 @@ Depends: R (>= 3.5.0)
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: HockeyScrapR,
+Imports:
+    HockeyScrapR,
     devtools,
     utils,
     stats,
     ggplot2,
-    ggrepel
+    ggrepel,
+    dplyr,
+    magrittr,
+    tibble
 Remotes:
   pbulsink/HockeyScrapR
 URL: https://github.com/pbulsink/HockeyModel

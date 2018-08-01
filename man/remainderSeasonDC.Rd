@@ -4,10 +4,15 @@
 \alias{remainderSeasonDC}
 \title{DC remainder of season}
 \usage{
-remainderSeasonDC(nsims = 10000)
+remainderSeasonDC(nsims = 10, scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule)
 }
 \arguments{
 \item{nsims}{Number of simulations}
+
+\item{scores}{the historical scores}
+
+\item{schedule}{uplayed future games}
 }
 \value{
 data frame of Team, playoff odds.

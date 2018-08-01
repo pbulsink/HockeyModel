@@ -4,8 +4,8 @@
 \alias{DCPredict}
 \title{DC Predict home/draw/away win}
 \usage{
-DCPredict(home, away, m = NULL, rho = NULL, maxgoal = 8,
-  scores = scores)
+DCPredict(home, away, m = HockeyModel::m, rho = HockeyModel::rho,
+  maxgoal = 8, scores = HockeyModel::scores)
 }
 \arguments{
 \item{home}{home team}

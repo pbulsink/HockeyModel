@@ -1,5 +1,6 @@
 #Hosts dixon-coles specific functions. Many copied from my work from pbulsink.github.io
 # see http://opisthokonta.net/?p=913
+# see http://rstudio-pubs-static.s3.amazonaws.com/149923_584734fddffe40799cee564c938948d7.html
 
 #' Update Dixon Coles parameters
 #'
@@ -42,10 +43,13 @@ plotDC <- function(m, teamlist = NULL){
 #' DC Predictions Today
 #'
 #' @param today Generate predictions for this date. Defaults to today
+#' @param rho DC Rho
+#' @param m DC m
+#' @param schedule shcedule to use, if not the builtin
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
 #' @export
-todayDC <- function(today = Sys.Date()){
+todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule){
   games<-schedule[schedule$Date == today, ]
   if(nrow(games) == 0){
     return(NULL)
@@ -68,12 +72,16 @@ todayDC <- function(today = Sys.Date()){
 #' @description Odds for each team to get to playoffs.
 #'
 #' @param nsims Number of simulations
+#' @param scores the historical scores
+#' @param schedule uplayed future games
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonDC <- function(nsims=10000){
+remainderSeasonDC <- function(nsims=10, scores = HockeyModel::scores, schedule = HockeyModel::schedule){
   season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
-  teamlist<-sort(unique(c(season_sofar$HomeTeam, season_sofar$AwayTeam,schedule$Home, schedule$Away)))
+
+  season_sofar <- season_sofar[c('Date','HomeTeam','AwayTeam','Result'),]
+  teamlist<-sort(unique(c(as.character(season_sofar$HomeTeam), as.character(season_sofar$AwayTeam), as.character(schedule$Home), as.character(schedule$Away))))
   games<-data.frame(HomeTeam = character(), AwayTeam=character(),
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
                     stringsAsFactors = FALSE)
@@ -86,36 +94,78 @@ remainderSeasonDC <- function(nsims=10000){
 
   n<-length(teamlist)
 
-  all_results <- data.frame(Team = rep(sTeams, nsims),
-                       SimNo = rep(1:iSim, each = n),
-                       Pts = rep(NA, n * nsims),
+  all_results <- data.frame(Team = rep(teamlist, nsims),
+                       SimNo = rep(1:nsims, each = n),
+                       Points = rep(NA, n * nsims),
                        W = rep(NA, n*nsims),
+                       L = rep(NA, n * nsims),
                        OTW = rep(NA, n * nsims),
                        SOW = rep(NA, n * nsims),
-                       Rank = rep(NA, n * nsims))
+                       OTL = rep(NA, n * nsims),
+                       SOL = rep(NA, n * nsims),
+                       Rank = rep(NA, n * nsims),
+                       ConfRank = rep(NA, n * nsims),
+                       DivRank = rep(NA, n * nsims),
+                       Playoffs = rep(NA, n * nsims),
+                       stringsAsFactors = FALSE)
   for(i in 1:nsims){
+    #Generate Games results once
     tmp<-games
-    tmp$res1<-runif(n = nrow(games))
-    tmp$res2<-runif(n = nrow(games))
-    tmp$D<-(tmp$res1>tmp$HomeWin && tmp$res1<(tmp$HomeWin + tmp$Draw))
-    tmp$H<-2*as.numeric((tmp$res1<tmp$HomeWin)) +
-      1*as.numeric((tmp$D)) +
-      1*as.numeric((tmp$D)*tmp$res2<0.5) + 0
-    tmp$A<-2*(tmp$res1>(tmp$HomeWin+tmp$Draw)) + 1*(tmp$D) + 1*(tmp$D)*tmp$res2>0.5+0
+    tmp$res1<-stats::runif(n = nrow(games))
+    tmp$res2<-stats::runif(n = nrow(games))
+    tmp$res3<-stats::runif(n = nrow(games))
+    tmp$Result <- 1*(as.numeric(tmp$res1<tmp$HomeWin)) +
+                  0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 < 0.75))) +
+                  0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 > 0.75))) +
+                  0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 > 0.75))) +
+                  0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 < 0.75))) +
+                  0
+
+    tmp$HomeWin <- NULL
+    tmp$AwayWin <- NULL
+    tmp$Draw <- NULL
+    tmp$res1<-NULL
+    tmp$res2<-NULL
+    tmp$res3<-NULL
+
+    tmp<-rbind(season_sofar, tmp)
+    #Make the season table
+    table<-buildStats(tmp)
+
+    all_results[(n*(i-1) + 1):(n*i)]$Points <- table$Points
+    all_results[(n*(i-1) + 1):(n*i)]$W <- table$W
+    all_results[(n*(i-1) + 1):(n*i)]$L <- table$L
+    all_results[(n*(i-1) + 1):(n*i)]$OTW <- table$OTW
+    all_results[(n*(i-1) + 1):(n*i)]$SOW <- table$SOW
+    all_results[(n*(i-1) + 1):(n*i)]$OTL <- table$OTL
+    all_results[(n*(i-1) + 1):(n*i)]$SOL <- table$SOL
+    all_results[(n*(i-1) + 1):(n*i)]$Rank <- table$Rank
+    all_results[(n*(i-1) + 1):(n*i)]$ConfRank <- table$ConfRank
+    all_results[(n*(i-1) + 1):(n*i)]$DivRank <- table$DivRank
+    all_results[(n*(i-1) + 1):(n*i)]$Playoffs <- table$Playoffs
+
   }
-  return(games)
-}
 
-#' DC Season Points/Ranking
-#'
-#' @return data frame of 'league table', including predicted points
-#' @export
-seasonRankDC <- function(){
-  NULL
-}
+  summary_results<-all_results %>%
+    dplyr::group_by(!!dplyr::sym('Team')) %>%
+    dplyr::summarise(
+      Playoffs = mean(!!dplyr::sym('Playoffs')),
+      meanPoints = mean(!!dplyr::sym('Points')),
+      maxPoints = max(!!dplyr::sym('Points')),
+      minPoints = min(!!dplyr::sym('Points')),
+      meanWins = mean(!!dplyr::sym('Wins')),
+      maxWins = max(!!dplyr::sym('Wins')),
+      Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
+      meanRank = mean(!!dplyr::sym('Rank')),
+      maxRank = max(!!dplyr::sym('Rank')),
+      meanConfRank = mean(!!dplyr::sym('ConfRank')),
+      maxConfRank = max(!!dplyr::sym('ConfRank')),
+      meanDivRank = mean(!!dplyr::sym('DivRank')),
+      maxDivRank = max(!!dplyr::sym('DivRank'))
+    )
 
-playoffOpponentDC <- function(){
-  NULL
+
+  return(summary_results)
 }
 
 tau_singular <- function(xx, yy, lambda, mu, rho) {
@@ -144,7 +194,7 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 #'
 #' @return a model 'm' of dixon coles type parameters.
 #' @keywords internal
-getM <- function(scores=scores) {
+getM <- function(scores=HockeyModel::scores) {
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
     Weight = c(DCweights(dates = scores$Date, currentDate = Sys.Date(), xi = 0.002), DCweights(dates = scores$Date, currentDate = Sys.Date(), xi = 0.002)),
@@ -172,7 +222,7 @@ getM <- function(scores=scores) {
 #'
 #' @return a numeric value (typically -0.5 to 0)
 #' @keywords internal
-getRho <- function(m = NULL, scores=scores) {
+getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
   if (is.null(m)){
     getM(scores)
   }
@@ -208,7 +258,7 @@ getRho <- function(m = NULL, scores=scores) {
 #'
 #' @return a list of home win, draw, and away win probability
 #' @keywords internal
-DCPredict <- function(home, away, m = NULL, rho = NULL, maxgoal = 8, scores = scores) {
+DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores) {
   if(is.null(m)){
     m <- getM(scores = scores)
   }

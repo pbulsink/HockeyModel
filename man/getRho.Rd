@@ -4,7 +4,7 @@
 \alias{getRho}
 \title{Generate a 'rho' factor for low scoring games}
 \usage{
-getRho(m = NULL, scores = scores)
+getRho(m = HockeyModel::m, scores = HockeyModel::scores)
 }
 \arguments{
 \item{m}{result from getM}
