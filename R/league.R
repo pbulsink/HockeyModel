@@ -85,3 +85,99 @@ buildStats<-function(scores = HockeyModel::scores){
 
   return(team_stats)
 }
+
+
+#' Simulate the remainder of the season
+#'
+#' @param odds_table A dataframe with HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, and Date
+#' @param scores Past (historical) season scores. Defaults to HockeyModel::Scores
+#' @param schedule Future unplayed games. Defaults to HockeyModel::schedule
+#' @param nsims number of simulations to run
+#'
+#' @return a data frame of results
+#' @export
+simulateSeason <- function(odds_table, scores= HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule){
+  season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+
+  season_sofar <- season_sofar[,c('Date','HomeTeam','AwayTeam','Result')]
+  teamlist<-sort(unique(c(as.character(season_sofar$HomeTeam), as.character(season_sofar$AwayTeam), as.character(schedule$Home), as.character(schedule$Away))))
+
+
+  n<-length(teamlist)
+
+  all_results <- data.frame(Team = rep(teamlist, nsims),
+                            SimNo = rep(1:nsims, each = n),
+                            Points = rep(NA, n * nsims),
+                            W = rep(NA, n*nsims),
+                            L = rep(NA, n * nsims),
+                            OTW = rep(NA, n * nsims),
+                            SOW = rep(NA, n * nsims),
+                            OTL = rep(NA, n * nsims),
+                            SOL = rep(NA, n * nsims),
+                            Rank = rep(NA, n * nsims),
+                            ConfRank = rep(NA, n * nsims),
+                            DivRank = rep(NA, n * nsims),
+                            Playoffs = rep(NA, n * nsims),
+                            stringsAsFactors = FALSE)
+
+  pb<-dplyr::progress_estimated(nsims)
+  for(i in 1:nsims){
+    #Generate Games results once
+    tmp<-odds_table
+    tmp$res1<-stats::runif(n = nrow(tmp))
+    tmp$res2<-stats::runif(n = nrow(tmp))
+    tmp$res3<-stats::runif(n = nrow(tmp))
+    tmp$Result <- 1*(as.numeric(tmp$res1<tmp$HomeWin)) +
+      0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 < 0.75))) +
+      0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 > 0.75))) +
+      0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 > 0.75))) +
+      0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 < 0.75))) +
+      0
+
+    tmp$HomeWin <- NULL
+    tmp$AwayWin <- NULL
+    tmp$Draw <- NULL
+    tmp$res1<-NULL
+    tmp$res2<-NULL
+    tmp$res3<-NULL
+
+    tmp<-rbind(season_sofar, tmp)
+    #Make the season table
+    table<-buildStats(tmp)
+
+    all_results[(n*(i-1) + 1):(n*i),]$Points <- table$Points
+    all_results[(n*(i-1) + 1):(n*i),]$W <- table$W
+    all_results[(n*(i-1) + 1):(n*i),]$L <- table$L
+    all_results[(n*(i-1) + 1):(n*i),]$OTW <- table$OTW
+    all_results[(n*(i-1) + 1):(n*i),]$SOW <- table$SOW
+    all_results[(n*(i-1) + 1):(n*i),]$OTL <- table$OTL
+    all_results[(n*(i-1) + 1):(n*i),]$SOL <- table$SOL
+    all_results[(n*(i-1) + 1):(n*i),]$Rank <- table$Rank
+    all_results[(n*(i-1) + 1):(n*i),]$ConfRank <- table$ConfRank
+    all_results[(n*(i-1) + 1):(n*i),]$DivRank <- table$DivRank
+    all_results[(n*(i-1) + 1):(n*i),]$Playoffs <- table$Playoffs
+
+    pb$tick()$print()
+  }
+
+  summary_results<-all_results %>%
+    dplyr::group_by(!!dplyr::sym('Team')) %>%
+    dplyr::summarise(
+      Playoffs = mean(!!dplyr::sym('Playoffs')),
+      meanPoints = mean(!!dplyr::sym('Points')),
+      maxPoints = max(!!dplyr::sym('Points')),
+      minPoints = min(!!dplyr::sym('Points')),
+      meanWins = mean(!!dplyr::sym('W')),
+      maxWins = max(!!dplyr::sym('W')),
+      Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
+      meanRank = mean(!!dplyr::sym('Rank')),
+      bestRank = min(!!dplyr::sym('Rank')),
+      meanConfRank = mean(!!dplyr::sym('ConfRank')),
+      bestConfRank = min(!!dplyr::sym('ConfRank')),
+      meanDivRank = mean(!!dplyr::sym('DivRank')),
+      bestDivRank = min(!!dplyr::sym('DivRank'))
+    )
+
+
+  return(summary_results)
+}

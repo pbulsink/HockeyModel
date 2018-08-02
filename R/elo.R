@@ -31,7 +31,67 @@ plotELO <- function(){
 
 }
 
-todayELO <- function(){NULL}
+#' ELO remainder of season
+#' @description Odds for each team to get to playoffs.
+#'
+#' @param nsims Number of simulations
+#' @param scores the historical scores
+#' @param schedule uplayed future games
+#'
+#' @return data frame of Team, playoff odds.
+#' @export
+remainderSeasonELO <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule){
+  season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+
+  season_sofar <- season_sofar[c('Date','HomeTeam','AwayTeam','Result'),]
+  odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
+                         HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
+                         stringsAsFactors = FALSE)
+
+  for(d in unique(schedule$Date)){
+    preds<-todayELO(today=d)
+    preds$Date <- d
+    odds_table<-rbind(odds_table, preds)
+  }
+  odds_table$Date<-schedule$Date
+
+  summary_results <- simulateSeason(odds_table, nsims, scores, schedule)
+
+  return(summary_results)
+}
+
+#' DC Predictions Today
+#'
+#' @param today Generate predictions for this date. Defaults to today
+#' @param elos Elo History (to extract last value)
+#' @param schedule shcedule to use, if not the builtin
+#'
+#' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
+#' @export
+todayELO <- function(today = Sys.Date(), elos = HockeyModel::elos, schedule = HockeyModel::schedule){
+  games<-schedule[schedule$Date == today, ]
+  if(nrow(games) == 0){
+    return(NULL)
+  }
+
+  preds<-data.frame(HomeTeam=games$Home, AwayTeam=games$Visitor,
+                    HomeWin=0, AwayWin = 0, Draw = 0,
+                    stringsAsFactors = FALSE)
+
+  for(i in 1:nrow(preds)){
+    e<-elos[elos$Date < today,]
+    e<-elos[nrow(e),]
+    h<-make.names(preds$HomeTeam[[i]])
+    a<-make.names(preds$AwayTeam[[i]])
+
+    p<-predictEloResult(home_rank = e[,colnames(e) == h], away_rank = e[,colnames(e) == a])
+    preds$HomeWin[[i]]<-p - 0.20*p
+    preds$AwayWin[[i]]<-(1-p) - (0.20*(1-p))
+    preds$Draw[[i]]<-0.20
+  }
+
+  return(preds)
+}
 
 playoffELO <- function(){NULL}
 
