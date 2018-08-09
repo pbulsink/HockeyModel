@@ -12,6 +12,13 @@ updateDC <- function(scores){
   m <- getM(scores=scoresdc)
   rho <- getRho(m = m, scores = scoresdc)
   devtools::use_data(m, rho, overwrite = TRUE)
+  teamlist <- as.character(unique(m$data$Home))
+  team_params <- data.frame(Attack = as.numeric(m$coefficients[1:length(teamlist)]),
+                            Defence = c(0, m$coefficients[(length(teamlist)+1):(length(teamlist)*2-1)]),
+                            Team = sort(teamlist),
+                            Date = Sys.Date())
+  #mdaily<-rbind(mdaily, team_params)
+  devtools::use_data(mdaily, internal = TRUE, overwrite = TRUE)
 }
 
 #' Produce a plot of each team's offence and defence scores
@@ -21,7 +28,7 @@ updateDC <- function(scores){
 #'
 #' @return a ggplot object
 #' @export
-plotDC <- function(m, teamlist = NULL){
+plotDC <- function(m = HockeyModel::m, teamlist = NULL){
   if(is.null(teamlist)){
     teamlist<-as.character(unique(m$data$Home))
   }
@@ -29,7 +36,13 @@ plotDC <- function(m, teamlist = NULL){
                             Defence = c(0, m$coefficients[(length(teamlist)+1):(length(teamlist)*2-1)]),
                             Team = sort(teamlist))
 
-  p<-ggplot2::ggplot(team_params, ggplot2::aes_(x=quote(Attack), y=quote(Defence), color=quote(Team), label=quote(Team))) +
+  p<-ggplot2::ggplot(team_params,
+                     ggplot2::aes_(x=quote(Attack),
+                                   y=quote(Defence),
+                                   color=quote(Team),
+                                   label=quote(Team)
+                                   )
+                     ) +
     ggplot2::ggtitle("Attack and Defence Parameters") +
     ggplot2::xlab("Attack") +
     ggplot2::ylab("Defence (lower = better)") +
@@ -37,6 +50,28 @@ plotDC <- function(m, teamlist = NULL){
     ggrepel::geom_text_repel(force=2, max.iter=5000) +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position="none")
+  return(p)
+}
+
+plotDCHistory <- function(teamlist = NULL){
+  if(is.null(teamlist)){
+    teamlist<-as.character(unique(HockeyModel::m$data$Home))
+  }
+
+  p <- ggplot2::ggplot(data = mdaily,
+                  ggplot2::aes_(x=quote(Attack),
+                                y=quote(Defence),
+                                colour = quote(Team),
+                                label = quote(Team)
+                                )
+                  ) +
+    ggplot2::geom_point(alpha = 0.7, show.legend = FALSE ) +
+    ggplot2::labs(title = 'Date: {frame_time}', x = 'Attack', y = 'Defence') +
+    ggrepel::geom_text_repel(force=2, max.iter=5000) +
+    ggplot2::theme_minimal() +
+    gganimate::transition_time(quote(Date)) +
+    gganimate::ease_aes('linear')
+
   return(p)
 }
 

@@ -4,7 +4,7 @@
 \alias{plotDC}
 \title{Produce a plot of each team's offence and defence scores}
 \usage{
-plotDC(m, teamlist = NULL)
+plotDC(m = HockeyModel::m, teamlist = NULL)
 }
 \arguments{
 \item{m}{m from data(m)}

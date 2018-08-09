@@ -164,20 +164,25 @@ simulateSeason <- function(odds_table, scores= HockeyModel::scores, nsims=10000,
     dplyr::group_by(!!dplyr::sym('Team')) %>%
     dplyr::summarise(
       Playoffs = mean(!!dplyr::sym('Playoffs')),
-      meanPoints = mean(!!dplyr::sym('Points')),
-      maxPoints = max(!!dplyr::sym('Points')),
-      minPoints = min(!!dplyr::sym('Points')),
-      meanWins = mean(!!dplyr::sym('W')),
-      maxWins = max(!!dplyr::sym('W')),
+      meanPoints = mean(!!dplyr::sym('Points'), na.rm = TRUE),
+      maxPoints = max(!!dplyr::sym('Points'), na.rm = TRUE),
+      minPoints = min(!!dplyr::sym('Points'), na.rm = TRUE),
+      meanWins = mean(!!dplyr::sym('W'), na.rm = TRUE),
+      maxWins = max(!!dplyr::sym('W'), na.rm = TRUE),
       Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
-      meanRank = mean(!!dplyr::sym('Rank')),
-      bestRank = min(!!dplyr::sym('Rank')),
-      meanConfRank = mean(!!dplyr::sym('ConfRank')),
-      bestConfRank = min(!!dplyr::sym('ConfRank')),
-      meanDivRank = mean(!!dplyr::sym('DivRank')),
-      bestDivRank = min(!!dplyr::sym('DivRank'))
+      meanRank = mean(!!dplyr::sym('Rank'), na.rm = TRUE),
+      bestRank = min(!!dplyr::sym('Rank'), na.rm = TRUE),
+      meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      meanDivRank = mean(!!dplyr::sym('DivRank'), na.rm = TRUE),
+      bestDivRank = min(!!dplyr::sym('DivRank'), na.rm = TRUE),
+      sdPoints = stats::sd(!!dplyr::sym('Points'), na.rm = TRUE),
+      sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
+      sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
+      sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
     )
 
 
-  return(summary_results)
+  return(list(summary_results = summary_results, raw_results = all_results))
 }
