@@ -23,6 +23,37 @@
 #' @source \url{http://www.hockey-reference.com/}
 "scores"
 
+#' Historical NHL scores with Advanced Stats
+#'
+#' A dataset containing historical NHL and WHA scores.
+#'
+#' @format A data frame with  variables:
+#' \describe{
+#'   \item{Date}{Date of the game}
+#'   \item{AwayTeam}{Name of visiting team}
+#'   \item{AwayGoals}{Number of goals for the visiting team}
+#'   \item{HomeTeam}{Name of the home team}
+#'   \item{HomeGoals}{Number of goals for the home team}
+#'   \item{OTStatus}{The OT status of the game (none, OT, SO, 2OT, 3OT, ...)}
+#'   \item{League}{NHL or WHA}
+#'   \item{Tie}{Boolean, Tie or Not}
+#'   \item{Winner}{Name of the winning team}
+#'   \item{Loser}{Name of the losing team}
+#'   \item{Result}{Coded home win = 0, visitor win = 1}
+#'   \item{HomeAllCF}{Home All Corsi For}
+#'   \item{HomeCloseCF}{Home Close Corsi For}
+#'   \item{HomeEvenCF}{Home Even Strength Corsi For}
+#'   \item{HomeHits}{Hits for the Home Team}
+#'   \item{HomeBlocks}{Blocks for the Home Team}
+#'   \item{AwayAllCF}{Away All Corsi For}
+#'   \item{AwayCloseCF}{Away Close Corsi For}
+#'   \item{AwayEvenCF}{Away Even Strength Corsi For}
+#'   \item{AwayHits}{Hits for the Away Team}
+#'   \item{AwayBlocks}{Blocks for the Away Team}
+#' }
+#' @source \url{http://www.hockey-reference.com/}
+"advanced_scores"
+
 #' Schedule for 2018-2019.
 #'
 #' A dataframe with the schedule (no scores included) for 2018-2019.
