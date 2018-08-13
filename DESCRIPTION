@@ -18,10 +18,11 @@ Imports:
     magrittr,
     tibble,
     ggridges,
-    gganimate
+    gganimate,
+    BradleyTerry2
 Remotes:
   pbulsink/HockeyScrapR
   thomasp85/gganimate
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
