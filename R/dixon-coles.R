@@ -90,7 +90,7 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
     return(NULL)
   }
 
-  preds<-data.frame(HomeTeam=games$Home, AwayTeam=games$Visitor,
+  preds<-data.frame(HomeTeam=games$HomeTeam, AwayTeam=games$AwayTeam,
                     HomeWin=0, AwayWin = 0, Draw = 0,
                     stringsAsFactors = FALSE)
   for(i in 1:nrow(preds)){

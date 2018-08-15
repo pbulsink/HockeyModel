@@ -74,7 +74,7 @@ todayELO <- function(today = Sys.Date(), elos = HockeyModel::elos, schedule = Ho
     return(NULL)
   }
 
-  preds<-data.frame(HomeTeam=games$Home, AwayTeam=games$Visitor,
+  preds<-data.frame(HomeTeam=games$HomeTeam, AwayTeam=games$AwayTeam,
                     HomeWin=0, AwayWin = 0, Draw = 0,
                     stringsAsFactors = FALSE)
 

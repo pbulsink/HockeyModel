@@ -19,7 +19,8 @@ Imports:
     tibble,
     ggridges,
     gganimate,
-    BradleyTerry2
+    BradleyTerry2,
+    gnm
 Remotes:
   pbulsink/HockeyScrapR
   thomasp85/gganimate

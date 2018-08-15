@@ -61,8 +61,8 @@
 #' @format A data frame with  variables:
 #' \describe{
 #'   \item{Date}{Date of the game played/to be played}
-#'   \item{Visitor}{Name of the visiting team}
-#'   \item{Home}{Name of the home team}
+#'   \item{AwayTeam}{Name of the visiting team}
+#'   \item{HomeTeam}{Name of the home team}
 #' }
 #' @source \url{http://www.hockey-reference.com/}
 "schedule"
@@ -113,6 +113,18 @@
 #'
 #' @format a single numerical value
 "rho"
+
+#' Bradley-Terry model
+#' Results of fitting Bradley Terry Model with Generalized Davidson terms
+#'
+#' @format a gnm Bradley Terry Davidson model
+"fittedBT"
+
+#' Bradley-Terry formatted data
+#' Data formatted for Bradley Terry Model with Generalized Davidson terms
+#'
+#' @format a data frame
+"fittedBT"
 
 #' Update Schedule
 #'
