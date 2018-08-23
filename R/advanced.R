@@ -96,8 +96,16 @@ prepareAdvancedData <- function(advanced_scores = HockeyModel::advanced_scores, 
   as3[is.nan(as3$CloseCFp), 'CloseCFp'] <- 0.5
   as3[is.nan(as3$EvenCFp), 'EvenCFp'] <- 0.5
 
-  as3$Result<-as.factor(as.character(as3$Result))
-  levels(as3$Result) <- c('Loss','OT Loss','SO Loss', 'SO Win', 'OT Win', 'Win')
+  as3$Result6<-as.factor(as.character(as3$Result))
+  levels(as3$Result6) <- c('Loss','OT Loss','SO Loss', 'SO Win', 'OT Win', 'Win')
+
+  as3$Result3<-round((as3$Result-0.5)*2.5)
+  as3$Result3<-as.factor(as.character(as3$Result3))
+  levels(as3$Result3) <- c('Loss','Draw','Win')
+
+  as3$Result2<-round(as3$Result)
+  as3$Result2<-as.factor(as.character(as3$Result2))
+  levels(as3$Result2) <- c('Loss','Win')
 
   if(long){
     return(as3)
@@ -119,7 +127,7 @@ prepareAdvancedData <- function(advanced_scores = HockeyModel::advanced_scores, 
 }
 
 caretTrain<-function(adv = prepareAdvancedData()){
-  folds<-caret::groupKFold(adv$Season, length(unique(adv$Season)))
+  #folds<-caret::groupKFold(adv$Season, length(unique(adv$Season)))
   inTraining <- caret::createDataPartition(adv$Result, p = .75, list = FALSE)
   training <- adv[ inTraining,]
   testing  <- adv[-inTraining,]
@@ -128,14 +136,15 @@ caretTrain<-function(adv = prepareAdvancedData()){
                            number = 10,
                            repeats = 10,
                            preProcOptions = c('center','scale'),
-                           classProbs = TRUE)
-  gbmGrid <-  expand.grid(interaction.depth = c(1:9),
+                           classProbs = TRUE,
+                           summaryFunction = caret::mnLogLoss)
+  gbmGrid <- expand.grid(interaction.depth = c(1,3,5,7,9),
                           n.trees = (1:30)*50,
                           shrinkage = 0.1,
                           n.minobsinnode = 20)
-  cl<-parallel::makePSOCKcluster(6)
+  cl<-parallel::makePSOCKcluster(10)
   doParallel::registerDoParallel(cl)
-  gbm.fit <- caret::train(Result ~ #Team:Season +
+  gbm.fit <- caret::train(Result2 ~ #Team:Season +
                             AtHome +
                             CAp.20 +
                             CEp.20 +
@@ -156,10 +165,14 @@ caretTrain<-function(adv = prepareAdvancedData()){
                    data = training,
                    method = "gbm",
                    trControl = fitControl,
-                   tuneGrid = gbmGrid,
-                   verbose = FALSE)
+                   tuneGrid = gbmGrid, metric = 'logLoss')#,
+                   #verbose = FALSE)
+  parallel::stopCluster(cl)
   gc()
-  adaboost.fit<-caret::train(Result ~
+
+  cl<-parallel::makePSOCKcluster(parallel::detectCores()-1)
+  doParallel::registerDoParallel(cl)
+  adaboost.fit<-caret::train(Result2 ~
                                AtHome +
                                CAp.20 +
                                CEp.20 +
@@ -179,10 +192,13 @@ caretTrain<-function(adv = prepareAdvancedData()){
                                0,
                              data = training,
                              method = "adaboost",
-                             trControl = fitControl,
-                             verbose = FALSE)
+                             trControl = fitControl)#,
+                             #verbose = FALSE)
+  parallel::stopCluster(cl)
   gc()
-  svm.fit <- caret::train(Result ~
+  cl<-parallel::makePSOCKcluster(6)
+  doParallel::registerDoParallel(cl)
+  svm.fit <- caret::train(Result2 ~
                             AtHome +
                             CAp.20 +
                             CEp.20 +
@@ -202,10 +218,10 @@ caretTrain<-function(adv = prepareAdvancedData()){
                             0,
                           data = training,
                           method = "svmLinearWeights",
-                          trControl = fitControl,
-                          verbose = FALSE)
+                          trControl = fitControl)#,
+                          #verbose = FALSE)
   gc()
-  nn.fit <- caret::train(Result ~
+  nn.fit <- caret::train(Result2 ~
                             AtHome +
                             CAp.20 +
                             CEp.20 +
@@ -224,11 +240,11 @@ caretTrain<-function(adv = prepareAdvancedData()){
                             SeasonGameNumber +
                             0,
                           data = training,
-                          method = "brnn",
-                          trControl = fitControl,
-                          verbose = FALSE)
+                          method = "avNNet",
+                          trControl = fitControl)#,
+                         #verbose = FALSE)
   gc()
-  bayesglm.fit <- caret::train(Result ~
+  bayesglm.fit <- caret::train(Result2 ~
                              AtHome +
                              CAp.20 +
                              CEp.20 +
@@ -248,9 +264,31 @@ caretTrain<-function(adv = prepareAdvancedData()){
                              0,
                            data = training,
                            method = "bayesglm",
-                           trControl = fitControl,
-                           verbose = FALSE)
+                           trControl = fitControl)#,
+                           #verbose = FALSE)
   gc()
+  nbayes.fit <- caret::train(Result2 ~
+                               AtHome +
+                               CAp.20 +
+                               CEp.20 +
+                               CCp.20 +
+                               PDO.20 +
+                               last.20 +
+                               days.till.next +
+                               days.since.last +
+                               TeamGameNumber +
+                               last.game +
+                               blocks.20 +
+                               hits.20 +
+                               shp.20 +
+                               svp.20 +
+                               ShftLngth.20 +
+                               SeasonGameNumber +
+                               0,
+                             data = training,
+                             method = "nb",
+                             trControl = fitControl)#,
+                             #verbose = FALSE)
 
   parallel::stopCluster(cl)
   gc()
