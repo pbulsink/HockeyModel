@@ -127,14 +127,15 @@ prepareAdvancedData <- function(advanced_scores = HockeyModel::advanced_scores, 
 }
 
 caretTrain<-function(adv = prepareAdvancedData()){
-  #folds<-caret::groupKFold(adv$Season, length(unique(adv$Season)))
-  inTraining <- caret::createDataPartition(adv$Result, p = .75, list = FALSE)
+  inTraining <- caret::createDataPartition(adv$Result, p = .80, list = FALSE)
   training <- adv[ inTraining,]
   testing  <- adv[-inTraining,]
-  fitControl<-caret::trainControl(method = 'repeatedcv',
-                           #index = folds,
-                           number = 10,
-                           repeats = 10,
+  folds<-caret::groupKFold(training$Season, length(unique(training$Season)))
+  fitControl<-caret::trainControl(method = 'timeslice',
+                                  #index = folds,
+                                  initialWindow = 1230,
+                           number = length(unique(adv$Season)),
+                           #repeats = 10,
                            preProcOptions = c('center','scale'),
                            classProbs = TRUE,
                            summaryFunction = caret::mnLogLoss)
@@ -144,7 +145,7 @@ caretTrain<-function(adv = prepareAdvancedData()){
                           n.minobsinnode = 20)
   cl<-parallel::makePSOCKcluster(10)
   doParallel::registerDoParallel(cl)
-  gbm.fit <- caret::train(Result2 ~ #Team:Season +
+  gbm.fit <- caret::train(Result2 ~ Team +
                             AtHome +
                             CAp.20 +
                             CEp.20 +
@@ -165,7 +166,8 @@ caretTrain<-function(adv = prepareAdvancedData()){
                    data = training,
                    method = "gbm",
                    trControl = fitControl,
-                   tuneGrid = gbmGrid, metric = 'logLoss')#,
+                   tuneGrid = gbmGrid,
+                   metric = 'logLoss')#,
                    #verbose = FALSE)
   parallel::stopCluster(cl)
   gc()
