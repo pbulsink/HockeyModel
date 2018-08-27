@@ -37,25 +37,27 @@ plotELO <- function(){
 #' @param nsims Number of simulations
 #' @param scores the historical scores
 #' @param schedule uplayed future games
+#' @param ... arguements to pass to elo predictor
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonELO <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule){
-  season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
-
-  season_sofar <- season_sofar[c('Date','HomeTeam','AwayTeam','Result'),]
+remainderSeasonELO <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, ...){
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                          HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
                          stringsAsFactors = FALSE)
 
   for(d in unique(schedule$Date)){
-    preds<-todayELO(today=d)
+    preds<-todayELO(today=d, schedule = schedule, ...)
     preds$Date <- d
     odds_table<-rbind(odds_table, preds)
   }
   odds_table$Date<-schedule$Date
 
-  summary_results <- simulateSeason(odds_table, nsims, scores, schedule)
+  if(odds){
+    return(odds_table)
+  }
+
+  summary_results <- simulateSeason(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule)
 
   return(summary_results)
 }
@@ -78,9 +80,10 @@ todayELO <- function(today = Sys.Date(), elos = HockeyModel::elos, schedule = Ho
                     HomeWin=0, AwayWin = 0, Draw = 0,
                     stringsAsFactors = FALSE)
 
+  e<-elos[elos$Date < today,]
+  e<-elos[nrow(e),]
+
   for(i in 1:nrow(preds)){
-    e<-elos[elos$Date < today,]
-    e<-elos[nrow(e),]
     h<-make.names(preds$HomeTeam[[i]])
     a<-make.names(preds$AwayTeam[[i]])
 
@@ -93,8 +96,6 @@ todayELO <- function(today = Sys.Date(), elos = HockeyModel::elos, schedule = Ho
   return(preds)
 }
 
-playoffELO <- function(){NULL}
-
 #' Calculate the win chance percent for HomeTeam
 #'
 #' @param home_rank The ranking of the Home Team.
@@ -103,7 +104,13 @@ playoffELO <- function(){NULL}
 #'
 #' @return A number between 0 and 1 corresponding to the win chances of the Home Team.
 #' @keywords internal
-predictEloResult <- function(home_rank, away_rank, h_adv=0) {
+predictEloResult <- function(home_rank, away_rank, h_adv=0, new_teams = 1300) {
+  if(length(home_rank) == 0){
+    home_rank <- new_teams
+  }
+  if(length(away_rank) == 0){
+    away_rank <- new_teams
+  }
   return(1/(1 + (10^((away_rank - (home_rank+h_adv))/400))))
 }
 
@@ -121,7 +128,7 @@ newRankings<-function(home_rank, away_rank, result, diff=NULL, h_adv=35, k=8){
 #' Calculate ELO for multiple seasons
 #'
 #' @description Calculate many seasons of elo. Repeatedly calls eloSeason and does mean regression.
-#' @param schedule The schedule with game results, format as a df with Date, HomeTeam, AwayTeam, Result, Diff
+#' @param schedule The schedule with game results, format as a df with Date, HomeTeam, AwayTeam, Result, HomeGoals, AwayGoals
 #' @param ratings_history Any ratings that we know exist.
 #' @param k The elo k value
 #' @param mean_value The mean value to regress towards
@@ -132,10 +139,12 @@ newRankings<-function(home_rank, away_rank, result, diff=NULL, h_adv=35, k=8){
 #' @return Elo at each date for each team
 #'
 #' @keywords internal
-calculateEloRatings <- function(schedule, ratings_history = NULL, k = 8, mean_value = 1505, new_teams = 1300,  regress_strength=3, home_adv=35) {
+calculateEloRatings <- function(schedule = HockeyModel::scores[,c('Date','HomeTeam','AwayTeam','HomeGoals','AwayGoals', 'Result')], ratings_history = NULL, k = 8, mean_value = 1505, new_teams = 1300,  regress_strength=3, home_adv=35) {
   # Ensuring Opts are ok.
-  stopifnot(ncol(schedule) == 5, nrow(schedule) > 0)
 
+  schedule$Diff <- schedule$HomeGoals - schedule$AwayGoals
+  schedule$HomeGoals <- NULL
+  schedule$AwayGoals <- NULL
   schedule$HomeTeam <- as.character(schedule$HomeTeam)
   schedule$AwayTeam <- as.character(schedule$AwayTeam)
   team_names = unique(c(schedule$HomeTeam, schedule$AwayTeam))

@@ -124,7 +124,7 @@
 #' Data formatted for Bradley Terry Model with Generalized Davidson terms
 #'
 #' @format a data frame
-"fittedBT"
+"dataBT"
 
 #' Update Schedule
 #'

@@ -109,25 +109,24 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
 #' @param nsims Number of simulations
 #' @param scores the historical scores
 #' @param schedule uplayed future games
+#' @param ... arguements to pass to dc predictor
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule){
-  season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, ...){
 
-  season_sofar <- season_sofar[c('Date','HomeTeam','AwayTeam','Result'),]
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
                     stringsAsFactors = FALSE)
 
   for(d in unique(schedule$Date)){
-    preds<-todayDC(today=d)
+    preds<-todayDC(today=d, schedule = schedule, ...)
     preds$Date <- d
     odds_table<-rbind(odds_table, preds)
   }
   odds_table$Date<-schedule$Date
 
-  summary_results <- simulateSeason(odds_table, nsims, scores, schedule)
+  summary_results <- simulateSeason(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule)
 
   return(summary_results)
 }

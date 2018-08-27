@@ -8,14 +8,9 @@ Results of fitting Bradley Terry Model with Generalized Davidson terms}
 \format{a gnm Bradley Terry Davidson model}
 \usage{
 fittedBT
-
-fittedBT
 }
 \description{
 Bradley-Terry model
 Results of fitting Bradley Terry Model with Generalized Davidson terms
-
-Bradley-Terry formatted data
-Data formatted for Bradley Terry Model with Generalized Davidson terms
 }
 \keyword{datasets}

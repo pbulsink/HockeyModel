@@ -5,7 +5,7 @@
 \title{DC remainder of season}
 \usage{
 remainderSeasonDC(nsims = 10000, scores = HockeyModel::scores,
-  schedule = HockeyModel::schedule)
+  schedule = HockeyModel::schedule, ...)
 }
 \arguments{
 \item{nsims}{Number of simulations}
@@ -13,6 +13,8 @@ remainderSeasonDC(nsims = 10000, scores = HockeyModel::scores,
 \item{scores}{the historical scores}
 
 \item{schedule}{uplayed future games}
+
+\item{...}{arguements to pass to dc predictor}
 }
 \value{
 data frame of Team, playoff odds.

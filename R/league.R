@@ -96,11 +96,19 @@ buildStats<-function(scores = HockeyModel::scores){
 #'
 #' @return a data frame of results
 #' @export
-simulateSeason <- function(odds_table, scores= HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule){
-  season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule){
+  teamlist<-c()
+  if(!is.null(scores)){
+    season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
 
-  season_sofar <- season_sofar[,c('Date','HomeTeam','AwayTeam','Result')]
-  teamlist<-sort(unique(c(as.character(season_sofar$HomeTeam), as.character(season_sofar$AwayTeam), as.character(schedule$Home), as.character(schedule$Away))))
+    season_sofar <- season_sofar[,c('Date','HomeTeam','AwayTeam','Result')]
+
+    teamlist<-c(teamlist, sort(unique(c(as.character(season_sofar$HomeTeam), as.character(season_sofar$AwayTeam)))))
+  } else {
+    season_sofar<-NULL
+  }
+
+  teamlist<-c(teamlist, sort(unique(c(as.character(schedule$Home), as.character(schedule$Away)))))
 
 
   n<-length(teamlist)

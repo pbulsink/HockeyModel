@@ -1,0 +1,85 @@
+---
+title: "Vignette Title"
+author: "Vignette Author"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(HockeyModel)
+```
+
+```{r}
+#metrics
+#How models would have done last year.
+
+#Each model is trained on whenever logically starts, to 20162017. Then tested on 20172018.
+
+#Reported Values:
+# - LogLoss for game by game results
+# - Recovery (max 31): for each team a predicted points (with sd) is generated. Sum the density at actual points for each team for a gaussian curve with sd=sd, centre= points predicted
+# - accuracy - playoffs
+
+n <- 10000
+
+sc16<-HockeyModel::scores
+sc16<-sc16[sc16$Date < "2017-08-01",]
+sc17<-HockeyModel::scores
+sc17<-sc17[sc17$Date > "2017-08-01",]
+sc17<-sc17[c(1:1271),]
+results17<-sc17
+stats17<-buildStats(results17)
+sc17<-sc17[,c('Date','HomeTeam','AwayTeam')]
+
+adv16 <- prepareAdvancedData()
+adv16 <- adv16[adv16$Date < "2017-08-01",]
+
+
+e16<-HockeyModel:::calculateEloRatings(sc16, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
+elo.16<-remainderSeasonELO(scores = NULL, schedule = sc17, elos = e16)$summary_results
+elo.16p<-remainderSeasonELO(scores = NULL, schedule = sc17, elos = e16, odds = TRUE)
+
+dc.16m<-getM(scores = sc16)
+dc.16rho <- getRho(scores = sc16, m = dc.16m)
+dc.16<-remainderSeasonDC(n = n, scores = NULL, schedule = sc17, m = dc.16m, rho= dc.16rho)$summary_results
+
+dc5.16m<-getM(scores = sc16[sc16$Date > "2012-08-01", ])
+dc5.16rho <- getRho(scores = sc16[sc16$Date > "2012-08-01", ], m = dc5.16m)
+dc5.16<-remainderSeasonDC(n = n, scores = NULL, schedule = sc17, m = dc5.16m, rho= dc5.16rho)$summary_results
+
+dc1.16m<-getM(scores = sc16[sc16$Date > "2016-08-01", ])
+dc1.16rho <- getRho(scores = sc16[sc16$Date > "2016-08-01", ], m = dc1.16m)
+dc1.16<-remainderSeasonDC(n = n, scores = NULL, schedule = sc17, m = dc1.16m, rho= dc1.16rho)$summary_results
+
+bt.16<-NULL
+ml.16<-NULL
+
+dcLogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
+dc5LogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
+dc1LogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
+btLogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
+eloLogLoss<-MLmetrics::LogLoss(y_pred = elo.16p$HomeWin, y_true = results17$Result)
+mlLogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
+
+dcRecovery<-recovery(,, stats17$Points)
+dc5Recovery<-recovery(,, stats17$Points)
+dc1Recovery<-recovery(,, stats17$Points)
+btRecovery<-recovery(,, stats17$Points)
+eloRecovery<-recovery(elo.16$summary_results$meanPoints, elo.16$summary_results$sdPoints, stats17$Points)
+mlRecovery<-recovery(,, stats17$Points)
+
+dcAccuracy <- sum((dc.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
+dc5Accuracy <- sum((dc5.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
+dc1Accuracy <- sum((dc1.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
+eloAccuracy <- sum((elo.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
+btAccuracy <- sum((bt.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
+mlAccuracy <- sum((ml.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
+```
