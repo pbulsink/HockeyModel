@@ -4,7 +4,7 @@
 \alias{predictEloResult}
 \title{Calculate the win chance percent for HomeTeam}
 \usage{
-predictEloResult(home_rank, away_rank, h_adv = 0)
+predictEloResult(home_rank, away_rank, h_adv = 0, new_teams = 1300)
 }
 \arguments{
 \item{home_rank}{The ranking of the Home Team.}

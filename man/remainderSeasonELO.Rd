@@ -5,7 +5,7 @@
 \title{ELO remainder of season}
 \usage{
 remainderSeasonELO(nsims = 10000, scores = HockeyModel::scores,
-  schedule = HockeyModel::schedule, ...)
+  schedule = HockeyModel::schedule, odds = FALSE, ...)
 }
 \arguments{
 \item{nsims}{Number of simulations}
@@ -14,7 +14,7 @@ remainderSeasonELO(nsims = 10000, scores = HockeyModel::scores,
 
 \item{schedule}{uplayed future games}
 
-\item{...}{arguements to pass to elo predictor}
+\item{...}{arguements to pass to elo predictor & simulateSeason}
 }
 \value{
 data frame of Team, playoff odds.

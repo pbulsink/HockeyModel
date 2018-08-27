@@ -14,21 +14,20 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-library(HockeyModel)
 ```
 
-```{r}
-#metrics
-#How models would have done last year.
+##Metrics
 
-#Each model is trained on whenever logically starts, to 20162017. Then tested on 20172018.
+We're interested to compare models. The best way is to see how each would have done last year. Now, 2017-2018 is a tricky season, as Vegas joined the league. 
 
-#Reported Values:
-# - LogLoss for game by game results
-# - Recovery (max 31): for each team a predicted points (with sd) is generated. Sum the density at actual points for each team for a gaussian curve with sd=sd, centre= points predicted
-# - accuracy - playoffs
+Each model will be trained on the data up to 2016-2017 season, then tested on the 2017-2018 season results. we'll test three metrics: 
+ - the log loss & accuracy of each predicted game
+ - the log loss & accuracy on team making the playoffs or not
+ - the recovery metric as used by Micah Blake McCurdy ([twitter: @IneffectiveMath](https://twitter.com/IneffectiveMath)) in his annual contest (see [hockeyviz.com/contest](hockeyviz.com/contest)). Ranges from 0 - 1.08 out of 31 last year. I'll define the function to do this calculation below.
 
-n <- 10000
+We'll start by preparing some data to feed to the models. 
+```{r dataprep}
+library(HockeyModel)
 
 sc16<-HockeyModel::scores
 sc16<-sc16[sc16$Date < "2017-08-01",]
@@ -41,45 +40,106 @@ sc17<-sc17[,c('Date','HomeTeam','AwayTeam')]
 
 adv16 <- prepareAdvancedData()
 adv16 <- adv16[adv16$Date < "2017-08-01",]
+```
 
+Now, some models have built-in new team handling, others don't. For those that don't, we'll take Vegas' preseason results as enough data to place them in the model. We'll add their preseason here.
+```{r preseason}
+ps17<-data.frame(Date = as.Date(c('2017-09-17', '2017-09-19', '2017-09-21', '2017-09-24', '2017-09-26', '2017-09-28', '2017-10-01')), 
+                 AwayTeam = factor(c('Vegas Golden Knights','Vegas Golden Knights','Vegas Golden Knights','Vegas Golden Knights','Los Angeles Kings','Colorado Avalanche','San Jose Sharks'), levels = levels(sc16$AwayTeam)),
+                 AwayGoals = c(9,4,2,4,3,4,5),
+                 HomeTeam = factor(c('Vancouver Canucks','Colorado Avalanche', 'San Jose Sharks', 'Anaheim Ducks', 'Vegas Golden Knights', 'Vegas Golden Knights','Vegas Golden Knights'), levels = levels(sc16$HomeTeam)), 
+                 HomeGoals = c(4,1,5,2,2,2,3),
+                 OTStatus = c("","","","","OT","",""),
+                 League = rep("NHL", 7),
+                 Tie = c(F,F,F,F,T,F,F),
+                 Winner = factor(c('Vegas Golden Knights', 'Vegas Golden Knights','San Jose Sharks','Vegas Golden Knights','Los Angeles Kings','Colorado Avalanche','San Jose Sharks'), levels = levels(sc16$Winner)),
+                 Loser = factor(c('Vancouver Canucks','Colorado Avalanche','Vegas Golden Knights','Anaheim Ducks','Vegas Golden Knights','Vegas Golden Knights','Vegas Golden Knights'), levels = levels(sc16$Loser)),
+                 Result = c(0,0,1,0,0.25,0,0))
+
+scp16<-rbind(sc16, ps17)
+```
+
+Before we develop the models, let's define our metric functions. 
+```{r metrics_functions}
+#IneffectiveMath recovery function
+recovery<-function(pPoints, sdPoints, aPoints){
+  return(sum(dnorm(aPoints, mean = pPoints, sd = sdPoints)))
+}
+
+#accuracy function - dropped ties
+accuracy<-function(pWin, result){
+  return(sum(round(result) == round(pWin))/length(result))
+}
+```
+
+Now we can use our models to make some predictions. We'll do the elo model, dixon-coles (as well as dixon coles on 1 and 5 years of history only), and more. 
+```{r model, warning=FALSE}
+n <- 10000 # number of season simulations to get odds.
 
 e16<-HockeyModel:::calculateEloRatings(sc16, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
-elo.16<-remainderSeasonELO(scores = NULL, schedule = sc17, elos = e16)$summary_results
 elo.16p<-remainderSeasonELO(scores = NULL, schedule = sc17, elos = e16, odds = TRUE)
+elo.16<-simulateSeasonParallel(odds_table = elo.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
 
-dc.16m<-getM(scores = sc16)
-dc.16rho <- getRho(scores = sc16, m = dc.16m)
-dc.16<-remainderSeasonDC(n = n, scores = NULL, schedule = sc17, m = dc.16m, rho= dc.16rho)$summary_results
 
-dc5.16m<-getM(scores = sc16[sc16$Date > "2012-08-01", ])
-dc5.16rho <- getRho(scores = sc16[sc16$Date > "2012-08-01", ], m = dc5.16m)
-dc5.16<-remainderSeasonDC(n = n, scores = NULL, schedule = sc17, m = dc5.16m, rho= dc5.16rho)$summary_results
+dc10.16m <- HockeyModel:::getM(scores = scp16[scp16$Date > as.Date("2007-08-01"),], currentDate = as.Date('2017-10-02'))
+dc10.16rho <- HockeyModel:::getRho(scores = scp16[scp16$Date > as.Date("2007-08-01"),], m = dc10.16m)
+dc10.16p <- remainderSeasonDC(scores = NULL, schedule = sc17, m=dc10.16m, rho=dc10.16rho, odds = TRUE)
+dc10.16 <- simulateSeasonParallel(odds_table = dc10.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
 
-dc1.16m<-getM(scores = sc16[sc16$Date > "2016-08-01", ])
-dc1.16rho <- getRho(scores = sc16[sc16$Date > "2016-08-01", ], m = dc1.16m)
-dc1.16<-remainderSeasonDC(n = n, scores = NULL, schedule = sc17, m = dc1.16m, rho= dc1.16rho)$summary_results
+dc5.16m <- HockeyModel:::getM(scores = scp16[scp16$Date > as.Date("2012-08-01"),], currentDate = as.Date('2017-10-02'))
+dc5.16rho <- HockeyModel:::getRho(scores = scp16[scp16$Date > as.Date("2012-08-01"),], m = dc10.16m)
+dc5.16p <- remainderSeasonDC(scores = NULL, schedule = sc17, m=dc5.16m, rho=dc5.16rho, odds = TRUE)
+dc5.16 <- simulateSeasonParallel(odds_table = dc5.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+
+dc1.16m <- HockeyModel:::getM(scores = scp16[scp16$Date > as.Date("2016-08-01"),], currentDate = as.Date('2017-10-02'))
+dc1.16rho <- HockeyModel:::getRho(scores = scp16[scp16$Date > as.Date("2016-08-01"),], m = dc1.16m)
+dc1.16p <- remainderSeasonDC(scores = NULL, schedule = sc17, m=dc1.16m, rho=dc1.16rho, odds = TRUE)
+dc1.16 <- simulateSeasonParallel(odds_table = dc1.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
 
 bt.16<-NULL
 ml.16<-NULL
 
-dcLogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
-dc5LogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
-dc1LogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
-btLogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
-eloLogLoss<-MLmetrics::LogLoss(y_pred = elo.16p$HomeWin, y_true = results17$Result)
-mlLogLoss<-MLmetrics::LogLoss(y_true = results17$Result)
 
-dcRecovery<-recovery(,, stats17$Points)
-dc5Recovery<-recovery(,, stats17$Points)
-dc1Recovery<-recovery(,, stats17$Points)
-btRecovery<-recovery(,, stats17$Points)
-eloRecovery<-recovery(elo.16$summary_results$meanPoints, elo.16$summary_results$sdPoints, stats17$Points)
-mlRecovery<-recovery(,, stats17$Points)
+```
 
-dcAccuracy <- sum((dc.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
-dc5Accuracy <- sum((dc5.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
-dc1Accuracy <- sum((dc1.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
-eloAccuracy <- sum((elo.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
-btAccuracy <- sum((bt.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
-mlAccuracy <- sum((ml.16$Playoffs>0.5) == sc17$Playoffs)/nrow(sc17)
+Now that the models are formed, we can test them for their performance. 
+```{r performance tests}
+library(MLmetrics)
+gameLogLoss = list('elo' = LogLoss(y_pred = elo.16p$HomeWin+0.20*elo.16p$HomeWin, y_true = results17$Result),
+                   'dc10' = LogLoss(y_pred = dc10.16p$HomeWin+dc10.16p$Draw*dc10.16p$HomeWin, y_true = results17$Result),
+                   'dc5' = LogLoss(y_pred = dc5.16p$HomeWin+dc5.16p$Draw*dc5.16p$HomeWin, y_true = results17$Result),
+                   'dc1' = LogLoss(y_pred = dc1.16p$HomeWin+dc1.16p$Draw*dc1.16p$HomeWin, y_true = results17$Result),
+                   'bt' = 10000,
+                   'ml' = 10000)
+gameAccuracy = list('elo' = accuracy(pWin = elo.16p$HomeWin+0.20*elo.16p$HomeWin, result = results17$Result),
+                    'dc10' = accuracy(pWin = dc10.16p$HomeWin+dc10.16p$Draw*dc10.16p$HomeWin, result = results17$Result),
+                    'dc5' = accuracy(pWin = dc5.16p$HomeWin+dc5.16p$Draw*dc5.16p$HomeWin, result = results17$Result),
+                    'dc1' = accuracy(pWin = dc1.16p$HomeWin+dc1.16p$Draw*dc1.16p$HomeWin, result = results17$Result),
+                    'bt' = 0,
+                    'ml' = 0)
+playoffLogLoss = list('elo' = LogLoss(y_pred = elo.16$Playoffs, y_true = stats17$Playoffs),
+                      'dc10' = LogLoss(y_pred = dc10.16$Playoffs, y_true = stats17$Playoffs),
+                      'dc5' = LogLoss(y_pred = dc5.16$Playoffs, y_true = stats17$Playoffs),
+                      'dc1' = LogLoss(y_pred = dc1.16$Playoffs, y_true = stats17$Playoffs),
+                      'bt' = 10000,
+                      'ml' = 10000)
+playoffAccuracy = list('elo' = accuracy(pWin = elo.16$Playoffs, result = stats17$Playoffs),
+                       'dc10' = accuracy(pWin = dc10.16$Playoffs, result = stats17$Playoffs),
+                       'dc5' = accuracy(pWin = dc5.16$Playoffs, result = stats17$Playoffs),
+                       'dc1' = accuracy(pWin = dc1.16$Playoffs, result = stats17$Playoffs),
+                       'bt' = 0,
+                       'ml' = 0)
+seasonRecovery = list('elo' = recovery(elo.16$meanPoints, elo.16$sdPoints, stats17$Points),
+                      'dc10' = recovery(dc10.16$meanPoints, dc10.16$sdPoints, stats17$Points),
+                      'dc5' = recovery(dc5.16$meanPoints, dc5.16$sdPoints, stats17$Points),
+                      'dc1' = recovery(dc1.16$meanPoints, dc1.16$sdPoints, stats17$Points),
+                      'bt' = 0,
+                      'ml' = 0)
+
+results = data.frame('model' = c('elo', 'dc','dc5','dc1','bt','ml'), 
+                     'GameLogLoss' = unlist(gameLogLoss),
+                     'GameAccuracy' = unlist(gameAccuracy),
+                     'PlayoffLogLoss' = unlist(playoffLogLoss),
+                     'PlayoffAccuracy' = unlist(playoffAccuracy),
+                     'SeasonRecovery' = unlist(seasonRecovery))
 ```

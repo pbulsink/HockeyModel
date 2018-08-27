@@ -109,11 +109,12 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
 #' @param nsims Number of simulations
 #' @param scores the historical scores
 #' @param schedule uplayed future games
+#' @param odds whether to return odds table or simulate season
 #' @param ... arguements to pass to dc predictor
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, ...){
+remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, ...){
 
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
@@ -125,6 +126,10 @@ remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedul
     odds_table<-rbind(odds_table, preds)
   }
   odds_table$Date<-schedule$Date
+
+  if(odds){
+    return(odds_table)
+  }
 
   summary_results <- simulateSeason(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule)
 
@@ -157,15 +162,16 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 #'
 #' @return a model 'm' of dixon coles type parameters.
 #' @keywords internal
-getM <- function(scores=HockeyModel::scores) {
+getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date()) {
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
-    Weight = c(DCweights(dates = scores$Date, currentDate = Sys.Date(), xi = 0.002), DCweights(dates = scores$Date, currentDate = Sys.Date(), xi = 0.002)),
+    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = 0.002), DCweights(dates = scores$Date, currentDate = currentDate, xi = 0.002)),
     Team = as.factor(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))),
     Opponent = as.factor(c(as.character(scores$AwayTeam), as.character(scores$HomeTeam))),
     Goals = c(scores$HomeGoals, scores$AwayGoals),
     Home = c(rep(1, nrow(scores)), rep(0, nrow(scores)))
   )
+  #df.indep <- df.indep[df.indep$Weight > 1e-8,]
   #Using a (+0) to remove intercept and give a value for each team instead of assuming 'Anaheim Ducks' = 0 (reference)
   m <- stats::glm(Goals ~ Team + Opponent + Home + 0,
                   data = df.indep,
@@ -199,7 +205,7 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
     DClogLik(y1 = scores$HomeGoals, y2 = scores$AwayGoals, mu = home.expected, lambda = away.expected, rho = rho, weights = weights)
   }
 
-  res <- stats::optim(par = c(0.1),
+  res <- stats::optim(par = c(-0.1),
                       fn = DCoptimRhoFn.fast,
                       #control = list(fnscale = -1),
                       method = "BFGS")

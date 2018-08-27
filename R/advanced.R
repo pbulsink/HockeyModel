@@ -143,8 +143,8 @@ caretTrain<-function(adv = prepareAdvancedData()){
                           n.trees = (1:30)*50,
                           shrinkage = 0.1,
                           n.minobsinnode = 20)
-  cl<-parallel::makePSOCKcluster(10)
-  doParallel::registerDoParallel(cl)
+  cl<-parallel::makeCluster(10)
+  doSNOW::registerDoSNOW(cl)
   gbm.fit <- caret::train(Result2 ~ Team +
                             AtHome +
                             CAp.20 +

@@ -195,6 +195,111 @@ simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, 
   return(list(summary_results = summary_results, raw_results = all_results))
 }
 
+
+#' Simulate the remainder of the season
+#'
+#' @param odds_table A dataframe with HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, and Date
+#' @param scores Past (historical) season scores. Defaults to HockeyModel::Scores
+#' @param schedule Future unplayed games. Defaults to HockeyModel::schedule
+#' @param nsims number of simulations to run
+#'
+#' @return a data frame of results
+#' @export
+simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, cores = parallel::detectCores() - 1){
+  teamlist<-c()
+  if(!is.null(scores)){
+    season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+
+    season_sofar <- season_sofar[,c('Date','HomeTeam','AwayTeam','Result')]
+
+    teamlist<-c(teamlist, sort(unique(c(as.character(season_sofar$HomeTeam), as.character(season_sofar$AwayTeam)))))
+  } else {
+    season_sofar<-NULL
+  }
+
+  teamlist<-c(teamlist, sort(unique(c(as.character(schedule$Home), as.character(schedule$Away)))))
+
+  if(!is.finite(cores)) cores <- 2
+
+  n<-length(teamlist)
+
+  # all_results <- data.frame(Team = rep(teamlist, nsims),
+  #                           SimNo = rep(1:nsims, each = n),
+  #                           Points = rep(NA, n * nsims),
+  #                           W = rep(NA, n*nsims),
+  #                           L = rep(NA, n * nsims),
+  #                           OTW = rep(NA, n * nsims),
+  #                           SOW = rep(NA, n * nsims),
+  #                           OTL = rep(NA, n * nsims),
+  #                           SOL = rep(NA, n * nsims),
+  #                           Rank = rep(NA, n * nsims),
+  #                           ConfRank = rep(NA, n * nsims),
+  #                           DivRank = rep(NA, n * nsims),
+  #                           Playoffs = rep(NA, n * nsims),
+  #                           stringsAsFactors = FALSE)
+
+  `%dopar%` <- foreach::`%dopar%`
+  cl<-parallel::makeCluster(cores)
+  doSNOW::registerDoSNOW(cl)
+  pb<-utils::txtProgressBar(max = nsims, style = 3)
+  progress <- function(n) utils::setTxtProgressBar(pb, n)
+  opts <- list(progress = progress)
+  all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts) %dopar% {
+    #Generate Games results once
+    tmp<-odds_table
+    tmp$res1<-stats::runif(n = nrow(tmp))
+    tmp$res2<-stats::runif(n = nrow(tmp))
+    tmp$res3<-stats::runif(n = nrow(tmp))
+    tmp$Result <- 1*(as.numeric(tmp$res1<tmp$HomeWin)) +
+      0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 < 0.75))) +
+      0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 > 0.75))) +
+      0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 > 0.75))) +
+      0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 < 0.75))) +
+      0
+
+    tmp$HomeWin <- NULL
+    tmp$AwayWin <- NULL
+    tmp$Draw <- NULL
+    tmp$res1<-NULL
+    tmp$res2<-NULL
+    tmp$res3<-NULL
+
+    tmp<-rbind(season_sofar, tmp)
+    #Make the season table
+    table<-buildStats(tmp)
+
+    table
+  }
+  close(pb)
+  parallel::stopCluster(cl)
+  gc(verbose = FALSE)
+
+  summary_results<-all_results %>%
+    dplyr::group_by(!!dplyr::sym('Team')) %>%
+    dplyr::summarise(
+      Playoffs = mean(!!dplyr::sym('Playoffs')),
+      meanPoints = mean(!!dplyr::sym('Points'), na.rm = TRUE),
+      maxPoints = max(!!dplyr::sym('Points'), na.rm = TRUE),
+      minPoints = min(!!dplyr::sym('Points'), na.rm = TRUE),
+      meanWins = mean(!!dplyr::sym('W'), na.rm = TRUE),
+      maxWins = max(!!dplyr::sym('W'), na.rm = TRUE),
+      Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
+      meanRank = mean(!!dplyr::sym('Rank'), na.rm = TRUE),
+      bestRank = min(!!dplyr::sym('Rank'), na.rm = TRUE),
+      meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      meanDivRank = mean(!!dplyr::sym('DivRank'), na.rm = TRUE),
+      bestDivRank = min(!!dplyr::sym('DivRank'), na.rm = TRUE),
+      sdPoints = stats::sd(!!dplyr::sym('Points'), na.rm = TRUE),
+      sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
+      sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
+      sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
+    )
+
+
+  return(list(summary_results = summary_results, raw_results = all_results))
+}
 #' Get Season from Game Date
 #'
 #' @param gamedate The date of the game to check for season

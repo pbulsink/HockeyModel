@@ -20,7 +20,9 @@ Imports:
     ggridges,
     gganimate,
     BradleyTerry2,
-    gnm
+    gnm,
+    parallel,
+    doSNOW
 Remotes:
   pbulsink/HockeyScrapR
   thomasp85/gganimate

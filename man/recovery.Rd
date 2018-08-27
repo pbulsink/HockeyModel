@@ -4,7 +4,7 @@
 \alias{recovery}
 \title{Recovery Calculating}
 \usage{
-recovery(predicted, actual)
+recovery(pPoints, sdPoints, aPoints)
 }
 \arguments{
 \item{predicted}{data.frame of Team, Predicted Points, SD}

@@ -37,7 +37,7 @@ plotELO <- function(){
 #' @param nsims Number of simulations
 #' @param scores the historical scores
 #' @param schedule uplayed future games
-#' @param ... arguements to pass to elo predictor
+#' @param ... arguements to pass to elo predictor & simulateSeason
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
@@ -57,7 +57,7 @@ remainderSeasonELO <- function(nsims=10000, scores = HockeyModel::scores, schedu
     return(odds_table)
   }
 
-  summary_results <- simulateSeason(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule)
+  summary_results <- simulateSeasonParallel(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule, ...)
 
   return(summary_results)
 }
