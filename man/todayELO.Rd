@@ -2,7 +2,7 @@
 % Please edit documentation in R/elo.R
 \name{todayELO}
 \alias{todayELO}
-\title{DC Predictions Today}
+\title{Elo Predictions Today}
 \usage{
 todayELO(today = Sys.Date(), elos = HockeyModel::elos,
   schedule = HockeyModel::schedule)
@@ -18,5 +18,5 @@ todayELO(today = Sys.Date(), elos = HockeyModel::elos,
 a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
 }
 \description{
-DC Predictions Today
+Elo Predictions Today
 }

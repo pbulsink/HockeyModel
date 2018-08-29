@@ -14,6 +14,8 @@ remainderSeasonELO(nsims = 10000, scores = HockeyModel::scores,
 
 \item{schedule}{uplayed future games}
 
+\item{odds}{whether to return odds table or predictions}
+
 \item{...}{arguements to pass to elo predictor & simulateSeason}
 }
 \value{

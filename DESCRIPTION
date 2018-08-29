@@ -1,7 +1,7 @@
 Package: HockeyModel
 Title: NHL Hockey Model for 2018-2019
 Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
+Authors@R: person("Philip", "bulsink", email = "bulsinkp@gmail.com", role = c("aut", "cre"))
 Description: Using various techniques, predict the winners of upcoming NHL hockey games, the expected points for the season, and odds for playoffs & cup winning.
 Depends: R (>= 3.5.0)
 License: GPL-3 + file LICENSE
@@ -22,7 +22,10 @@ Imports:
     BradleyTerry2,
     gnm,
     parallel,
-    doSNOW
+    doSNOW,
+    caret,
+    zoo,
+    foreach
 Remotes:
   pbulsink/HockeyScrapR
   thomasp85/gganimate

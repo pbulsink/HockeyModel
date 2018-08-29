@@ -143,7 +143,7 @@ caretTrain<-function(adv = prepareAdvancedData()){
                           n.trees = (1:30)*50,
                           shrinkage = 0.1,
                           n.minobsinnode = 20)
-  cl<-parallel::makeCluster(10)
+  cl<-parallel::makeCluster(parallel::detectCores()-1)
   doSNOW::registerDoSNOW(cl)
   gbm.fit <- caret::train(Result2 ~ Team +
                             AtHome +
@@ -172,8 +172,8 @@ caretTrain<-function(adv = prepareAdvancedData()){
   parallel::stopCluster(cl)
   gc()
 
-  cl<-parallel::makePSOCKcluster(parallel::detectCores()-1)
-  doParallel::registerDoParallel(cl)
+  cl<-parallel::makeCluster(parallel::detectCores()-1)
+  doSNOW::registerDoSNOW(cl)
   adaboost.fit<-caret::train(Result2 ~
                                AtHome +
                                CAp.20 +
@@ -198,8 +198,8 @@ caretTrain<-function(adv = prepareAdvancedData()){
                              #verbose = FALSE)
   parallel::stopCluster(cl)
   gc()
-  cl<-parallel::makePSOCKcluster(6)
-  doParallel::registerDoParallel(cl)
+  cl<-parallel::makeCluster(parallel::detectCores()-1)
+  doSNOW::registerDoSNOW(cl)
   svm.fit <- caret::train(Result2 ~
                             AtHome +
                             CAp.20 +
@@ -222,7 +222,10 @@ caretTrain<-function(adv = prepareAdvancedData()){
                           method = "svmLinearWeights",
                           trControl = fitControl)#,
                           #verbose = FALSE)
+  parallel::stopCluster(cl)
   gc()
+  cl<-parallel::makeCluster(parallel::detectCores()-1)
+  doSNOW::registerDoSNOW(cl)
   nn.fit <- caret::train(Result2 ~
                             AtHome +
                             CAp.20 +
@@ -245,7 +248,10 @@ caretTrain<-function(adv = prepareAdvancedData()){
                           method = "avNNet",
                           trControl = fitControl)#,
                          #verbose = FALSE)
+  parallel::stopCluster(cl)
   gc()
+  cl<-parallel::makeCluster(parallel::detectCores()-1)
+  doSNOW::registerDoSNOW(cl)
   bayesglm.fit <- caret::train(Result2 ~
                              AtHome +
                              CAp.20 +
@@ -268,7 +274,10 @@ caretTrain<-function(adv = prepareAdvancedData()){
                            method = "bayesglm",
                            trControl = fitControl)#,
                            #verbose = FALSE)
+  parallel::stopCluster(cl)
   gc()
+  cl<-parallel::makeCluster(parallel::detectCores()-1)
+  doSNOW::registerDoSNOW(cl)
   nbayes.fit <- caret::train(Result2 ~
                                AtHome +
                                CAp.20 +

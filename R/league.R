@@ -202,6 +202,7 @@ simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, 
 #' @param scores Past (historical) season scores. Defaults to HockeyModel::Scores
 #' @param schedule Future unplayed games. Defaults to HockeyModel::schedule
 #' @param nsims number of simulations to run
+#' @param cores number of cores to use in parallel.
 #'
 #' @return a data frame of results
 #' @export
@@ -299,27 +300,4 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
 
 
   return(list(summary_results = summary_results, raw_results = all_results))
-}
-#' Get Season from Game Date
-#'
-#' @param gamedate The date of the game to check for season
-#'
-#' @return a character season id (e.g. 20172018)
-#' @export
-getSeason <- function(gamedate){
-  year<-as.integer(strftime(gamedate, '%Y'))
-  month<-as.integer(strftime(gamedate, '%m'))
-  if(month < 8){
-    return(paste0(year-1,year))
-  } else {
-    return(paste0(year,year+1))
-  }
-}
-
-vGetSeason<-Vectorize(getSeason)
-
-normalizeOdds<-function(odds){
-  odds<-unlist(odds)
-  odds<-odds/sum(odds)
-  return(odds)
 }

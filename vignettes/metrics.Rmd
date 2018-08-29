@@ -73,8 +73,8 @@ accuracy<-function(pWin, result){
 ```
 
 Now we can use our models to make some predictions. We'll do the elo model, dixon-coles (as well as dixon coles on 1 and 5 years of history only), and more. 
-```{r model, warning=FALSE}
-n <- 10000 # number of season simulations to get odds.
+```{r model, warning=FALSE, eval=FALSE}
+n <- 10 # number of season simulations to get odds.
 
 e16<-HockeyModel:::calculateEloRatings(sc16, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
 elo.16p<-remainderSeasonELO(scores = NULL, schedule = sc17, elos = e16, odds = TRUE)
@@ -103,7 +103,7 @@ ml.16<-NULL
 ```
 
 Now that the models are formed, we can test them for their performance. 
-```{r performance tests}
+```{r performance_tests, eval=FALSE}
 library(MLmetrics)
 gameLogLoss = list('elo' = LogLoss(y_pred = elo.16p$HomeWin+0.20*elo.16p$HomeWin, y_true = results17$Result),
                    'dc10' = LogLoss(y_pred = dc10.16p$HomeWin+dc10.16p$Draw*dc10.16p$HomeWin, y_true = results17$Result),

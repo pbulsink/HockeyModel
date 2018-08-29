@@ -22,7 +22,6 @@ plotBT <- function(){NULL}
 #' @param fittedBT The bt model as HockeyModel::fittedBT
 #' @param schedule the future's schedule from HockeyModel::schedule
 #'
-#' @return
 #' @export
 todayBT <- function(today = Sys.Date(), btdata=HockeyModel::dataBT, fittedBT=HockeyModel::fittedBT, schedule = HockeyModel::schedule){
   games<-schedule[schedule$Date == today, ]
@@ -101,6 +100,7 @@ prepareDataForBT <- function(data=HockeyModel::scores){
 #' @param btdata data from prepareDataForBT, or defaults to all data prepared.
 #' @param subset_from date from which (forward) to run BT model. Full nhl history is at least > 45 GB ram requirement (true value unknown). Runing since 1980-08-01 requires minimum 16GB RAM system RAM, process time = hours. Minimum few years required for estimate of team strength, home advantage, and tie percents
 #'
+#' @importFrom BradleyTerry2 GenDavidson
 #' @return a gnm fit model
 #' @export
 fitBT <- function(btdata=prepareDataForBT(), subset_from = '2008-08-01'){
@@ -117,10 +117,10 @@ fitBT <- function(btdata=prepareDataForBT(), subset_from = '2008-08-01'){
                                                   at.home1 = AtHome,
                                                   at.home2 = !AtHome
                        ) - 1,
-                     eliminate = game,
-                     family = poisson,
+                     eliminate = quote(game),
+                     family = stats::poisson,
                      data = btdata,
-                     subset = Date > as.Date(subset_from))
+                     subset = quote(Date) > as.Date(subset_from))
   gc(verbose = FALSE)
   return(fittedBT)
 }
@@ -128,18 +128,18 @@ fitBT <- function(btdata=prepareDataForBT(), subset_from = '2008-08-01'){
 #' Plot the BT model Fit
 #'
 #' @param fittedBT the HockeyModel::fittedBT Model
-#' @param btdata the HockeyModel::dataBT data
+#' @param dataBT the HockeyModel::dataBT data
 #'
 #' @return a baseplot from BradleyTerry2
 #' @export
 plotBTModelFit <- function(fittedBT=HockeyModel::fittedBT, dataBT=HockeyModel::dataBT){
   coef <- stats::coef(fittedBT)
   alpha <- names(coef[-(1:4)])
-  BradleyTerry2::plotProportions(Result == 1, Result == 0, Result == -1,
-                                 HomeTeam:Season, AwayTeam:Season,
+  BradleyTerry2::plotProportions(quote(Result) == 1, quote(Result) == 0, quote(Result) == -1,
+                                 quote(HomeTeam:Season), quote(AwayTeam:Season),
                                  abilities = coef[alpha], home.adv = coef["home.adv"],
                                  tie.max = coef["tie.max"], tie.scale = coef["tie.scale"],
                                  tie.mode = coef["tie.mode"],
-                                 at.home1 = AtHome, at.home2 = !AtHome,
-                                 data = dataBT, subset = count == 1)
+                                 at.home1 = quote(AtHome), at.home2 = !quote(AtHome),
+                                 data = dataBT, subset = quote(count) == 1)
 }

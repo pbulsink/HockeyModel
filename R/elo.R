@@ -37,6 +37,7 @@ plotELO <- function(){
 #' @param nsims Number of simulations
 #' @param scores the historical scores
 #' @param schedule uplayed future games
+#' @param odds whether to return odds table or predictions
 #' @param ... arguements to pass to elo predictor & simulateSeason
 #'
 #' @return data frame of Team, playoff odds.
@@ -62,7 +63,7 @@ remainderSeasonELO <- function(nsims=10000, scores = HockeyModel::scores, schedu
   return(summary_results)
 }
 
-#' DC Predictions Today
+#' Elo Predictions Today
 #'
 #' @param today Generate predictions for this date. Defaults to today
 #' @param elos Elo History (to extract last value)

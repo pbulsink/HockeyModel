@@ -4,7 +4,7 @@
 \alias{getM}
 \title{Fast Dixon-Coles model fitting 'm'.}
 \usage{
-getM(scores = HockeyModel::scores)
+getM(scores = HockeyModel::scores, currentDate = Sys.Date())
 }
 \arguments{
 \item{scores}{the historical scores to evaluate}

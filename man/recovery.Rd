@@ -7,9 +7,11 @@
 recovery(pPoints, sdPoints, aPoints)
 }
 \arguments{
-\item{predicted}{data.frame of Team, Predicted Points, SD}
+\item{pPoints}{vector of predcited points}
 
-\item{actual}{data.frame of Team, Actual Points}
+\item{sdPoints}{vector of predicted points standard deviations}
+
+\item{aPoints}{vector of actual points}
 }
 \value{
 single value 0-31

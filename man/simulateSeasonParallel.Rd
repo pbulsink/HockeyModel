@@ -16,6 +16,8 @@ simulateSeasonParallel(odds_table, scores = HockeyModel::scores,
 \item{nsims}{number of simulations to run}
 
 \item{schedule}{Future unplayed games. Defaults to HockeyModel::schedule}
+
+\item{cores}{number of cores to use in parallel.}
 }
 \value{
 a data frame of results
