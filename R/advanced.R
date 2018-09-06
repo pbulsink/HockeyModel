@@ -131,40 +131,56 @@ caretTrain<-function(adv = prepareAdvancedData()){
   training <- adv[ inTraining,]
   testing  <- adv[-inTraining,]
   folds<-caret::groupKFold(training$Season, length(unique(training$Season)))
-  fitControl<-caret::trainControl(method = 'boot',
+  fitControl<-caret::trainControl(method = 'cv',
                                   index = folds,
                                   number = length(unique(adv$Season)),
                                   #repeats = 10,
                                   preProcOptions = c('center','scale'),
-                                  classProbs = TRUE,
-                                  savePredictions = 'final',
-                                  summaryFunction = caret::mnLogLoss)
+                                  savePredictions = 'final')#,
+                                  #summaryFunction = ModelMetrics::mlogLoss)
   gbmGrid <- expand.grid(interaction.depth = c(1,3,5,7,9),
                           n.trees = (1:30)*50,
                           shrinkage = 0.1,
                           n.minobsinnode = 20)
   cl<-parallel::makeCluster(parallel::detectCores()-1)
   doSNOW::registerDoSNOW(cl)
-  model_list <- caretEnsemble::caretList(Result2 ~
-                                           .+
+  model_list <- caretEnsemble::caretList(Result ~
+                                           AtHome +
+                                           CAp.20 +
+                                           CEp.20 +
+                                           CCp.20 +
+                                           PDO.20 +
+                                           last.20 +
+                                           days.till.next +
+                                           days.since.last +
+                                           TeamGameNumber +
+                                           last.game +
+                                           blocks.20 +
+                                           hits.20 +
+                                           shp.20 +
+                                           svp.20 +
+                                           ShftLngth.20 +
+                                           SeasonGameNumber+
                                            0,
                                          data = training,
                                          trControl = fitControl,
-                                         methodList = c('glm','gbm',"rpart", "avNNet", 'lda', 'pcaNNet', 'rf'))#, 'logicBag'))
+                                         methodList = c('glm','gbm',"rpart", "avNNet", 'pcr', 'pcaNNet', 'rf'))
+
   greedy_ensemble <- caretEnsemble::caretEnsemble(model_list,
-                                                  trControl = caret::trainControl(number = 2,
-                                                                           summaryFunction = caret::mnLogLoss,
-                                                                           classProbs = TRUE
-                                                                           )
+                                                  trControl = caret::trainControl(number = 2)
                                                   )
   summary(greedy_ensemble)
+  model_preds <- lapply(model_list, predict, newdata=testing)
+  model_preds <- data.frame(model_preds)
+  model_preds$Result<-testing$Result
+  model_combo <- caret::train(Result ~ ., data = model_preds, method = 'glmnet', trControl = caret::trainControl(method = 'repeatedcv', number = 10, repeats = 10))
+  summary(model_combo)
   gbm_ensemble <- caretEnsemble::caretStack(model_list,
                                             method = 'gbm',
                                             trControl = caret::trainControl(method = 'boot',
                                                                             number = 10,
                                                                             savePredictions = 'final',
-                                                                            classProbs = TRUE,
-                                                                            summaryFunction = caret::mnLogLoss
+                                                                            classProbs = TRUE
                                                                             )
                                             )
   summary(gbm_ensemble)
@@ -174,13 +190,13 @@ caretTrain<-function(adv = prepareAdvancedData()){
   model_preds <- data.frame(model_preds)
   ens_preds <- predict(greedy_ensemble, newdata=testing, type="prob")
   model_preds$ensemble <- ens_preds
-  caTools::colAUC(model_preds, testing$Result2)
+  caTools::colAUC(model_preds, testing$Result3)
 
   model_preds3 <- model_preds
   model_preds3$ensemble <- predict(gbm_ensemble, newdata=testing, type="prob")
-  colAUC(model_preds3, testing$Result2)
-  library(caret); library(gbm)
-  varImp(greedy_ensemble)
+  caTools::colAUC(model_preds3, testing$Result3)
+  #library(caret); library(gbm)
+  caret::varImp(greedy_ensemble)
 
 
   gbm.fit <- caret::train(Result2 ~ Team +

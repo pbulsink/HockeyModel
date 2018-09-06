@@ -42,13 +42,13 @@ plotELO <- function(){
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonELO <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, ...){
+remainderSeasonELO <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, elos = HockeyModel::elos, ...){
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                          HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
                          stringsAsFactors = FALSE)
 
   for(d in unique(schedule$Date)){
-    preds<-todayELO(today=d, schedule = schedule, ...)
+    preds<-todayELO(today=d, schedule = schedule, elos, ...)
     preds$Date <- d
     odds_table<-rbind(odds_table, preds)
   }

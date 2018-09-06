@@ -29,14 +29,24 @@ We'll start by preparing some data to feed to the models.
 ```{r dataprep}
 library(HockeyModel)
 
+sc15<-HockeyModel::scores
+sc15<-sc15[sc15$Date < "2016-08-01",]
+r16<-HockeyModel::scores
+r16<-r16[r16$Date > "2016-08-01",]
+r16<-r16[c(1:1230),]
+results16<-r16
+stats16<-buildStats(results16)
+r16<-r16[,c('Date','HomeTeam','AwayTeam')]
+
 sc16<-HockeyModel::scores
 sc16<-sc16[sc16$Date < "2017-08-01",]
-sc17<-HockeyModel::scores
-sc17<-sc17[sc17$Date > "2017-08-01",]
-sc17<-sc17[c(1:1271),]
-results17<-sc17
+sc16<-sc16[sc16$Date > "2016-08-01",]
+r17<-HockeyModel::scores
+r17<-r17[r17$Date > "2017-08-01",]
+r17<-r17[c(1:1271),]
+results17<-r17
 stats17<-buildStats(results17)
-sc17<-sc17[,c('Date','HomeTeam','AwayTeam')]
+r17<-r17[,c('Date','HomeTeam','AwayTeam')]
 
 adv16 <- prepareAdvancedData()
 adv16 <- adv16[adv16$Date < "2017-08-01",]
@@ -74,12 +84,21 @@ accuracy<-function(pWin, result){
 
 Now we can use our models to make some predictions. We'll do the elo model, dixon-coles (as well as dixon coles on 1 and 5 years of history only), and more. 
 ```{r model, warning=FALSE, eval=FALSE}
-n <- 10 # number of season simulations to get odds.
 
 e16<-HockeyModel:::calculateEloRatings(sc16, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
 elo.16p<-remainderSeasonELO(scores = NULL, schedule = sc17, elos = e16, odds = TRUE)
 elo.16<-simulateSeasonParallel(odds_table = elo.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+n <- 10000 # number of season simulations to get odds.
 
+eloRecovery<-function(par = c(8,1505,1300,3,35), scores15=sc15, scores16=sc16, sched16=r16, sched17=r17, a16=stats16, a17=stats17, n = n){
+  e15<-HockeyModel:::calculateEloRatings(scores15, k=par[[1]], mean_value = par[[2]], new_teams = par[[3]], regress_strength = par[[3]], home_adv = par[[4]])
+  elo.15<-HockeyModel::remainderSeasonELO(scores = NULL, schedule = sched16, elos = e15, nsims = n)$summary_results
+  e16<-HockeyModel:::calculateEloRatings(scores16, k=par[[1]], mean_value = par[[2]], new_teams = par[[3]], regress_strength = par[[3]], home_adv = par[[4]], ratings_history = e15)
+  elo.16<-HockeyModel::remainderSeasonELO(scores = NULL, schedule = sched17, elos = e16, nsims = n)$summary_results
+  return(max(sum(dnorm(a16$Points, mean = elo.15$meanPoints, sd = elo.15$sdPoints), 
+             dnorm(a17$Points, mean = elo.16$meanPoints, sd = elo.16$sdPoints), na.rm = TRUE), 0, na.rm = TRUE))
+}
+elores<-optimParallel(par = c(8, 1505, 1300, 3, 35), fn = eloRecovery, control = list(fnscale=-1, parscale=c(8, 1505, 1300, 3, 35), ndeps = c(1e-2,1e-2,1e-2,1e-2,1e-2)), lower = 0, upper=2000, scores15=sc15, scores16=sc16, sched16=r16, sched17=r17, a16=stats16, a17=stats17, n = n)
 
 dc10.16m <- HockeyModel:::getM(scores = scp16[scp16$Date > as.Date("2007-08-01"),], currentDate = as.Date('2017-10-02'))
 dc10.16rho <- HockeyModel:::getRho(scores = scp16[scp16$Date > as.Date("2007-08-01"),], m = dc10.16m)
