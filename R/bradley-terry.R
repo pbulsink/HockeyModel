@@ -103,7 +103,7 @@ prepareDataForBT <- function(data=HockeyModel::scores){
 #' @importFrom BradleyTerry2 GenDavidson
 #' @return a gnm fit model
 #' @export
-fitBT <- function(btdata=prepareDataForBT(), subset_from = '2008-08-01'){
+fitBTGD <- function(btdata=prepareDataForBT(), subset_from = '2008-08-01'){
   if(as.Date(subset_from)>Sys.Date()){
     stop('subset_from date must be in past')
   }
@@ -125,14 +125,66 @@ fitBT <- function(btdata=prepareDataForBT(), subset_from = '2008-08-01'){
   return(fittedBT)
 }
 
-#' Plot the BT model Fit
+simpleBTPredict<-function(btSimple, home.team, away.team){
+  bta<-BTabilities(update(btSimple, refcat = home.team))[away.team]
+  return(exp(bta)/(1+exp(bta)))
+}
+
+#' Fit Simple BradleyTerry Model
+#'
+#' @param btdata data from prepareDataForBT, or defaults to all data prepared.
+#' @param subset_from date from which (forward) to run BT model.
+#'
+#' @return a gnm fit model
+#' @export
+fitBTSimple <- function(scores=HockeyModel::scores, subset_from = '2016-08-01'){
+  if(!is.null(subset_from)){
+    if(as.Date(subset_from)>Sys.Date()){
+      stop('subset_from date must be in past')
+    }
+    sc<-scores[scores$Date > as.Date(subset_from), ]
+  } else {
+    sc<-scores
+  }
+
+  #simple BT cannot handle ties
+  sc<-sc[sc$Result != 0.5,]
+  sc$Result <- round(sc$Result)
+
+  sc$Season<-as.factor(HockeyModel:::vGetSeason(sc$Date))
+
+  sc<-droplevels(sc)
+
+  sc<-sc %>%
+    dplyr::mutate(home.team = HomeTeam,
+                  away.team = AwayTeam) %>%
+    dplyr::group_by(home.team, away.team, Season) %>%
+    dplyr::summarise(home.wins = sum(Result>0.5), away.wins = sum(Result<0.5)) %>%
+    as.data.frame()
+
+  #The term + (1|team) allows for random effects
+  fittedBTSimple<-BradleyTerry2::BTm(outcome = cbind(home.wins, away.wins),
+                               player1 = home.team,
+                               player2 = away.team,
+                               data = sc,
+                               id = "team")
+
+  sc$home.team<-data.frame(team = sc$home.team, at.home = 1)
+  sc$away.team<-data.frame(team = sc$away.team, at.home = 0)
+
+  fittedBTSimple <- update(fittedBTSimple, formula = ~ team + at.home)
+
+  return(fittedBTSimple)
+}
+
+#' Plot the BT GD model Fit
 #'
 #' @param fittedBT the HockeyModel::fittedBT Model
 #' @param dataBT the HockeyModel::dataBT data
 #'
 #' @return a baseplot from BradleyTerry2
 #' @export
-plotBTModelFit <- function(fittedBT=HockeyModel::fittedBT, dataBT=HockeyModel::dataBT){
+plotBTGDModelFit <- function(fittedBT=HockeyModel::fittedBT, dataBT=HockeyModel::dataBT){
   coef <- stats::coef(fittedBT)
   alpha <- names(coef[-(1:4)])
   BradleyTerry2::plotProportions(quote(Result) == 1, quote(Result) == 0, quote(Result) == -1,
