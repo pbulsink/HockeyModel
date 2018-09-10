@@ -4,17 +4,17 @@
 \alias{todayBT}
 \title{Predict Today's results using BT}
 \usage{
-todayBT(today = Sys.Date(), btdata = HockeyModel::dataBT,
-  fittedBT = HockeyModel::fittedBT, schedule = HockeyModel::schedule)
+todayBT(today = Sys.Date(), fittedBT = HockeyModel::fittedBT,
+  schedule = HockeyModel::schedule)
 }
 \arguments{
 \item{today}{Date to predict, optional}
 
-\item{btdata}{The original btdata frame from HockeyModel::dataBT}
-
 \item{fittedBT}{The bt model as HockeyModel::fittedBT}
 
 \item{schedule}{the future's schedule from HockeyModel::schedule}
+
+\item{btdata}{The original btdata frame from HockeyModel::dataBT}
 }
 \description{
 Predict Today's results using BT

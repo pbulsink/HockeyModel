@@ -18,12 +18,12 @@ plotBT <- function(){NULL}
 #' Predict Today's results using BT
 #'
 #' @param today Date to predict, optional
-#' @param btdata The original btdata frame from HockeyModel::dataBT
-#' @param fittedBT The bt model as HockeyModel::fittedBT
+#' @param fittedBT The bt model (Generalized Davidson or simple BT) as HockeyModel::fittedBT or HockeyModel::fittedBTSimple
 #' @param schedule the future's schedule from HockeyModel::schedule
 #'
+#' @return a data frame of home win, away win, and draw odds.
 #' @export
-todayBT <- function(today = Sys.Date(), btdata=HockeyModel::dataBT, fittedBT=HockeyModel::fittedBT, schedule = HockeyModel::schedule){
+todayBT <- function(today = Sys.Date(), fittedBT=HockeyModel::fittedBT, schedule = HockeyModel::schedule){
   games<-schedule[schedule$Date == today, ]
   if(nrow(games) == 0){
     return(NULL)
@@ -33,19 +33,28 @@ todayBT <- function(today = Sys.Date(), btdata=HockeyModel::dataBT, fittedBT=Hoc
                     HomeWin=0, AwayWin = 0, Draw = 0,
                     stringsAsFactors = FALSE)
 
-  for(i in 1:nrow(games)){
-    newdata<-data.frame(Date = today,
-                        HomeTeam = factor(games[i, 'HomeTeam'], levels = levels(btdata$HomeTeam)),
-                        AwayTeam = factor(games[i, 'AwayTeam'], levels = levels(btdata$AwayTeam)),
-                        Season = factor("20172018", levels = levels(btdata$Season)),
-                        Result = factor(c(1,0,-1), levels = levels(btdata$Result)),
-                        game = as.factor("63071")) # picky on this game numberbeing in btdata, but doesn't actually impact result. weird.
-    newdata$AtHome <- TRUE
-    p<-stats::predict(object = fittedBT, newdata = newdata, type = 'response')
-    p<-normalizeOdds(p)
-    preds$HomeWin[[i]]<-p[[1]]
-    preds$AwayWin[[i]]<-p[[3]]
-    preds$Draw[[i]]<-p[[2]]
+  if('gnm' %in% class(fittedBT)){ #BradleyTerry Generalized Davidson
+    for(i in 1:nrow(games)){
+      newdata<-data.frame(Date = today,
+                          HomeTeam = as.character(games[i, 'HomeTeam']),
+                          AwayTeam = as.character(games[i, 'AwayTeam']),
+                          Result = c(1,0,-1))
+      newdata$AtHome <- TRUE
+      p<-stats::predict(object = fittedBT, newdata = newdata, type = 'response')
+      p<-normalizeOdds(p)
+      preds$HomeWin[[i]]<-p[[1]]
+      preds$AwayWin[[i]]<-p[[3]]
+      preds$Draw[[i]]<-p[[2]]
+    }
+  } else if ('BTm' %in% fittedBT){ #BradleyTerry Simple Model
+    for(i in 1:nrow(games)){
+      p<-normalizeOdds(simpleBTPredict(btModel = fittedBT,
+                                       home.team = games[i, 'HomeTeam'],
+                                       away.team = games[i, 'AwayTeam']))
+      preds$HomeWin[[i]]<-p - 0.20*p
+      preds$AwayWin[[i]]<-(1-p) - (0.20*(1-p))
+      preds$Draw[[i]]<-0.20
+    }
   }
 
   return(preds)
@@ -103,13 +112,15 @@ prepareDataForBT <- function(data=HockeyModel::scores){
 #' @importFrom BradleyTerry2 GenDavidson
 #' @return a gnm fit model
 #' @export
-fitBTGD <- function(btdata=prepareDataForBT(), subset_from = '2008-08-01'){
+fitBTGD <- function(btdata=prepareDataForBT(), subset_from = '2016-08-01'){
   if(as.Date(subset_from)>Sys.Date()){
     stop('subset_from date must be in past')
   }
+  btdata<-btdata[btdata$Date > as.Date(subset_from), ]
+  btdata<-droplevels(btdata)
   fittedBT<-gnm::gnm(count ~
                        GenDavidson(Result == 1, Result == 0, Result == -1,
-                                                  HomeTeam:Season, AwayTeam:Season,
+                                                  HomeTeam, AwayTeam,
                                                   home.adv = ~1,
                                                   tie.max = ~1,
                                                   tie.scale = ~1,
@@ -117,7 +128,7 @@ fitBTGD <- function(btdata=prepareDataForBT(), subset_from = '2008-08-01'){
                                                   at.home1 = AtHome,
                                                   at.home2 = !AtHome
                        ) - 1,
-                     eliminate = quote(game),
+                     #eliminate = quote(game),
                      family = stats::poisson,
                      data = btdata,
                      subset = quote(Date) > as.Date(subset_from))
@@ -125,9 +136,22 @@ fitBTGD <- function(btdata=prepareDataForBT(), subset_from = '2008-08-01'){
   return(fittedBT)
 }
 
-simpleBTPredict<-function(btSimple, home.team, away.team){
-  bta<-BTabilities(update(btSimple, refcat = home.team))[away.team]
-  return(exp(bta)/(1+exp(bta)))
+#' Simple BT Predict Game
+#'
+#' @param btSimple simple Bradley Terry Model
+#' @param home.team text home team
+#' @param away.team text away team
+#'
+#' @return odd for a home team win from 0-1
+#' @export
+simpleBTPredict<-function(btModel, home.team, away.team){
+  bthome<-btModel$coefficients[['at.home']]
+  bta<-BradleyTerry2::BTabilities(btModel)[away.team,][[1]]
+  bth<-BradleyTerry2::BTabilities(btModel)[home.team,][[1]]
+
+  lambda<-bth-bta + bthome
+
+  return(exp(lambda)/(1+exp(lambda)))
 }
 
 #' Fit Simple BradleyTerry Model
@@ -162,17 +186,15 @@ fitBTSimple <- function(scores=HockeyModel::scores, subset_from = '2016-08-01'){
     dplyr::summarise(home.wins = sum(Result>0.5), away.wins = sum(Result<0.5)) %>%
     as.data.frame()
 
-  #The term + (1|team) allows for random effects
+  sc$home.team<-data.frame(team = sc$home.team, at.home = 1)
+  sc$away.team<-data.frame(team = sc$away.team, at.home = 0)
+
   fittedBTSimple<-BradleyTerry2::BTm(outcome = cbind(home.wins, away.wins),
                                player1 = home.team,
                                player2 = away.team,
                                data = sc,
+                               formula = ~team + at.home,
                                id = "team")
-
-  sc$home.team<-data.frame(team = sc$home.team, at.home = 1)
-  sc$away.team<-data.frame(team = sc$away.team, at.home = 0)
-
-  fittedBTSimple <- update(fittedBTSimple, formula = ~ team + at.home)
 
   return(fittedBTSimple)
 }

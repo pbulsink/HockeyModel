@@ -91,7 +91,7 @@
 #' @format a single numerical value
 "rho"
 
-#' Bradley-Terry model
+#' Generalized Davidson Bradley-Terry model
 #' Results of fitting Bradley Terry Model with Generalized Davidson terms
 #'
 #' @format a gnm Bradley Terry Davidson model
@@ -102,6 +102,12 @@
 #'
 #' @format a data frame
 "dataBT"
+
+#' Simple Bradley-Terry model
+#' Results of fitting Bradley Terry Model
+#'
+#' @format a gnm Bradley Terry Davidson model
+"fittedBTSimple"
 
 #' Update Schedule
 #'
@@ -137,3 +143,5 @@ updateScores <- function(data_dir = "./data-raw"){
   }
   return(TRUE)
 }
+
+

@@ -106,6 +106,7 @@ dc1.16p <- remainderSeasonDC(scores = NULL, schedule = sc17, m=dc1.16m, rho=dc1.
 dc1.16 <- simulateSeasonParallel(odds_table = dc1.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
 
 bt.16<-NULL
+btgd.16<-NULL
 ml.16<-NULL
 
 
@@ -119,18 +120,21 @@ gameLogLoss = list('elo' = LogLoss(y_pred = elo.16p$HomeWin+0.20*elo.16p$HomeWin
                    'dc5' = LogLoss(y_pred = dc5.16p$HomeWin+dc5.16p$Draw*dc5.16p$HomeWin, y_true = results17$Result),
                    'dc1' = LogLoss(y_pred = dc1.16p$HomeWin+dc1.16p$Draw*dc1.16p$HomeWin, y_true = results17$Result),
                    'bt' = 10000,
+                   'btgd' = 10000,
                    'ml' = 10000)
 gameAccuracy = list('elo' = accuracy(pWin = elo.16p$HomeWin+0.20*elo.16p$HomeWin, result = results17$Result),
                     'dc10' = accuracy(pWin = dc10.16p$HomeWin+dc10.16p$Draw*dc10.16p$HomeWin, result = results17$Result),
                     'dc5' = accuracy(pWin = dc5.16p$HomeWin+dc5.16p$Draw*dc5.16p$HomeWin, result = results17$Result),
                     'dc1' = accuracy(pWin = dc1.16p$HomeWin+dc1.16p$Draw*dc1.16p$HomeWin, result = results17$Result),
                     'bt' = 0,
+                    'btgd' = 0,
                     'ml' = 0)
 playoffLogLoss = list('elo' = LogLoss(y_pred = elo.16$Playoffs, y_true = stats17$Playoffs),
                       'dc10' = LogLoss(y_pred = dc10.16$Playoffs, y_true = stats17$Playoffs),
                       'dc5' = LogLoss(y_pred = dc5.16$Playoffs, y_true = stats17$Playoffs),
                       'dc1' = LogLoss(y_pred = dc1.16$Playoffs, y_true = stats17$Playoffs),
                       'bt' = 10000,
+                      'btgd' = 10000,
                       'ml' = 10000)
 playoffAccuracy = list('elo' = accuracy(pWin = elo.16$Playoffs, result = stats17$Playoffs),
                        'dc10' = accuracy(pWin = dc10.16$Playoffs, result = stats17$Playoffs),
@@ -143,9 +147,10 @@ seasonRecovery = list('elo' = recovery(elo.16$meanPoints, elo.16$sdPoints, stats
                       'dc5' = recovery(dc5.16$meanPoints, dc5.16$sdPoints, stats17$Points),
                       'dc1' = recovery(dc1.16$meanPoints, dc1.16$sdPoints, stats17$Points),
                       'bt' = 0,
+                      'btgd' = 0,
                       'ml' = 0)
 
-results = data.frame('model' = c('elo', 'dc','dc5','dc1','bt','ml'), 
+results = data.frame('model' = c('elo', 'dc','dc5','dc1','bt', 'btgd', 'ml'), 
                      'GameLogLoss' = unlist(gameLogLoss),
                      'GameAccuracy' = unlist(gameAccuracy),
                      'PlayoffLogLoss' = unlist(playoffLogLoss),
