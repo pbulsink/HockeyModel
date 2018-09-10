@@ -3,14 +3,14 @@
 \docType{data}
 \name{fittedBT}
 \alias{fittedBT}
-\title{Bradley-Terry model
+\title{Generalized Davidson Bradley-Terry model
 Results of fitting Bradley Terry Model with Generalized Davidson terms}
 \format{a gnm Bradley Terry Davidson model}
 \usage{
 fittedBT
 }
 \description{
-Bradley-Terry model
+Generalized Davidson Bradley-Terry model
 Results of fitting Bradley Terry Model with Generalized Davidson terms
 }
 \keyword{datasets}

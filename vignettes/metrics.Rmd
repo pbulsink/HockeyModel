@@ -105,8 +105,14 @@ dc1.16rho <- HockeyModel:::getRho(scores = scp16[scp16$Date > as.Date("2016-08-0
 dc1.16p <- remainderSeasonDC(scores = NULL, schedule = sc17, m=dc1.16m, rho=dc1.16rho, odds = TRUE)
 dc1.16 <- simulateSeasonParallel(odds_table = dc1.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
 
-bt.16<-NULL
-btgd.16<-NULL
+btfitted <- readRDS("../data-raw/metricBTFitted.RDS")
+bt.16p<-remainderSeasonBT(scores = NULL, schedule = sc17, odds = TRUE, fittedBT = btfitted)
+bt.16<-simulateSeasonParallel(odds_table = bt.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+
+btgdfitted <- readRDS("../data-raw/metricBTGDFitted.RDS")
+btgd.16p<-remainderSeasonBT(scores = NULL, schedule = sc17, odds = TRUE, fittedBT = btgdfitted)
+btgd.16<-simulateSeasonParallel(odds_table = btgd.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+
 ml.16<-NULL
 
 

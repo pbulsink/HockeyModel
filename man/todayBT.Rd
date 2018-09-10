@@ -10,11 +10,12 @@ todayBT(today = Sys.Date(), fittedBT = HockeyModel::fittedBT,
 \arguments{
 \item{today}{Date to predict, optional}
 
-\item{fittedBT}{The bt model as HockeyModel::fittedBT}
+\item{fittedBT}{The bt model (Generalized Davidson or simple BT) as HockeyModel::fittedBT or HockeyModel::fittedBTSimple}
 
 \item{schedule}{the future's schedule from HockeyModel::schedule}
-
-\item{btdata}{The original btdata frame from HockeyModel::dataBT}
+}
+\value{
+a data frame of home win, away win, and draw odds.
 }
 \description{
 Predict Today's results using BT

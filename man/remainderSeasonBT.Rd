@@ -5,7 +5,8 @@
 \title{BT remainder of season}
 \usage{
 remainderSeasonBT(nsims = 10000, scores = HockeyModel::scores,
-  schedule = HockeyModel::schedule)
+  schedule = HockeyModel::schedule, fittedBT = HockeyModel::fittedBT,
+  odds = FALSE, ...)
 }
 \arguments{
 \item{nsims}{Number of simulations}
@@ -13,6 +14,10 @@ remainderSeasonBT(nsims = 10000, scores = HockeyModel::scores,
 \item{scores}{the historical scores}
 
 \item{schedule}{uplayed future games}
+
+\item{odds}{Whether to return raw odds (TRUE) or go to simulation.}
+
+\item{...}{additional parameters to pass to season simulation (in parallel)}
 }
 \value{
 data frame of Team, playoff odds.

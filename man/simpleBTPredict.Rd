@@ -7,9 +7,14 @@
 simpleBTPredict(btModel, home.team, away.team)
 }
 \arguments{
-\item{away.team}{}
+\item{home.team}{text home team}
+
+\item{away.team}{text away team}
 
 \item{btSimple}{simple Bradley Terry Model}
+}
+\value{
+odd for a home team win from 0-1
 }
 \description{
 Simple BT Predict Game

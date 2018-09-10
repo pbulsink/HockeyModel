@@ -66,10 +66,12 @@ todayBT <- function(today = Sys.Date(), fittedBT=HockeyModel::fittedBT, schedule
 #' @param nsims Number of simulations
 #' @param scores the historical scores
 #' @param schedule uplayed future games
+#' @param odds Whether to return raw odds (TRUE) or go to simulation.
+#' @param ... additional parameters to pass to season simulation (in parallel)
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonBT <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule){
+remainderSeasonBT <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, fittedBT = HockeyModel::fittedBT, odds = FALSE, ...){
   season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
 
   season_sofar <- season_sofar[c('Date','HomeTeam','AwayTeam','Result'),]
@@ -78,13 +80,17 @@ remainderSeasonBT <- function(nsims=10000, scores = HockeyModel::scores, schedul
                          stringsAsFactors = FALSE)
 
   for(d in unique(schedule$Date)){
-    preds<-todayBT(today=d)
+    preds<-todayBT(today=d, fittedBT = fittedBT, schedule = schedule)
     preds$Date <- d
     odds_table<-rbind(odds_table, preds)
   }
   odds_table$Date<-schedule$Date
 
-  summary_results <- simulateSeason(odds_table, nsims, scores, schedule)
+  if(odds){
+    return(odds_table)
+  }
+
+  summary_results <- simulateSeasonParallel(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule, ...)
 
   return(summary_results)
 }
