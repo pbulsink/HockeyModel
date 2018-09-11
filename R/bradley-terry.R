@@ -46,11 +46,11 @@ todayBT <- function(today = Sys.Date(), fittedBT=HockeyModel::fittedBT, schedule
       preds$AwayWin[[i]]<-p[[3]]
       preds$Draw[[i]]<-p[[2]]
     }
-  } else if ('BTm' %in% fittedBT){ #BradleyTerry Simple Model
+  } else if ('BTm' %in% class(fittedBT)){ #BradleyTerry Simple Model
     for(i in 1:nrow(games)){
-      p<-normalizeOdds(simpleBTPredict(btModel = fittedBT,
-                                       home.team = games[i, 'HomeTeam'],
-                                       away.team = games[i, 'AwayTeam']))
+      p<-simpleBTPredict(btModel = fittedBT,
+                         home.team = as.character(games[i, 'HomeTeam']),
+                         away.team = as.character(games[i, 'AwayTeam']))
       preds$HomeWin[[i]]<-p - 0.20*p
       preds$AwayWin[[i]]<-(1-p) - (0.20*(1-p))
       preds$Draw[[i]]<-0.20

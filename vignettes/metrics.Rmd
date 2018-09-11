@@ -85,33 +85,55 @@ accuracy<-function(pWin, result){
 Now we can use our models to make some predictions. We'll do the elo model, dixon-coles (as well as dixon coles on 1 and 5 years of history only), and more. 
 ```{r model, warning=FALSE, eval=FALSE}
 n <- 10000 # number of season simulations to get odds.
+cores <- 10 # number of cores to use in simulations
 
+cat('Elo')
+e15<-HockeyModel:::calculateEloRatings(sc15, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
+elo.15p<-remainderSeasonELO(scores = NULL, schedule = r16, elos = e15, odds = TRUE)
+elo.15<-simulateSeasonParallel(odds_table = elo.16p, nsims = n, scores = NULL, schedule = r16, cores = cores)$summary_results
 e16<-HockeyModel:::calculateEloRatings(sc16, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
-elo.16p<-remainderSeasonELO(scores = NULL, schedule = sc17, elos = e16, odds = TRUE)
-elo.16<-simulateSeasonParallel(odds_table = elo.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+elo.16p<-remainderSeasonELO(scores = NULL, schedule = r17, elos = e16, odds = TRUE)
+elo.16<-simulateSeasonParallel(odds_table = elo.16p, nsims = n, scores = NULL, schedule = r17, cores = cores)$summary_results
 
+cat("DC 10 year")
+dc10.15m <- HockeyModel:::getM(scores = sc15[sc15$Date > as.Date("2006-08-01"),], currentDate = as.Date('2016-10-02'))
+dc10.15rho <- HockeyModel:::getRho(scores = sc15[sc15$Date > as.Date("2006-08-01"),], m = dc10.15m)
+dc10.15p <- remainderSeasonDC(scores = NULL, schedule = r16, m=dc10.15m, rho=dc10.15rho, odds = TRUE)
+dc10.15 <- simulateSeasonParallel(odds_table = dc10.15p, nsims = n, scores = NULL, schedule = r16, cores = cores)$summary_results
 dc10.16m <- HockeyModel:::getM(scores = scp16[scp16$Date > as.Date("2007-08-01"),], currentDate = as.Date('2017-10-02'))
 dc10.16rho <- HockeyModel:::getRho(scores = scp16[scp16$Date > as.Date("2007-08-01"),], m = dc10.16m)
-dc10.16p <- remainderSeasonDC(scores = NULL, schedule = sc17, m=dc10.16m, rho=dc10.16rho, odds = TRUE)
-dc10.16 <- simulateSeasonParallel(odds_table = dc10.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+dc10.16p <- remainderSeasonDC(scores = NULL, schedule = r17, m=dc10.16m, rho=dc10.16rho, odds = TRUE)
+dc10.16 <- simulateSeasonParallel(odds_table = dc10.16p, nsims = n, scores = NULL, schedule = r17, cores = cores)$summary_results
 
+cat("DC 5 year")
+dc5.15m <- HockeyModel:::getM(scores = sc15[sc15$Date > as.Date("2011-08-01"),], currentDate = as.Date('2016-10-02'))
+dc5.15rho <- HockeyModel:::getRho(scores = sc15[sc15$Date > as.Date("2011-08-01"),], m = dc5.15m)
+dc5.15p <- remainderSeasonDC(scores = NULL, schedule = r16, m=dc5.15m, rho=dc5.15rho, odds = TRUE)
+dc5.15 <- simulateSeasonParallel(odds_table = dc5.15p, nsims = n, scores = NULL, schedule = r16, cores = cores)$summary_results
 dc5.16m <- HockeyModel:::getM(scores = scp16[scp16$Date > as.Date("2012-08-01"),], currentDate = as.Date('2017-10-02'))
-dc5.16rho <- HockeyModel:::getRho(scores = scp16[scp16$Date > as.Date("2012-08-01"),], m = dc10.16m)
-dc5.16p <- remainderSeasonDC(scores = NULL, schedule = sc17, m=dc5.16m, rho=dc5.16rho, odds = TRUE)
-dc5.16 <- simulateSeasonParallel(odds_table = dc5.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+dc5.16rho <- HockeyModel:::getRho(scores = scp16[scp16$Date > as.Date("2012-08-01"),], m = dc5.16m)
+dc5.16p <- remainderSeasonDC(scores = NULL, schedule = r17, m=dc5.16m, rho=dc5.16rho, odds = TRUE)
+dc5.16 <- simulateSeasonParallel(odds_table = dc5.16p, nsims = n, scores = NULL, schedule = r17, cores = cores)$summary_results
 
+cat("DC 1 year")
+dc1.15m <- HockeyModel:::getM(scores = sc15[sc15$Date > as.Date("2015-08-01"),], currentDate = as.Date('2016-10-02'))
+dc1.15rho <- HockeyModel:::getRho(scores = sc15[sc15$Date > as.Date("2015-08-01"),], m = dc1.15m)
+dc1.15p <- remainderSeasonDC(scores = NULL, schedule = r16, m=dc1.15m, rho=dc1.15rho, odds = TRUE)
+dc1.15 <- simulateSeasonParallel(odds_table = dc1.15p, nsims = n, scores = NULL, schedule = r16, cores = cores)$summary_results
 dc1.16m <- HockeyModel:::getM(scores = scp16[scp16$Date > as.Date("2016-08-01"),], currentDate = as.Date('2017-10-02'))
 dc1.16rho <- HockeyModel:::getRho(scores = scp16[scp16$Date > as.Date("2016-08-01"),], m = dc1.16m)
-dc1.16p <- remainderSeasonDC(scores = NULL, schedule = sc17, m=dc1.16m, rho=dc1.16rho, odds = TRUE)
-dc1.16 <- simulateSeasonParallel(odds_table = dc1.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+dc1.16p <- remainderSeasonDC(scores = NULL, schedule = r17, m=dc1.16m, rho=dc1.16rho, odds = TRUE)
+dc1.16 <- simulateSeasonParallel(odds_table = dc1.16p, nsims = n, scores = NULL, schedule = r17, cores = cores)$summary_results
 
+cat("BT")
 btfitted <- readRDS("../data-raw/metricBTFitted.RDS")
-bt.16p<-remainderSeasonBT(scores = NULL, schedule = sc17, odds = TRUE, fittedBT = btfitted)
-bt.16<-simulateSeasonParallel(odds_table = bt.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+bt.16p<-remainderSeasonBT(scores = NULL, schedule = r17, odds = TRUE, fittedBT = btfitted)
+bt.16<-simulateSeasonParallel(odds_table = bt.16p, nsims = n, scores = NULL, schedule = r17, cores = cores)$summary_results
 
+cat("BT GD")
 btgdfitted <- readRDS("../data-raw/metricBTGDFitted.RDS")
-btgd.16p<-remainderSeasonBT(scores = NULL, schedule = sc17, odds = TRUE, fittedBT = btgdfitted)
-btgd.16<-simulateSeasonParallel(odds_table = btgd.16p, nsims = n, scores = NULL, schedule = sc17, cores = 10)$summary_results
+btgd.16p<-remainderSeasonBT(scores = NULL, schedule = r17, odds = TRUE, fittedBT = btgdfitted)
+btgd.16<-simulateSeasonParallel(odds_table = btgd.16p, nsims = n, scores = NULL, schedule = r17, cores = cores)$summary_results
 
 ml.16<-NULL
 
@@ -121,45 +143,46 @@ ml.16<-NULL
 Now that the models are formed, we can test them for their performance. 
 ```{r performance_tests, eval=FALSE}
 library(MLmetrics)
-gameLogLoss = list('elo' = LogLoss(y_pred = elo.16p$HomeWin+0.20*elo.16p$HomeWin, y_true = results17$Result),
+gameLogLoss = list('elo' = LogLoss(y_pred = elo.16p$HomeWin+elo.16p$Draw*elo.16p$HomeWin, y_true = results17$Result),
                    'dc10' = LogLoss(y_pred = dc10.16p$HomeWin+dc10.16p$Draw*dc10.16p$HomeWin, y_true = results17$Result),
                    'dc5' = LogLoss(y_pred = dc5.16p$HomeWin+dc5.16p$Draw*dc5.16p$HomeWin, y_true = results17$Result),
                    'dc1' = LogLoss(y_pred = dc1.16p$HomeWin+dc1.16p$Draw*dc1.16p$HomeWin, y_true = results17$Result),
-                   'bt' = 10000,
-                   'btgd' = 10000,
+                   'bt' = LogLoss(y_pred = bt.16p$HomeWin+bt.16p$Draw*bt.16p$HomeWin, y_true = results17$Result),
+                   'btgd' = LogLoss(y_pred = btgd.16p$HomeWin+btgd.16p$Draw*btgd.16p$HomeWin, y_true = results17$Result),
                    'ml' = 10000)
-gameAccuracy = list('elo' = accuracy(pWin = elo.16p$HomeWin+0.20*elo.16p$HomeWin, result = results17$Result),
+gameAccuracy = list('elo' = accuracy(pWin = elo.16p$HomeWin+elo.16p$Draw*elo.16p$HomeWin, result = results17$Result),
                     'dc10' = accuracy(pWin = dc10.16p$HomeWin+dc10.16p$Draw*dc10.16p$HomeWin, result = results17$Result),
                     'dc5' = accuracy(pWin = dc5.16p$HomeWin+dc5.16p$Draw*dc5.16p$HomeWin, result = results17$Result),
                     'dc1' = accuracy(pWin = dc1.16p$HomeWin+dc1.16p$Draw*dc1.16p$HomeWin, result = results17$Result),
-                    'bt' = 0,
-                    'btgd' = 0,
+                    'bt' = accuracy(pWin = bt.16p$HomeWin+bt.16p$Draw*bt.16p$HomeWin, result = results17$Result),
+                    'btgd' = accuracy(pWin = btgd.16p$HomeWin+btgd.16p$Draw*btgd.16p$HomeWin, result = results17$Result),
                     'ml' = 0)
 playoffLogLoss = list('elo' = LogLoss(y_pred = elo.16$Playoffs, y_true = stats17$Playoffs),
                       'dc10' = LogLoss(y_pred = dc10.16$Playoffs, y_true = stats17$Playoffs),
                       'dc5' = LogLoss(y_pred = dc5.16$Playoffs, y_true = stats17$Playoffs),
                       'dc1' = LogLoss(y_pred = dc1.16$Playoffs, y_true = stats17$Playoffs),
-                      'bt' = 10000,
-                      'btgd' = 10000,
+                      'bt' = LogLoss(y_pred = bt.16$Playoffs, y_true = stats17$Playoffs),
+                      'btgd' =LogLoss(y_pred = btgd.16$Playoffs, y_true = stats17$Playoffs),
                       'ml' = 10000)
 playoffAccuracy = list('elo' = accuracy(pWin = elo.16$Playoffs, result = stats17$Playoffs),
                        'dc10' = accuracy(pWin = dc10.16$Playoffs, result = stats17$Playoffs),
                        'dc5' = accuracy(pWin = dc5.16$Playoffs, result = stats17$Playoffs),
                        'dc1' = accuracy(pWin = dc1.16$Playoffs, result = stats17$Playoffs),
-                       'bt' = 0,
+                       'bt' = accuracy(pWin = bt.16$Playoffs, result = stats17$Playoffs),
+                       'btgd' = accuracy(pWin = btgd.16$Playoffs, result = stats17$Playoffs),
                        'ml' = 0)
 seasonRecovery = list('elo' = recovery(elo.16$meanPoints, elo.16$sdPoints, stats17$Points),
                       'dc10' = recovery(dc10.16$meanPoints, dc10.16$sdPoints, stats17$Points),
                       'dc5' = recovery(dc5.16$meanPoints, dc5.16$sdPoints, stats17$Points),
                       'dc1' = recovery(dc1.16$meanPoints, dc1.16$sdPoints, stats17$Points),
-                      'bt' = 0,
-                      'btgd' = 0,
+                      'bt' = recovery(bt.16$meanPoints, bt.16$sdPoints, stats17$Points),
+                      'btgd' = recovery(btgd.16$meanPoints, btgd.16$sdPoints, stats17$Points),
                       'ml' = 0)
 
-results = data.frame('model' = c('elo', 'dc','dc5','dc1','bt', 'btgd', 'ml'), 
-                     'GameLogLoss' = unlist(gameLogLoss),
-                     'GameAccuracy' = unlist(gameAccuracy),
-                     'PlayoffLogLoss' = unlist(playoffLogLoss),
-                     'PlayoffAccuracy' = unlist(playoffAccuracy),
-                     'SeasonRecovery' = unlist(seasonRecovery))
+results = tibble::tibble('model' = c('elo', 'dc','dc5','dc1','bt', 'btgd', 'ml'), 
+                         'GameLogLoss' = unlist(gameLogLoss),
+                         'GameAccuracy' = unlist(gameAccuracy),
+                         'PlayoffLogLoss' = unlist(playoffLogLoss),
+                         'PlayoffAccuracy' = unlist(playoffAccuracy),
+                         'SeasonRecovery' = unlist(seasonRecovery))
 ```
