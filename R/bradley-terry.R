@@ -167,7 +167,7 @@ simpleBTPredict<-function(btModel, home.team, away.team){
 #'
 #' @return a gnm fit model
 #' @export
-fitBTSimple <- function(scores=HockeyModel::scores, subset_from = '2016-08-01'){
+fitBTSimple <- function(scores=HockeyModel::scores, subset_from = as.Date('2016-08-01')){
   if(!is.null(subset_from)){
     if(as.Date(subset_from)>Sys.Date()){
       stop('subset_from date must be in past')
