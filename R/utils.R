@@ -20,19 +20,53 @@ cleanModel <- function(cm) {
 #' @return a character season id (e.g. 20172018)
 #' @export
 getSeason <- function(gamedate){
-  year<-as.integer(strftime(gamedate, '%Y'))
-  month<-as.integer(strftime(gamedate, '%m'))
-  if(month < 8){
-    return(paste0(year-1,year))
-  } else {
-    return(paste0(year,year+1))
+  gs<-function(gd){
+    year<-as.integer(strftime(gamedate, '%Y'))
+    month<-as.integer(strftime(gamedate, '%m'))
+    if(month < 8){
+      return(paste0(year-1,year))
+    } else {
+      return(paste0(year,year+1))
+    }
+  }
+  vgs<-Vectorize(gs)
+
+
+  if(length(gamedate) == 1)
+    return(gs(gd))
+  else if (length(gamedate) > 1) {
+    return(vgs(gd))
   }
 }
-
-vGetSeason<-Vectorize(getSeason)
 
 normalizeOdds<-function(odds){
   odds<-unlist(odds)
   odds<-odds/sum(odds)
   return(odds)
+}
+
+historicalPoints<-function(sc){
+  points<-tibble::tibble(Team = character(), Season = character(), Points = integer())
+
+  for (i in unique(sc$Season)){
+    if(i == "20122013"){
+      next
+    }
+    if(i == "20172018"){
+      ngames<-1271
+    } else {
+      ngames<-1230
+    }
+
+    s<-sc[sc$Season == i,]
+    s<-sc[1:ngames, ]
+    b<-buildStats(s)
+    b$Season <- i
+
+
+    points<-dplyr::bind_rows(points, b[,colnames(b) %in% c('Team', 'Season', 'Points')])
+
+  }
+
+  return(points)
 }
