@@ -68,10 +68,11 @@ remainderSeasonELO <- function(nsims=10000, scores = HockeyModel::scores, schedu
 #' @param today Generate predictions for this date. Defaults to today
 #' @param elos Elo History (to extract last value)
 #' @param schedule shcedule to use, if not the builtin
+#' @param pDraw The odds of a draw. Set to 0 for simple win/loss
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
 #' @export
-todayELO <- function(today = Sys.Date(), elos = HockeyModel::elos, schedule = HockeyModel::schedule){
+todayELO <- function(today = Sys.Date(), elos = HockeyModel::elos, schedule = HockeyModel::schedule, pDraw = 0.20){
   games<-schedule[schedule$Date == today, ]
   if(nrow(games) == 0){
     return(NULL)
@@ -89,9 +90,10 @@ todayELO <- function(today = Sys.Date(), elos = HockeyModel::elos, schedule = Ho
     a<-make.names(preds$AwayTeam[[i]])
 
     p<-predictEloResult(home_rank = e[,colnames(e) == h], away_rank = e[,colnames(e) == a])
-    preds$HomeWin[[i]]<-p - 0.20*p
-    preds$AwayWin[[i]]<-(1-p) - (0.20*(1-p))
-    preds$Draw[[i]]<-0.20
+
+    preds$HomeWin[[i]]<-p - pDraw*p
+    preds$AwayWin[[i]]<-(1-p) - (pDraw*(1-p))
+    preds$Draw[[i]]<-pDraw
   }
 
   return(preds)

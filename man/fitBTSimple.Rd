@@ -4,7 +4,8 @@
 \alias{fitBTSimple}
 \title{Fit Simple BradleyTerry Model}
 \usage{
-fitBTSimple(scores = HockeyModel::scores, subset_from = "2016-08-01")
+fitBTSimple(scores = HockeyModel::scores,
+  subset_from = as.Date("2016-08-01"))
 }
 \arguments{
 \item{subset_from}{date from which (forward) to run BT model.}

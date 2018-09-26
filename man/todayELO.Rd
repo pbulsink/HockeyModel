@@ -5,7 +5,7 @@
 \title{Elo Predictions Today}
 \usage{
 todayELO(today = Sys.Date(), elos = HockeyModel::elos,
-  schedule = HockeyModel::schedule)
+  schedule = HockeyModel::schedule, pDraw = 0.2)
 }
 \arguments{
 \item{today}{Generate predictions for this date. Defaults to today}
@@ -13,6 +13,8 @@ todayELO(today = Sys.Date(), elos = HockeyModel::elos,
 \item{elos}{Elo History (to extract last value)}
 
 \item{schedule}{shcedule to use, if not the builtin}
+
+\item{pDraw}{The odds of a draw. Set to 0 for simple win/loss}
 }
 \value{
 a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
