@@ -1,0 +1,107 @@
+---
+title: "Predictions by Game instead of Season"
+author: "Philip Bulsink"
+date: '2018-09-25'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(HockeyModel)
+library(MLmetrics)
+
+scores15<-HockeyModel::scores
+scores15<-scores15[scores15$Date < "2016-08-01",]
+results16<-HockeyModel::scores
+results16<-results16[results16$Date > "2016-08-01",]
+results16<-results16[results16$Date < "2017-08-01",]
+schedule16<-results16[,c("Date", "HomeTeam", "AwayTeam")]
+schedule16<-schedule16[c(1:1230),]
+
+scores16<-HockeyModel::scores
+scores16<-scores16[scores16$Date < "2016-08-01",]
+results17<-HockeyModel::scores
+results17<-results17[results17$Date > "2016-08-01",]
+results17<-results17[results17$Date < "2017-08-01",]
+schedule17<-results17[,c("Date", "HomeTeam", "AwayTeam")]
+```
+
+## Evaluating by Game instead of by Season
+
+Peformance measures can be done by game, instead of by season. 
+
+The first metrics analysis I performed looked at results for a coming season. This is fun, but less useful in February when we start looking at how a team is doing this year instead of last. 
+
+Lets look at the performance of Elo and Dixon Coles (log loss and accuracy) for the 2016-2017 season.
+
+```{r elo1617}
+elo<-HockeyModel:::calculateEloRatings(scores15, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
+
+eloResults<-results16[c(1:1230),]
+eloResults$pHome <- NA
+eloResults$pAway <- NA
+
+for(gameday in unique(schedule16$Date)){
+  todayp<-todayELO(today = gameday, elos = elo, schedule = schedule16, pDraw = 0)
+  
+  eloResults[eloResults$Date == gameday,]$pHome<-todayp$HomeWin
+  eloResults[eloResults$Date == gameday,]$pAway<-todayp$AwayWin
+  
+  todayscores<-results16[results16$Date == gameday, ]
+  elo<-HockeyModel:::calculateEloRatings(todayscores[,c('Date','HomeTeam','AwayTeam','HomeGoals','AwayGoals', 'Result')], ratings_history = elo, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
+}
+elo.ll.1617 <- LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
+elo.acc.1617 <- Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
+
+message("Log Loss: ", elo.ll.1617)
+message("Accuracy: ", elo.acc.1617)
+```
+
+```{r elo1718, eval = TRUE, echo=FALSE}
+eloResults<-results17[c(1:1271),]
+eloResults$pHome <- NA
+eloResults$pAway <- NA
+
+for(gameday in unique(schedule17)){
+  todayp<-todayELO(today = gameday, elos = elo, schedule = schedule16, pDraw = 0)
+  
+  eloResults[eloResults$Date == gameday]$pHome<-todayp$HomeWin
+  eloResults[eloResults$Date == gameday]$pAway<-todayp$AwayWin
+  
+  todayscores<-results17[results17$Date == gameday, ]
+  elo<-HockeyModel:::calculateEloRatings(todayscores[,c('Date','HomeTeam','AwayTeam','HomeGoals','AwayGoals', 'Result')], ratings_history = elo, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
+}
+elo.ll.1718 <- LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
+elo.acc.1718 <- Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
+```
+Similarly, for 2017-2018, we get a Log Loss of `r elo.ll.1718` and Accuracy of `r elo.acc.1718`.
+
+With this same technique, we'll analyze Dixon-Coles.
+```{r dc1617}
+dc.m <- HockeyModel:::getM(scores = scores15, currentDate = as.Date('2016-10-02'))
+dc.rho <- HockeyModel:::getRho(scores = scores15, m = dc.m)
+
+dcResults<-results16[c(1:1230),]
+dcResults$pHome <- NA
+dcResults$pAway <- NA
+
+for(gameday in unique(schedule16$Date)){
+  todayp<-todayDC(today = gameday, m = dc.m, rho = dc.rho)
+  
+  dcResults[dcResults$Date == gameday,]$pHome<-todayp$HomeWin
+  dcResults[dcResults$Date == gameday,]$pAway<-todayp$AwayWin
+  dcResults[dcResults$Date == gameday,]$pDraw<-todayp$Draw
+  
+  todayscores<-rbind(scores15, results16[results16$Date <= gameday, ])
+  dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = gameday)
+  dc.rho <- HockeyModel:::getRho(scores = todayscores, m = dc.m)
+}
+dc.ll.1617 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
+dc.acc.1617 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
+
+message("Log Loss: ", dc.ll.1617)
+message("Accuracy: ", dc.acc.1617)
+```
+
+Of course, Dixon-Coles has no default ability, so to predict for the beginning of 1718
