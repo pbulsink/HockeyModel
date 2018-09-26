@@ -1,7 +1,7 @@
 ---
 title: "Predictions by Game instead of Season"
 author: "Philip Bulsink"
-date: '2018-09-25'
+date: '2018-09-26'
 output: html_document
 ---
 
@@ -22,9 +22,10 @@ schedule16<-schedule16[c(1:1230),]
 scores16<-HockeyModel::scores
 scores16<-scores16[scores16$Date < "2016-08-01",]
 results17<-HockeyModel::scores
-results17<-results17[results17$Date > "2016-08-01",]
-results17<-results17[results17$Date < "2017-08-01",]
+results17<-results17[results17$Date > "2017-08-01",]
+results17<-results17[results17$Date < "2018-08-01",]
 schedule17<-results17[,c("Date", "HomeTeam", "AwayTeam")]
+schedule17<-schedule17[c(1:1271),]
 ```
 
 ## Evaluating by Game instead of by Season
@@ -63,11 +64,11 @@ eloResults<-results17[c(1:1271),]
 eloResults$pHome <- NA
 eloResults$pAway <- NA
 
-for(gameday in unique(schedule17)){
-  todayp<-todayELO(today = gameday, elos = elo, schedule = schedule16, pDraw = 0)
+for(gameday in unique(schedule17$Date)){
+  todayp<-todayELO(today = gameday, elos = elo, schedule = schedule17, pDraw = 0)
   
-  eloResults[eloResults$Date == gameday]$pHome<-todayp$HomeWin
-  eloResults[eloResults$Date == gameday]$pAway<-todayp$AwayWin
+  eloResults[eloResults$Date == gameday,]$pHome<-todayp$HomeWin
+  eloResults[eloResults$Date == gameday,]$pAway<-todayp$AwayWin
   
   todayscores<-results17[results17$Date == gameday, ]
   elo<-HockeyModel:::calculateEloRatings(todayscores[,c('Date','HomeTeam','AwayTeam','HomeGoals','AwayGoals', 'Result')], ratings_history = elo, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
@@ -87,7 +88,7 @@ dcResults$pHome <- NA
 dcResults$pAway <- NA
 
 for(gameday in unique(schedule16$Date)){
-  todayp<-todayDC(today = gameday, m = dc.m, rho = dc.rho)
+  todayp<-todayDC(today = gameday, schedule = schedule16, m = dc.m, rho = dc.rho)
   
   dcResults[dcResults$Date == gameday,]$pHome<-todayp$HomeWin
   dcResults[dcResults$Date == gameday,]$pAway<-todayp$AwayWin
@@ -104,4 +105,27 @@ message("Log Loss: ", dc.ll.1617)
 message("Accuracy: ", dc.acc.1617)
 ```
 
-Of course, Dixon-Coles has no default ability, so to predict for the beginning of 1718
+```{r dc1718, echo=FALSE}
+dc.m <- HockeyModel:::getM(scores = scores16, currentDate = as.Date('2017-10-02'))
+dc.rho <- HockeyModel:::getRho(scores = scores16, m = dc.m)
+
+dcResults<-results16[c(1:1271),]
+dcResults$pHome <- NA
+dcResults$pAway <- NA
+
+for(gameday in unique(schedule17$Date)){
+  todayp<-todayDC(today = gameday, schedule = schedule17, m = dc.m, rho = dc.rho)
+  
+  dcResults[dcResults$Date == gameday,]$pHome<-todayp$HomeWin
+  dcResults[dcResults$Date == gameday,]$pAway<-todayp$AwayWin
+  dcResults[dcResults$Date == gameday,]$pDraw<-todayp$Draw
+  
+  todayscores<-rbind(scores15, results17[results17$Date <= gameday, ])
+  dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = gameday)
+  dc.rho <- HockeyModel:::getRho(scores = todayscores, m = dc.m)
+}
+dc.ll.1718 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
+dc.acc.1718 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
+```
+
+And likewise for 2017-2018, we get a Log Loss of `r dc.ll.1718` and accuracy of `r dc.acc.1718`.

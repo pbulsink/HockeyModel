@@ -25,7 +25,8 @@ Imports:
     doSNOW,
     caret,
     zoo,
-    foreach
+    foreach,
+    rlist
 Remotes:
   pbulsink/HockeyScrapR
   thomasp85/gganimate

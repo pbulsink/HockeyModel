@@ -234,11 +234,19 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
   if(is.null(rho)){
     rho <- getRho(m=m, scores=scores)
   }
+
   # Expected goals home
-  lambda <- stats::predict(m, data.frame(Home = 1, Team = home, Opponent = away), type = "response")
+  lambda <- try(stats::predict(m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
 
   # Expected goals away
-  mu <- stats::predict(m, data.frame(Home = 0, Team = away, Opponent = home), type = "response")
+  mu<-try(stats::predict(m, data.frame(Home = 0, Team = away, Opponent = home), type = "response"), TRUE)
+
+  if(!is.numeric(lambda)){
+    lambda<-DCPredictErrorRecover(team = home, opponent = away, homeiceadv = TRUE)
+  }
+  if(!is.numeric(mu)){
+    mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE)
+  }
 
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
 
@@ -292,4 +300,41 @@ cleanModel <- function(cm) {
   cm$prior.weights <- c()
 
   cm
+}
+
+DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyModel::m){
+  teamlist<-unique(m$data$Team)
+  opponentlist<-unique(m$data$Opponent)
+
+  if(homeiceadv){
+    homeice<-m$coefficients['Home']
+  } else {
+    homeice<-0
+  }
+
+  if(!(team %in% teamlist) & !(opponent %in% opponentlist)){
+    lambda <- NA
+  } else if(!(team %in% teamlist)){
+    teamp<-min(rlist::list.match(m$coefficients, 'Team'))  # lowest goals scored for new team
+    opponentp<-m$coefficients[paste0('Opponent', opponent)]
+
+    lambda<-exp(teamp+opponentp+homeice)
+  } else if (!(opponent %in% opponentlist)){
+    teamp<-m$coefficients[paste0('Team', team)]
+    opponentp<-max(rlist::list.match(m$coefficients, 'Opponent'))  # most goals allowed for new team
+
+    lambda<-exp(teamp+opponentp+homeice)
+  } else {
+    lambda <- NA
+  }
+
+  if(is.na(lambda)){
+    if(homeiceadv){
+      lambda <- 3.319624 #Historical home goals
+    } else {
+      lambda <- 2.827417
+    }
+  }
+
+  return(unname(lambda))
 }
