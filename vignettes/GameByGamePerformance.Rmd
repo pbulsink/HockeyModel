@@ -18,6 +18,7 @@ results16<-results16[results16$Date > "2016-08-01",]
 results16<-results16[results16$Date < "2017-08-01",]
 schedule16<-results16[,c("Date", "HomeTeam", "AwayTeam")]
 schedule16<-schedule16[c(1:1230),]
+schedule16$Date<-as.character(schedule16$Date)
 
 scores16<-HockeyModel::scores
 scores16<-scores16[scores16$Date < "2016-08-01",]
@@ -26,6 +27,7 @@ results17<-results17[results17$Date > "2017-08-01",]
 results17<-results17[results17$Date < "2018-08-01",]
 schedule17<-results17[,c("Date", "HomeTeam", "AwayTeam")]
 schedule17<-schedule17[c(1:1271),]
+schedule17$Date<-as.character(schedule17$Date)
 ```
 
 ## Evaluating by Game instead of by Season
@@ -59,7 +61,7 @@ message("Log Loss: ", elo.ll.1617)
 message("Accuracy: ", elo.acc.1617)
 ```
 
-```{r elo1718, eval = TRUE, echo=FALSE}
+```{r elo1718, echo=FALSE, message=FALSE, warning=FALSE}
 eloResults<-results17[c(1:1271),]
 eloResults$pHome <- NA
 eloResults$pAway <- NA
@@ -79,24 +81,31 @@ elo.acc.1718 <- Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloRes
 Similarly, for 2017-2018, we get a Log Loss of `r elo.ll.1718` and Accuracy of `r elo.acc.1718`.
 
 With this same technique, we'll analyze Dixon-Coles.
+```{r trimScores, echo=FALSE, message=FALSE, warning=FALSE}
+scores15<-scores15[scores15$Date > "2005-08-01",]
+scores15<-droplevels(scores15)
+scores16<-scores16[scores16$Date > "2006-08-01",]
+scores16<-droplevels(scores16)
+```
+
 ```{r dc1617}
-dc.m <- HockeyModel:::getM(scores = scores15, currentDate = as.Date('2016-10-02'))
-dc.rho <- HockeyModel:::getRho(scores = scores15, m = dc.m)
+dc.m <- HockeyModel:::getM(scores = scores15, currentDate = as.Date('2016-10-12'))
+dc.rho <- suppressWarnings(HockeyModel:::getRho(scores = scores15, m = dc.m))
 
 dcResults<-results16[c(1:1230),]
 dcResults$pHome <- NA
 dcResults$pAway <- NA
+dcResults$pDraw <- NA
 
 for(gameday in unique(schedule16$Date)){
-  todayp<-todayDC(today = gameday, schedule = schedule16, m = dc.m, rho = dc.rho)
+  todayp<-todayDC(today = as.Date(gameday), schedule = schedule16, m = dc.m, rho = dc.rho)
   
-  dcResults[dcResults$Date == gameday,]$pHome<-todayp$HomeWin
-  dcResults[dcResults$Date == gameday,]$pAway<-todayp$AwayWin
-  dcResults[dcResults$Date == gameday,]$pDraw<-todayp$Draw
+  dcResults[dcResults$Date == as.Date(gameday),]$pHome<-todayp$HomeWin
+  dcResults[dcResults$Date == as.Date(gameday),]$pAway<-todayp$AwayWin
+  dcResults[dcResults$Date == as.Date(gameday),]$pDraw<-todayp$Draw
   
-  todayscores<-rbind(scores15, results16[results16$Date <= gameday, ])
-  dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = gameday)
-  dc.rho <- HockeyModel:::getRho(scores = todayscores, m = dc.m)
+  todayscores<-rbind(scores15, results16[results16$Date <= as.Date(gameday), ])
+  dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = as.Date(gameday))
 }
 dc.ll.1617 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
 dc.acc.1617 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
@@ -105,27 +114,27 @@ message("Log Loss: ", dc.ll.1617)
 message("Accuracy: ", dc.acc.1617)
 ```
 
-```{r dc1718, echo=FALSE}
-dc.m <- HockeyModel:::getM(scores = scores16, currentDate = as.Date('2017-10-02'))
-dc.rho <- HockeyModel:::getRho(scores = scores16, m = dc.m)
+```{r dc1718, echo=FALSE, message=FALSE, warning=FALSE}
+dc.m <- HockeyModel:::getM(scores = scores16, currentDate = as.Date('2017-10-04'))
+dc.rho <- suppressWarnings(HockeyModel:::getRho(scores = scores16, m = dc.m))
 
-dcResults<-results16[c(1:1271),]
+dcResults<-results17[c(1:1271),]
 dcResults$pHome <- NA
 dcResults$pAway <- NA
+dcResults$pDraw <- NA
 
 for(gameday in unique(schedule17$Date)){
-  todayp<-todayDC(today = gameday, schedule = schedule17, m = dc.m, rho = dc.rho)
+  todayp<-todayDC(today = as.Date(gameday), schedule = schedule17, m = dc.m, rho = dc.rho)
   
-  dcResults[dcResults$Date == gameday,]$pHome<-todayp$HomeWin
-  dcResults[dcResults$Date == gameday,]$pAway<-todayp$AwayWin
-  dcResults[dcResults$Date == gameday,]$pDraw<-todayp$Draw
+  dcResults[dcResults$Date == as.Date(gameday),]$pHome<-todayp$HomeWin
+  dcResults[dcResults$Date == as.Date(gameday),]$pAway<-todayp$AwayWin
+  dcResults[dcResults$Date == as.Date(gameday),]$pDraw<-todayp$Draw
   
-  todayscores<-rbind(scores15, results17[results17$Date <= gameday, ])
-  dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = gameday)
-  dc.rho <- HockeyModel:::getRho(scores = todayscores, m = dc.m)
+  todayscores<-rbind(scores16, results17[results17$Date <= as.Date(gameday), ])
+  dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = as.Date(gameday))
 }
 dc.ll.1718 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
 dc.acc.1718 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
 ```
 
-And likewise for 2017-2018, we get a Log Loss of `r dc.ll.1718` and accuracy of `r dc.acc.1718`.
+And likewise for 2017-2018, we get a Log Loss of `r dc.ll.1718` and accuracy of `r dc.acc.1718`. Much better than Elo prediction!!
