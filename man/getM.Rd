@@ -4,15 +4,20 @@
 \alias{getM}
 \title{Fast Dixon-Coles model fitting 'm'.}
 \usage{
-getM(scores = HockeyModel::scores, currentDate = Sys.Date())
+getM(scores = HockeyModel::scores, currentDate = Sys.Date(),
+  xi = 0.002)
 }
 \arguments{
 \item{scores}{the historical scores to evaluate}
+
+\item{currentDate}{(for date weight adjustment)}
+
+\item{xi}{agressiveness of date weighting}
 }
 \value{
 a model 'm' of dixon coles type parameters.
 }
 \description{
-Produces a
+Produces a DC model
 }
 \keyword{internal}

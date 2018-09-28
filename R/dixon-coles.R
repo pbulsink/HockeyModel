@@ -103,6 +103,100 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
   return(preds)
 }
 
+dcRecalcSeasonPredict<-function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, dc.m = HockeyModel::m, dc.rho = HockeyModel::rho, core = parallell::detectCores(), ...){
+
+  dcscores<-scores[scores$Date > as.Date("2005-08-01"),]
+  dcscores<-droplevels(dcscores)
+
+  dc.m <- getM(scores = dcscores, currentDate = schedule$Date[[1]])
+
+  `%dopar%` <- foreach::`%dopar%`
+  cl<-parallel::makeCluster(cores)
+  doSNOW::registerDoSNOW(cl)
+  pb<-utils::txtProgressBar(max = nsims, style = 3)
+  progress <- function(n) utils::setTxtProgressBar(pb, n)
+  opts <- list(progress = progress)
+  all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts) %dopar% {
+    results<-schedule
+    results$HomeGoals<-NA
+    results$AwayGoals<-NA
+    for(g in 1:nrow(schedule)){
+      home<-schedule$HomeTeam[[g]]
+      away<-schedule$AwayTeam[[g]]
+      # Expected goals home
+      lambda <- try(stats::predict(dc.m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
+
+      # Expected goals away
+      mu<-try(stats::predict(dc.m, data.frame(Home = 0, Team = away, Opponent = home), type = "response"), TRUE)
+
+      if(!is.numeric(lambda)){
+        lambda<-DCPredictErrorRecover(team = home, opponent = away, homeiceadv = TRUE, m = dc.m)
+      }
+      if(!is.numeric(mu)){
+        mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE, m = dc.m)
+      }
+      homegoals<-rpois(lambda = lambda)
+      awaygoals<-rpois(lambda = mu)
+      if(homegoals == awaygoals){
+        if(lambda>mu){
+          if(runif() < 0.6){
+            homegoals <- homegoals + 1
+          } else {
+            awaygoals <- awaygoals + 1
+          }
+        } else {
+          if(runif() < 0.6){
+            awaygoals <- awaygoals + 1
+          } else {
+            homegoals <- homegoals + 1
+          }
+        }
+      }
+
+      results$HomeGoals[[g]] <- homegoals
+      results$AwayGoals[[g]] <- awaygoals
+
+      newscores<-rbind(dcscores, results[results$Date <= g, ])
+
+      dc.m <- getM(scores = newscores, currentDate = schedule$Date[[1]])
+
+    }
+
+    table<-buildStats(results)
+    table
+  }
+  close(pb)
+  parallel::stopCluster(cl)
+  gc(verbose = FALSE)
+
+  summary_results<-all_results %>%
+    dplyr::group_by(!!dplyr::sym('Team')) %>%
+    dplyr::summarise(
+      Playoffs = mean(!!dplyr::sym('Playoffs')),
+      meanPoints = mean(!!dplyr::sym('Points'), na.rm = TRUE),
+      maxPoints = max(!!dplyr::sym('Points'), na.rm = TRUE),
+      minPoints = min(!!dplyr::sym('Points'), na.rm = TRUE),
+      meanWins = mean(!!dplyr::sym('W'), na.rm = TRUE),
+      maxWins = max(!!dplyr::sym('W'), na.rm = TRUE),
+      Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
+      meanRank = mean(!!dplyr::sym('Rank'), na.rm = TRUE),
+      bestRank = min(!!dplyr::sym('Rank'), na.rm = TRUE),
+      meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      meanDivRank = mean(!!dplyr::sym('DivRank'), na.rm = TRUE),
+      bestDivRank = min(!!dplyr::sym('DivRank'), na.rm = TRUE),
+      sdPoints = stats::sd(!!dplyr::sym('Points'), na.rm = TRUE),
+      sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
+      sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
+      sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
+    )
+
+
+  return(list(summary_results = summary_results, raw_results = all_results))
+}
+
+
 #' DC remainder of season
 #' @description Odds for each team to get to playoffs.
 #'
@@ -156,16 +250,18 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 
 #' Fast Dixon-Coles model fitting 'm'.
 #'
-#' @description Produces a
+#' @description Produces a DC model
 #'
 #' @param scores the historical scores to evaluate
+#' @param currentDate (for date weight adjustment)
+#' @param xi agressiveness of date weighting
 #'
 #' @return a model 'm' of dixon coles type parameters.
 #' @keywords internal
-getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date()) {
+getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.002) {
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
-    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = 0.002), DCweights(dates = scores$Date, currentDate = currentDate, xi = 0.002)),
+    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi), DCweights(dates = scores$Date, currentDate = currentDate, xi = 0.002)),
     Team = as.factor(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))),
     Opponent = as.factor(c(as.character(scores$AwayTeam), as.character(scores$HomeTeam))),
     Goals = c(scores$HomeGoals, scores$AwayGoals),
