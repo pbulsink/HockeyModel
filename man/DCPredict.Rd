@@ -26,4 +26,3 @@ a list of home win, draw, and away win probability
 \description{
 Using Dixon Coles technique, predict odds each of home win, draw, and away win.
 }
-\keyword{internal}

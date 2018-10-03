@@ -103,24 +103,62 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
   return(preds)
 }
 
-dcRecalcSeasonPredict<-function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, dc.m = HockeyModel::m, dc.rho = HockeyModel::rho, core = parallell::detectCores(), ...){
+#' DC Simulate season with reevaluation every day
+#'
+#' @param nsims number of simulations
+#' @param scores hisotircal scores
+#' @param schedule schedule this season
+#' @param cores number of cores to process
+#'
+#' @export
+dcRealSeasonPredict<-function(nsims=100000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1){
 
   dcscores<-scores[scores$Date > as.Date("2005-08-01"),]
   dcscores<-droplevels(dcscores)
+  dcscores$Winner <- NULL
+  dcscores$Loser <- NULL
+  dcscores$League <- NULL
+  dcscores$Tie <- NULL
 
-  dc.m <- getM(scores = dcscores, currentDate = schedule$Date[[1]])
+  #Get a tie performance for each team.
+  dcscores.ot<-dcscores[dcscores$OTStatus != '', ]
+  dcscores.ot$minscore<-pmin(dcscores.ot$HomeGoals, dcscores.ot$AwayGoals)
+  dcscores.ot$HomeGoals<-dcscores.ot$HomeGoals-dcscores.ot$minscore
+  dcscores.ot$AwayGoals<-dcscores.ot$AwayGoals-dcscores.ot$minscore
 
+  dcscores$OTStatus <- NULL
+
+  #Generate m
+  dc.m.ot <- getM(scores=dcscores, currentDate = schedule$Date[[1]])
+  dc.m.original <- getM(scores = dcscores, currentDate = schedule$Date[[1]])
+
+  `%do%` <- foreach::`%do%`
   `%dopar%` <- foreach::`%dopar%`
   cl<-parallel::makeCluster(cores)
   doSNOW::registerDoSNOW(cl)
   pb<-utils::txtProgressBar(max = nsims, style = 3)
   progress <- function(n) utils::setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
-  all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts) %dopar% {
+  #all_results <- data.frame(Team = character(), GP = integer(), Points = integer(), W = integer(), L = integer(), OTL = integer(), SOL = integer(), SOW = integer(), Rank = integer(), ConfRank = integer(), DivRank = integer(), Playoffs = integer())
+
+  all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts, .packages=c("HockeyModel")) %dopar%{ #, DCPredictErrorRecover = DCPredictErrorRecover) %dopar% {
+  #for(i in 1:nsims){
+    dc.m <- dc.m.original
     results<-schedule
     results$HomeGoals<-NA
     results$AwayGoals<-NA
+    results$Result<-NA
+
+    lastdate<-schedule$Date[[1]]
+
     for(g in 1:nrow(schedule)){
+      if(schedule$Date[[g]] > lastdate){
+        #New dc.m
+        newscores<-rbind(dcscores, results[results$Date<schedule$Date[[g]], ])
+        dc.m<-getM(scores = newscores, currentDate = schedule$Date[[g]])
+        lastdate<-schedule$Date[[g]]
+      }
+
       home<-schedule$HomeTeam[[g]]
       away<-schedule$AwayTeam[[g]]
       # Expected goals home
@@ -129,42 +167,49 @@ dcRecalcSeasonPredict<-function(nsims=10000, scores = HockeyModel::scores, sched
       # Expected goals away
       mu<-try(stats::predict(dc.m, data.frame(Home = 0, Team = away, Opponent = home), type = "response"), TRUE)
 
+      #Fix something wrong with expected away or home goals
       if(!is.numeric(lambda)){
+        message("unknown lambda")
         lambda<-DCPredictErrorRecover(team = home, opponent = away, homeiceadv = TRUE, m = dc.m)
       }
       if(!is.numeric(mu)){
+        message("unknown mu")
         mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE, m = dc.m)
       }
-      homegoals<-rpois(lambda = lambda)
-      awaygoals<-rpois(lambda = mu)
+
+      #Get a goals by poisson odds
+      homegoals<-rpois(lambda = lambda, n=1)
+      awaygoals<-rpois(lambda = mu, n=1)
+
+      #Deal with ties
       if(homegoals == awaygoals){
-        if(lambda>mu){
-          if(runif() < 0.6){
-            homegoals <- homegoals + 1
+        p<-DCPredict(home = schedule$HomeTeam[[g]], away = schedule$AwayTeam[[g]], m=dc.m.ot, rho=0, maxgoal=1, scores=NULL)
+        pHome<-normalizeOdds(c(p[[1]], 0, p[[3]]))[[1]]
+        if(runif(1) < pHome){
+          homegoals <- homegoals + 1
+          if(runif(1) > p[[2]]){
+            results$Result[[g]] <- 0.75
           } else {
-            awaygoals <- awaygoals + 1
+            results$Result[[g]] <- 0.60
           }
         } else {
-          if(runif() < 0.6){
-            awaygoals <- awaygoals + 1
+          awaygoals <- awaygoals + 1
+          if(runif(1) > p[[2]]){
+            results$Result[[g]] <- 0.25
           } else {
-            homegoals <- homegoals + 1
+            results$Result[[g]] <- 0.40
           }
         }
+      } else {
+        results$Result[[g]]<-ifelse(homegoals>awaygoals, 1, 0)
       }
 
       results$HomeGoals[[g]] <- homegoals
       results$AwayGoals[[g]] <- awaygoals
-
-      newscores<-rbind(dcscores, results[results$Date <= g, ])
-
-      dc.m <- getM(scores = newscores, currentDate = schedule$Date[[1]])
-
     }
-
     table<-buildStats(results)
-    table
   }
+
   close(pb)
   parallel::stopCluster(cl)
   gc(verbose = FALSE)
@@ -256,8 +301,8 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 #' @param currentDate (for date weight adjustment)
 #' @param xi agressiveness of date weighting
 #'
+#' @export
 #' @return a model 'm' of dixon coles type parameters.
-#' @keywords internal
 getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.002) {
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
@@ -322,7 +367,7 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #'
 #' @return a list of home win, draw, and away win probability
-#' @keywords internal
+#' @export
 DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores) {
   if(is.null(m)){
     m <- getM(scores = scores)

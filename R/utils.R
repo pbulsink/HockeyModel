@@ -39,6 +39,12 @@ getSeason <- function(gamedate){
   }
 }
 
+#' Normalize Odds
+#'
+#' @param odds a vector of odds to normalize
+#'
+#' @return odds summing to 1
+#' @export
 normalizeOdds<-function(odds){
   odds<-unlist(odds)
   odds<-odds/sum(odds)

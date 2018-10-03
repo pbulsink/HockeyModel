@@ -20,4 +20,3 @@ a model 'm' of dixon coles type parameters.
 \description{
 Produces a DC model
 }
-\keyword{internal}
