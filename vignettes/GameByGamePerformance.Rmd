@@ -89,37 +89,34 @@ scores16<-droplevels(scores16)
 ```
 
 ```{r dc1617}
-#dc.m <- HockeyModel:::getM(scores = scores15, currentDate = as.Date('2016-10-12'))
-#dc.rho <- suppressWarnings(HockeyModel:::getRho(scores = scores15, m = dc.m))
+dc.m <- HockeyModel:::getM(scores = scores15, currentDate = as.Date('2016-10-12'))
+dc.rho <- suppressWarnings(HockeyModel:::getRho(scores = scores15, m = dc.m))
 
-optDCXI <- function(xi=0.002, results16, schedule16, scores15){
-  dc.m <- HockeyModel:::getM(scores = scores15, currentDate = as.Date('2016-10-12'), xi = xi)
-  dc.rho <- suppressWarnings(HockeyModel:::getRho(scores = scores15, m = dc.m))
-  dcResults<-results16[c(1:1230),]
-  dcResults$pHome <- NA
-  dcResults$pAway <- NA
-  dcResults$pDraw <- NA
+dcResults<-results16[c(1:1230),]
+dcResults$pHome <- NA
+dcResults$pAway <- NA
+dcResults$pDraw <- NA
+
+for(gameday in unique(schedule16$Date)){
+  todayp<-todayDC(today = as.Date(gameday), schedule = schedule16, m = dc.m, rho = dc.rho)
   
-  for(gameday in unique(schedule16$Date)){
-    todayp<-todayDC(today = as.Date(gameday), schedule = schedule16, m = dc.m, rho = dc.rho)
-    
-    dcResults[dcResults$Date == as.Date(gameday),]$pHome<-todayp$HomeWin
-    dcResults[dcResults$Date == as.Date(gameday),]$pAway<-todayp$AwayWin
-    dcResults[dcResults$Date == as.Date(gameday),]$pDraw<-todayp$Draw
-    
-    todayscores<-rbind(scores15, results16[results16$Date <= as.Date(gameday), ])
-    dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = as.Date(gameday), xi=xi)
-  }
-  #dc.ll.1617 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
-  dc.acc.1617 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
-  return(dc.acc.1617)
+  dcResults[dcResults$Date == as.Date(gameday),]$pHome<-todayp$HomeWin
+  dcResults[dcResults$Date == as.Date(gameday),]$pAway<-todayp$AwayWin
+  dcResults[dcResults$Date == as.Date(gameday),]$pDraw<-todayp$Draw
+  
+  todayscores<-rbind(scores15, results16[results16$Date <= as.Date(gameday), ])
+  dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = as.Date(gameday))
 }
+dc.ll.1617 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
+dc.acc.1617 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
 
-#ll opt: 0.02037406 = ll of 0.6701052
 
-optdc<-optim(0.002, optDCXI, results16=results16, schedule16=schedule16, scores15 = scores15, lower=1e-8, upper = 1, control = list(fnscale=-1))
-#message("Log Loss: ", dc.ll.1617)
-#message("Accuracy: ", dc.acc.1617)
+#ll opt: xi = 0.003801642 => logloss of 0.6692796
+#accuracy: xi = 0.004729035 => accuracy of 0.5943089
+
+
+message("Log Loss: ", dc.ll.1617)
+message("Accuracy: ", dc.acc.1617)
 ```
 
 ```{r dc1718, echo=FALSE, message=FALSE, warning=FALSE}

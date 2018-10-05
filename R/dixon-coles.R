@@ -103,16 +103,19 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
   return(preds)
 }
 
-#' DC Simulate season with reevaluation every day
+#' DC Simulate season with reevaluation every n days
 #'
 #' @param nsims number of simulations
 #' @param scores hisotircal scores
 #' @param schedule schedule this season
 #' @param cores number of cores to process
+#' @param ndays number of days of games to play before reevaluating m
 #'
+#' @return data frame of Team point ranges, playoff odds, etc.
 #' @export
-dcRealSeasonPredict<-function(nsims=100000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1){
+dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1, ndays=1){
 
+  schedule$Date<-as.Date(schedule$Date)
   dcscores<-scores[scores$Date > as.Date("2005-08-01"),]
   dcscores<-droplevels(dcscores)
   dcscores$Winner <- NULL
@@ -148,11 +151,12 @@ dcRealSeasonPredict<-function(nsims=100000, scores = HockeyModel::scores, schedu
     results$HomeGoals<-NA
     results$AwayGoals<-NA
     results$Result<-NA
+    results<-dplyr::bind_rows(scores[scores$Date > as.Date("2018-10-01"),], results)
 
-    lastdate<-schedule$Date[[1]]
+    lastdate<-as.Date(schedule$Date[[1]])
 
     for(g in 1:nrow(schedule)){
-      if(schedule$Date[[g]] > lastdate){
+      if(schedule$Date[[g]] > (lastdate + ndays)){gc
         #New dc.m
         newscores<-rbind(dcscores, results[results$Date<schedule$Date[[g]], ])
         dc.m<-getM(scores = newscores, currentDate = schedule$Date[[g]])
@@ -303,10 +307,10 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 #'
 #' @export
 #' @return a model 'm' of dixon coles type parameters.
-getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.002) {
+getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.00426) {
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
-    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi), DCweights(dates = scores$Date, currentDate = currentDate, xi = 0.002)),
+    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi)),
     Team = as.factor(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))),
     Opponent = as.factor(c(as.character(scores$AwayTeam), as.character(scores$HomeTeam))),
     Goals = c(scores$HomeGoals, scores$AwayGoals),
@@ -409,7 +413,7 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
 #'
 #' @return list of weights coresponding to dates
 #' @keywords internal
-DCweights <- function(dates, currentDate = Sys.Date(), xi = 0) {
+DCweights <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
   datediffs <- dates - as.Date(currentDate)
   datediffs <- as.numeric(datediffs * -1)
   w <- exp(-1 * xi * datediffs)
