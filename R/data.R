@@ -136,8 +136,10 @@ updateSchedule <- function(data_dir = "./data-raw"){
 #'
 #' @export
 updateScores <- function(data_dir = "./data-raw"){
-  new_scores<-HockeyScrapR::updateScores(score_data = scores, data_dir = data_dir)
+  new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir)
   if(nrow(new_scores) > nrow(scores)){
+    new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))
+    new_scores$HomeTeam<-factor(new_scores$HomeTeam, levels = levels(scores$HomeTeam))
     scores<-new_scores
     devtools::use_data(scores, overwrite = TRUE)
   }

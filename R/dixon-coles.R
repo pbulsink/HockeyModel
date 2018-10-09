@@ -130,12 +130,12 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   dcscores.ot$AwayGoals<-dcscores.ot$AwayGoals-dcscores.ot$minscore
 
   dcscores$OTStatus <- NULL
+  dcscores.ot$minscore <- NULL
 
   #Generate m
-  dc.m.ot <- getM(scores=dcscores, currentDate = schedule$Date[[1]])
+  dc.m.ot <- getM(scores=dcscores.ot, currentDate = schedule$Date[[1]])
   dc.m.original <- getM(scores = dcscores, currentDate = schedule$Date[[1]])
 
-  `%do%` <- foreach::`%do%`
   `%dopar%` <- foreach::`%dopar%`
   cl<-parallel::makeCluster(cores)
   doSNOW::registerDoSNOW(cl)
@@ -482,4 +482,16 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
   }
 
   return(unname(lambda))
+}
+
+predict_multiple_days<-function(start=as.Date("2018-10-01"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, ...){
+  predict_dates<-unique(scores$Date[scores$Date >= start & scores$Date <= end])
+  schedule$Date<-as.Date(schedule$Date)
+
+  for(day in predict_dates){
+    score<-scores[scores$Date < day,]
+    sched<-schedule[schedule$Date >= day,]
+    preds<-dcRealSeasonPredict(nsims=max(1e6, floor(1.5e6/nrow(sched))), scores=score, schedule = sched, ndays=7)
+    saveRDS(preds$summary_results, file = file.path("./prediction_results", paste0(day, 'predictions.RDS')))
+  }
 }
