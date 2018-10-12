@@ -2,11 +2,11 @@
 % Please edit documentation in R/dixon-coles.R
 \name{dcRealSeasonPredict}
 \alias{dcRealSeasonPredict}
-\title{DC Simulate season with reevaluation every day}
+\title{DC Simulate season with reevaluation every n days}
 \usage{
 dcRealSeasonPredict(nsims = 1e+05, scores = HockeyModel::scores,
   schedule = HockeyModel::schedule, cores = parallel::detectCores() -
-  1)
+  1, ndays = 1)
 }
 \arguments{
 \item{nsims}{number of simulations}
@@ -16,7 +16,12 @@ dcRealSeasonPredict(nsims = 1e+05, scores = HockeyModel::scores,
 \item{schedule}{schedule this season}
 
 \item{cores}{number of cores to process}
+
+\item{ndays}{number of days of games to play before reevaluating m}
+}
+\value{
+data frame of Team point ranges, playoff odds, etc.
 }
 \description{
-DC Simulate season with reevaluation every day
+DC Simulate season with reevaluation every n days
 }

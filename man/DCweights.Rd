@@ -4,7 +4,7 @@
 \alias{DCweights}
 \title{DC Weight}
 \usage{
-DCweights(dates, currentDate = Sys.Date(), xi = 0)
+DCweights(dates, currentDate = Sys.Date(), xi = 0.00426)
 }
 \arguments{
 \item{dates}{list of dates to calculate weights.}

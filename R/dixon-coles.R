@@ -116,6 +116,7 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
 dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1, ndays=1){
 
   schedule$Date<-as.Date(schedule$Date)
+  schedule<-schedule[schedule$Date > max(scores$Date), ]
   dcscores<-scores[scores$Date > as.Date("2005-08-01"),]
   dcscores<-droplevels(dcscores)
   dcscores$Winner <- NULL
@@ -151,20 +152,20 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
     results$HomeGoals<-NA
     results$AwayGoals<-NA
     results$Result<-NA
-    results<-dplyr::bind_rows(scores[scores$Date > as.Date("2018-10-01"),], results)
+    results<-dplyr::bind_rows(dcscores[dcscores$Date > as.Date("2018-10-01"),], results)
 
     lastdate<-as.Date(schedule$Date[[1]])
 
-    for(g in 1:nrow(schedule)){
-      if(schedule$Date[[g]] > (lastdate + ndays)){gc
+    for(g in which(is.na(results$Result))){
+      if(results$Date[[g]] > (lastdate + ndays)){
         #New dc.m
-        newscores<-rbind(dcscores, results[results$Date<schedule$Date[[g]], ])
-        dc.m<-getM(scores = newscores, currentDate = schedule$Date[[g]])
-        lastdate<-schedule$Date[[g]]
+        newscores<-rbind(dcscores, results[results$Date<results$Date[[g]], ])
+        dc.m<-getM(scores = newscores, currentDate = results$Date[[g]])
+        lastdate<-results$Date[[g]]
       }
 
-      home<-schedule$HomeTeam[[g]]
-      away<-schedule$AwayTeam[[g]]
+      home<-results$HomeTeam[[g]]
+      away<-results$AwayTeam[[g]]
       # Expected goals home
       lambda <- try(stats::predict(dc.m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
 
@@ -187,7 +188,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
 
       #Deal with ties
       if(homegoals == awaygoals){
-        p<-DCPredict(home = schedule$HomeTeam[[g]], away = schedule$AwayTeam[[g]], m=dc.m.ot, rho=0, maxgoal=1, scores=NULL)
+        p<-DCPredict(home = home, away = away, m=dc.m.ot, rho=0, maxgoal=1, scores=NULL)
         pHome<-normalizeOdds(c(p[[1]], 0, p[[3]]))[[1]]
         if(runif(1) < pHome){
           homegoals <- homegoals + 1
@@ -484,14 +485,35 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
   return(unname(lambda))
 }
 
-predict_multiple_days<-function(start=as.Date("2018-10-01"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, ...){
+#' DC Predict Multiple Days
+#'
+#' @description For catching up on daily predictions
+#'
+#' @param start First day to predict. Default start of season
+#' @param end Last day to predict. Default today
+#' @param scores HockeyModel::scores
+#' @param schedule hockeyModel::schedule
+#' @param today whether to predict for today also
+#' @param ... Additional parameters to pass to dcRealSeasonPredict
+#'
+#' @return true, if successful
+#' @export
+dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, today = TRUE, ...){
   predict_dates<-unique(scores$Date[scores$Date >= start & scores$Date <= end])
+  if(today){
+    predict_dates<-c(predict_dates, Sys.Date())
+  }
   schedule$Date<-as.Date(schedule$Date)
 
+  message("Running predictions for ", length(predict_dates), " days.")
   for(day in predict_dates){
+    d<-as.Date(day, origin="1970-01-01")
+    message('Predictions as of: ', d)
     score<-scores[scores$Date < day,]
     sched<-schedule[schedule$Date >= day,]
-    preds<-dcRealSeasonPredict(nsims=max(1e6, floor(1.5e6/nrow(sched))), scores=score, schedule = sched, ndays=7)
-    saveRDS(preds$summary_results, file = file.path("./prediction_results", paste0(day, 'predictions.RDS')))
+    preds<-dcRealSeasonPredict(nsims=min(1e6, floor(1.5e6/nrow(sched))), scores=score, schedule = sched, ndays=7, ...)
+    saveRDS(preds$summary_results, file = file.path("./prediction_results", paste0(d, '-predictions.RDS')))
   }
+
+  return(TRUE)
 }
