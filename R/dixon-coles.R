@@ -501,11 +501,11 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, today = TRUE, ...){
   predict_dates<-unique(scores$Date[scores$Date >= start & scores$Date <= end])
   if(today){
-    predict_dates<-c(predict_dates, Sys.Date())
+    predict_dates<-unique(c(predict_dates, Sys.Date()))
   }
   schedule$Date<-as.Date(schedule$Date)
 
-  message("Running predictions for ", length(predict_dates), " days.")
+  message("Running predictions for ", length(predict_dates), " day(s).")
   for(day in predict_dates){
     d<-as.Date(day, origin="1970-01-01")
     message('Predictions as of: ', d)

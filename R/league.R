@@ -301,3 +301,23 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
 
   return(list(summary_results = summary_results, raw_results = all_results))
 }
+
+compile_predictions<-function(dir="./prediction_results"){
+  #Find the files
+  filelist<-list.files(path = dir)
+  pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
+  all_predictions<-lapply(pdates, function(f) readRDS(file.path(dir, (paste0(f, "-predictions.RDS"))))) #Read all the files
+  names(all_predictions)<-pdates
+  all_predictions<-dplyr::bind_rows(all_predictions, .id="predictionDate")
+  return(all_predictions)
+}
+
+plot_predictions_by_team<-function(all_predictions){
+  teams<-unique(all_predictions$Team)
+  dates<-as.Date(unique(all_predictions$predictionDate))
+  all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
+  p<-ggplot2::ggplot(data=all_predictions)
+  for(t in Team){
+
+  }
+}
