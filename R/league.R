@@ -334,8 +334,6 @@ plot_prediction_points_by_team<-function(all_predictions, past_days = 14){
   names(teamColoursList)<-teamColours$Team[teamColours$Code == "Primary"]
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
-  #Add
-
   #make plot
   p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=meanPoints, colour = Team)) +
     ggplot2::geom_line() +
@@ -352,6 +350,40 @@ plot_prediction_points_by_team<-function(all_predictions, past_days = 14){
   return(p)
 }
 
-plot_prediction_playoffs_by_team <- function(all_predictions){
-  NULL
+plot_prediction_playoffs_by_team <- function(all_predictions, past_days = 14){
+  #Trim predictions to fit plot
+  all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
+  lastdate <- max(all_predictions$predictionDate)
+  firstdate <- lastdate - past_days
+  all_predictions<-all_predictions[all_predictions$predictionDate >= firstdate,]
+
+  #extract constants
+  teams<-unique(all_predictions$Team)
+  dates<-as.Date(unique(all_predictions$predictionDate))
+  #Get division
+  all_predictions$Division<-getDivision(all_predictions$Team)
+  #make team label appear properly later with ggrepel
+  all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
+                                  as.character(paste0(getShortTeam(all_predictions$Team), '-', round(all_predictions$meanPoints, digits = 0))),
+                                  NA_character_)
+
+  #Build and trim team colours for plot
+  teamColoursList<-as.vector(teamColours$Hex[teamColours$Code == "Primary"])
+  names(teamColoursList)<-teamColours$Team[teamColours$Code == "Primary"]
+  teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
+
+  #make plot
+  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=Playoffs, colour = Team)) +
+    ggplot2::geom_line() +
+    ggplot2::facet_wrap( ~ Division, ncol = length(unique(all_predictions$Division))) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::scale_colour_manual(values = teamColoursList) +
+    ggplot2::xlab("Date") +
+    ggplot2::ylab("Points") +
+    ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days")) +
+    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE)
+
+
+  return(p)
 }
