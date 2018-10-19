@@ -109,6 +109,18 @@
 #' @format a gnm Bradley Terry Davidson model
 "fittedBTSimple"
 
+#' Team Colours
+#' Hex and RGB team colours (primary & secondary where applicable)
+#'
+#' @format a data frame of colours
+"teamColors"
+
+buildTeamColours <- function(){
+  teamColours <- read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
+  teamColours$Code <- as.factor(teamColours$Code)
+  devtools::use_data(teamColours, overwrite = TRUE)
+}
+
 #' Update Schedule
 #'
 #' @description Updates the stored schedule if any games are rescheduled due to any event. Adds playoff games as the schedules are released
@@ -135,7 +147,7 @@ updateSchedule <- function(data_dir = "./data-raw"){
 #' @return True, if successful update or validation, `scores` is a built in data
 #'
 #' @export
-updateScores <- function(data_dir = "./data-raw"){
+updateScores <- function(data_dir = "./data-raw/"){
   new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0)
   if(nrow(new_scores) > nrow(scores)){
     new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))
