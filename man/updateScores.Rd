@@ -4,7 +4,7 @@
 \alias{updateScores}
 \title{Update Scores}
 \usage{
-updateScores(data_dir = "./data-raw")
+updateScores(data_dir = "./data-raw/")
 }
 \arguments{
 \item{data_dir}{The data storage directory}

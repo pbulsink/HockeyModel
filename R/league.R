@@ -302,6 +302,13 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
   return(list(summary_results = summary_results, raw_results = all_results))
 }
 
+#' Compile predictions to one object
+#'
+#' @description compiles predictions from a group of .RDS files to one data.frame
+#' @param dir Directory holding the prediction .RDS files.
+#'
+#' @return a data frame.
+#' @export
 compile_predictions<-function(dir="./prediction_results"){
   #Find the files
   filelist<-list.files(path = dir)
@@ -312,6 +319,13 @@ compile_predictions<-function(dir="./prediction_results"){
   return(all_predictions)
 }
 
+#' Plot Predicted Points
+#'
+#' @param all_predictions the compiled predictions
+#' @param past_days number of past days to include on the plot. Default: a fortnight
+#'
+#' @return a ggplot object
+#' @export
 plot_prediction_points_by_team<-function(all_predictions, past_days = 14){
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
@@ -324,9 +338,11 @@ plot_prediction_points_by_team<-function(all_predictions, past_days = 14){
   dates<-as.Date(unique(all_predictions$predictionDate))
   #Get division
   all_predictions$Division<-getDivision(all_predictions$Team)
+  #Set divisions to logical order
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
-                                   as.character(paste0(getShortTeam(all_predictions$Team), '-', round(all_predictions$meanPoints, digits = 0))),
+                                   as.character(paste0(getShortTeam(all_predictions$Team), '\n', round(all_predictions$meanPoints, digits = 0))),
                                    NA_character_)
 
   #Build and trim team colours for plot
@@ -337,20 +353,74 @@ plot_prediction_points_by_team<-function(all_predictions, past_days = 14){
   #make plot
   p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=meanPoints, colour = Team)) +
     ggplot2::geom_line() +
-    ggplot2::facet_wrap( ~ Division, ncol = length(unique(all_predictions$Division))) +
-    ggplot2::theme_bw() +
-    ggplot2::theme(legend.position = "none") +
+    ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
+    ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
     ggplot2::ylab("Points") +
     ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days")) +
-    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE)
-
+    ggplot2::theme_bw() +
+    ggplot2::theme(legend.position = "none") +
+    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(x.range[[2]], NA))
 
   return(p)
 }
 
+#' Plot Playoff Odds
+#'
+#' @param all_predictions the compiled predictions
+#' @param past_days number of past days to include on the plot. Default: a fortnight
+#'
+#' @return a ggplot object
+#' @export
 plot_prediction_playoffs_by_team <- function(all_predictions, past_days = 14){
+  #Trim predictions to fit plot
+  all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
+  lastdate <- max(all_predictions$predictionDate)
+  firstdate <- lastdate - past_days
+  all_predictions<-all_predictions[all_predictions$predictionDate >= firstdate,]
+
+  #extract constants
+  teams<-unique(all_predictions$Team)
+  dates<-as.Date(unique(all_predictions$predictionDate))
+  #Get division
+  all_predictions$Division<-getDivision(all_predictions$Team)
+  #Set divisions to logical order
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
+  #make team label appear properly later with ggrepel
+  all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
+                                  as.character(paste0(getShortTeam(all_predictions$Team), '\n', round(all_predictions$Playoffs, digits = 3))),
+                                  NA_character_)
+
+  #Build and trim team colours for plot
+  teamColoursList<-as.vector(teamColours$Hex[teamColours$Code == "Primary"])
+  names(teamColoursList)<-teamColours$Team[teamColours$Code == "Primary"]
+  teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
+
+  #make plot
+  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=Playoffs, colour = Team)) +
+    ggplot2::geom_line() +
+    ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
+    ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
+    ggplot2::scale_colour_manual(values = teamColoursList) +
+    ggplot2::xlab("Date") +
+    ggplot2::ylab("Points") +
+    ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days")) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(legend.position = "none") +
+    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(x.range[[2]], NA))
+
+  return(p)
+}
+
+#' Plot President's Trophey Odds
+#'
+#' @param all_predictions the compiled predictions
+#' @param past_days number of past days to include on the plot. Default: a fortnight
+#'
+#' @return a ggplot object
+#' @export
+plot_prediction_presidents_by_team <- function(all_predictions, past_days = 14){
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -364,7 +434,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions, past_days = 14){
   all_predictions$Division<-getDivision(all_predictions$Team)
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
-                                  as.character(paste0(getShortTeam(all_predictions$Team), '-', round(all_predictions$meanPoints, digits = 0))),
+                                  as.character(paste0(getShortTeam(all_predictions$Team), '-', round(all_predictions$Presidents, digits = 3))),
                                   NA_character_)
 
   #Build and trim team colours for plot
@@ -373,7 +443,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions, past_days = 14){
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
-  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=Playoffs, colour = Team)) +
+  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=Presidents, colour = Team)) +
     ggplot2::geom_line() +
     ggplot2::facet_wrap( ~ Division, ncol = length(unique(all_predictions$Division))) +
     ggplot2::theme_bw() +
@@ -381,9 +451,22 @@ plot_prediction_playoffs_by_team <- function(all_predictions, past_days = 14){
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
     ggplot2::ylab("Points") +
-    ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days")) +
+    ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days")) +
     ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE)
 
 
   return(p)
+}
+
+
+#' Plot Pace by team
+#'
+#' @param team Specific team(s) to plot. Default = all
+#' @param scores the historical scores.
+#' @param season choose a specific season. Default NULL is most recent (current)
+#'
+#' @return a ggplot object
+#' @export
+plot_pace_by_team <- function(team = 'all', scores = HockeyModel::scores, season = NULL) {
+  ##TODO: pace charts
 }

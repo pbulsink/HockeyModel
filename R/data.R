@@ -113,7 +113,7 @@
 #' Hex and RGB team colours (primary & secondary where applicable)
 #'
 #' @format a data frame of colours
-"teamColors"
+"teamColours"
 
 buildTeamColours <- function(){
   teamColours <- read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
