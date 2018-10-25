@@ -4,7 +4,9 @@
 \alias{plot_prediction_playoffs_by_team}
 \title{Plot Playoff Odds}
 \usage{
-plot_prediction_playoffs_by_team(all_predictions, past_days = 14)
+
+  plot_prediction_playoffs_by_team(all_predictions = compile_predictions(),
+  past_days = 14)
 }
 \arguments{
 \item{all_predictions}{the compiled predictions}

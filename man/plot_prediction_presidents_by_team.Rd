@@ -4,7 +4,9 @@
 \alias{plot_prediction_presidents_by_team}
 \title{Plot President's Trophey Odds}
 \usage{
-plot_prediction_presidents_by_team(all_predictions, past_days = 14)
+
+  plot_prediction_presidents_by_team(all_predictions = compile_predictions(),
+  past_days = 14)
 }
 \arguments{
 \item{all_predictions}{the compiled predictions}

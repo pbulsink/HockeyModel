@@ -326,7 +326,7 @@ compile_predictions<-function(dir="./prediction_results"){
 #'
 #' @return a ggplot object
 #' @export
-plot_prediction_points_by_team<-function(all_predictions, past_days = 14){
+plot_prediction_points_by_team<-function(all_predictions = compile_predictions(), past_days = 14){
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -361,7 +361,7 @@ plot_prediction_points_by_team<-function(all_predictions, past_days = 14){
     ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days")) +
     ggplot2::theme_bw() +
     ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(x.range[[2]], NA))
+    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
   return(p)
 }
@@ -373,7 +373,7 @@ plot_prediction_points_by_team<-function(all_predictions, past_days = 14){
 #'
 #' @return a ggplot object
 #' @export
-plot_prediction_playoffs_by_team <- function(all_predictions, past_days = 14){
+plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictions(), past_days = 14){
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -389,7 +389,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions, past_days = 14){
   all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
-                                  as.character(paste0(getShortTeam(all_predictions$Team), '\n', round(all_predictions$Playoffs, digits = 3))),
+                                  as.character(paste0(getShortTeam(all_predictions$Team), '\n', signif(all_predictions$Playoffs*100, digits = 2), '%')),
                                   NA_character_)
 
   #Build and trim team colours for plot
@@ -408,7 +408,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions, past_days = 14){
     ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days")) +
     ggplot2::theme_bw() +
     ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(x.range[[2]], NA))
+    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
   return(p)
 }
@@ -420,7 +420,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions, past_days = 14){
 #'
 #' @return a ggplot object
 #' @export
-plot_prediction_presidents_by_team <- function(all_predictions, past_days = 14){
+plot_prediction_presidents_by_team <- function(all_predictions = compile_predictions(), past_days = 14){
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -432,9 +432,11 @@ plot_prediction_presidents_by_team <- function(all_predictions, past_days = 14){
   dates<-as.Date(unique(all_predictions$predictionDate))
   #Get division
   all_predictions$Division<-getDivision(all_predictions$Team)
+  #Set divisions to logical order
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
-                                  as.character(paste0(getShortTeam(all_predictions$Team), '-', round(all_predictions$Presidents, digits = 3))),
+                                  as.character(paste0(getShortTeam(all_predictions$Team), '\n', signif(all_predictions$Presidents*100, digits = 2), '%')),
                                   NA_character_)
 
   #Build and trim team colours for plot
@@ -445,14 +447,15 @@ plot_prediction_presidents_by_team <- function(all_predictions, past_days = 14){
   #make plot
   p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=Presidents, colour = Team)) +
     ggplot2::geom_line() +
-    ggplot2::facet_wrap( ~ Division, ncol = length(unique(all_predictions$Division))) +
-    ggplot2::theme_bw() +
-    ggplot2::theme(legend.position = "none") +
+    ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
+    ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
     ggplot2::ylab("Points") +
     ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days")) +
-    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE)
+    ggplot2::theme_bw() +
+    ggplot2::theme(legend.position = "none") +
+    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
 
   return(p)
@@ -469,4 +472,32 @@ plot_prediction_presidents_by_team <- function(all_predictions, past_days = 14){
 #' @export
 plot_pace_by_team <- function(team = 'all', scores = HockeyModel::scores, season = NULL) {
   ##TODO: pace charts
+}
+
+#' Plot Today's Odds
+#'
+#' @param today The day's odds to plot
+#' @param schedule The schedule of games
+#' @param ... additional parameters to pass
+plot_odds_today <- function(today = Sys.Date(), schedule = HockeyModel::schedule, ...) {
+  todayodds<-todayDC(today = today, ...)
+  todayodds$HomeWinOT<-(todayodds$HomeWin / (todayodds$HomeWin + todayodds$AwayWin)) * todayodds$Draw
+  todayodds$AwayWinOT<-todayodds$Draw-todayodds$HomeWinOT
+
+  p<- ggplot2::ggplot() +
+    ggplot2::geom_tile(ggplot2::aes(x = c('Away Win', 'Draw', 'Home Win'), y = rep(todayodds[1,2],3), fill = c(todayodds[1,4], todayodds[1,5], todayodds[1,3])))+
+    ggplot2::geom_tile(ggplot2::aes(x = c('Away Win', 'Draw', 'Home Win'), y = rep(todayodds[2,2],3), fill = c(todayodds[2,4], todayodds[2,5], todayodds[2,3]))) +
+    ggplot2::geom_tile(ggplot2::aes(x = c('Away Win', 'Draw', 'Home Win'), y = rep(todayodds[3,2],3), fill = c(todayodds[3,4], todayodds[3,5], todayodds[3,3])))+
+    ggplot2::geom_tile(ggplot2::aes(x = c('Away Win', 'Draw', 'Home Win'), y = rep(todayodds[4,2],3), fill = c(todayodds[4,4], todayodds[4,5], todayodds[4,3]))) +
+    ggplot2::geom_text(ggplot2::aes(x = 'Home Team', y = todayodds[1,2], label = todayodds[1,1]))
+
+  m<-reshape2::melt(todayodds, id.vars = c('HomeTeam', 'AwayTeam'))
+  m$variable<-factor(x = m$variable, levels = c("AwayWin", "AwayWinOT", "Draw", "HomeWinOT", "HomeWin"), ordered = TRUE)
+  m<-dplyr::arrange(.data = m, -variable)
+  q<-ggplot2::ggplot(m[m$variable %in% c('HomeWin','AwayWin','HomeWinOT', 'AwayWinOT'),], ggplot2::aes(y = value, x = HomeTeam, fill = variable)) +
+    ggplot2::geom_bar(stat = "identity", position = "fill") +
+    ggplot2::ylab("Result Odds") +
+    ggplot2::coord_flip() +
+    ggplot2::ggtitle(paste0("Predictions for games ", Sys.Date()))
+
 }

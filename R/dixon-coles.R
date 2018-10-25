@@ -7,18 +7,18 @@
 #' @param scores scores, if not then data(scores)
 #'
 #' @export
-updateDC <- function(scores){
+updateDC <- function(scores = HockeyModel::scores){
   scoresdc<-scores[scores$Date > as.Date("2008-08-01"),]
   m <- getM(scores=scoresdc)
   rho <- getRho(m = m, scores = scoresdc)
-  devtools::use_data(m, rho, overwrite = TRUE)
+  usethis::use_data(m, rho, overwrite = TRUE)
   teamlist <- as.character(unique(m$data$Home))
   team_params <- data.frame(Attack = as.numeric(m$coefficients[1:length(teamlist)]),
                             Defence = c(0, m$coefficients[(length(teamlist)+1):(length(teamlist)*2-1)]),
                             Team = sort(teamlist),
                             Date = Sys.Date())
   #mdaily<-rbind(mdaily, team_params)
-  devtools::use_data(mdaily, internal = TRUE, overwrite = TRUE)
+  #usethis::use_data(mdaily, internal = TRUE, overwrite = TRUE)
 }
 
 #' Produce a plot of each team's offence and defence scores
@@ -30,11 +30,16 @@ updateDC <- function(scores){
 #' @export
 plotDC <- function(m = HockeyModel::m, teamlist = NULL){
   if(is.null(teamlist)){
-    teamlist<-as.character(unique(m$data$Home))
+    teamlist<-as.character(unique(m$data$Team))
   }
   team_params <- data.frame(Attack = as.numeric(m$coefficients[1:length(teamlist)]),
-                            Defence = c(0, m$coefficients[(length(teamlist)+1):(length(teamlist)*2-1)]),
+                            Defence = c(0, -m$coefficients[(length(teamlist)+1):(length(teamlist)*2-1)]),
                             Team = sort(teamlist))
+
+  #Build and trim team colours for plot
+  teamColoursList<-as.vector(teamColours$Hex[teamColours$Code == "Primary"])
+  names(teamColoursList)<-teamColours$Team[teamColours$Code == "Primary"]
+  teamColoursList<-teamColoursList[names(teamColoursList) %in% teamlist]
 
   p<-ggplot2::ggplot(team_params,
                      ggplot2::aes_(x=quote(Attack),
@@ -45,8 +50,9 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
                      ) +
     ggplot2::ggtitle("Attack and Defence Parameters") +
     ggplot2::xlab("Attack") +
-    ggplot2::ylab("Defence (lower = better)") +
+    ggplot2::ylab("Defence") +
     ggplot2::geom_point() +
+    ggplot2::scale_colour_manual(values = teamColoursList) +
     ggrepel::geom_text_repel(force=2, max.iter=5000) +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position="none")

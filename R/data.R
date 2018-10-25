@@ -118,7 +118,11 @@
 buildTeamColours <- function(){
   teamColours <- read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
   teamColours$Code <- as.factor(teamColours$Code)
-  devtools::use_data(teamColours, overwrite = TRUE)
+  teamlist<-unique(teamColours$Team)
+  secondary<-teamlist[!teamlist %in% teamColours[teamColours$Code == 'Secondary', 'Team']]
+  secondary<-data.frame(Team = secondary, Code = 'Secondary', R = 0, G=0, B=0, Hex = '#000000')
+  teamColours <- rbind(teamColours, secondary)
+  usethis::use_data(teamColours, overwrite = TRUE)
 }
 
 #' Update Schedule
@@ -134,7 +138,7 @@ updateSchedule <- function(data_dir = "./data-raw"){
   if(nrow(new_schedule) > nrow(schedule)){
     schedule <- new_schedule
     schedule <- schedule[,c('Date','Home','Visitor')]
-    devtools::use_data(schedule, overwrite = TRUE)
+    usethis::use_data(schedule, overwrite = TRUE)
   }
   return(TRUE)
 }
@@ -153,7 +157,8 @@ updateScores <- function(data_dir = "./data-raw/"){
     new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))
     new_scores$HomeTeam<-factor(new_scores$HomeTeam, levels = levels(scores$HomeTeam))
     scores<-new_scores
-    devtools::use_data(scores, overwrite = TRUE)
+    usethis::use_data(scores, overwrite = TRUE)
+    message("Data saved. Please rebuild package to use updated HockeyModel::scores.")
   }
   return(TRUE)
 }
