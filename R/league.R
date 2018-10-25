@@ -484,20 +484,46 @@ plot_odds_today <- function(today = Sys.Date(), schedule = HockeyModel::schedule
   todayodds$HomeWinOT<-(todayodds$HomeWin / (todayodds$HomeWin + todayodds$AwayWin)) * todayodds$Draw
   todayodds$AwayWinOT<-todayodds$Draw-todayodds$HomeWinOT
 
-  p<- ggplot2::ggplot() +
-    ggplot2::geom_tile(ggplot2::aes(x = c('Away Win', 'Draw', 'Home Win'), y = rep(todayodds[1,2],3), fill = c(todayodds[1,4], todayodds[1,5], todayodds[1,3])))+
-    ggplot2::geom_tile(ggplot2::aes(x = c('Away Win', 'Draw', 'Home Win'), y = rep(todayodds[2,2],3), fill = c(todayodds[2,4], todayodds[2,5], todayodds[2,3]))) +
-    ggplot2::geom_tile(ggplot2::aes(x = c('Away Win', 'Draw', 'Home Win'), y = rep(todayodds[3,2],3), fill = c(todayodds[3,4], todayodds[3,5], todayodds[3,3])))+
-    ggplot2::geom_tile(ggplot2::aes(x = c('Away Win', 'Draw', 'Home Win'), y = rep(todayodds[4,2],3), fill = c(todayodds[4,4], todayodds[4,5], todayodds[4,3]))) +
-    ggplot2::geom_text(ggplot2::aes(x = 'Home Team', y = todayodds[1,2], label = todayodds[1,1]))
+  p<- ggplot2::ggplot()
+  for(i in 1:nrow(todayodds)) {
+    y<-rep(todayodds[i,2], 4)
+    p<-p + ggplot2::geom_tile(mapping = ggplot2::aes(x = c('Away Win', 'Away OT/SO Win', 'Home OT/SO Win', 'Home Win'), y = y, fill = c(todayodds[i,4], todayodds[i,7], todayodds[i,6], todayodds[i,3]))) +
+      ggplot2::geom_text(ggplot2::aes(x = "Home Team", y = todayodds[i,2], label = todayodds[i,1])) +
+      ggplot2::geom_text(ggplot2::aes(x = "Away Team", y = todayodds[i,2], label = todayodds[i,2]))
+  }
+
 
   m<-reshape2::melt(todayodds, id.vars = c('HomeTeam', 'AwayTeam'))
   m$variable<-factor(x = m$variable, levels = c("AwayWin", "AwayWinOT", "Draw", "HomeWinOT", "HomeWin"), ordered = TRUE)
-  m<-dplyr::arrange(.data = m, -variable)
-  q<-ggplot2::ggplot(m[m$variable %in% c('HomeWin','AwayWin','HomeWinOT', 'AwayWinOT'),], ggplot2::aes(y = value, x = HomeTeam, fill = variable)) +
-    ggplot2::geom_bar(stat = "identity", position = "fill") +
+  plotcolors<-c()
+  plotalpha<-c()
+  for(i in 1:nrow(todayodds)){
+    plotcolors<-c(plotcolors,
+                  teamColours[(teamColours$Team == todayodds[i, 'HomeTeam'] & teamColours$Code == 'Primary'), 'Hex'],
+                  teamColours[(teamColours$Team == todayodds[i, 'HomeTeam'] & teamColours$Code == 'Primary'), 'Hex'],
+                  teamColours[(teamColours$Team == todayodds[i, 'AwayTeam'] & teamColours$Code == 'Primary'), 'Hex'],
+                  teamColours[(teamColours$Team == todayodds[i, 'AwayTeam'] & teamColours$Code == 'Primary'), 'Hex'])
+    plotalpha <- c(plotalpha, 0.7, 0.4, 0.4, 0.7)
+  }
+  q<-ggplot2::ggplot(m[m$variable %in% c('HomeWin','HomeWinOT', 'AwayWinOT', 'AwayWin'),], ggplot2::aes(y = value, x = HomeTeam, group = variable)) +
+    ggplot2::geom_bar(stat = "identity", position='fill', fill = plotcolors, alpha = plotalpha) +
+   #ggplot2::scale_y_continuous(fill = plotcolors, alpha = plotalpha) +
+    ggplot2::xlab("") +
     ggplot2::ylab("Result Odds") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(axis.text.y = ggplot2::element_blank(),
+                   axis.ticks.y = ggplot2::element_blank(),
+                   panel.background = element_rect(fill = "white"),
+                   panel.border = ggplot2::element_blank()) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expand_scale(add = 0.3),
+                                breaks = c(0,0.5,1)) +
+    ggplot2::annotate("text", x = todayodds$HomeTeam, y = -.01, hjust = 1, label = paste('Win:',todayodds$HomeTeam)) +
+    ggplot2::annotate("text", x = todayodds$HomeTeam, y = 1.01, hjust = 0, label = todayodds$AwayTeam) +
+    ggplot2::annotate("label", x = todayodds$HomeTeam, y = 0.01, hjust = 0, label = round(todayodds$HomeWin, 3)) +
+    ggplot2::annotate("label", x = todayodds$HomeTeam, y= .99, hjust = 1, label = round(todayodds$AwayWin, 3)) +
+    ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT - 0.01, hjust = 1, label = round(todayodds$HomeWinOT, 3)) +
+    ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT + 0.01, hjust = 0, label = round(todayodds$AwayWinOT, 3)) +
     ggplot2::coord_flip() +
-    ggplot2::ggtitle(paste0("Predictions for games ", Sys.Date()))
+    ggplot2::ggtitle(paste0("  Predictions for games ", Sys.Date()))
 
 }
