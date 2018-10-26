@@ -134,14 +134,15 @@ buildTeamColours <- function(){
 #' @return True, if successful update or validation, `schedule` is a built in data
 #'
 #' @export
-updateSchedule <- function(data_dir = "./data-raw"){
+updateSchedule <- function(data_dir = "./data-raw/"){
   new_schedule<-HockeyScrapR::getSchedule(data_dir = data_dir, from_date=as.Date("2018-10-01"))
   if(nrow(new_schedule) > nrow(schedule)){
     schedule <- new_schedule
     schedule <- schedule[,c('Date','Home','Visitor')]
     usethis::use_data(schedule, overwrite = TRUE)
+    message("Data saved. Please rebuild package to use updated HockeyModel::schedule.")
   }
-  return(TRUE)
+  return(new_schedule)
 }
 
 #' Update Scores
@@ -161,7 +162,7 @@ updateScores <- function(data_dir = "./data-raw/"){
     usethis::use_data(scores, overwrite = TRUE)
     message("Data saved. Please rebuild package to use updated HockeyModel::scores.")
   }
-  return(TRUE)
+  return(new_scores)
 }
 
 

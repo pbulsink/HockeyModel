@@ -313,6 +313,7 @@ compile_predictions<-function(dir="./prediction_results"){
   #Find the files
   filelist<-list.files(path = dir)
   pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
+  pdates<-pdates[pdates != 'graphics']
   all_predictions<-lapply(pdates, function(f) readRDS(file.path(dir, (paste0(f, "-predictions.RDS"))))) #Read all the files
   names(all_predictions)<-pdates
   all_predictions<-dplyr::bind_rows(all_predictions, .id="predictionDate")
@@ -404,7 +405,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
-    ggplot2::ylab("Points") +
+    ggplot2::ylab("Plaoff Odds") +
     ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days")) +
     ggplot2::theme_bw() +
     ggplot2::theme(legend.position = "none") +
@@ -451,7 +452,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
-    ggplot2::ylab("Points") +
+    ggplot2::ylab("President's Trophy Odds") +
     ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days")) +
     ggplot2::theme_bw() +
     ggplot2::theme(legend.position = "none") +

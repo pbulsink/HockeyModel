@@ -28,7 +28,9 @@ Imports:
     foreach,
     rlist,
     usethis,
-    reshape2
+    reshape2,
+    rtweet,
+    png
 Remotes:
   pbulsink/HockeyScrapR
   thomasp85/gganimate

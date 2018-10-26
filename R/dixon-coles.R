@@ -19,6 +19,8 @@ updateDC <- function(scores = HockeyModel::scores){
                             Date = Sys.Date())
   #mdaily<-rbind(mdaily, team_params)
   #usethis::use_data(mdaily, internal = TRUE, overwrite = TRUE)
+  message("Data saved. Please rebuild package to use updated HockeyModel::m or HockeyModel::rho.")
+  return(list(m = m, rho=rho))
 }
 
 #' Produce a plot of each team's offence and defence scores

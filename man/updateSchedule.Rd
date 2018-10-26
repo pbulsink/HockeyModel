@@ -4,7 +4,7 @@
 \alias{updateSchedule}
 \title{Update Schedule}
 \usage{
-updateSchedule(data_dir = "./data-raw")
+updateSchedule(data_dir = "./data-raw/")
 }
 \arguments{
 \item{data_dir}{The data storage directory}
