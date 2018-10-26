@@ -27,7 +27,8 @@ Imports:
     zoo,
     foreach,
     rlist,
-    usethis
+    usethis,
+    reshape2
 Remotes:
   pbulsink/HockeyScrapR
   thomasp85/gganimate

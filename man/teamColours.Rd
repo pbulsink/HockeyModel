@@ -4,13 +4,13 @@
 \name{teamColours}
 \alias{teamColours}
 \title{Team Colours
-Hex and RGB team colours (primary & secondary where applicable)}
-\format{a data frame of colours}
+Hex and RGB team colours (primary & secondary where applicable), and path to team logos}
+\format{a data frame of colours & logos}
 \usage{
 teamColours
 }
 \description{
 Team Colours
-Hex and RGB team colours (primary & secondary where applicable)
+Hex and RGB team colours (primary & secondary where applicable), and path to team logos
 }
 \keyword{datasets}

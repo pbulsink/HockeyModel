@@ -4,15 +4,15 @@
 \alias{plot_odds_today}
 \title{Plot Today's Odds}
 \usage{
-plot_odds_today(today = Sys.Date(), schedule = HockeyModel::schedule,
-  ...)
+plot_odds_today(today = Sys.Date(), ...)
 }
 \arguments{
 \item{today}{The day's odds to plot}
 
-\item{schedule}{The schedule of games}
-
 \item{...}{additional parameters to pass}
+}
+\value{
+a ggplot image of odds
 }
 \description{
 Plot Today's Odds
