@@ -110,9 +110,9 @@
 "fittedBTSimple"
 
 #' Team Colours
-#' Hex and RGB team colours (primary & secondary where applicable)
+#' Hex and RGB team colours (primary & secondary where applicable), and path to team logos
 #'
-#' @format a data frame of colours
+#' @format a data frame of colours & logos
 "teamColours"
 
 buildTeamColours <- function(){
@@ -122,6 +122,7 @@ buildTeamColours <- function(){
   secondary<-teamlist[!teamlist %in% teamColours[teamColours$Code == 'Secondary', 'Team']]
   secondary<-data.frame(Team = secondary, Code = 'Secondary', R = 0, G=0, B=0, Hex = '#000000')
   teamColours <- rbind(teamColours, secondary)
+  teamColours$Logo <- file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", teamlist)), ".gif"))
   usethis::use_data(teamColours, overwrite = TRUE)
 }
 
