@@ -17,23 +17,16 @@ Imports:
     dplyr,
     magrittr,
     tibble,
-    ggridges,
-    gganimate,
-    BradleyTerry2,
-    gnm,
     parallel,
     doSNOW,
-    caret,
-    zoo,
     foreach,
     rlist,
     usethis,
     reshape2,
     rtweet,
-    png
+    git2r
 Remotes:
   pbulsink/HockeyScrapR
-  thomasp85/gganimate
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
 RoxygenNote: 6.1.0

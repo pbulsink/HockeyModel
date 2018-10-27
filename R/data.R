@@ -140,7 +140,6 @@ updateSchedule <- function(data_dir = "./data-raw/"){
     schedule <- new_schedule
     schedule <- schedule[,c('Date','Home','Visitor')]
     usethis::use_data(schedule, overwrite = TRUE)
-    message("Data saved. Please rebuild package to use updated HockeyModel::schedule.")
   }
   return(new_schedule)
 }
@@ -160,7 +159,6 @@ updateScores <- function(data_dir = "./data-raw/"){
     new_scores$HomeTeam<-factor(new_scores$HomeTeam, levels = levels(scores$HomeTeam))
     scores<-new_scores
     usethis::use_data(scores, overwrite = TRUE)
-    message("Data saved. Please rebuild package to use updated HockeyModel::scores.")
   }
   return(new_scores)
 }

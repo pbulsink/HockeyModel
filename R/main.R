@@ -10,7 +10,7 @@ updateModel <- function(...){
   scores<-updateScores(...)
   schedule<-updateSchedule(...)
   dcparams<-updateDC(scores = scores, ...)
-  message("Updates complete. Please rebuild package.")
+  devtools::install(local = FALSE)
 }
 
 #' Update predictions
@@ -151,5 +151,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
   rating <- ratings(...)
   ggplot2::ggsave(file.path(graphic_dir, 'current_rating.png'), plot = rating)
 
+  #git2r::commit(all = TRUE, message = paste("Updates", Sys.Date()))
+  #git2r::push()
   tweet(graphic_dir, ...)
 }

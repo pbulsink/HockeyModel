@@ -9,17 +9,11 @@
 #' @export
 updateDC <- function(scores = HockeyModel::scores){
   scoresdc<-scores[scores$Date > as.Date("2008-08-01"),]
+  message('Calculating new model parameters...')
   m <- getM(scores=scoresdc)
+  message('Solving for low scoring games...')
   rho <- getRho(m = m, scores = scoresdc)
-  usethis::use_data(m, rho, overwrite = TRUE)
-  teamlist <- as.character(unique(m$data$Home))
-  team_params <- data.frame(Attack = as.numeric(m$coefficients[1:length(teamlist)]),
-                            Defence = c(0, m$coefficients[(length(teamlist)+1):(length(teamlist)*2-1)]),
-                            Team = sort(teamlist),
-                            Date = Sys.Date())
-  #mdaily<-rbind(mdaily, team_params)
-  #usethis::use_data(mdaily, internal = TRUE, overwrite = TRUE)
-  message("Data saved. Please rebuild package to use updated HockeyModel::m or HockeyModel::rho.")
+  suppressMessages(usethis::use_data(m, rho, overwrite = TRUE))
   return(list(m = m, rho=rho))
 }
 
