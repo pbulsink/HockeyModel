@@ -139,7 +139,7 @@ updateSchedule <- function(data_dir = "./data-raw/"){
   if(nrow(new_schedule) > nrow(schedule)){
     schedule <- new_schedule
     schedule <- schedule[,c('Date','Home','Visitor')]
-    usethis::use_data(schedule, overwrite = TRUE)
+    suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
   }
   return(new_schedule)
 }
@@ -158,7 +158,7 @@ updateScores <- function(data_dir = "./data-raw/"){
     new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))
     new_scores$HomeTeam<-factor(new_scores$HomeTeam, levels = levels(scores$HomeTeam))
     scores<-new_scores
-    usethis::use_data(scores, overwrite = TRUE)
+    suppressMessages(usethis::use_data(scores, overwrite = TRUE))
   }
   return(new_scores)
 }

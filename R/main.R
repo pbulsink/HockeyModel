@@ -11,6 +11,8 @@ updateModel <- function(...){
   schedule<-updateSchedule(...)
   dcparams<-updateDC(scores = scores, ...)
   devtools::install(local = FALSE)
+  .rs.restartR()
+  require(HockeyModel)
 }
 
 #' Update predictions
@@ -56,10 +58,10 @@ todayOdds <- function(date = Sys.Date(), ...){
 #' @return playoff odds ggplot object
 #' @export
 playoffOdds <- function(...){
-  if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
-    message('Scores may be out of date. This can affect predictions. Please update if midseason.')
-  }
-  updatePredictions(...)
+  # if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
+  #   message('Scores may be out of date. This can affect predictions. Please update if midseason.')
+  # }
+  # updatePredictions(...)
   return(plot_prediction_playoffs_by_team(...))
 }
 
@@ -70,10 +72,10 @@ playoffOdds <- function(...){
 #' @return president's odds ggplot object
 #' @export
 presidentOdds <- function(...){
-  if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
-    message('Scores may be out of date. This can affect predictions. Please update if midseason.')
-  }
-  updatePredictions(...)
+  # if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
+  #   message('Scores may be out of date. This can affect predictions. Please update if midseason.')
+  # }
+  # updatePredictions(...)
   return(plot_prediction_presidents_by_team())
 }
 
@@ -84,10 +86,10 @@ presidentOdds <- function(...){
 #' @return point prediction ggplot object
 #' @export
 pointPredict <- function(...){
-  if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
-    message('Scores may be out of date. This can affect predictions. Please update if midseason.')
-  }
-  updatePredictions(...)
+  # if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
+  #   message('Scores may be out of date. This can affect predictions. Please update if midseason.')
+  # }
+  # updatePredictions(...)
   return(plot_prediction_points_by_team())
 }
 
@@ -116,18 +118,23 @@ tweet <- function(graphic_dir = './prediction_results/graphics/', token = rtweet
   rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), ")."),
                      media = file.path(graphic_dir, "point_predict.png"), token = token)
 
+  my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
+  reply_id<-my_timeline$status_id[1]
   #until Rtweet has scheduler
   Sys.sleep(delay)
 
   rtweet::post_tweet(status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), ")."),
-                     media = file.path(graphic_dir, "playoff_odds.png"), token = token)
+                     media = file.path(graphic_dir, "playoff_odds.png"),
+                     in_reply_to_status_id = reply_id, token = token)
 
+  my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
+  reply_id<-my_timeline$status_id[1]
   #until Rtweet has scheduler
   Sys.sleep(delay)
 
   rtweet::post_tweet(status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), ")."),
-                     media = file.path(graphic_dir, "president_odds.png"), token = token)
-
+                     media = file.path(graphic_dir, "president_odds.png"),
+                     in_reply_to_status_id = reply_id, token = token)
 }
 
 #' Daily functions, rolled into one call
@@ -141,15 +148,15 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
   #updateModel(...)
   updatePredictions(...)
   today <- todayOdds(...)
-  ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today)
+  ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
   playoff <- playoffOdds(...)
-  ggplot2::ggsave(file.path(graphic_dir, 'playoff_odds.png'), plot = playoff)
+  ggplot2::ggsave(file.path(graphic_dir, 'playoff_odds.png'), plot = playoff, width = 11, height = 8.5, units = "in")
   president <- presidentOdds(...)
-  ggplot2::ggsave(file.path(graphic_dir, 'president_odds.png'), plot = president)
+  ggplot2::ggsave(file.path(graphic_dir, 'president_odds.png'), plot = president, width = 11, height = 8.5, units = "in")
   point <- pointPredict(...)
-  ggplot2::ggsave(file.path(graphic_dir, 'point_predict.png'), plot = point)
+  ggplot2::ggsave(file.path(graphic_dir, 'point_predict.png'), plot = point, width = 11, height = 8.5, units = "in")
   rating <- ratings(...)
-  ggplot2::ggsave(file.path(graphic_dir, 'current_rating.png'), plot = rating)
+  ggplot2::ggsave(file.path(graphic_dir, 'current_rating.png'), plot = rating, width = 11, height = 8.5, units = "in")
 
   #git2r::commit(all = TRUE, message = paste("Updates", Sys.Date()))
   #git2r::push()
