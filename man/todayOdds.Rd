@@ -4,7 +4,9 @@
 \alias{todayOdds}
 \title{Today's game odds graphic}
 \usage{
-todayOdds(date = Sys.Date(), ...)
+todayOdds(date = Sys.Date(), rho = HockeyModel::rho,
+  m = HockeyModel::m, schedule = HockeyModel::schedule,
+  scores = HockeyModel::scores, ...)
 }
 \arguments{
 \item{date}{date to predict odds. Default today}

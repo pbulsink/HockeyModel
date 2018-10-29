@@ -4,7 +4,8 @@
 \alias{updatePredictions}
 \title{Update predictions}
 \usage{
-updatePredictions(data_dir = "./prediction_results/", ...)
+updatePredictions(data_dir = "./prediction_results/",
+  scores = HockeyModel::scores, schedule = HockeyModel::schedule, ...)
 }
 \arguments{
 \item{data_dir}{directory of predictions}

@@ -10,9 +10,10 @@ updateModel <- function(...){
   scores<-updateScores(...)
   schedule<-updateSchedule(...)
   dcparams<-updateDC(scores = scores, ...)
-  devtools::install(local = FALSE)
-  .rs.restartR()
-  require(HockeyModel)
+  #devtools::install(local = FALSE)
+  #.rs.restartR()
+  #require(HockeyModel)
+  return(list(scores = scores, schedule = schedule, m = dcparams$m, rho = dcparams$rho))
 }
 
 #' Update predictions
@@ -21,7 +22,7 @@ updateModel <- function(...){
 #' @param ... Items to pass to update functions.
 #'
 #' @export
-updatePredictions<- function(data_dir = "./prediction_results/", ...){
+updatePredictions<- function(data_dir = "./prediction_results/", scores = HockeyModel::scores, schedule = HockeyModel::schedule, ...){
   if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
     message('Scores may be out of date. This can affect predictions. Please update if midseason.')
   }
@@ -30,7 +31,7 @@ updatePredictions<- function(data_dir = "./prediction_results/", ...){
   pdates<-pdates[pdates != 'graphics']
   lastp<-as.Date(max(pdates))
   if(lastp != Sys.Date()){
-    dcPredictMultipleDays(start = as.Date(lastp)+1, ...)
+    dcPredictMultipleDays(start = as.Date(lastp)+1, scores = scores, schedule = schedule, ...)
   }
 }
 
@@ -41,14 +42,14 @@ updatePredictions<- function(data_dir = "./prediction_results/", ...){
 #'
 #' @return today's odds ggplot object
 #' @export
-todayOdds <- function(date = Sys.Date(), ...){
+todayOdds <- function(date = Sys.Date(), rho = HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, scores = HockeyModel::scores, ...){
   if(scores$Date[nrow(scores)] < (date - 7)){
     message('Scores may be out of date. This can affect predictions. Please update if midseason.')
   }
   if(nrow(schedule[schedule$Date == date, ]) == 0){
     stop("No games today.")
   }
-  return(plot_odds_today(date, ...))
+  return(plot_odds_today(date, rho = rho, m = m, schedule = schedule, ...))
 }
 
 #' Predict playoff odds graphic
@@ -99,8 +100,8 @@ pointPredict <- function(...){
 #'
 #' @return today's ratings ggplot object
 #' @export
-ratings <- function(...) {
-  return(plotDC(...))
+ratings <- function(m = HockeyModel::m, ...) {
+  return(plotDC(m=m, ...))
 }
 
 tweet <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, ...){
@@ -143,11 +144,11 @@ tweet <- function(graphic_dir = './prediction_results/graphics/', token = rtweet
 #'
 #' @export
 dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
-  message("Reminder, run updateModel() first.")
-  Sys.sleep(5)
-  #updateModel(...)
-  updatePredictions(...)
-  today <- todayOdds(...)
+  #message("Reminder, run updateModel() first.")
+  #Sys.sleep(5)
+  modelparams<-updateModel(...)
+  updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
+  today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
   ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
   playoff <- playoffOdds(...)
   ggplot2::ggsave(file.path(graphic_dir, 'playoff_odds.png'), plot = playoff, width = 11, height = 8.5, units = "in")
@@ -155,10 +156,12 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
   ggplot2::ggsave(file.path(graphic_dir, 'president_odds.png'), plot = president, width = 11, height = 8.5, units = "in")
   point <- pointPredict(...)
   ggplot2::ggsave(file.path(graphic_dir, 'point_predict.png'), plot = point, width = 11, height = 8.5, units = "in")
-  rating <- ratings(...)
+  rating <- ratings(m = modelparams$m)
   ggplot2::ggsave(file.path(graphic_dir, 'current_rating.png'), plot = rating, width = 11, height = 8.5, units = "in")
 
-  #git2r::commit(all = TRUE, message = paste("Updates", Sys.Date()))
+  #repo <- git2r::repository()
+  #git2r::add(repo=repo, path = "./prediction_results/*.RDS")
+  #git2r::commit(repo = repo, all = TRUE, message = paste("Updates", Sys.Date()))
   #git2r::push()
   tweet(graphic_dir, ...)
 }

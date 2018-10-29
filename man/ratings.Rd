@@ -4,7 +4,7 @@
 \alias{ratings}
 \title{Current ratings}
 \usage{
-ratings(...)
+ratings(m = HockeyModel::m, ...)
 }
 \arguments{
 \item{...}{Items to pass to plot functions.}

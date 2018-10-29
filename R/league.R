@@ -483,8 +483,8 @@ plot_pace_by_team <- function(team = 'all', scores = HockeyModel::scores, season
 #' @return a ggplot image of odds
 #'
 #' @export
-plot_odds_today <- function(today = Sys.Date(), ...) {
-  todayodds<-todayDC(today = today, ...)
+plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, ...) {
+  todayodds<-todayDC(today = today, rho = rho, m = m, schedule = schedule, ...)
 
   #add odds for each team in OT/SO
   todayodds$HomeWinOT<-(todayodds$HomeWin / (todayodds$HomeWin + todayodds$AwayWin)) * todayodds$Draw
