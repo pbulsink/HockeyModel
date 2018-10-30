@@ -421,12 +421,16 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
 #'
 #' @return a ggplot object
 #' @export
-plot_prediction_presidents_by_team <- function(all_predictions = compile_predictions(), past_days = 14){
+plot_prediction_presidents_by_team <- function(all_predictions = compile_predictions(), past_days = 14, minimum = 0.01){
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
   firstdate <- lastdate - past_days
   all_predictions<-all_predictions[all_predictions$predictionDate >= firstdate,]
+
+  rankedTeams<-unname(unlist(all_predictions[(all_predictions$predictionDate == lastdate & all_predictions$Presidents > minimum), "Team"]))
+
+  all_predictions<-all_predictions[all_predictions$Team %in% rankedTeams, ]
 
   #extract constants
   teams<-unique(all_predictions$Team)

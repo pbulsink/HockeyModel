@@ -136,9 +136,11 @@ buildTeamColours <- function(){
 #' @export
 updateSchedule <- function(data_dir = "./data-raw/"){
   new_schedule<-HockeyScrapR::getSchedule(data_dir = data_dir, from_date=as.Date("2018-10-01"))
+  new_schedule<-new_schedule[,c('Date', 'Visitor', 'Home')]
+  new_schedule<-data.frame("Date" = new_schedule$Date, "HomeTeam" = new_schedule$Home, "AwayTeam" = new_schedule$Visitor)
+  new_schedule$Date <- as.Date(new_schedule$Date)
   if(nrow(new_schedule) > nrow(schedule)){
     schedule <- new_schedule
-    schedule <- schedule[,c('Date','Home','Visitor')]
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
   }
   return(new_schedule)

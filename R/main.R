@@ -114,6 +114,7 @@ tweet <- function(graphic_dir = './prediction_results/graphics/', token = rtweet
                      in_reply_to_status_id = reply_id, token = token)
 
   #until Rtweet has scheduler
+  message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
   rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), ")."),
@@ -121,7 +122,9 @@ tweet <- function(graphic_dir = './prediction_results/graphics/', token = rtweet
 
   my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
   reply_id<-my_timeline$status_id[1]
+
   #until Rtweet has scheduler
+  message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
   rtweet::post_tweet(status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), ")."),
@@ -130,7 +133,9 @@ tweet <- function(graphic_dir = './prediction_results/graphics/', token = rtweet
 
   my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
   reply_id<-my_timeline$status_id[1]
+
   #until Rtweet has scheduler
+  message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
   rtweet::post_tweet(status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), ")."),
