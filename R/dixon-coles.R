@@ -138,6 +138,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   #Generate m
   dc.m.ot <- getM(scores=dcscores.ot, currentDate = schedule$Date[[1]])
   dc.m.original <- getM(scores = dcscores, currentDate = schedule$Date[[1]])
+  rho <- HockeyModel::rho
 
   `%dopar%` <- foreach::`%dopar%`
   cl<-parallel::makeCluster(cores)
@@ -184,9 +185,28 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
         mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE, m = dc.m)
       }
 
+
       #Get a goals by poisson odds
-      homegoals<-rpois(lambda = lambda, n=1)
-      awaygoals<-rpois(lambda = mu, n=1)
+      goals<-data.frame(Goals = c(0:10), Home = dpois(0:10, lambda), Away = dpois(0:10, mu))
+
+      #Adjust for low scores
+      goals$Home[[1]]<-goals$Home[[1]]*(-(lambda*mu*rho))
+      goals$Home[[2]]<-goals$Home[[2]]*(1-rho)
+
+      goals$Away[[1]]<-goals$Away[[1]]*(-(lambda*mu*rho))
+      goals$Away[[2]]<-goals$Away[[2]]*(1-rho)
+
+      #renormalize
+      goals$Home<-goals$Home/sum(goals$Home)
+      goals$Away<-goals$Away/sum(goals$Away)
+
+      #Sum of densities (1 indexed... row 1 == 0 goals) for randomly getting a reasonable goal total
+      hg<-cumsum(goals$Home)
+      ag<-cumsum(goals$Away)
+
+      #Use runif to get a goals total, then adjust for 0/1 off-index. max includes... ,1 for error prevention (e.g. no hg < runif(1))
+      homegoals<-max(which(hg < runif(1)), 1)-1
+      awaygoals<-max(which(ag < runif(1)), 1)-1
 
       #Deal with ties
       if(homegoals == awaygoals){
@@ -480,7 +500,7 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
     if(homeiceadv){
       lambda <- 3.319624 #Historical home goals
     } else {
-      lambda <- 2.827417
+      lambda <- 2.827417 #Historical away goals
     }
   }
 
