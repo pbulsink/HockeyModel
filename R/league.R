@@ -552,3 +552,64 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
   return(gt)
 
 }
+
+
+#' Title
+#'
+#' @param home The Home Team
+#' @param away The AWay Team
+#' @param m the DC m model
+#' @param rho the DC rho value
+#'
+#' @return a list of expected home & away goals, plus a plot.
+#' @export
+plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho){
+  # Expected goals home
+  lambda <- try(stats::predict(m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
+
+  # Expected goals away
+  mu<-try(stats::predict(m, data.frame(Home = 0, Team = away, Opponent = home), type = "response"), TRUE)
+
+  #fix errors
+  if(!is.numeric(lambda)){
+    lambda<-DCPredictErrorRecover(team = home, opponent = away, homeiceadv = TRUE)
+  }
+  if(!is.numeric(mu)){
+    mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE)
+  }
+
+  goals<-data.frame(Goals = c(0:8), Home = dpois(0:8, lambda), Away = dpois(0:8, mu))
+
+  goals$Home[[1]]<-goals$Home[[1]]*-(lambda*mu*rho)
+  goals$Home[[2]]<-goals$Home[[2]]*(1-rho)
+
+  goals$Away[[1]]<-goals$Away[[1]]*-(lambda*mu*rho)
+  goals$Away[[2]]<-goals$Away[[2]]*(1-rho)
+  goals$Home<-goals$Home/sum(goals$Home)
+  goals$Away<-goals$Away/sum(goals$Away)
+
+  goals<-reshape2::melt(goals, id = "Goals", variable.name = "Team", value.name = "Density")
+
+  plotcolors<-c(teamColours[(teamColours$Team == home & teamColours$Code == "Primary"), "Hex"],
+                teamColours[(teamColours$Team == away & teamColours$Code == "Primary"), "Hex"])
+
+  home_hjust<-1-(mu>lambda)
+
+  p <- ggplot2::ggplot(data = goals, ggplot2::aes(x = Goals, y = Density, color = Team, fill = Team, color = Team)) +
+    #ggplot2::geom_point() +
+    ggplot2::geom_area(position = "identity", alpha = 0.5) +
+    ggplot2::theme_bw() +
+    ggplot2::geom_vline(xintercept = mu) +
+    ggplot2::geom_vline(xintercept = lambda) +
+    ggplot2::scale_x_continuous(limits = c(0, 8)) +
+    ggplot2::scale_fill_manual(labels = c(home, away), values = plotcolors)+
+    ggplot2::scale_color_manual(labels = c(home, away), values = plotcolors)+
+    ggplot2::annotate(geom = 'label', x = mu, y = 0.01, label = paste0("Away Goals: ", round(mu, 2)), hjust = home_hjust) +
+    ggplot2::annotate(geom = 'label', x = lambda, y = 0.01, label = paste0("Home Goals: ", round(lambda, 2)), hjust = 1-home_hjust) +
+    ggplot2::xlab('Goals') +
+    ggplot2::ylab('Odds') +
+    ggplot2::ggtitle("Predicted Goals", subtitle = paste0("For ", away, " at ", home, " on ", Sys.Date()))
+
+  return(list(homegoals = lambda, awaygoals = mu, plot = p))
+
+}
