@@ -154,6 +154,10 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
   modelparams<-updateModel(...)
   updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
   today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
+
+  if(!dir.exists(graphic_dir)){
+    dir.create(graphic_dir, recursive = TRUE)
+  }
   ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
   playoff <- playoffOdds(...)
   ggplot2::ggsave(file.path(graphic_dir, 'playoff_odds.png'), plot = playoff, width = 11, height = 8.5, units = "in")
