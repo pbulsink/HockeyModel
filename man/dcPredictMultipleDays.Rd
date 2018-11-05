@@ -6,7 +6,7 @@
 \usage{
 dcPredictMultipleDays(start = as.Date("2018-10-01"), end = Sys.Date(),
   scores = HockeyModel::scores, schedule = HockeyModel::schedule,
-  today = TRUE, ...)
+  today = TRUE, filedir = "./prediction_results", ...)
 }
 \arguments{
 \item{start}{First day to predict. Default start of season}
