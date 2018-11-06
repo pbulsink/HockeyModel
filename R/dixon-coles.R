@@ -520,7 +520,12 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, today = TRUE, ...){
+dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, today = TRUE, filedir = "./prediction_results", ...){
+
+  if(!dir.exists(filedir)){
+    dir.create(filedir, recursive = TRUE)
+  }
+
   predict_dates<-unique(scores$Date[scores$Date >= start & scores$Date <= end])
   if(today){
     predict_dates<-unique(c(predict_dates, Sys.Date()))
@@ -533,8 +538,11 @@ dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), sco
     message('Predictions as of: ', d)
     score<-scores[scores$Date < day,]
     sched<-schedule[schedule$Date >= day,]
-    preds<-dcRealSeasonPredict(nsims=min(1e6, floor(1.5e6/nrow(sched))), scores=score, schedule = sched, ndays=7, ...)
-    saveRDS(preds$summary_results, file = file.path("./prediction_results", paste0(d, '-predictions.RDS')))
+    preds<-tryCatch({dcRealSeasonPredict(nsims=min(1e6, floor(1.5e6/nrow(sched))), scores=score, schedule = sched, ndays=7, ...)
+    saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))},
+    error = function(e) message("Error: ", e, "\non day ",d,". Skipping...")
+    )
+    gc(verbose = FALSE)
   }
 
   return(TRUE)
