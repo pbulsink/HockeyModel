@@ -347,8 +347,8 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
                                    NA_character_)
 
   #Build and trim team colours for plot
-  teamColoursList<-as.vector(teamColours$Hex[teamColours$Code == "Primary"])
-  names(teamColoursList)<-teamColours$Team[teamColours$Code == "Primary"]
+  teamColoursList<-as.vector(teamColours$Hex)
+  names(teamColoursList)<-teamColours$Team
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
@@ -394,8 +394,8 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
                                   NA_character_)
 
   #Build and trim team colours for plot
-  teamColoursList<-as.vector(teamColours$Hex[teamColours$Code == "Primary"])
-  names(teamColoursList)<-teamColours$Team[teamColours$Code == "Primary"]
+  teamColoursList<-as.vector(teamColours$Hex)
+  names(teamColoursList)<-teamColours$Team
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
@@ -445,8 +445,8 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
                                   NA_character_)
 
   #Build and trim team colours for plot
-  teamColoursList<-as.vector(teamColours$Hex[teamColours$Code == "Primary"])
-  names(teamColoursList)<-teamColours$Team[teamColours$Code == "Primary"]
+  teamColoursList<-as.vector(teamColours$Hex)
+  names(teamColoursList)<-teamColours$Team
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
@@ -503,10 +503,10 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
   plotalpha<-c()
   for(i in 1:nrow(todayodds)){
     plotcolors<-c(plotcolors,
-                  teamColours[(teamColours$Team == todayodds[i, 'HomeTeam'] & teamColours$Code == 'Primary'), 'Hex'],
-                  teamColours[(teamColours$Team == todayodds[i, 'HomeTeam'] & teamColours$Code == 'Primary'), 'Hex'],
-                  teamColours[(teamColours$Team == todayodds[i, 'AwayTeam'] & teamColours$Code == 'Primary'), 'Hex'],
-                  teamColours[(teamColours$Team == todayodds[i, 'AwayTeam'] & teamColours$Code == 'Primary'), 'Hex'])
+                  teamColours[teamColours$Team == todayodds[i, 'HomeTeam'], 'Hex'],
+                  teamColours[teamColours$Team == todayodds[i, 'HomeTeam'], 'Hex'],
+                  teamColours[teamColours$Team == todayodds[i, 'AwayTeam'], 'Hex'],
+                  teamColours[teamColours$Team == todayodds[i, 'AwayTeam'], 'Hex'])
     plotalpha <- c(plotalpha, 0.9, 0.7, 0.6, 0.9)
   }
 
@@ -590,8 +590,8 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho){
 
   goals<-reshape2::melt(goals, id = "Goals", variable.name = "Team", value.name = "Density")
 
-  plotcolors<-c(teamColours[(teamColours$Team == home & teamColours$Code == "Primary"), "Hex"],
-                teamColours[(teamColours$Team == away & teamColours$Code == "Primary"), "Hex"])
+  plotcolors<-c(teamColours[teamColours$Team == home, "Hex"],
+                teamColours[teamColours$Team == away, "Hex"])
 
   home_hjust<-1-(mu>lambda)
 
