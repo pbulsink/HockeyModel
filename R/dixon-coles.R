@@ -538,10 +538,9 @@ dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), sco
     message('Predictions as of: ', d)
     score<-scores[scores$Date < day,]
     sched<-schedule[schedule$Date >= day,]
-    preds<-tryCatch({dcRealSeasonPredict(nsims=min(1e6, floor(1.5e6/nrow(sched))), scores=score, schedule = sched, ndays=7, ...)
-    saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))},
-    error = function(e) message("Error: ", e, "\non day ",d,". Skipping...")
-    )
+    preds<-try(dcRealSeasonPredict(nsims=min(1e6, floor(1.5e6/nrow(sched))), scores=score, schedule = sched, ndays=7, ...))
+    saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))
+
     gc(verbose = FALSE)
   }
 
