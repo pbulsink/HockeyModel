@@ -538,9 +538,22 @@ dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), sco
     message('Predictions as of: ', d)
     score<-scores[scores$Date < day,]
     sched<-schedule[schedule$Date >= day,]
-    preds<-try(dcRealSeasonPredict(nsims=min(1e6, floor(1.5e6/nrow(sched))), scores=score, schedule = sched, ndays=7, ...))
-    saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))
-
+    preds<-NULL
+    preds<-try(dcRealSeasonPredict(nsims=min(1e5, floor(2e6/nrow(sched))), scores=score, schedule = sched, ndays=7), silent = TRUE)
+    if(!is.null(preds) & 'summary_results' %in% names(preds)){
+      message('Saving Prediction file...')
+      saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))
+    } else {
+      message('Error occurred, retrying', d, '.')
+      preds<-NULL
+      preds<-try(dcRealSeasonPredict(nsims=min(1e5, floor(2e6/nrow(sched))), scores=score, schedule = sched, ndays=7), silent = TRUE)
+      if(!is.null(preds) & 'summary_results' %in% names(preds)){
+        message('Saving Prediction file...')
+        saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))
+      } else {
+        message('An Error Occurred. Continuing to next day...')
+      }
+    }
     gc(verbose = FALSE)
   }
 

@@ -117,11 +117,7 @@
 
 buildTeamColours <- function(){
   teamColours <- read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
-  teamColours$Code <- as.factor(teamColours$Code)
   teamlist<-unique(teamColours$Team)
-  secondary<-teamlist[!teamlist %in% teamColours[teamColours$Code == 'Secondary', 'Team']]
-  secondary<-data.frame(Team = secondary, Code = 'Secondary', R = 0, G=0, B=0, Hex = '#000000')
-  teamColours <- rbind(teamColours, secondary)
   teamColours$Logo <- file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", teamlist)), ".gif"))
   usethis::use_data(teamColours, overwrite = TRUE)
 }

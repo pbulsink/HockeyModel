@@ -153,18 +153,23 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
   #Sys.sleep(5)
   modelparams<-updateModel(...)
   updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
-  today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
 
   if(!dir.exists(graphic_dir)){
     dir.create(graphic_dir, recursive = TRUE)
   }
+  message("Creating graphics...")
+  today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
   ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
+
   playoff <- playoffOdds(...)
   ggplot2::ggsave(file.path(graphic_dir, 'playoff_odds.png'), plot = playoff, width = 11, height = 8.5, units = "in")
+
   president <- presidentOdds(...)
   ggplot2::ggsave(file.path(graphic_dir, 'president_odds.png'), plot = president, width = 11, height = 8.5, units = "in")
+
   point <- pointPredict(...)
   ggplot2::ggsave(file.path(graphic_dir, 'point_predict.png'), plot = point, width = 11, height = 8.5, units = "in")
+
   rating <- ratings(m = modelparams$m)
   ggplot2::ggsave(file.path(graphic_dir, 'current_rating.png'), plot = rating, width = 11, height = 8.5, units = "in")
 
@@ -172,5 +177,6 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
   #git2r::add(repo=repo, path = "./prediction_results/*.RDS")
   #git2r::commit(repo = repo, all = TRUE, message = paste("Updates", Sys.Date()))
   #git2r::push()
+  message("Posting Tweets...")
   tweet(graphic_dir, ...)
 }

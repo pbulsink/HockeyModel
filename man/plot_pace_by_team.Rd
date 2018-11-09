@@ -4,8 +4,8 @@
 \alias{plot_pace_by_team}
 \title{Plot Pace by team}
 \usage{
-plot_pace_by_team(team = "all", scores = HockeyModel::scores,
-  season = NULL)
+plot_pace_by_team(graphic_dir = "./prediction_results/graphics",
+  subdir = "pace", prediction_dir = "./prediction_results")
 }
 \arguments{
 \item{team}{Specific team(s) to plot. Default = all}
