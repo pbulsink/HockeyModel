@@ -359,8 +359,8 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
     ggplot2::ylab("Points") +
-    ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days")) +
-    ggplot2::theme_bw() +
+    ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days\nChart by @BulsinkB")) +
+    ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
@@ -406,8 +406,8 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
     ggplot2::ylab("Plaoff Odds") +
-    ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days")) +
-    ggplot2::theme_bw() +
+    ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days\nChart by @BulsinkB")) +
+    ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
@@ -457,8 +457,8 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
     ggplot2::ylab("President's Trophy Odds") +
-    ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days")) +
-    ggplot2::theme_bw() +
+    ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days\nChart by @BulsinkB")) +
+    ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
@@ -469,11 +469,10 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
 
 #' Plot Pace by team
 #'
-#' @param team Specific team(s) to plot. Default = all
-#' @param scores the historical scores.
-#' @param season choose a specific season. Default NULL is most recent (current)
+#' @param graphic_dir The graphics directory
+#' @param subdir The pace subdirectory in graphics
+#' @param prediction_dir The predictions directory
 #'
-#' @return a ggplot object
 #' @export
 plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdir = 'pace', prediction_dir = "./prediction_results"){
   sc<-scores[scores$Date > as.Date("2018-10-01"),]
@@ -481,13 +480,17 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
   teamlist<-unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
 
   #Get old and most recent predictions
-  p<-readRDS(file.dir(prediction_dir, "2018-10-03-predictions.RDS"))
+  p<-readRDS(file.path(prediction_dir, "2018-10-03-predictions.RDS"))
 
+  filelist<-list.files(path = prediction_dir)
   pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
   pdates<-pdates[pdates != 'graphics']
   lastp<-as.Date(max(pdates))
-  q<-readRDS(file.dir(prediction_dir, paste0(lastp,"-predictions.RDS")))
+  q<-readRDS(file.path(prediction_dir, paste0(lastp,"-predictions.RDS")))
 
+  if(!dir.exists(file.path(graphic_dir, subdir))){
+    dir.create(file.path(graphic_dir, subdir), recursive = TRUE)
+  }
 
   for (team in teamlist){
     colour = teamColours[teamColours$Team == team, 'Hex']
@@ -510,11 +513,11 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
     maxq<-qteam$maxPoints
     minq<-qteam$minPoints
 
-    p <- ggplot2::ggplot(teamscores, ggplot2::aes(x = GameNum, y = cPoints, colour = Venue)) +
+    plt <- ggplot2::ggplot(teamscores, ggplot2::aes(x = GameNum, y = cPoints, colour = Venue)) +
       ggplot2::geom_point() +
       ggplot2::scale_x_continuous(limits = c(0, 82)) +
       ggplot2::scale_y_continuous(limits = c(0, 164)) +
-      ggplot2::theme_bw() +
+      ggplot2::theme_minimal() +
       ggplot2::ggtitle('Points Pace', subtitle = paste0(team, ' Expected Points: ', round(qpoints, 1), "\nChart by @BulsinkB"))+
       ggplot2::ylab('Points') +
       ggplot2::xlab('Game Number') +
@@ -525,7 +528,7 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
       ggplot2::geom_segment(x = ngames, y = cp, xend = 82, yend = maxq, alpha = 0.2, colour = colour)+
       ggplot2::geom_segment(x = ngames, y = cp, xend = 82, yend = minq, alpha = 0.2, colour = colour)
 
-    ggplot2::ggsave(filename = file.path(graphic_dir, subdir, paste0(team, '.png')), plot = p, width = 11, height = 8.5, units = "in")
+    ggplot2::ggsave(filename = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", team)), '.png')), plot = plt, width = 11, height = 8.5, units = "in")
   }
 }
 
@@ -567,8 +570,8 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
    #ggplot2::scale_y_continuous(fill = plotcolors, alpha = plotalpha) +
     ggplot2::xlab("") +
     ggplot2::ylab("Result Odds") +
-    ggplot2::ggtitle(paste0("  Predictions for Games ", Sys.Date(), "\n")) +
-    ggplot2::theme_bw() +
+    ggplot2::ggtitle(paste0("  Predictions for Games ", Sys.Date(), "\nChart by @BulsinkB\n")) +
+    ggplot2::theme_minimal() +
     ggplot2::theme(axis.text.y = ggplot2::element_blank(),
                    axis.ticks.y = ggplot2::element_blank(),
                    panel.background = ggplot2::element_rect(fill = "white"),
@@ -612,9 +615,9 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
 #' @param m the DC m model
 #' @param rho the DC rho value
 #'
-#' @return a list of expected home & away goals, plus a plot.
+#' @return a ggplot object
 #' @export
-plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho){
+plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoal = 10){
   # Expected goals home
   lambda <- try(stats::predict(m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
 
@@ -629,15 +632,16 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho){
     mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE)
   }
 
-  goals<-data.frame(Goals = c(0:8), Home = dpois(0:8, lambda), Away = dpois(0:8, mu))
+  #goal prediction method by poisson & d/c handling of low scores:
+  probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
 
-  goals$Home[[1]]<-goals$Home[[1]]*-(lambda*mu*rho)
-  goals$Home[[2]]<-goals$Home[[2]]*(1-rho)
+  scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
+  probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
 
-  goals$Away[[1]]<-goals$Away[[1]]*-(lambda*mu*rho)
-  goals$Away[[2]]<-goals$Away[[2]]*(1-rho)
-  goals$Home<-goals$Home/sum(goals$Home)
-  goals$Away<-goals$Away/sum(goals$Away)
+  goals<-data.frame(Goals = c(0:maxgoal), Home = 0, Away = 0)
+
+  goals$Away<-colSums(probability_matrix)*1/sum(colSums(probability_matrix))
+  goals$Home<-rowSums(probability_matrix)*1/sum(rowSums(probability_matrix))
 
   goals<-reshape2::melt(goals, id = "Goals", variable.name = "Team", value.name = "Density")
 
@@ -646,22 +650,23 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho){
 
   home_hjust<-1-(mu>lambda)
 
-  p <- ggplot2::ggplot(data = goals, ggplot2::aes(x = Goals, y = Density, color = Team, fill = Team, color = Team)) +
+  p <- ggplot2::ggplot(data = goals, ggplot2::aes(x = Goals, y = Density, fill = Team)) +
     #ggplot2::geom_point() +
     ggplot2::geom_area(position = "identity", alpha = 0.5) +
-    ggplot2::theme_bw() +
-    ggplot2::geom_vline(xintercept = mu) +
-    ggplot2::geom_vline(xintercept = lambda) +
+    ggplot2::theme_minimal() +
+    ggplot2::geom_vline(xintercept = mu,linetype="dashed") +
+    ggplot2::geom_vline(xintercept = lambda,linetype="dashed") +
     ggplot2::scale_x_continuous(limits = c(0, 8)) +
     ggplot2::scale_fill_manual(labels = c(home, away), values = plotcolors)+
     ggplot2::scale_color_manual(labels = c(home, away), values = plotcolors)+
-    ggplot2::annotate(geom = 'label', x = mu, y = 0.01, label = paste0("Away Goals: ", round(mu, 2)), hjust = home_hjust) +
-    ggplot2::annotate(geom = 'label', x = lambda, y = 0.01, label = paste0("Home Goals: ", round(lambda, 2)), hjust = 1-home_hjust) +
+    ggplot2::annotate(geom = 'label', x = mu, y = 0.0, label = paste0(away, "\nPredicted Goals:", round(mu, 2)), hjust = home_hjust, vjust = 0) +
+    ggplot2::annotate(geom = 'label', x = lambda, y = 0.0, label = paste0(home, "\nPredicted Goals:", round(lambda, 2)), hjust = 1-home_hjust, vjust = 0) +
     ggplot2::xlab('Goals') +
     ggplot2::ylab('Odds') +
-    ggplot2::ggtitle("Predicted Goals", subtitle = paste0("For ", away, " at ", home, " on ", Sys.Date()))
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::ggtitle("Predicted Goals", subtitle = paste0(away, " at ", home, " on ", Sys.Date(),"\nChart by @BulsinkB"))
 
-  return(list(homegoals = lambda, awaygoals = mu, plot = p))
+  return(p)
 
 }
 
