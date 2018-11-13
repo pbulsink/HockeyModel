@@ -33,8 +33,8 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
                             Team = sort(teamlist))
 
   #Build and trim team colours for plot
-  teamColoursList<-as.vector(teamColours$Hex[teamColours$Code == "Primary"])
-  names(teamColoursList)<-teamColours$Team[teamColours$Code == "Primary"]
+  teamColoursList<-as.vector(teamColours$Hex)
+  names(teamColoursList)<-teamColours$Team
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teamlist]
 
   p<-ggplot2::ggplot(team_params,

@@ -359,7 +359,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
     ggplot2::ylab("Points") +
-    ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days\nChart by @BulsinkB")) +
+    ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
@@ -406,7 +406,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
     ggplot2::ylab("Plaoff Odds") +
-    ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days\nChart by @BulsinkB")) +
+    ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
@@ -457,7 +457,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::xlab("Date") +
     ggplot2::ylab("President's Trophy Odds") +
-    ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days\nChart by @BulsinkB")) +
+    ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
@@ -570,8 +570,8 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
    #ggplot2::scale_y_continuous(fill = plotcolors, alpha = plotalpha) +
     ggplot2::xlab("") +
     ggplot2::ylab("Result Odds") +
-    ggplot2::ggtitle(paste0("  Predictions for Games ", Sys.Date(), "\nChart by @BulsinkB\n")) +
-    ggplot2::theme_minimal() +
+    ggplot2::ggtitle(paste0("Predictions for Games ", Sys.Date()), subtitle = "Chart by @BulsinkB") +
+    ggplot2::theme_bw() +
     ggplot2::theme(axis.text.y = ggplot2::element_blank(),
                    axis.ticks.y = ggplot2::element_blank(),
                    panel.background = ggplot2::element_rect(fill = "white"),
