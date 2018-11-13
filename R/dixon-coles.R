@@ -140,6 +140,8 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   dc.m.original <- getM(scores = dcscores, currentDate = schedule$Date[[1]])
   rho <- HockeyModel::rho
 
+  maxgoal<-10
+
   `%dopar%` <- foreach::`%dopar%`
   cl<-parallel::makeCluster(cores)
   doSNOW::registerDoSNOW(cl)
@@ -185,24 +187,21 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
         mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE, m = dc.m)
       }
 
+      #Another new goal prediction method by poisson & d/c handling of low scores:
+      probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
 
-      #Get a goals by poisson odds
-      goals<-data.frame(Goals = c(0:10), Home = dpois(0:10, lambda), Away = dpois(0:10, mu))
+      scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
+      probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
 
-      #Adjust for low scores
-      goals$Home[[1]]<-goals$Home[[1]]*(-(lambda*mu*rho))
-      goals$Home[[2]]<-goals$Home[[2]]*(1-rho)
+      goals<-data.frame(Goals = c(0:maxgoal), Home = 0, Away = 0)
 
-      goals$Away[[1]]<-goals$Away[[1]]*(-(lambda*mu*rho))
-      goals$Away[[2]]<-goals$Away[[2]]*(1-rho)
-
-      #renormalize
-      goals$Home<-goals$Home/sum(goals$Home)
-      goals$Away<-goals$Away/sum(goals$Away)
+      goals$Away<-colSums(probability_matrix)*1/sum(colSums(probability_matrix))
+      goals$Home<-rowSums(probability_matrix)*1/sum(rowSums(probability_matrix))
 
       #Sum of densities (1 indexed... row 1 == 0 goals) for randomly getting a reasonable goal total
-      hg<-cumsum(goals$Home)
-      ag<-cumsum(goals$Away)
+
+      hg<-cumsum(homegoalsodds)
+      ag<-cumsum(awaygoalsodds)
 
       #Use runif to get a goals total, then adjust for 0/1 off-index. max includes... ,1 for error prevention (e.g. no hg < runif(1))
       homegoals<-max(which(hg < runif(1)), 1)-1
