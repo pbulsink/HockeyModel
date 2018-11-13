@@ -8,14 +8,11 @@ plot_pace_by_team(graphic_dir = "./prediction_results/graphics",
   subdir = "pace", prediction_dir = "./prediction_results")
 }
 \arguments{
-\item{team}{Specific team(s) to plot. Default = all}
+\item{graphic_dir}{The graphics directory}
 
-\item{scores}{the historical scores.}
+\item{subdir}{The pace subdirectory in graphics}
 
-\item{season}{choose a specific season. Default NULL is most recent (current)}
-}
-\value{
-a ggplot object
+\item{prediction_dir}{The predictions directory}
 }
 \description{
 Plot Pace by team

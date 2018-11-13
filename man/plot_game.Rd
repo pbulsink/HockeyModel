@@ -4,7 +4,8 @@
 \alias{plot_game}
 \title{Title}
 \usage{
-plot_game(home, away, m = HockeyModel::m, rho = HockeyModel::rho)
+plot_game(home, away, m = HockeyModel::m, rho = HockeyModel::rho,
+  maxgoal = 10)
 }
 \arguments{
 \item{home}{The Home Team}
@@ -16,7 +17,7 @@ plot_game(home, away, m = HockeyModel::m, rho = HockeyModel::rho)
 \item{rho}{the DC rho value}
 }
 \value{
-a list of expected home & away goals, plus a plot.
+a ggplot object
 }
 \description{
 Title

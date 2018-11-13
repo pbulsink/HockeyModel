@@ -96,7 +96,7 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
                     HomeWin=0, AwayWin = 0, Draw = 0,
                     stringsAsFactors = FALSE)
   for(i in 1:nrow(preds)){
-    p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], m=m, rho=rho, expeected_mean, season_percent)
+    p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], m=m, rho=rho, expected_mean=expected_mean, season_percent=season_percent)
     preds$HomeWin[[i]]<-p[[1]]
     preds$AwayWin[[i]]<-p[[3]]
     preds$Draw[[i]]<-p[[2]]
@@ -116,7 +116,7 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
 #'
 #' @return data frame of Team point ranges, playoff odds, etc.
 #' @export
-dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1, ndays=7, regress=TRUE){
+dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1, ndays=7, regress=FALSE){
 
   schedule$Date<-as.Date(schedule$Date)
   schedule<-schedule[schedule$Date > max(scores$Date), ]
@@ -141,16 +141,16 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   dc.m.original <- getM(scores = dcscores, currentDate = schedule$Date[[1]])
   rho <- HockeyModel::rho
 
-<<<<<<< HEAD
   if(regress){
-    last_game_date <- as.Date(max(schedule$Date))
+    last_game_date<-as.Date(max(scores$Date))
+    season_end_date <- as.Date(max(schedule$Date))
     season_start_date <- as.Date(min(c(scores[scores$Date > as.Date('2018-10-01'), 'Date'], schedule[schedule$Date > as.Date('2018-10-01'), 'Date'])))
-    season_length <- as.integer(last_game_date) - as.integer(season_start_date)
+    season_length <- as.integer(season_end_date) - as.integer(season_start_date)
+    remaining_length <- as.integer(season_end_date) - as.integer(last_game_date)
     expected_mean<-2.835184
   }
-=======
+
   maxgoal<-10
->>>>>>> a2ca11d1bb5099e85b68bfa0830c1edf0ba2997f
 
   `%dopar%` <- foreach::`%dopar%`
   cl<-parallel::makeCluster(cores)
@@ -197,17 +197,16 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
         mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE, m = dc.m)
       }
 
-<<<<<<< HEAD
       if(regress){
         #Adjust regress to mean
-        season_precent <- (season_length - as.integer(last_game_date - as.Date(results$Date[[g]])))/season_length
-        lambda <- lambda * (1-1/3 * season_precent) + expected_mean * (1/3 * season_precent)
-        mu <- mu * (1-1/3 * season_precent) + expected_mean * (1/3 * season_precent)
+        season_percent <- (remaining_length - as.integer(season_end_date - as.Date(d)))/season_length
+        lambda <- lambda * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
+        mu <- mu * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
       }
-=======
+
       #Another new goal prediction method by poisson & d/c handling of low scores:
       probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
->>>>>>> a2ca11d1bb5099e85b68bfa0830c1edf0ba2997f
+
 
       scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
       probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
@@ -219,8 +218,8 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
 
       #Sum of densities (1 indexed... row 1 == 0 goals) for randomly getting a reasonable goal total
 
-      hg<-cumsum(homegoalsodds)
-      ag<-cumsum(awaygoalsodds)
+      hg<-cumsum(goals$Home)
+      ag<-cumsum(goals$Away)
 
       #Use runif to get a goals total, then adjust for 0/1 off-index. max includes... ,1 for error prevention (e.g. no hg < runif(1))
       homegoals<-max(which(hg < runif(1)), 1)-1
@@ -304,20 +303,27 @@ remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedul
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
                     stringsAsFactors = FALSE)
 
+  last_game_date<-as.Date(max(scores$Date))
+  schedule <- schedule[schedule$Date > last_game_date, ]
+
   if(regress){
-    last_game_date <- as.Date(max(schedule$Date))
+    season_end_date <- as.Date(max(schedule$Date))
     season_start_date <- as.Date(min(c(scores[scores$Date > as.Date('2018-10-01'), 'Date'], schedule[schedule$Date > as.Date('2018-10-01'), 'Date'])))
-    season_length <- as.integer(last_game_date) - as.integer(season_start_date)
+    season_length <- as.integer(season_end_date) - as.integer(season_start_date)
+    remaining_length <- as.integer(season_end_date) - as.integer(last_game_date)
     expected_mean<-2.835184
+  } else {
+    expected_mean<-NULL
+    season_percent <- NULL
   }
 
   for(d in unique(schedule$Date)){
     if(regress){
       #Adjust regress to mean
-      season_precent <- (season_length - as.integer(last_game_date - as.Date(d)))/season_length
+      season_percent <- (remaining_length - as.integer(season_end_date - as.Date(d)))/season_length
     }
 
-    preds<-todayDC(today=d, schedule = schedule, season_percent, expected_mean, ...)
+    preds<-todayDC(today=d, schedule = schedule, season_percent = season_percent, expected_mean = expected_mean, ...)
     preds$Date <- d
     odds_table<-rbind(odds_table, preds)
   }
@@ -346,6 +352,10 @@ tau_singular <- function(xx, yy, lambda, mu, rho) {
   }
 }
 
+#' Tau function
+#' @description Used in dixon coles to adjust low scores
+#'
+#' @export
 tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 
 
@@ -425,7 +435,7 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
 #'
 #' @return a list of home win, draw, and away win probability
 #' @export
-DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean, season_percent) {
+DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL) {
   if(is.null(m)){
     m <- getM(scores = scores)
   }
@@ -447,8 +457,8 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
   }
 
   if(!is.null(expected_mean) & ! is.null(season_percent)) {
-    lambda <- lambda * (1-1/3 * season_precent) + expected_mean * (1/3 * season_precent)
-    mu <- mu * (1-1/3 * season_precent) + expected_mean * (1/3 * season_precent)
+    lambda <- lambda * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
+    mu <- mu * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
   }
 
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
