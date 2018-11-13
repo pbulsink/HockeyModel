@@ -6,7 +6,7 @@
 \usage{
 dcRealSeasonPredict(nsims = 1e+05, scores = HockeyModel::scores,
   schedule = HockeyModel::schedule, cores = parallel::detectCores() -
-  1, ndays = 1)
+  1, ndays = 7, regress = TRUE)
 }
 \arguments{
 \item{nsims}{number of simulations}
@@ -18,6 +18,8 @@ dcRealSeasonPredict(nsims = 1e+05, scores = HockeyModel::scores,
 \item{cores}{number of cores to process}
 
 \item{ndays}{number of days of games to play before reevaluating m}
+
+\item{regress}{Whether to regress toward mean}
 }
 \value{
 data frame of Team point ranges, playoff odds, etc.

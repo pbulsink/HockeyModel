@@ -86,7 +86,7 @@ plotDCHistory <- function(teamlist = NULL){
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
 #' @export
-todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule){
+todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL){
   games<-schedule[schedule$Date == today, ]
   if(nrow(games) == 0){
     return(NULL)
@@ -96,7 +96,7 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
                     HomeWin=0, AwayWin = 0, Draw = 0,
                     stringsAsFactors = FALSE)
   for(i in 1:nrow(preds)){
-    p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], m=m, rho=rho)
+    p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], m=m, rho=rho, expeected_mean, season_percent)
     preds$HomeWin[[i]]<-p[[1]]
     preds$AwayWin[[i]]<-p[[3]]
     preds$Draw[[i]]<-p[[2]]
@@ -112,10 +112,11 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
 #' @param schedule schedule this season
 #' @param cores number of cores to process
 #' @param ndays number of days of games to play before reevaluating m
+#' @param regress Whether to regress toward mean
 #'
 #' @return data frame of Team point ranges, playoff odds, etc.
 #' @export
-dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1, ndays=1){
+dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1, ndays=7, regress=TRUE){
 
   schedule$Date<-as.Date(schedule$Date)
   schedule<-schedule[schedule$Date > max(scores$Date), ]
@@ -139,6 +140,13 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   dc.m.ot <- getM(scores=dcscores.ot, currentDate = schedule$Date[[1]])
   dc.m.original <- getM(scores = dcscores, currentDate = schedule$Date[[1]])
   rho <- HockeyModel::rho
+
+  if(regress){
+    last_game_date <- as.Date(max(schedule$Date))
+    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date('2018-10-01'), 'Date'], schedule[schedule$Date > as.Date('2018-10-01'), 'Date'])))
+    season_length <- as.integer(last_game_date) - as.integer(season_start_date)
+    expected_mean<-2.835184
+  }
 
   `%dopar%` <- foreach::`%dopar%`
   cl<-parallel::makeCluster(cores)
@@ -185,6 +193,12 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
         mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE, m = dc.m)
       }
 
+      if(regress){
+        #Adjust regress to mean
+        season_precent <- (season_length - as.integer(last_game_date - as.Date(results$Date[[g]])))/season_length
+        lambda <- lambda * (1-1/3 * season_precent) + expected_mean * (1/3 * season_precent)
+        mu <- mu * (1-1/3 * season_precent) + expected_mean * (1/3 * season_precent)
+      }
 
       #Get a goals by poisson odds
       goals<-data.frame(Goals = c(0:10), Home = dpois(0:10, lambda), Away = dpois(0:10, mu))
@@ -280,14 +294,26 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, ...){
+remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, regress = FALSE, ...){
 
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
                     stringsAsFactors = FALSE)
 
+  if(regress){
+    last_game_date <- as.Date(max(schedule$Date))
+    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date('2018-10-01'), 'Date'], schedule[schedule$Date > as.Date('2018-10-01'), 'Date'])))
+    season_length <- as.integer(last_game_date) - as.integer(season_start_date)
+    expected_mean<-2.835184
+  }
+
   for(d in unique(schedule$Date)){
-    preds<-todayDC(today=d, schedule = schedule, ...)
+    if(regress){
+      #Adjust regress to mean
+      season_precent <- (season_length - as.integer(last_game_date - as.Date(d)))/season_length
+    }
+
+    preds<-todayDC(today=d, schedule = schedule, season_percent, expected_mean, ...)
     preds$Date <- d
     odds_table<-rbind(odds_table, preds)
   }
@@ -297,7 +323,7 @@ remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedul
     return(odds_table)
   }
 
-  summary_results <- simulateSeason(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule)
+  summary_results <- simulateSeasonParallel(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule)
 
   return(summary_results)
 }
@@ -395,7 +421,7 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
 #'
 #' @return a list of home win, draw, and away win probability
 #' @export
-DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores) {
+DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean, season_percent) {
   if(is.null(m)){
     m <- getM(scores = scores)
   }
@@ -414,6 +440,11 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
   }
   if(!is.numeric(mu)){
     mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE)
+  }
+
+  if(!is.null(expected_mean) & ! is.null(season_percent)) {
+    lambda <- lambda * (1-1/3 * season_precent) + expected_mean * (1/3 * season_precent)
+    mu <- mu * (1-1/3 * season_precent) + expected_mean * (1/3 * season_precent)
   }
 
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
@@ -539,14 +570,14 @@ dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), sco
     score<-scores[scores$Date < day,]
     sched<-schedule[schedule$Date >= day,]
     preds<-NULL
-    preds<-try(dcRealSeasonPredict(nsims=min(1e5, floor(2e6/nrow(sched))), scores=score, schedule = sched, ndays=7), silent = TRUE)
+    preds<-try(dcRealSeasonPredict(nsims=min(1e5, floor(2e6/nrow(sched))), scores=score, schedule = sched, ...), silent = TRUE)
     if(!is.null(preds) & 'summary_results' %in% names(preds)){
       message('Saving Prediction file...')
       saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))
     } else {
       message('Error occurred, retrying', d, '.')
       preds<-NULL
-      preds<-try(dcRealSeasonPredict(nsims=min(1e5, floor(2e6/nrow(sched))), scores=score, schedule = sched, ndays=7), silent = TRUE)
+      preds<-try(dcRealSeasonPredict(nsims=min(1e5, floor(2e6/nrow(sched))), scores=score, schedule = sched, ...), silent = TRUE)
       if(!is.null(preds) & 'summary_results' %in% names(preds)){
         message('Saving Prediction file...')
         saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))

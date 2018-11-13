@@ -1,0 +1,58 @@
+---
+title: "regression to mean"
+author: "Philip Bulsink"
+date: '2018-11-09'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Regression to mean in predictions
+
+```{r}
+library(HockeyModel)
+```
+
+Things should regress to mean, no?
+
+```{r}
+teamlist<-unique(m$data$Team)
+lambdas <- c()
+for(h in teamlist){
+  tl<-teamlist[teamlist != h]
+  for(a in tl){
+    lambdas <- c(lambdas, stats::predict(m, data.frame(Home = 0, Team = h, Opponent = a), type = "response"))
+  }
+}
+```
+
+The above are all of the teams in the nhl in the last 5 years. If each of them play eachother now, we have lambda and mu ranging from `r min(ex)` to `r max(ex)`, with a mean of `r mean(ex)`. 
+
+The histogram of these look like:
+```{r echo = FALSE}
+hist(ex)
+```
+
+What should we do? we could regress to the mean by 1/3 every season (as the elo model does) while predicting. So, each game would regress to 1/3 the mean by 1/82. This is hard to count game numbers though, we could alternatively go by day of season number?
+
+```{r}
+startdate<-min(schedule[schedule$Date > as.Date('2018-10-01'), 'Date'])
+lastdate<-as.Date(max(schedule$Date))
+ndays<-as.Date(lastdate)-as.Date(startdate)
+```
+
+So we get a season of `r as.integer(ndays)` long.
+
+So, for predictions on the first date:
+```{r}
+season_day <- 185 - as.integer(lastdate - as.Date(schedule[schedule$Date > as.Date('2018-10-01'), ]$Date[[1]]))
+lambda_adj <- lambda * (1-1/3 * season_day/185) + mean(lambdas) * (1/3 * (season_day/185))
+
+season_day2 <- 185 - as.integer(lastdate - as.Date(max(schedule[schedule$Date > as.Date('2018-10-01'), ]$Date)))
+lambda_adj2 <- lambda * (1-1/3 * season_day2/185) + mean(lambdas) * (1/3 * (season_day2/185))
+```
+So for an original lambda of `r lambda`, when predicting a whole season, the first game would have the lambda adjusted to `r lambda_adj`, and the last day would be `r lambda_adj2`
+
+To adjust for mid-season, change the `185 - ...` to the number of days remaining from the time the predictions are run instead (so `lastdate - Sys.Date()`).
