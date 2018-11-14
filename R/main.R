@@ -104,7 +104,7 @@ ratings <- function(m = HockeyModel::m, ...) {
   return(plotDC(m=m, ...))
 }
 
-tweet <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, ...){
+tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, ...){
   rtweet::post_tweet(status = "Predicted odds for today's #NHL games",
                      media = file.path(graphic_dir, "today_odds.png"), token = token)
   my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
@@ -141,6 +141,7 @@ tweet <- function(graphic_dir = './prediction_results/graphics/', token = rtweet
   rtweet::post_tweet(status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), ")."),
                      media = file.path(graphic_dir, "president_odds.png"),
                      in_reply_to_status_id = reply_id, token = token)
+
 }
 
 #' Daily functions, rolled into one call
@@ -157,28 +158,33 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
   if(!dir.exists(graphic_dir)){
     dir.create(graphic_dir, recursive = TRUE)
   }
-  message("Creating graphics...")
-  today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
-  ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
+  sc<-modelparams$schedule
+  if(Sys.Date() %in% sc$Date){
+    message("Creating graphics...")
+    today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
+    ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
 
-  playoff <- playoffOdds(...)
-  ggplot2::ggsave(file.path(graphic_dir, 'playoff_odds.png'), plot = playoff, width = 11, height = 8.5, units = "in")
+    playoff <- playoffOdds(...)
+    ggplot2::ggsave(file.path(graphic_dir, 'playoff_odds.png'), plot = playoff, width = 11, height = 8.5, units = "in")
 
-  president <- presidentOdds(...)
-  ggplot2::ggsave(file.path(graphic_dir, 'president_odds.png'), plot = president, width = 11, height = 8.5, units = "in")
+    president <- presidentOdds(...)
+    ggplot2::ggsave(file.path(graphic_dir, 'president_odds.png'), plot = president, width = 11, height = 8.5, units = "in")
 
-  point <- pointPredict(...)
-  ggplot2::ggsave(file.path(graphic_dir, 'point_predict.png'), plot = point, width = 11, height = 8.5, units = "in")
+    point <- pointPredict(...)
+    ggplot2::ggsave(file.path(graphic_dir, 'point_predict.png'), plot = point, width = 11, height = 8.5, units = "in")
 
-  rating <- ratings(m = modelparams$m)
-  ggplot2::ggsave(file.path(graphic_dir, 'current_rating.png'), plot = rating, width = 11, height = 8.5, units = "in")
+    rating <- ratings(m = modelparams$m)
+    ggplot2::ggsave(file.path(graphic_dir, 'current_rating.png'), plot = rating, width = 11, height = 8.5, units = "in")
 
-  #repo <- git2r::repository()
-  #git2r::add(repo=repo, path = "./prediction_results/*.RDS")
-  #git2r::commit(repo = repo, all = TRUE, message = paste("Updates", Sys.Date()))
-  #git2r::push()
-  message("Posting Tweets...")
-  tweet(graphic_dir, ...)
+    message("Posting Tweets...")
+    tweet(graphic_dir, ...)
+    #until Rtweet has scheduler
+    message("Delaying ", delay, " seconds to space tweets...")
+    Sys.sleep(delay)
+
+    tweetGames(games = sc[sc$Date == Sys.Date(), ], m = modelparams$m, rho = modelparams$rho)
+
+  }
 }
 
 #' Tweet Pace Plots
@@ -215,6 +221,34 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
   }
+}
 
+#' Tweet Game Plots
+#'
+#' @param games Games to tweet graphics from
+#' @param delay Delay between tweets
+#' @param graphic_dir the graphics directory
+#'
+#' @export
+tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date == Sys.Date(), ], delay = 60*15, graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m, rho = HockeyModel::rho){
+  #Tweet each game
+  if(!dir.exists(graphic_dir)){
+    dir.create(graphic_dir, recursive = TRUE)
+  }
 
+  for(g in 1:nrow(games)){
+    home<-games[g,"HomeTeam"]
+    away<-games[g,"AwayTeam"]
+    plt<-plot_game(home = home, away = away, m=m, rho=rho)
+    ggplot2::ggsave(file.path(graphic_dir, 'predicted_goals.png'), plot = plt, width = 11, height = 8.5, units = "in")
+
+    rtweet::post_tweet(paste0(teamColours[teamColours$Team == home, "Hashtag"], " at ", teamColours[teamColours$Team == away, "Hashtag"], " predicted goals."),
+                       media = file.path(graphic_dir, 'predicted_goals.png'))
+
+    file.remove(file.path(graphic_dir, 'predicted_goals.png'))
+
+    #until Rtweet has scheduler
+    message("Delaying ", delay, " seconds to space tweets...")
+    Sys.sleep(delay)
+  }
 }

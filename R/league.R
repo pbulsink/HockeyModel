@@ -650,9 +650,11 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
 
   home_hjust<-1-(mu>lambda)
 
+  odds<-DCPredict(home = home, away = away)
+
   p <- ggplot2::ggplot(data = goals, ggplot2::aes(x = Goals, y = Density, fill = Team)) +
     #ggplot2::geom_point() +
-    ggplot2::geom_area(position = "identity", alpha = 0.5) +
+    ggplot2::geom_area(position = "identity", alpha = 0.6) +
     ggplot2::theme_minimal() +
     ggplot2::geom_vline(xintercept = mu,linetype="dashed") +
     ggplot2::geom_vline(xintercept = lambda,linetype="dashed") +
@@ -664,7 +666,7 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
     ggplot2::xlab('Goals') +
     ggplot2::ylab('Odds') +
     ggplot2::theme(legend.position = "none") +
-    ggplot2::ggtitle("Predicted Goals", subtitle = paste0(away, " at ", home, " on ", Sys.Date(),"\nChart by @BulsinkB"))
+    ggplot2::ggtitle("Predicted Goals", subtitle = paste0(away, " at ", home, " on ", Sys.Date(),"\nWin Odds - Away: ", round(odds[[3]], 3), " - Home: ", round(odds[[1]], 3), " - OT/SO: ", round(odds[[2]], 3)))
 
   return(p)
 

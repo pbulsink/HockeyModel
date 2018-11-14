@@ -28,3 +28,4 @@ rsconnect/
 .Rproj.user
 env.RData
 inst/doc
+Rplots.pdf
