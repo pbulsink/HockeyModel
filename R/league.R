@@ -518,7 +518,7 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
       ggplot2::scale_x_continuous(limits = c(0, 82)) +
       ggplot2::scale_y_continuous(limits = c(0, 164)) +
       ggplot2::theme_minimal() +
-      ggplot2::ggtitle('Points Pace', subtitle = paste0(team, ' Expected Points: ', round(qpoints, 1), "\nChart by @BulsinkB"))+
+      ggplot2::ggtitle('Points Pace', subtitle = paste0(team, ' Expected Points: ', format(round(qpoints, 1), nsmall = 1), "\nChart by @BulsinkB"))+
       ggplot2::ylab('Points') +
       ggplot2::xlab('Game Number') +
       ggplot2::geom_segment(x = 0, y = 0, xend = 82, yend = ppoints, alpha = 0.05, colour = 'grey')+
@@ -582,10 +582,10 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
                                 breaks = c(0,0.5,1)) +
     ggplot2::annotate("text", x = todayodds$HomeTeam, y = -.01, hjust = 1, label = todayodds$HomeTeam) +
     ggplot2::annotate("text", x = todayodds$HomeTeam, y = 1.01, hjust = 0, label = todayodds$AwayTeam) +
-    ggplot2::annotate("label", x = todayodds$HomeTeam, y = 0.01, hjust = 0, label = round(todayodds$HomeWin, 3)) +
-    ggplot2::annotate("label", x = todayodds$HomeTeam, y= .99, hjust = 1, label = round(todayodds$AwayWin, 3)) +
-    ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT - 0.01, hjust = 1, label = round(todayodds$HomeWinOT, 3)) +
-    ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT + 0.02, hjust = 0, label = round(todayodds$AwayWinOT, 3)) +
+    ggplot2::annotate("label", x = todayodds$HomeTeam, y = 0.01, hjust = 0, label = format(round(todayodds$HomeWin, 3), nsmall = 3)) +
+    ggplot2::annotate("label", x = todayodds$HomeTeam, y= .99, hjust = 1, label = format(round(todayodds$AwayWin, 3), nsmall = 3)) +
+    ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT - 0.01, hjust = 1, label = format(round(todayodds$HomeWinOT, 3), nsmall = 3)) +
+    ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT + 0.02, hjust = 0, label = format(round(todayodds$AwayWinOT, 3), nsmall = 3)) +
     ggplot2::coord_flip()
 
   #Add instructions to read
@@ -661,12 +661,12 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
     ggplot2::scale_x_continuous(limits = c(0, 8)) +
     ggplot2::scale_fill_manual(labels = c(home, away), values = plotcolors)+
     ggplot2::scale_color_manual(labels = c(home, away), values = plotcolors)+
-    ggplot2::annotate(geom = 'label', x = mu, y = 0.0, label = paste0(away, "\nPredicted Goals:", round(mu, 2)), hjust = home_hjust, vjust = 0) +
-    ggplot2::annotate(geom = 'label', x = lambda, y = 0.0, label = paste0(home, "\nPredicted Goals:", round(lambda, 2)), hjust = 1-home_hjust, vjust = 0) +
-    ggplot2::xlab('Goals') +
+    ggplot2::annotate(geom = 'label', x = mu, y = 0.0, label = paste0(away, "\nPredicted Goals:", format(round(mu, 2), nsmall = 2)), hjust = home_hjust, vjust = 0) +
+    ggplot2::annotate(geom = 'label', x = lambda, y = 0.0, label = paste0(home, "\nPredicted Goals:",format(round(lambda, 2), nsmall = 2)), hjust = 1-home_hjust, vjust = 0) +
+    ggplot2::xlab('Predicted Team Goals') +
     ggplot2::ylab('Odds') +
     ggplot2::theme(legend.position = "none") +
-    ggplot2::ggtitle("Predicted Goals", subtitle = paste0(away, " at ", home, " on ", Sys.Date(),"\nWin Odds - Away: ", round(odds[[3]], 3), " - Home: ", round(odds[[1]], 3), " - OT/SO: ", round(odds[[2]], 3)))
+    ggplot2::ggtitle("Predicted Goals", subtitle = paste0(away, " at ", home, " on ", Sys.Date(),"\nWin Odds - Away: ", format(round(odds[[3]], 3), nsmall = 3), " - Home: ", format(round(odds[[1]], 3), nsmall = 3), " - OT/SO: ", format(round(odds[[2]], 3), nsmall = 3)))
 
   return(p)
 
