@@ -149,7 +149,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 #' @param ... Items to pass to update and plot functions.
 #'
 #' @export
-dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
+dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), ...){
   #message("Reminder, run updateModel() first.")
   #Sys.sleep(5)
   modelparams<-updateModel(...)
@@ -177,12 +177,12 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
     ggplot2::ggsave(file.path(graphic_dir, 'current_rating.png'), plot = rating, width = 11, height = 8.5, units = "in")
 
     message("Posting Tweets...")
-    tweet(graphic_dir, ...)
+    tweet(graphic_dir, token = token, ...)
     #until Rtweet has scheduler
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
 
-    tweetGames(games = sc[sc$Date == Sys.Date(), ], m = modelparams$m, rho = modelparams$rho)
+    tweetGames(games = sc[sc$Date == Sys.Date(), ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token)
 
   }
 }
@@ -195,11 +195,12 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', ...){
 #' @param prediction_dir The predictions directory
 #'
 #' @export
-tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/", subdir = "pace", prediction_dir = "./prediction_results/"){
+tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/", subdir = "pace", prediction_dir = "./prediction_results/", token = rtweet::get_token(), scores = HockeyModel::scores){
   #Tweet pace
-  plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir)
+  plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores = scores)
 
   preds<-readRDS(file.path(prediction_dir, "2018-10-03-predictions.RDS"))
+  scores<-scores[scores$Date > as.Date("2018-10-03"), ]
 
   teamlist<-unique(preds$Team)
 
@@ -209,11 +210,12 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
   reply_id<-my_timeline$status_id[1]
 
   for(team in teamlist){
-    rtweet::post_tweet(paste0(team, ' pace. ', teamColours[teamColours$Team == team, "Hashtag"]),
+    ngames <- sum(sum(scores$HomeTeam == team), sum(scores$AwayTeam == team))
+    rtweet::post_tweet(paste0(team, ' pace after ', ngames, " games. ", teamColours[teamColours$Team == team, "Hashtag"]),
                        media = file.path(graphic_dir,
                                          subdir,
                                          paste0(tolower(gsub(" ", "_", team)), '.png')),
-                       in_reply_to_status_id = reply_id)
+                       in_reply_to_status_id = reply_id, token = token)
     my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
     reply_id<-my_timeline$status_id[1]
 
@@ -230,7 +232,7 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
 #' @param graphic_dir the graphics directory
 #'
 #' @export
-tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date == Sys.Date(), ], delay = 60*15, graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m, rho = HockeyModel::rho){
+tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date == Sys.Date(), ], delay = 60*15, graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m, rho = HockeyModel::rho, token = rtweet::get_token()){
   #Tweet each game
   if(!dir.exists(graphic_dir)){
     dir.create(graphic_dir, recursive = TRUE)
@@ -243,7 +245,8 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
     ggplot2::ggsave(file.path(graphic_dir, 'predicted_goals.png'), plot = plt, width = 11, height = 8.5, units = "in")
 
     rtweet::post_tweet(paste0(teamColours[teamColours$Team == home, "Hashtag"], " at ", teamColours[teamColours$Team == away, "Hashtag"], " predicted goals."),
-                       media = file.path(graphic_dir, 'predicted_goals.png'))
+                       media = file.path(graphic_dir, 'predicted_goals.png'),
+                       token = token)
 
     file.remove(file.path(graphic_dir, 'predicted_goals.png'))
 

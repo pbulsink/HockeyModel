@@ -7,7 +7,7 @@
 tweetGames(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
   Sys.Date(), ], delay = 60 * 15,
   graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m,
-  rho = HockeyModel::rho)
+  rho = HockeyModel::rho, token = rtweet::get_token())
 }
 \arguments{
 \item{games}{Games to tweet graphics from}

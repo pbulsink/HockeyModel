@@ -4,7 +4,8 @@
 \alias{dailySummary}
 \title{Daily functions, rolled into one call}
 \usage{
-dailySummary(graphic_dir = "./prediction_results/graphics/", ...)
+dailySummary(graphic_dir = "./prediction_results/graphics/",
+  token = rtweet::get_token(), ...)
 }
 \arguments{
 \item{...}{Items to pass to update and plot functions.}

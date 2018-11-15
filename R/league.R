@@ -474,7 +474,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
 #' @param prediction_dir The predictions directory
 #'
 #' @export
-plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdir = 'pace', prediction_dir = "./prediction_results"){
+plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdir = 'pace', prediction_dir = "./prediction_results", scores=HockeyModel::scores){
   sc<-scores[scores$Date > as.Date("2018-10-01"),]
 
   teamlist<-unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
