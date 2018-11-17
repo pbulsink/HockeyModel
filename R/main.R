@@ -243,8 +243,8 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
     away<-games[g,"AwayTeam"]
     plt<-plot_game(home = home, away = away, m=m, rho=rho)
     ggplot2::ggsave(file.path(graphic_dir, 'predicted_goals.png'), plot = plt, width = 11, height = 8.5, units = "in")
-
-    rtweet::post_tweet(paste0(teamColours[teamColours$Team == home, "Hashtag"], " at ", teamColours[teamColours$Team == away, "Hashtag"], " predicted goals."),
+    status<-paste0(teamColours[teamColours$Team == home, "Hashtag"], " at ", teamColours[teamColours$Team == away, "Hashtag"], " predicted goals.")
+    rtweet::post_tweet(status = status,
                        media = file.path(graphic_dir, 'predicted_goals.png'),
                        token = token)
 
