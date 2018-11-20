@@ -149,7 +149,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 #' @param ... Items to pass to update and plot functions.
 #'
 #' @export
-dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), ...){
+dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, ...){
   #message("Reminder, run updateModel() first.")
   #Sys.sleep(5)
   modelparams<-updateModel(...)
@@ -184,6 +184,9 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
     tweetGames(games = sc[sc$Date == Sys.Date(), ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token)
 
+  }
+  if(lubridate::day(Sys.Date()) == 20){
+    tweetPace()
   }
 }
 
