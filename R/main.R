@@ -196,9 +196,17 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 #'
 #' @export
 tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/", subdir = "pace", prediction_dir = "./prediction_results/", token = rtweet::get_token(), scores = HockeyModel::scores){
-  #Tweet pace
+  #make sure we're working with the most up-to-date info.
+  scores<-updateScores()
+
+  #Make Pace Plots
   plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores = scores)
 
+  filelist<-list.files(path = prediction_dir)
+  pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
+  pdates<-pdates[pdates != 'graphics']
+  lastp<-as.Date(max(pdates))
+  current_preds<-readRDS(file.path(prediction_dir, paste0(lastp,"-predictions.RDS")))
   preds<-readRDS(file.path(prediction_dir, "2018-10-03-predictions.RDS"))
   scores<-scores[scores$Date > as.Date("2018-10-03"), ]
 
@@ -211,11 +219,22 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
 
   for(team in teamlist){
     ngames <- sum(sum(scores$HomeTeam == team), sum(scores$AwayTeam == team))
-    rtweet::post_tweet(paste0(team, ' pace after ', ngames, " games. ", teamColours[teamColours$Team == team, "Hashtag"]),
+    status<-paste0(team,
+                   " pace after ",
+                   ngames,
+                   " games. Originally predicted ",
+                   format(round(as.numeric(preds[preds$Team == team, 'meanPoints'], digits = 1)), nsmall = 1),
+                   " points, now on pace for ",
+                   format(round(as.numeric(current_preds[current_preds$Team == team, 'meanPoints'], 1)), nsmall = 1),
+                   ". ",
+                   teamColours[teamColours$Team == team, "Hashtag"])
+
+    rtweet::post_tweet(status = status,
                        media = file.path(graphic_dir,
                                          subdir,
                                          paste0(tolower(gsub(" ", "_", team)), '.png')),
-                       in_reply_to_status_id = reply_id, token = token)
+                       in_reply_to_status_id = reply_id,
+                       token = token)
     my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
     reply_id<-my_timeline$status_id[1]
 
