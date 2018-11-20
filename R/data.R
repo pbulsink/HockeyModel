@@ -116,7 +116,7 @@
 "teamColours"
 
 buildTeamColours <- function(){
-  teamColours <- read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
+  teamColours <- utils::read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
   teamlist<-unique(teamColours$Team)
   teamColours$Logo <- file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", teamlist)), ".gif"))
   usethis::use_data(teamColours, overwrite = TRUE)

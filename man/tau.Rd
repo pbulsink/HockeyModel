@@ -6,6 +6,17 @@
 \usage{
 tau(xx, yy, lambda, mu, rho)
 }
+\arguments{
+\item{xx}{Away Goal value for adjustment factor calculation}
+
+\item{yy}{Home Goal value for adjustment factor calculation}
+
+\item{lambda}{Home goal expected for adjustment factor calcuation}
+
+\item{mu}{Away Goal expected for adjustment factor calculation}
+
+\item{rho}{the factor for adjustment calculations}
+}
 \description{
 Used in dixon coles to adjust low scores
 }

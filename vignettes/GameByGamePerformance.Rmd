@@ -2,14 +2,16 @@
 title: "Predictions by Game instead of Season"
 author: "Philip Bulsink"
 date: '2018-09-26'
-output: html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Predictions by Game instead of Season}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-
 library(HockeyModel)
-library(MLmetrics)
+knitr::opts_chunk$set(echo = TRUE)
 
 scores15<-HockeyModel::scores
 scores15<-scores15[scores15$Date < "2016-08-01",]
@@ -54,8 +56,8 @@ for(gameday in unique(schedule16$Date)){
   todayscores<-results16[results16$Date == gameday, ]
   elo<-HockeyModel:::calculateEloRatings(todayscores[,c('Date','HomeTeam','AwayTeam','HomeGoals','AwayGoals', 'Result')], ratings_history = elo, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
 }
-elo.ll.1617 <- LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
-elo.acc.1617 <- Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
+elo.ll.1617 <- MLmetrics::LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
+elo.acc.1617 <- MLmetrics::Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
 
 message("Log Loss: ", elo.ll.1617)
 message("Accuracy: ", elo.acc.1617)
@@ -75,8 +77,8 @@ for(gameday in unique(schedule17$Date)){
   todayscores<-results17[results17$Date == gameday, ]
   elo<-HockeyModel:::calculateEloRatings(todayscores[,c('Date','HomeTeam','AwayTeam','HomeGoals','AwayGoals', 'Result')], ratings_history = elo, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
 }
-elo.ll.1718 <- LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
-elo.acc.1718 <- Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
+elo.ll.1718 <- MLmetrics::LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
+elo.acc.1718 <- MLmetrics::Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
 ```
 Similarly, for 2017-2018, we get a Log Loss of `r elo.ll.1718` and Accuracy of `r elo.acc.1718`.
 
@@ -107,8 +109,8 @@ for(gameday in unique(schedule16$Date)){
   todayscores<-rbind(scores15, results16[results16$Date <= as.Date(gameday), ])
   dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = as.Date(gameday))
 }
-dc.ll.1617 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
-dc.acc.1617 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
+dc.ll.1617 <- MLmetrics::LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
+dc.acc.1617 <- MLmetrics::Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
 
 
 #ll opt: xi = 0.003801642 => logloss of 0.6692796
@@ -138,8 +140,8 @@ for(gameday in unique(schedule17$Date)){
   todayscores<-rbind(scores16, results17[results17$Date <= as.Date(gameday), ])
   dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = as.Date(gameday))
 }
-dc.ll.1718 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
-dc.acc.1718 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
+dc.ll.1718 <- MLmetrics::LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
+dc.acc.1718 <- MLmetrics::Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
 ```
 
 And likewise for 2017-2018, we get a Log Loss of `r dc.ll.1718` and accuracy of `r dc.acc.1718`. Much better than Elo prediction!!

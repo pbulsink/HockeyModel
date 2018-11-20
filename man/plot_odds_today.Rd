@@ -8,9 +8,17 @@ plot_odds_today(today = Sys.Date(), rho = HockeyModel::rho,
   m = HockeyModel::m, schedule = HockeyModel::schedule, ...)
 }
 \arguments{
-\item{today}{The day's odds to plot}
+\item{today}{The day's odds to plot. Default today.}
+
+\item{rho}{HockeyModel::rho or a custom value}
+
+\item{m}{HockeyModel::m or a custom value}
+
+\item{schedule}{HockeyModel::schedule or a custom value}
 
 \item{...}{additional parameters to pass}
+
+\item{teamColours}{HockeyModel::teamColours or a custom value}
 }
 \value{
 a ggplot image of odds

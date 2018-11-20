@@ -324,10 +324,11 @@ compile_predictions<-function(dir="./prediction_results"){
 #'
 #' @param all_predictions the compiled predictions
 #' @param past_days number of past days to include on the plot. Default: a fortnight
+#' @param teamColours HockeyModel::teamColours or a custom value
 #'
 #' @return a ggplot object
 #' @export
-plot_prediction_points_by_team<-function(all_predictions = compile_predictions(), past_days = 14){
+plot_prediction_points_by_team<-function(all_predictions = compile_predictions(), past_days = 14, teamColours = HockeyModel::teamColours){
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -371,10 +372,11 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
 #'
 #' @param all_predictions the compiled predictions
 #' @param past_days number of past days to include on the plot. Default: a fortnight
+#' @param teamColours HockeyModel::teamColours or a custom value
 #'
 #' @return a ggplot object
 #' @export
-plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictions(), past_days = 14){
+plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictions(), past_days = 14, teamColours = HockeyModel::teamColours){
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -418,10 +420,12 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
 #'
 #' @param all_predictions the compiled predictions
 #' @param past_days number of past days to include on the plot. Default: a fortnight
+#' @param minimum Minimum chance at pres trophy to plot. Cleans up significantly.
+#' @param teamColours HockeyModel::teamColours or a custom value
 #'
 #' @return a ggplot object
 #' @export
-plot_prediction_presidents_by_team <- function(all_predictions = compile_predictions(), past_days = 14, minimum = 0.01){
+plot_prediction_presidents_by_team <- function(all_predictions = compile_predictions(), past_days = 14, minimum = 0.01, teamColours = HockeyModel::teamColours){
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -472,9 +476,11 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
 #' @param graphic_dir The graphics directory
 #' @param subdir The pace subdirectory in graphics
 #' @param prediction_dir The predictions directory
+#' @param teamColours HockeyModel::teamColours or a custom value
+#' @param scores The HockeyModel::scores object, or custom scores in the same format.
 #'
 #' @export
-plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdir = 'pace', prediction_dir = "./prediction_results", scores=HockeyModel::scores){
+plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdir = 'pace', prediction_dir = "./prediction_results", scores=HockeyModel::scores, teamColours = HockeyModel::teamColours){
   sc<-scores[scores$Date > as.Date("2018-10-01"),]
 
   teamlist<-unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
@@ -502,7 +508,7 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
     teamscores$cPoints<-cumsum(teamscores$Points)
     teamscores$GameNum<-1:nrow(teamscores)
     ngames<-nrow(teamscores)
-    cp<-tail(teamscores$cPoints, 1)
+    cp<-utils::tail(teamscores$cPoints, 1)
 
     pteam<-p[p$Team == team, ]
     ppoints<-pteam$meanPoints
@@ -535,14 +541,18 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
 
 #' Plot Today's Odds
 #'
-#' @param today The day's odds to plot
+#' @param today The day's odds to plot. Default today.
+#' @param rho HockeyModel::rho or a custom value
+#' @param m HockeyModel::m or a custom value
+#' @param schedule HockeyModel::schedule or a custom value
+#' @param teamColours HockeyModel::teamColours or a custom value
 #' @param ... additional parameters to pass
 #'
 #' @return a ggplot image of odds
 #'
 #' @export
 plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, ...) {
-  todayodds<-todayDC(today = today, rho = rho, m = m, schedule = schedule, ...)
+  todayodds<-todayDC(today = today, rho = rho, m = m, schedule = schedule, teamColours=HockeyModel::teamColours, ...)
 
   #add odds for each team in OT/SO
   todayodds$HomeWinOT<-(todayodds$HomeWin / (todayodds$HomeWin + todayodds$AwayWin)) * todayodds$Draw
@@ -608,16 +618,18 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
 }
 
 
-#' Title
+#' Plot single game expected goals
 #'
 #' @param home The Home Team
 #' @param away The AWay Team
 #' @param m the DC m model
 #' @param rho the DC rho value
+#' @param maxgoal the max number of goals to predict. Plot a few less.
+#' @param teamColours HockeyModel::teamColours or a custom value
 #'
 #' @return a ggplot object
 #' @export
-plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoal = 10){
+plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoal = 10, teamColours = HockeyModel::teamColours){
   # Expected goals home
   lambda <- try(stats::predict(m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
 

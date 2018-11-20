@@ -19,6 +19,8 @@ updateModel <- function(...){
 #' Update predictions
 #'
 #' @param data_dir directory of predictions
+#' @param scores HockeyModel::scores or a custom value
+#' @param schedule HockeyModel::schedule or a custom value
 #' @param ... Items to pass to update functions.
 #'
 #' @export
@@ -38,6 +40,10 @@ updatePredictions<- function(data_dir = "./prediction_results/", scores = Hockey
 #' Today's game odds graphic
 #'
 #' @param date date to predict odds. Default today
+#' @param rho HockeyModel::rho or a custom value
+#' @param m HockeyModel::m or a custom value
+#' @param schedule HockeyModel::schedule or a custom value
+#' @param scores HockeyModel::scores or a custom value
 #' @param ... Items to pass to update functions.
 #'
 #' @return today's odds ggplot object
@@ -96,6 +102,7 @@ pointPredict <- function(...){
 
 #' Current ratings
 #'
+#' @param m HockeyModel::m or a custom value
 #' @param ... Items to pass to plot functions.
 #'
 #' @return today's ratings ggplot object
@@ -107,7 +114,7 @@ ratings <- function(m = HockeyModel::m, ...) {
 tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, ...){
   rtweet::post_tweet(status = "Predicted odds for today's #NHL games",
                      media = file.path(graphic_dir, "today_odds.png"), token = token)
-  my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
+  my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
   reply_id<-my_timeline$status_id[1]
   rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
                      media = file.path(graphic_dir, "current_rating.png"),
@@ -120,7 +127,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), ")."),
                      media = file.path(graphic_dir, "point_predict.png"), token = token)
 
-  my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
+  my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
   reply_id<-my_timeline$status_id[1]
 
   #until Rtweet has scheduler
@@ -131,7 +138,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
                      media = file.path(graphic_dir, "playoff_odds.png"),
                      in_reply_to_status_id = reply_id, token = token)
 
-  my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
+  my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
   reply_id<-my_timeline$status_id[1]
 
   #until Rtweet has scheduler
@@ -146,6 +153,9 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 
 #' Daily functions, rolled into one call
 #'
+#' @param graphic_dir Directory for graphic files
+#' @param token token to pass to rtweet calls
+#' @param delay delay between tweet posts
 #' @param ... Items to pass to update and plot functions.
 #'
 #' @export
@@ -196,9 +206,12 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 #' @param graphic_dir The graphics directory
 #' @param subdir The pace subdirectory in graphics
 #' @param prediction_dir The predictions directory
+#' @param token rtweet token
+#' @param scores HockeyModel::scores or a custom value
+#' @param teamColours HockeyModel::teamColours or a custom value
 #'
 #' @export
-tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/", subdir = "pace", prediction_dir = "./prediction_results/", token = rtweet::get_token(), scores = HockeyModel::scores){
+tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/", subdir = "pace", prediction_dir = "./prediction_results/", token = rtweet::get_token(), scores = HockeyModel::scores, teamColours = HockeyModel::teamColours){
   #make sure we're working with the most up-to-date info.
   scores<-updateScores()
 
@@ -217,7 +230,7 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
 
   rtweet::post_tweet(paste0("Here are team pace plots as of ", Sys.Date(), ". Plots show original predicted points range and current predicted range."))
 
-  my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
+  my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
   reply_id<-my_timeline$status_id[1]
 
   for(team in teamlist){
@@ -225,10 +238,10 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
     status<-paste0(team,
                    " pace after ",
                    ngames,
-                   " games. Originally predicted ",
-                   format(round(as.numeric(preds[preds$Team == team, 'meanPoints'], digits = 1)), nsmall = 1),
-                   " points, now on pace for ",
-                   format(round(as.numeric(current_preds[current_preds$Team == team, 'meanPoints'], 1)), nsmall = 1),
+                   " games. The model initially predicted ",
+                   format(round(as.numeric(preds[preds$Team == team, 'meanPoints']), digits = 1), nsmall = 1),
+                   " points, now expecting ",
+                   format(round(as.numeric(current_preds[current_preds$Team == team, 'meanPoints']), digits = 1), nsmall = 1),
                    ". ",
                    teamColours[teamColours$Team == team, "Hashtag"])
 
@@ -238,13 +251,36 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
                                          paste0(tolower(gsub(" ", "_", team)), '.png')),
                        in_reply_to_status_id = reply_id,
                        token = token)
-    my_timeline<-rtweet::get_timeline(rtweet:::home_user(), token = token)
+    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
     reply_id<-my_timeline$status_id[1]
 
     #until Rtweet has scheduler
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
   }
+  pacediff<-data.frame("Team" = current_preds$Team, "Initial" = preds$meanPoints, "Current" = current_preds$meanPoints, stringsAsFactors = FALSE)
+  pacediff$Diff <- pacediff$Current - pacediff$Initial
+  maxdiff<-max(pacediff$Diff)
+  mindiff<-min(pacediff$Diff)
+  maxteam<-pacediff[which.max(pacediff$Diff), 'Team']
+  minteam<-pacediff[which.min(pacediff$Diff), 'Team']
+
+  recapstatus <- paste0("To recap - ",
+                        "\nFurthest above expectation: ", maxteam, " ", teamColours[teamColours$Team == maxteam, "Hashtag"],
+                        "\nFurthest below expectation: ", minteam, " ", teamColours[teamColours$Team == minteam, "Hashtag"])
+  rtweet::post_tweet(status = recapstatus,
+                     in_reply_to_status_id = reply_id,
+                     token = token)
+  my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+  reply_id<-my_timeline$status_id[1]
+
+  #until Rtweet has scheduler
+  message("Delaying ", delay, " seconds to space tweets...")
+  Sys.sleep(delay)
+
+  rtweet::post_tweet(status = "Missed your team? Expand this thread to find them! #NHL",
+                     in_reply_to_status_id = reply_id,
+                     token = token)
 }
 
 #' Tweet Game Plots
@@ -252,9 +288,13 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
 #' @param games Games to tweet graphics from
 #' @param delay Delay between tweets
 #' @param graphic_dir the graphics directory
+#' @param m HockeyModel::m or a custom value
+#' @param rho HockeyModel::rho or a custom value
+#' @param token the token for rtweet
+#' @param teamColours HockeyModel::teamColours or a custom value
 #'
 #' @export
-tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date == Sys.Date(), ], delay = 60*15, graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m, rho = HockeyModel::rho, token = rtweet::get_token()){
+tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date == Sys.Date(), ], delay = 60*15, graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m, rho = HockeyModel::rho, token = rtweet::get_token(), teamColours = HockeyModel::teamColours){
   #Tweet each game
   if(!dir.exists(graphic_dir)){
     dir.create(graphic_dir, recursive = TRUE)

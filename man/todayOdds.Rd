@@ -11,6 +11,14 @@ todayOdds(date = Sys.Date(), rho = HockeyModel::rho,
 \arguments{
 \item{date}{date to predict odds. Default today}
 
+\item{rho}{HockeyModel::rho or a custom value}
+
+\item{m}{HockeyModel::m or a custom value}
+
+\item{schedule}{HockeyModel::schedule or a custom value}
+
+\item{scores}{HockeyModel::scores or a custom value}
+
 \item{...}{Items to pass to update functions.}
 }
 \value{

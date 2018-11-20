@@ -5,9 +5,15 @@
 \title{Daily functions, rolled into one call}
 \usage{
 dailySummary(graphic_dir = "./prediction_results/graphics/",
-  token = rtweet::get_token(), ...)
+  token = rtweet::get_token(), delay = 60 * 15, ...)
 }
 \arguments{
+\item{graphic_dir}{Directory for graphic files}
+
+\item{token}{token to pass to rtweet calls}
+
+\item{delay}{delay between tweet posts}
+
 \item{...}{Items to pass to update and plot functions.}
 }
 \description{

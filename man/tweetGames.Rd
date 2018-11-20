@@ -7,7 +7,8 @@
 tweetGames(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
   Sys.Date(), ], delay = 60 * 15,
   graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m,
-  rho = HockeyModel::rho, token = rtweet::get_token())
+  rho = HockeyModel::rho, token = rtweet::get_token(),
+  teamColours = HockeyModel::teamColours)
 }
 \arguments{
 \item{games}{Games to tweet graphics from}
@@ -15,6 +16,14 @@ tweetGames(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
 \item{delay}{Delay between tweets}
 
 \item{graphic_dir}{the graphics directory}
+
+\item{m}{HockeyModel::m or a custom value}
+
+\item{rho}{HockeyModel::rho or a custom value}
+
+\item{token}{the token for rtweet}
+
+\item{teamColours}{HockeyModel::teamColours or a custom value}
 }
 \description{
 Tweet Game Plots

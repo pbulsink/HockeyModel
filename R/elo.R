@@ -38,6 +38,7 @@ plotELO <- function(){
 #' @param scores the historical scores
 #' @param schedule uplayed future games
 #' @param odds whether to return odds table or predictions
+#' @param elos HockeyModel::elos or custom value
 #' @param ... arguements to pass to elo predictor & simulateSeason
 #'
 #' @return data frame of Team, playoff odds.

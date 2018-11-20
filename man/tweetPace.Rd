@@ -7,7 +7,8 @@
 tweetPace(delay = 60 * 5,
   graphic_dir = "./prediction_results/graphics/", subdir = "pace",
   prediction_dir = "./prediction_results/",
-  token = rtweet::get_token(), scores = HockeyModel::scores)
+  token = rtweet::get_token(), scores = HockeyModel::scores,
+  teamColours = HockeyModel::teamColours)
 }
 \arguments{
 \item{delay}{Delay between posted tweets}
@@ -17,6 +18,12 @@ tweetPace(delay = 60 * 5,
 \item{subdir}{The pace subdirectory in graphics}
 
 \item{prediction_dir}{The predictions directory}
+
+\item{token}{rtweet token}
+
+\item{scores}{HockeyModel::scores or a custom value}
+
+\item{teamColours}{HockeyModel::teamColours or a custom value}
 }
 \description{
 Tweet Pace Plots
