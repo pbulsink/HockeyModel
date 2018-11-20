@@ -6,12 +6,14 @@
 \usage{
 
   plot_prediction_playoffs_by_team(all_predictions = compile_predictions(),
-  past_days = 14)
+  past_days = 14, teamColours = HockeyModel::teamColours)
 }
 \arguments{
 \item{all_predictions}{the compiled predictions}
 
 \item{past_days}{number of past days to include on the plot. Default: a fortnight}
+
+\item{teamColours}{HockeyModel::teamColours or a custom value}
 }
 \value{
 a ggplot object

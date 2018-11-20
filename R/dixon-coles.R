@@ -33,8 +33,8 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
                             Team = sort(teamlist))
 
   #Build and trim team colours for plot
-  teamColoursList<-as.vector(teamColours$Hex)
-  names(teamColoursList)<-teamColours$Team
+  teamColoursList<-as.vector(HockeyModel::teamColours$Hex)
+  names(teamColoursList)<-HockeyModel::teamColours$Team
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teamlist]
 
   p<-ggplot2::ggplot(team_params,
@@ -83,6 +83,8 @@ plotDCHistory <- function(teamlist = NULL){
 #' @param rho DC Rho
 #' @param m DC m
 #' @param schedule shcedule to use, if not the builtin
+#' @param expected_mean the mean lambda & mu, used only for regression
+#' @param season_percent the percent complete of the season, used for regression
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
 #' @export
@@ -199,7 +201,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
 
       if(regress){
         #Adjust regress to mean
-        season_percent <- (remaining_length - as.integer(season_end_date - as.Date(d)))/season_length
+        season_percent <- (remaining_length - as.integer(season_end_date - as.Date(results$Date[[g]])))/season_length
         lambda <- lambda * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
         mu <- mu * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
       }
@@ -222,23 +224,23 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
       ag<-cumsum(goals$Away)
 
       #Use runif to get a goals total, then adjust for 0/1 off-index. max includes... ,1 for error prevention (e.g. no hg < runif(1))
-      homegoals<-max(which(hg < runif(1)), 1)-1
-      awaygoals<-max(which(ag < runif(1)), 1)-1
+      homegoals<-max(which(hg < stats::runif(1)), 1)-1
+      awaygoals<-max(which(ag < stats::runif(1)), 1)-1
 
       #Deal with ties
       if(homegoals == awaygoals){
         p<-DCPredict(home = home, away = away, m=dc.m.ot, rho=0, maxgoal=1, scores=NULL)
         pHome<-normalizeOdds(c(p[[1]], 0, p[[3]]))[[1]]
-        if(runif(1) < pHome){
+        if(stats::runif(1) < pHome){
           homegoals <- homegoals + 1
-          if(runif(1) > p[[2]]){
+          if(stats::runif(1) > p[[2]]){
             results$Result[[g]] <- 0.75
           } else {
             results$Result[[g]] <- 0.60
           }
         } else {
           awaygoals <- awaygoals + 1
-          if(runif(1) > p[[2]]){
+          if(stats::runif(1) > p[[2]]){
             results$Result[[g]] <- 0.25
           } else {
             results$Result[[g]] <- 0.40
@@ -293,6 +295,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
 #' @param scores the historical scores
 #' @param schedule uplayed future games
 #' @param odds whether to return odds table or simulate season
+#' @param regress whether to apply a regression to the mean for team strength on future predictions
 #' @param ... arguements to pass to dc predictor
 #'
 #' @return data frame of Team, playoff odds.
@@ -354,6 +357,12 @@ tau_singular <- function(xx, yy, lambda, mu, rho) {
 
 #' Tau function
 #' @description Used in dixon coles to adjust low scores
+#'
+#' @param xx Away Goal value for adjustment factor calculation
+#' @param yy Home Goal value for adjustment factor calculation
+#' @param lambda Home goal expected for adjustment factor calcuation
+#' @param mu Away Goal expected for adjustment factor calculation
+#' @param rho the factor for adjustment calculations
 #'
 #' @export
 tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
@@ -432,6 +441,8 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
 #' @param away away team
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
+#' @param expected_mean the mean lambda & mu, used only for regression
+#' @param season_percent the percent complete of the season, used for regression
 #'
 #' @return a list of home win, draw, and away win probability
 #' @export
@@ -561,6 +572,7 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #' @param scores HockeyModel::scores
 #' @param schedule hockeyModel::schedule
 #' @param today whether to predict for today also
+#' @param filedir Where to save prediction files.
 #' @param ... Additional parameters to pass to dcRealSeasonPredict
 #'
 #' @return true, if successful

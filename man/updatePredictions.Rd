@@ -10,6 +10,10 @@ updatePredictions(data_dir = "./prediction_results/",
 \arguments{
 \item{data_dir}{directory of predictions}
 
+\item{scores}{HockeyModel::scores or a custom value}
+
+\item{schedule}{HockeyModel::schedule or a custom value}
+
 \item{...}{Items to pass to update functions.}
 }
 \description{

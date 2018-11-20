@@ -6,12 +6,17 @@
 \usage{
 
   plot_prediction_presidents_by_team(all_predictions = compile_predictions(),
-  past_days = 14, minimum = 0.01)
+  past_days = 14, minimum = 0.01,
+  teamColours = HockeyModel::teamColours)
 }
 \arguments{
 \item{all_predictions}{the compiled predictions}
 
 \item{past_days}{number of past days to include on the plot. Default: a fortnight}
+
+\item{minimum}{Minimum chance at pres trophy to plot. Cleans up significantly.}
+
+\item{teamColours}{HockeyModel::teamColours or a custom value}
 }
 \value{
 a ggplot object

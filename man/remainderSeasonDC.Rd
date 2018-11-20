@@ -17,6 +17,8 @@ remainderSeasonDC(nsims = 10000, scores = HockeyModel::scores,
 
 \item{odds}{whether to return odds table or simulate season}
 
+\item{regress}{whether to apply a regression to the mean for team strength on future predictions}
+
 \item{...}{arguements to pass to dc predictor}
 }
 \value{

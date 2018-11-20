@@ -1,3 +1,4 @@
+^prediction_results$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$

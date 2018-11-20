@@ -7,6 +7,8 @@
 ratings(m = HockeyModel::m, ...)
 }
 \arguments{
+\item{m}{HockeyModel::m or a custom value}
+
 \item{...}{Items to pass to plot functions.}
 }
 \value{

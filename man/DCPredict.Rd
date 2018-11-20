@@ -20,6 +20,10 @@ DCPredict(home, away, m = HockeyModel::m, rho = HockeyModel::rho,
 \item{maxgoal}{max number of goals per team}
 
 \item{scores}{optional, if not supplying m & rho, scores used to calculate them.}
+
+\item{expected_mean}{the mean lambda & mu, used only for regression}
+
+\item{season_percent}{the percent complete of the season, used for regression}
 }
 \value{
 a list of home win, draw, and away win probability

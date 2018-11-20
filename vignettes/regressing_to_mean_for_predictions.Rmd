@@ -1,8 +1,12 @@
 ---
-title: "regression to mean"
+title: "Regression to Mean"
 author: "Philip Bulsink"
 date: '2018-11-09'
-output: html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Regression to Mean}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -28,11 +32,11 @@ for(h in teamlist){
 }
 ```
 
-The above are all of the teams in the nhl in the last 5 years. If each of them play eachother now, we have lambda and mu ranging from `r min(ex)` to `r max(ex)`, with a mean of `r mean(ex)`. 
+The above are all of the teams in the nhl in the last 5 years. If each of them play eachother now, we have lambda and mu ranging from `r min(lambdas)` to `r max(lambdas)`, with a mean of `r mean(lambdas)`. 
 
 The histogram of these look like:
 ```{r echo = FALSE}
-hist(ex)
+hist(lambdas)
 ```
 
 What should we do? we could regress to the mean by 1/3 every season (as the elo model does) while predicting. So, each game would regress to 1/3 the mean by 1/82. This is hard to count game numbers though, we could alternatively go by day of season number?
@@ -47,6 +51,7 @@ So we get a season of `r as.integer(ndays)` long.
 
 So, for predictions on the first date:
 ```{r}
+lambda <- 4
 season_day <- 185 - as.integer(lastdate - as.Date(schedule[schedule$Date > as.Date('2018-10-01'), ]$Date[[1]]))
 lambda_adj <- lambda * (1-1/3 * season_day/185) + mean(lambdas) * (1/3 * (season_day/185))
 

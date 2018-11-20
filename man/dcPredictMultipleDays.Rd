@@ -19,6 +19,8 @@ dcPredictMultipleDays(start = as.Date("2018-10-01"), end = Sys.Date(),
 
 \item{today}{whether to predict for today also}
 
+\item{filedir}{Where to save prediction files.}
+
 \item{...}{Additional parameters to pass to dcRealSeasonPredict}
 }
 \value{

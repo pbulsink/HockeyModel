@@ -2,10 +2,10 @@
 % Please edit documentation in R/league.R
 \name{plot_game}
 \alias{plot_game}
-\title{Title}
+\title{Plot single game expected goals}
 \usage{
 plot_game(home, away, m = HockeyModel::m, rho = HockeyModel::rho,
-  maxgoal = 10)
+  maxgoal = 10, teamColours = HockeyModel::teamColours)
 }
 \arguments{
 \item{home}{The Home Team}
@@ -15,10 +15,14 @@ plot_game(home, away, m = HockeyModel::m, rho = HockeyModel::rho,
 \item{m}{the DC m model}
 
 \item{rho}{the DC rho value}
+
+\item{maxgoal}{the max number of goals to predict. Plot a few less.}
+
+\item{teamColours}{HockeyModel::teamColours or a custom value}
 }
 \value{
 a ggplot object
 }
 \description{
-Title
+Plot single game expected goals
 }

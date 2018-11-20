@@ -16,6 +16,10 @@ todayDC(today = Sys.Date(), rho = HockeyModel::rho,
 \item{m}{DC m}
 
 \item{schedule}{shcedule to use, if not the builtin}
+
+\item{expected_mean}{the mean lambda & mu, used only for regression}
+
+\item{season_percent}{the percent complete of the season, used for regression}
 }
 \value{
 a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
