@@ -186,7 +186,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   }
   if(lubridate::day(Sys.Date()) == 20){
-    tweetPace()
+    tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
   }
 }
 

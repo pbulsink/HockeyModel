@@ -506,12 +506,12 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
 
     pteam<-p[p$Team == team, ]
     ppoints<-pteam$meanPoints
-    maxp<-pteam$maxPoints
-    minp<-pteam$minPoints
+    maxp<-pteam$meanPoints + 2*(pteam$sdPoints)
+    minp<-pteam$meanPoints - 2*(pteam$sdPoints)
     qteam<-q[q$Team == team, ]
     qpoints<-qteam$meanPoints
-    maxq<-qteam$maxPoints
-    minq<-qteam$minPoints
+    maxq<-qteam$meanPoints + 2*(qteam$sdPoints)
+    minq<-qteam$meanPoints + 2*(qteam$sdPoints)
 
     plt <- ggplot2::ggplot(teamscores, ggplot2::aes(x = GameNum, y = cPoints, colour = Venue)) +
       ggplot2::geom_point() +
