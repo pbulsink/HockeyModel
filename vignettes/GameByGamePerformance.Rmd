@@ -11,8 +11,19 @@ vignette: >
 
 ```{r setup, include=FALSE}
 library(HockeyModel)
+library(MLmetrics)
 knitr::opts_chunk$set(echo = TRUE)
 
+elo.ll.1617 <- 0.698528636409134
+elo.acc.1617 <- 0.459349593495935
+elo.ll.1718 <- 0.7056434
+elo.acc.1718 <-0.4539732
+dc.ll.1617 <- 0.669333230168212
+dc.acc.1617 <- 0.591056910569106
+dc.ll.1718 <- 0.6758298
+dc.acc.1718 <- 0.5908733
+```
+```{r data_prep, eval = FALSE, include = FALSE}
 scores15<-HockeyModel::scores
 scores15<-scores15[scores15$Date < "2016-08-01",]
 results16<-HockeyModel::scores
@@ -40,7 +51,7 @@ The first metrics analysis I performed looked at results for a coming season. Th
 
 Lets look at the performance of Elo and Dixon Coles (log loss and accuracy) for the 2016-2017 season.
 
-```{r elo1617}
+```{r elo1617, eval = FALSE}
 elo<-HockeyModel:::calculateEloRatings(scores15, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
 
 eloResults<-results16[c(1:1230),]
@@ -56,14 +67,11 @@ for(gameday in unique(schedule16$Date)){
   todayscores<-results16[results16$Date == gameday, ]
   elo<-HockeyModel:::calculateEloRatings(todayscores[,c('Date','HomeTeam','AwayTeam','HomeGoals','AwayGoals', 'Result')], ratings_history = elo, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
 }
-elo.ll.1617 <- MLmetrics::LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
-elo.acc.1617 <- MLmetrics::Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
-
-message("Log Loss: ", elo.ll.1617)
-message("Accuracy: ", elo.acc.1617)
+elo.ll.1617 <- LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
+elo.acc.1617 <- Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
 ```
 
-```{r elo1718, echo=FALSE, message=FALSE, warning=FALSE}
+```{r elo1718, echo=FALSE, eval = FALSE}
 eloResults<-results17[c(1:1271),]
 eloResults$pHome <- NA
 eloResults$pAway <- NA
@@ -77,20 +85,20 @@ for(gameday in unique(schedule17$Date)){
   todayscores<-results17[results17$Date == gameday, ]
   elo<-HockeyModel:::calculateEloRatings(todayscores[,c('Date','HomeTeam','AwayTeam','HomeGoals','AwayGoals', 'Result')], ratings_history = elo, k=8, mean_value = 1505, new_teams = 1300, regress_strength = 3, home_adv = 35)
 }
-elo.ll.1718 <- MLmetrics::LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
-elo.acc.1718 <- MLmetrics::Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
+elo.ll.1718 <- LogLoss(y_pred = eloResults$pHome, y_true = round(eloResults$Result))
+elo.acc.1718 <- Accuracy(y_pred = round(eloResults$pHome), y_true = round(eloResults$Result))
 ```
-Similarly, for 2017-2018, we get a Log Loss of `r elo.ll.1718` and Accuracy of `r elo.acc.1718`.
+So, for 2016-2017 we get a Log Loss of `r round(elo.ll.1718, 4)` and Accuracy of `r round(elo.acc.1718, 4)`. Similarly, for 2017-2018, we get a Log Loss of `r round(elo.ll.1718, 4)` and Accuracy of `r round(elo.acc.1718, 4)`.
 
 With this same technique, we'll analyze Dixon-Coles.
-```{r trimScores, echo=FALSE, message=FALSE, warning=FALSE}
+```{r trimScores, eval = FALSE}
 scores15<-scores15[scores15$Date > "2005-08-01",]
 scores15<-droplevels(scores15)
 scores16<-scores16[scores16$Date > "2006-08-01",]
 scores16<-droplevels(scores16)
 ```
 
-```{r dc1617}
+```{r dc1617, eval = FALSE}
 dc.m <- HockeyModel:::getM(scores = scores15, currentDate = as.Date('2016-10-12'))
 dc.rho <- suppressWarnings(HockeyModel:::getRho(scores = scores15, m = dc.m))
 
@@ -109,19 +117,13 @@ for(gameday in unique(schedule16$Date)){
   todayscores<-rbind(scores15, results16[results16$Date <= as.Date(gameday), ])
   dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = as.Date(gameday))
 }
-dc.ll.1617 <- MLmetrics::LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
-dc.acc.1617 <- MLmetrics::Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
 
+dc.ll.1617 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
+dc.acc.1617 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
 
-#ll opt: xi = 0.003801642 => logloss of 0.6692796
-#accuracy: xi = 0.004729035 => accuracy of 0.5943089
-
-
-message("Log Loss: ", dc.ll.1617)
-message("Accuracy: ", dc.acc.1617)
 ```
 
-```{r dc1718, echo=FALSE, message=FALSE, warning=FALSE}
+```{r dc1718, echo=FALSE, message=FALSE, warning=FALSE, eval = FALSE}
 dc.m <- HockeyModel:::getM(scores = scores16, currentDate = as.Date('2017-10-04'))
 dc.rho <- suppressWarnings(HockeyModel:::getRho(scores = scores16, m = dc.m))
 
@@ -140,8 +142,9 @@ for(gameday in unique(schedule17$Date)){
   todayscores<-rbind(scores16, results17[results17$Date <= as.Date(gameday), ])
   dc.m <- HockeyModel:::getM(scores = todayscores, currentDate = as.Date(gameday))
 }
-dc.ll.1718 <- MLmetrics::LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
-dc.acc.1718 <- MLmetrics::Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
+dc.ll.1718 <- LogLoss(y_pred = dcResults$pHome+dcResults$pDraw*0.5, y_true = round(dcResults$Result))
+dc.acc.1718 <- Accuracy(y_pred = round(dcResults$pHome+dcResults$pDraw*0.5), y_true = round(dcResults$Result))
 ```
 
-And likewise for 2017-2018, we get a Log Loss of `r dc.ll.1718` and accuracy of `r dc.acc.1718`. Much better than Elo prediction!!
+So for 2016-2017, we get  Log Loss of `r round(dc.ll.1617, 4)` and accuracy of `r round(dc.acc.1617, 4)`
+And likewise for 2017-2018, we get a Log Loss of `r round(dc.ll.1718, 4)` and accuracy of `r round(dc.acc.1718, 4)`. Much better than Elo prediction!!

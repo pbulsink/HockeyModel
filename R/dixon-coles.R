@@ -55,27 +55,27 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
   return(p)
 }
 
-plotDCHistory <- function(teamlist = NULL){
-  if(is.null(teamlist)){
-    teamlist<-as.character(unique(HockeyModel::m$data$Home))
-  }
-
-  p <- ggplot2::ggplot(data = mdaily,
-                  ggplot2::aes_(x=quote(Attack),
-                                y=quote(Defence),
-                                colour = quote(Team),
-                                label = quote(Team)
-                                )
-                  ) +
-    ggplot2::geom_point(alpha = 0.7, show.legend = FALSE ) +
-    ggplot2::labs(title = 'Date: {frame_time}', x = 'Attack', y = 'Defence') +
-    ggrepel::geom_text_repel(force=2, max.iter=5000) +
-    ggplot2::theme_minimal() +
-    gganimate::transition_time(quote(Date)) +
-    gganimate::ease_aes('linear')
-
-  return(p)
-}
+# plotDCHistory <- function(teamlist = NULL){
+#   if(is.null(teamlist)){
+#     teamlist<-as.character(unique(HockeyModel::m$data$Home))
+#   }
+#
+#   p <- ggplot2::ggplot(data = mdaily,
+#                   ggplot2::aes_(x=quote(Attack),
+#                                 y=quote(Defence),
+#                                 colour = quote(Team),
+#                                 label = quote(Team)
+#                                 )
+#                   ) +
+#     ggplot2::geom_point(alpha = 0.7, show.legend = FALSE ) +
+#     ggplot2::labs(title = 'Date: {frame_time}', x = 'Attack', y = 'Defence') +
+#     ggrepel::geom_text_repel(force=2, max.iter=5000) +
+#     ggplot2::theme_minimal() +
+#     gganimate::transition_time(quote(Date)) +
+#     gganimate::ease_aes('linear')
+#
+#   return(p)
+# }
 
 #' DC Predictions Today
 #'

@@ -353,7 +353,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
-  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=meanPoints, colour = Team)) +
+  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=quote(predictionDate), y=quote(meanPoints), colour = quote(Team))) +
     ggplot2::geom_line() +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
@@ -363,7 +363,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
     ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+    ggrepel::geom_label_repel(ggplot2::aes(label = quote(label)),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
   return(p)
 }
@@ -401,7 +401,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
-  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=Playoffs, colour = Team)) +
+  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=quote(predictionDate), y=quote(Playoffs), colour = quote(Team))) +
     ggplot2::geom_line() +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
@@ -411,7 +411,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
     ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+    ggrepel::geom_label_repel(ggplot2::aes(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
   return(p)
 }
@@ -454,7 +454,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
-  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=predictionDate, y=Presidents, colour = Team)) +
+  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=quote(predictionDate), y=quote(Presidents), colour = quote(Team))) +
     ggplot2::geom_line() +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
@@ -464,7 +464,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
     ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes(label = label),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+    ggrepel::geom_label_repel(ggplot2::aes(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
 
   return(p)
@@ -519,7 +519,7 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
     maxq<-qteam$meanPoints + 2*(qteam$sdPoints)
     minq<-qteam$meanPoints + 2*(qteam$sdPoints)
 
-    plt <- ggplot2::ggplot(teamscores, ggplot2::aes(x = GameNum, y = cPoints, colour = Venue)) +
+    plt <- ggplot2::ggplot(teamscores, ggplot2::aes(x = quote(GameNum), y = quote(cPoints), colour = quote(Venue))) +
       ggplot2::geom_point() +
       ggplot2::scale_x_continuous(limits = c(0, 82)) +
       ggplot2::scale_y_continuous(limits = c(0, 164)) +
@@ -551,8 +551,8 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
 #' @return a ggplot image of odds
 #'
 #' @export
-plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, ...) {
-  todayodds<-todayDC(today = today, rho = rho, m = m, schedule = schedule, teamColours=HockeyModel::teamColours, ...)
+plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
+  todayodds<-todayDC(today = today, rho = rho, m = m, schedule = schedule, ...)
 
   #add odds for each team in OT/SO
   todayodds$HomeWinOT<-(todayodds$HomeWin / (todayodds$HomeWin + todayodds$AwayWin)) * todayodds$Draw
@@ -575,7 +575,8 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
   }
 
   #build plot
-  p<-ggplot2::ggplot(m[m$variable %in% c('HomeWin','HomeWinOT', 'AwayWinOT', 'AwayWin'),], ggplot2::aes(y = value, x = HomeTeam, group = variable)) +
+  p<-ggplot2::ggplot(m[m$variable %in% c('HomeWin','HomeWinOT', 'AwayWinOT', 'AwayWin'),],
+                     ggplot2::aes(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
     ggplot2::geom_bar(stat = "identity", position='fill', fill = plotcolors, alpha = plotalpha, colour = 'white') +
    #ggplot2::scale_y_continuous(fill = plotcolors, alpha = plotalpha) +
     ggplot2::xlab("") +
@@ -664,7 +665,7 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
 
   odds<-DCPredict(home = home, away = away)
 
-  p <- ggplot2::ggplot(data = goals, ggplot2::aes(x = Goals, y = Density, fill = Team)) +
+  p <- ggplot2::ggplot(data = goals, ggplot2::aes(x = quote(Goals), y = quote(Density), fill = quote(Team))) +
     #ggplot2::geom_point() +
     ggplot2::geom_area(position = "identity", alpha = 0.6) +
     ggplot2::theme_minimal() +
