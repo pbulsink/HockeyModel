@@ -300,6 +300,9 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
     dir.create(graphic_dir, recursive = TRUE)
   }
 
+  if(nrow(games) == 0){
+    stop("No games to tweet")
+  }
   for(g in 1:nrow(games)){
     home<-games[g,"HomeTeam"]
     away<-games[g,"AwayTeam"]

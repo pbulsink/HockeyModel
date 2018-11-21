@@ -353,8 +353,8 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
-  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=quote(predictionDate), y=quote(meanPoints), colour = quote(Team))) +
-    ggplot2::geom_line() +
+  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes_(x=quote(predictionDate), y=quote(meanPoints), colour = quote(Team))) +
+    ggalt::geom_xspline(shape = 0.5) + +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
@@ -363,7 +363,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
     ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes(label = quote(label)),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+    ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
   return(p)
 }
@@ -401,8 +401,8 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
-  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=quote(predictionDate), y=quote(Playoffs), colour = quote(Team))) +
-    ggplot2::geom_line() +
+  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes_(x=quote(predictionDate), y=quote(Playoffs), colour = quote(Team))) +
+    ggalt::geom_xspline(shape = 0.5) + +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
@@ -411,7 +411,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
     ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+    ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
   return(p)
 }
@@ -454,8 +454,8 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
   teamColoursList<-teamColoursList[names(teamColoursList) %in% teams]
 
   #make plot
-  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes(x=quote(predictionDate), y=quote(Presidents), colour = quote(Team))) +
-    ggplot2::geom_line() +
+  p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes_(x=quote(predictionDate), y=quote(Presidents), colour = quote(Team))) +
+    ggalt::geom_xspline(shape = 0.5) +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
@@ -464,7 +464,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
     ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+    ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
 
 
   return(p)
@@ -519,7 +519,7 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
     maxq<-qteam$meanPoints + 2*(qteam$sdPoints)
     minq<-qteam$meanPoints + 2*(qteam$sdPoints)
 
-    plt <- ggplot2::ggplot(teamscores, ggplot2::aes(x = quote(GameNum), y = quote(cPoints), colour = quote(Venue))) +
+    plt <- ggplot2::ggplot(teamscores, ggplot2::aes_(x = quote(GameNum), y = quote(cPoints), colour = quote(Venue))) +
       ggplot2::geom_point() +
       ggplot2::scale_x_continuous(limits = c(0, 82)) +
       ggplot2::scale_y_continuous(limits = c(0, 164)) +
@@ -559,8 +559,8 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
   todayodds$AwayWinOT<-todayodds$Draw-todayodds$HomeWinOT
 
   #Melt data to work with ggplot
-  m<-reshape2::melt(todayodds, id.vars = c('HomeTeam', 'AwayTeam'))
-  m$variable<-factor(x = m$variable, levels = c("AwayWin", "AwayWinOT", "Draw", "HomeWinOT", "HomeWin"), ordered = TRUE)
+  melted<-reshape2::melt(todayodds, id.vars = c('HomeTeam', 'AwayTeam'))
+  melted$variable<-factor(x = melted$variable, levels = c("AwayWin", "AwayWinOT", "Draw", "HomeWinOT", "HomeWin"), ordered = TRUE)
 
   #Make colour and alpha lists for plot
   plotcolors<-c()
@@ -571,12 +571,12 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
                   teamColours[teamColours$Team == todayodds[i, 'HomeTeam'], 'Hex'],
                   teamColours[teamColours$Team == todayodds[i, 'AwayTeam'], 'Hex'],
                   teamColours[teamColours$Team == todayodds[i, 'AwayTeam'], 'Hex'])
-    plotalpha <- c(plotalpha, 0.9, 0.7, 0.6, 0.9)
+    plotalpha <- c(plotalpha, 1, 0.7, 0.7, 1)
   }
 
   #build plot
-  p<-ggplot2::ggplot(m[m$variable %in% c('HomeWin','HomeWinOT', 'AwayWinOT', 'AwayWin'),],
-                     ggplot2::aes(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
+  p<-ggplot2::ggplot(melted[melted$variable %in% c('HomeWin','HomeWinOT', 'AwayWinOT', 'AwayWin'),],
+                     ggplot2::aes_(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
     ggplot2::geom_bar(stat = "identity", position='fill', fill = plotcolors, alpha = plotalpha, colour = 'white') +
    #ggplot2::scale_y_continuous(fill = plotcolors, alpha = plotalpha) +
     ggplot2::xlab("") +
@@ -605,14 +605,14 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
   otlabel.y <- todayodds[nrow(todayodds), "HomeWin"] + todayodds[nrow(todayodds), "Draw"]/2
   text_ot <- grid::textGrob("OT/SO Decision", gp = grid::gpar(fontsize = 10), hjust = 0.5)
   p<-p +
-    ggplot2::annotation_custom(text_home, xmin=nrow(todayodds) + 0.55, ymin = 0.01, ymax = .01) +
-    ggplot2::annotation_custom(text_away, xmin=nrow(todayodds) + 0.55, ymin = 0.99, ymax = .99)  +
-    ggplot2::annotation_custom(text_ot, xmin=nrow(todayodds) + 0.55, ymin = otlabel.y, ymax = otlabel.y)
+    ggplot2::annotation_custom(text_home, xmin=nrow(todayodds) + min(0.1*(nrow(todayodds)), 1), ymin = 0.01, ymax = .01) +
+    ggplot2::annotation_custom(text_away, xmin=nrow(todayodds) + min(0.1*(nrow(todayodds)), 1), ymin = 0.99, ymax = .99)  +
+    ggplot2::annotation_custom(text_ot, xmin=nrow(todayodds) + min(0.1*(nrow(todayodds)), 1), ymin = otlabel.y, ymax = otlabel.y)
 
   #Turn off clipping so the instructions can show
   gt <- ggplot2::ggplot_gtable(ggplot2::ggplot_build(p))
   gt$layout$clip[gt$layout$name == "panel"] <- "off"
-  grid::grid.draw(gt)
+  #grid::grid.draw(gt)
 
   return(gt)
 
@@ -665,7 +665,7 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
 
   odds<-DCPredict(home = home, away = away)
 
-  p <- ggplot2::ggplot(data = goals, ggplot2::aes(x = quote(Goals), y = quote(Density), fill = quote(Team))) +
+  p <- ggplot2::ggplot(data = goals, ggplot2::aes_(x = quote(Goals), y = quote(Density), fill = quote(Team))) +
     #ggplot2::geom_point() +
     ggplot2::geom_area(position = "identity", alpha = 0.6) +
     ggplot2::theme_minimal() +
