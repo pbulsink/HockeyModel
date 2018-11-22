@@ -1,5 +1,5 @@
 ---
-title: "Complex V Simple Season Prediction"
+title: "Complex Vs Simple Season Prediction"
 author: "Philip Bulsink"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -42,12 +42,12 @@ simple_odds_regressed<-remainderSeasonDC(regress = TRUE, odds = TRUE)
 
 The non-regressed odds look like this:
 ```{r odds_table, echo = FALSE, results="asis"}
-knitr::kable(tail(simple_odds), digits = 3)
+knitr::kable(tail(simple_odds), digits = 3, row.names = FALSE)
 ```
 
 Compare to the regressed odds:
 ```{r regressed_odds_table, echo = FALSE, results="asis"}
-knitr::kable(tail(simple_odds_regressed), digits = 3)
+knitr::kable(tail(simple_odds_regressed), digits = 3, row.names = FALSE)
 ```
 
 We can use these odds to predict the rest of the season, either by feeding them back in through `simulateSeason(odds_table = simple_odds)` (or the parallel version: `simulateSeasonParallel(odds_table = simple_odds)`), or just by calling `remainderSeasonDC()`
@@ -95,14 +95,14 @@ compare_results<-data.frame(Team = predictions$Team,
 So, let's compare! First, playoff odds (what everyone cares about).
 
 ```{r compare_table_playoffs, results = "asis", echo=FALSE}
-knitr::kable(compare_results[,c('Team', 'ComplexPlayoffs','CurrentPlayoffs', 'RegressedPlayoffs')], digits = 3)
+knitr::kable(compare_results[,c('Team', 'ComplexPlayoffs','CurrentPlayoffs', 'RegressedPlayoffs')], digits = 3, row.names = FALSE)
 ```
 
 So, it looks like simplifying the predictions jostles things around, but the trends are similar.
 
 Likewise, predicted points:
 ```{r compare_table_points, results = "asis", echo=FALSE}
-knitr::kable(compare_results[,c('Team', 'ComplexPoints','CurrentPoints', 'RegressedPoints')], digits = 3)
+knitr::kable(compare_results[,c('Team', 'ComplexPoints','CurrentPoints', 'RegressedPoints')], digits = 3, row.names = FALSE)
 ```
 
 Now we start to see a more clear difference. Some of the highest teams have a slightly lower point estimate, and the lower teams can do better. There's exceptions, of course, but the expected results is within 2-3 points typically. 

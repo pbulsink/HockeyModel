@@ -1,0 +1,85 @@
+---
+title: "Game Impact"
+author: "Philip Bulsink"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(HockeyModel)
+```
+
+Sometimes people want to know what the results of a game will mean for their team's playoff chances. 
+
+This is particularly important near the end of the season (~10 games left) for teams on the bubble. 
+
+One way to predict this would be to run simulations at each of the outcomes and compare. 
+
+For example, let's work a game from 2018-11-23:
+```{r make_score_schedule}
+scores<-HockeyModel::scores
+scores<-scores[scores$Date < as.Date("2018-11-22"),]
+schedule<-HockeyModel::schedule
+max_score_date<-max(HockeyModel::scores$Date)
+schedule<-rbind(HockeyModel::scores[HockeyModel::scores$Date > as.Date("2018-11-22"), ], 
+                HockeyModel::schedule[HockeyModel::schedule$Date > max_score_date, ])
+```
+
+Now, the first game after this point in the season is: `r knitr::kable(head(schedule,1), row.names = FALSE)`.
+
+For this point in the season, we can get our rho and m parameters to know we're simulating for the team strength as it was then:
+```{r get_rho_m, message = FALSE, error = FALSE, warning=FALSE}
+dcparams<-updateDC(scores = scores)
+rho<-dcparams$rho
+m<-dcparams$m
+```
+
+With these factors, we can predict the season. in particular, we'll look for the playoff odds of both Anaheim and Vancouver.
+```{r season_predict, include=FALSE}
+predictions<-remainderSeasonDC(schedule = schedule, rho=rho, m=m, regress = TRUE)
+```
+```{r season_predict, eval=FALSE}
+predictions<-remainderSeasonDC(schedule = schedule, scores = scores, rho=rho, m=m, regress = TRUE)
+```
+
+Having predicted the season from this point, what happens if we modify things a bit?
+
+Let's say Anaheim wins. The exact score won't matter, but we can add in a 3-2 score for a placeholder.
+```{r anaheim_win}
+result<-data.frame(Date = as.Date("2018-11-23"), 
+                   AwayTeam = "Vancouver Canucks", 
+                   AwayGoals = 2,
+                   HomeTeam = "Anaheim Ducks", 
+                   HomeGoals = 3,
+                   OTStatus = "",
+                   League = "NHL",
+                   Tie = FALSE,
+                   Winner = "Anaheim Ducks",
+                   Loser = "Vancouver Canucks",
+                   Result = 1
+                   )
+#add the results to scores
+newscores<-rbind(scores, result)
+#remove the game from schedule
+newschedule<-schedule[2:nrow(schedule),]
+
+new_predict<-remainderSeasonDC(schedule = newschedule, scores = newscores, rho=rho, m=m, regress = TRUE)
+```
+
+With this, we can see that Anaheim's chances increased:
+```{r chances}
+previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+message("Was: ", round(previous_chance*100, 2), "%, now: ", round(new_chance*100, 2), "%, change of ", round((new_chance-previous_chance)*100, 2), "%.")
+```
+
+COOL!!!
+
