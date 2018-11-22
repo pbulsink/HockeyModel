@@ -320,7 +320,8 @@ remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedul
     season_percent <- NULL
   }
 
-  for(d in unique(schedule$Date)){
+  for(day in unique(schedule$Date)){
+    d<-as.Date(day, origin="1970-01-01")
     if(regress){
       #Adjust regress to mean
       season_percent <- (remaining_length - as.integer(season_end_date - as.Date(d)))/season_length
