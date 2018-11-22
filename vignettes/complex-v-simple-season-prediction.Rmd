@@ -1,0 +1,113 @@
+---
+title: "Complex V Simple Season Prediction"
+author: "Philip Bulsink"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(HockeyModel)
+filelist<-list.files(path = "../prediction_results/")
+pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
+pdates<-pdates[pdates != 'graphics']
+lastp<-as.Date(max(pdates))
+predictions<-readRDS(file.path("../prediction_results/", paste0(lastp,"-predictions.RDS")))
+```
+
+Current season predictions (playoffs, president's trophy, points) require a four to five hour calculation. The model regenerates the `m` and `rho` parameters every 7 days of simulation, every iteration of the season. The team's strenght still is regressed toward the mean to prevent runaway scenarios. This involves a significant amount of processing and yet leaves us with only ~1500 simulations. 
+
+With this, we get such nice images as these:
+
+```{r prediction_plots, echo = FALSE, warnings = FALSE, message = FALSE, fig.dim = c(6,6)}
+all_predictions<-HockeyModel:::compile_predictions(dir = "../prediction_results/")
+plot_prediction_points_by_team(all_predictions = all_predictions)
+```
+
+What, though, would the difference be if we just used the current `m` and `rho` values and regressed, instead of recalculating them constantly? We would hopefully reduce run time, allowing for more simulations (maybe ten or a hundred thousand simulations, instead of one thousand?), or calculating the impact of single games on a team's odds?
+
+To show the importance of regression, we'll first generate the regressed and non-regressed odds for simple prediction.
+```{r season_sim}
+simple_odds<-remainderSeasonDC(odds = TRUE)
+simple_odds_regressed<-remainderSeasonDC(regress = TRUE, odds = TRUE)
+```
+
+The non-regressed odds look like this:
+```{r odds_table, echo = FALSE, results="asis"}
+knitr::kable(tail(simple_odds), digits = 3)
+```
+
+Compare to the regressed odds:
+```{r regressed_odds_table, echo = FALSE, results="asis"}
+knitr::kable(tail(simple_odds_regressed), digits = 3)
+```
+
+We can use these odds to predict the rest of the season, either by feeding them back in through `simulateSeason(odds_table = simple_odds)` (or the parallel version: `simulateSeasonParallel(odds_table = simple_odds)`), or just by calling `remainderSeasonDC()`
+
+```{r prediction_simulation_fake, eval = FALSE}
+start_time<-Sys.time()
+no_regress_prediction<-remainderSeasonDC()$summary_results
+no_regress_time<-Sys.time()-start_time
+
+start_time<-Sys.time()
+regress_prediction<-remainderSeasonDC(regress = TRUE)$summary_results
+regress_time<-Sys.time() - start_time
+```
+
+```{r prediction_simulation, include = FALSE}
+start_time<-as.numeric(Sys.time())
+no_regress_prediction<-remainderSeasonDC()
+no_regress_time<-as.numeric(Sys.time())-start_time
+
+start_time<-as.numeric(Sys.time())
+regress_prediction<-remainderSeasonDC(regress = TRUE)
+regress_time<-as.numeric(Sys.time()) - start_time
+```
+
+In running these, I've found the time takes about `r round(no_regress_time, 0)` seconds for the regression free, or `r round(regress_time, 0)` seconds for the regressed simulation to simulate the remainder of the season *10000* times. Much better than hours for the complex reevaluted method of prediction! In fact, if we assume 4 hours for analysis, and 1000 simulations, this is a `r round((14400/regress_time)*10, 0)` speed up.
+
+The real question is how it performs. 
+
+We'll compare the complex, regressed, and non-regressed (current) predictions here. The complex predictions were loaded earlier and are in `predictions`.
+```{r compare_prep}
+regress_prediction<-regress_prediction$summary_results
+no_regress_prediction<-no_regress_prediction$summary_results
+compare_results<-data.frame(Team = predictions$Team,
+                            ComplexPoints = predictions$meanPoints,
+                            CurrentPoints = no_regress_prediction$meanPoints,
+                            RegressedPoints = regress_prediction$meanPoints,
+                            ComplexPlayoffs = predictions$Playoffs,
+                            CurrentPlayoffs = no_regress_prediction$Playoffs,
+                            RegressedPlayoffs = regress_prediction$Playoffs,
+                            ComplexPresident = predictions$Presidents,
+                            CurrentPresident = no_regress_prediction$Presidents,
+                            RegressedPresident = regress_prediction$Presidents)
+```
+
+So, let's compare! First, playoff odds (what everyone cares about).
+
+```{r compare_table_playoffs, results = "asis", echo=FALSE}
+knitr::kable(compare_results[,c('Team', 'ComplexPlayoffs','CurrentPlayoffs', 'RegressedPlayoffs')], digits = 3)
+```
+
+So, it looks like simplifying the predictions jostles things around, but the trends are similar.
+
+Likewise, predicted points:
+```{r compare_table_points, results = "asis", echo=FALSE}
+knitr::kable(compare_results[,c('Team', 'ComplexPoints','CurrentPoints', 'RegressedPoints')], digits = 3)
+```
+
+Now we start to see a more clear difference. Some of the highest teams have a slightly lower point estimate, and the lower teams can do better. There's exceptions, of course, but the expected results is within 2-3 points typically. 
+
+It's for the reader to show the same for president's trophy odds.
+
+At the end of the day, this is likely good enough. No one can really understand the difference between 75% chance of making the playoffs and 78% chance, especially since the result is going to be binary. But doing predictions with `r round((14400/regress_time)*10, 0)` times higher efficiency is well worth the tradeoff!
+
