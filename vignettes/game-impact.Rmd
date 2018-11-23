@@ -27,7 +27,6 @@ For example, let's work a game from 2018-11-23:
 ```{r make_score_schedule}
 scores<-HockeyModel::scores
 scores<-scores[scores$Date < as.Date("2018-11-22"),]
-schedule<-HockeyModel::schedule
 max_score_date<-max(HockeyModel::scores$Date)
 schedule<-rbind(HockeyModel::scores[HockeyModel::scores$Date > as.Date("2018-11-22"), c('Date', 'HomeTeam', 'AwayTeam')], 
                 HockeyModel::schedule[HockeyModel::schedule$Date > max_score_date, ])
@@ -44,7 +43,7 @@ m<-dcparams$m
 
 With these factors, we can predict the season. in particular, we'll look for the playoff odds of both Anaheim and Vancouver.
 ```{r season_predict, include=FALSE}
-predictions<-remainderSeasonDC(schedule = schedule, rho=rho, m=m, regress = TRUE)
+predictions<-remainderSeasonDC(nsims = 1e5, schedule = schedule, rho=rho, m=m, regress = TRUE)
 ```
 ```{r season_predict_fake, eval=FALSE}
 predictions<-remainderSeasonDC(schedule = schedule, scores = scores, rho=rho, m=m, regress = TRUE)
@@ -71,7 +70,7 @@ newscores<-rbind(scores, result)
 #remove the game from schedule
 newschedule<-schedule[2:nrow(schedule),]
 
-new_predict<-remainderSeasonDC(schedule = newschedule, scores = newscores, rho=rho, m=m, regress = TRUE)
+new_predict<-remainderSeasonDC(nsims = 1e5, schedule = newschedule, scores = newscores, rho=rho, m=m, regress = TRUE)
 ```
 
 With this, we can see that Anaheim's chances increased:
@@ -94,22 +93,27 @@ Similarly, we can calculate the result after a OT, SO result, or loss, and see t
 home_ot<-result
 home_ot$OTStatus <- "OT"
 home_ot$Tie <- TRUE
+home_ot$Result <- 0.75
 
 home_so<-home_ot
 home_so$OTStatus <- "SO"
+home_so$Result <- 0.6
 
 away_win<-result
 away_win$HomeGoals <-2
 away_win$AwayGoals <- 3
 away_win$Winner <- 'Vancouver Canucks'
 away_win$Loser <- 'Anaheim Ducks'
+away_win$Result <- 0
 
 away_ot <- away_win
 away_ot$OTStatus = "OT"
 away_ot$Tie <- TRUE
+away_ot$Result <- 0.25
 
 away_so<-away_ot
 away_so$OTStatus <-"SO"
+away_so$Result <- 0.4
 
 home_ot_score<-rbind(scores, home_ot)
 home_so_score<-rbind(scores, home_so)
@@ -117,11 +121,11 @@ away_win_score<-rbind(scores, away_win)
 away_ot_score<-rbind(scores, away_ot)
 away_so_score<-rbind(scores, away_so)
 
-predict_home_ot<-remainderSeasonDC(schedule = newschedule, scores = home_ot_score, rho=rho, m=m, regress = TRUE)
-predict_home_so<-remainderSeasonDC(schedule = newschedule, scores = home_so_score, rho=rho, m=m, regress = TRUE)
-predict_away_win<-remainderSeasonDC(schedule = newschedule, scores = away_win_score, rho=rho, m=m, regress = TRUE)
-predict_away_ot<-remainderSeasonDC(schedule = newschedule, scores = away_ot_score, rho=rho, m=m, regress = TRUE)
-predict_away_so<-remainderSeasonDC(schedule = newschedule, scores = away_so_score, rho=rho, m=m, regress = TRUE)
+predict_home_ot<-remainderSeasonDC(nsims = 1e5, schedule = newschedule, scores = home_ot_score, rho=rho, m=m, regress = TRUE)
+predict_home_so<-remainderSeasonDC(nsims = 1e5, schedule = newschedule, scores = home_so_score, rho=rho, m=m, regress = TRUE)
+predict_away_win<-remainderSeasonDC(nsims = 1e5, schedule = newschedule, scores = away_win_score, rho=rho, m=m, regress = TRUE)
+predict_away_ot<-remainderSeasonDC(nsims = 1e5, schedule = newschedule, scores = away_ot_score, rho=rho, m=m, regress = TRUE)
+predict_away_so<-remainderSeasonDC(nsims = 1e5, schedule = newschedule, scores = away_so_score, rho=rho, m=m, regress = TRUE)
 
 ana_home_ot_chance<-as.numeric(predict_home_ot$summary_results[predict_home_ot$summary_results$Team == "Anaheim Ducks", "Playoffs"])
 ana_home_so_chance<-as.numeric(predict_home_so$summary_results[predict_home_so$summary_results$Team == "Anaheim Ducks", "Playoffs"])

@@ -365,7 +365,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
 
   #make plot
   p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes_(x=quote(predictionDate), y=quote(meanPoints), colour = quote(Team))) +
-    ggalt::geom_xspline(shape = 0.5) +
+    ggalt::geom_xspline(spline_shape = 0.5) +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
@@ -413,7 +413,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
 
   #make plot
   p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes_(x=quote(predictionDate), y=quote(Playoffs), colour = quote(Team))) +
-    ggalt::geom_xspline(shape = 0.5) +
+    ggalt::geom_xspline(spline_shape = 0.5) +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
@@ -466,7 +466,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
 
   #make plot
   p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes_(x=quote(predictionDate), y=quote(Presidents), colour = quote(Team))) +
-    ggalt::geom_xspline(shape = 0.5) +
+    ggalt::geom_xspline(spline_shape = 0.5) +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +

@@ -174,13 +174,13 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
     ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
 
-    playoff <- playoffOdds(...)
+    playoff <- playoffOdds()
     ggplot2::ggsave(file.path(graphic_dir, 'playoff_odds.png'), plot = playoff, width = 11, height = 8.5, units = "in")
 
-    president <- presidentOdds(...)
+    president <- presidentOdds()
     ggplot2::ggsave(file.path(graphic_dir, 'president_odds.png'), plot = president, width = 11, height = 8.5, units = "in")
 
-    point <- pointPredict(...)
+    point <- pointPredict()
     ggplot2::ggsave(file.path(graphic_dir, 'point_predict.png'), plot = point, width = 11, height = 8.5, units = "in")
 
     rating <- ratings(m = modelparams$m)
