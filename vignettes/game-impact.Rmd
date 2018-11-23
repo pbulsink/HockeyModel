@@ -29,7 +29,7 @@ scores<-HockeyModel::scores
 scores<-scores[scores$Date < as.Date("2018-11-22"),]
 schedule<-HockeyModel::schedule
 max_score_date<-max(HockeyModel::scores$Date)
-schedule<-rbind(HockeyModel::scores[HockeyModel::scores$Date > as.Date("2018-11-22"), ], 
+schedule<-rbind(HockeyModel::scores[HockeyModel::scores$Date > as.Date("2018-11-22"), c('Date', 'HomeTeam', 'AwayTeam')], 
                 HockeyModel::schedule[HockeyModel::schedule$Date > max_score_date, ])
 ```
 
@@ -46,7 +46,7 @@ With these factors, we can predict the season. in particular, we'll look for the
 ```{r season_predict, include=FALSE}
 predictions<-remainderSeasonDC(schedule = schedule, rho=rho, m=m, regress = TRUE)
 ```
-```{r season_predict, eval=FALSE}
+```{r season_predict_fake, eval=FALSE}
 predictions<-remainderSeasonDC(schedule = schedule, scores = scores, rho=rho, m=m, regress = TRUE)
 ```
 
@@ -76,10 +76,84 @@ new_predict<-remainderSeasonDC(schedule = newschedule, scores = newscores, rho=r
 
 With this, we can see that Anaheim's chances increased:
 ```{r chances}
-previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Anaheim Ducks", "Playoffs"])
-new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Anaheim Ducks", "Playoffs"])
-message("Was: ", round(previous_chance*100, 2), "%, now: ", round(new_chance*100, 2), "%, change of ", round((new_chance-previous_chance)*100, 2), "%.")
+ana_previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+ana_new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+message("Was: ", round(ana_previous_chance*100, 2), "%, now: ", round(ana_new_chance*100, 2), "%, change of ", round((ana_new_chance-ana_previous_chance)*100, 2), "%.")
 ```
 
-COOL!!!
+```{r include = FALSE}
+van_previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Vancouver Canucks", "Playoffs"])
+van_new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Vancouver Canucks", "Playoffs"])
+ari_previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Arizona Coyotes", "Playoffs"])
+ari_new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Arizona Coyotes", "Playoffs"])
+```
+Of course, nothing happens in isolation. The chances for a few other teams changed too. Vancouver's odds changed by `r round((van_new_chance-van_previous_chance)*100, 2)`%, but Arizona's chanced changed too, by `r round((ari_new_chance-ari_previous_chance)*100, 2)`%.
+
+Similarly, we can calculate the result after a OT, SO result, or loss, and see the impact of each.
+```{r results, include = FALSE}
+home_ot<-result
+home_ot$OTStatus <- "OT"
+home_ot$Tie <- TRUE
+
+home_so<-home_ot
+home_so$OTStatus <- "SO"
+
+away_win<-result
+away_win$HomeGoals <-2
+away_win$AwayGoals <- 3
+away_win$Winner <- 'Vancouver Canucks'
+away_win$Loser <- 'Anaheim Ducks'
+
+away_ot <- away_win
+away_ot$OTStatus = "OT"
+away_ot$Tie <- TRUE
+
+away_so<-away_ot
+away_so$OTStatus <-"SO"
+
+home_ot_score<-rbind(scores, home_ot)
+home_so_score<-rbind(scores, home_so)
+away_win_score<-rbind(scores, away_win)
+away_ot_score<-rbind(scores, away_ot)
+away_so_score<-rbind(scores, away_so)
+
+predict_home_ot<-remainderSeasonDC(schedule = newschedule, scores = home_ot_score, rho=rho, m=m, regress = TRUE)
+predict_home_so<-remainderSeasonDC(schedule = newschedule, scores = home_so_score, rho=rho, m=m, regress = TRUE)
+predict_away_win<-remainderSeasonDC(schedule = newschedule, scores = away_win_score, rho=rho, m=m, regress = TRUE)
+predict_away_ot<-remainderSeasonDC(schedule = newschedule, scores = away_ot_score, rho=rho, m=m, regress = TRUE)
+predict_away_so<-remainderSeasonDC(schedule = newschedule, scores = away_so_score, rho=rho, m=m, regress = TRUE)
+
+ana_home_ot_chance<-as.numeric(predict_home_ot$summary_results[predict_home_ot$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+ana_home_so_chance<-as.numeric(predict_home_so$summary_results[predict_home_so$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+ana_away_chance<-as.numeric(predict_away_win$summary_results[predict_away_win$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+ana_away_ot_chance<-as.numeric(predict_away_ot$summary_results[predict_away_ot$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+ana_away_so_chance<-as.numeric(predict_away_so$summary_results[predict_away_so$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+
+van_home_ot_chance<-as.numeric(predict_home_ot$summary_results[predict_home_ot$summary_results$Team == "Vancouver Canucks", "Playoffs"])
+van_home_so_chance<-as.numeric(predict_home_so$summary_results[predict_home_so$summary_results$Team == "Vancouver Canucks", "Playoffs"])
+van_away_chance<-as.numeric(predict_away_win$summary_results[predict_away_win$summary_results$Team == "Vancouver Canucks", "Playoffs"])
+van_away_ot_chance<-as.numeric(predict_away_ot$summary_results[predict_away_ot$summary_results$Team == "Vancouver Canucks", "Playoffs"])
+van_away_so_chance<-as.numeric(predict_away_so$summary_results[predict_away_so$summary_results$Team == "Vancouver Canucks", "Playoffs"]) 
+
+impact<-data.frame(Scenario = c("Home Win", "Home OT Win", "Home SO Win", "Away SO Win", "Away OT Win", "Away Win"), 
+                   "Home Team (Anaheim Ducks)" = c(ana_new_chance - ana_previous_chance,
+                                                   ana_home_ot_chance - ana_previous_chance,
+                                                   ana_home_so_chance - ana_previous_chance,
+                                                   ana_away_so_chance - ana_previous_chance,
+                                                   ana_away_ot_chance - ana_previous_chance,
+                                                   ana_away_chance - ana_previous_chance
+                   ),
+                   "Away Team (Vancouver Canucks)" = c(van_new_chance - van_previous_chance,
+                                                       van_home_ot_chance - van_previous_chance,
+                                                       van_home_so_chance - van_previous_chance,
+                                                       van_away_so_chance - van_previous_chance,
+                                                       van_away_ot_chance - van_previous_chance,
+                                                       van_away_chance - van_previous_chance)
+                   )
+```
+
+```{r, echo = FALSE}
+knitr::kable(impact)
+```
+
 
