@@ -115,10 +115,11 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
 #' @param cores number of cores to process
 #' @param ndays number of days of games to play before reevaluating m
 #' @param regress Whether to regress toward mean
+#' @param progress Whether to show a progress bar.
 #'
 #' @return data frame of Team point ranges, playoff odds, etc.
 #' @export
-dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1, ndays=7, regress=FALSE){
+dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule = HockeyModel::schedule, cores = parallel::detectCores()-1, ndays=7, regress=FALSE, progress = FALSE){
 
   schedule$Date<-as.Date(schedule$Date)
   schedule<-schedule[schedule$Date > max(scores$Date), ]
@@ -157,9 +158,13 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   `%dopar%` <- foreach::`%dopar%`
   cl<-parallel::makeCluster(cores)
   doSNOW::registerDoSNOW(cl)
-  pb<-utils::txtProgressBar(max = nsims, style = 3)
-  progress <- function(n) utils::setTxtProgressBar(pb, n)
-  opts <- list(progress = progress)
+  if(progress){
+    pb<-utils::txtProgressBar(max = nsims, style = 3)
+    progress <- function(n) utils::setTxtProgressBar(pb, n)
+    opts <- list(progress = progress)
+  } else {
+    opts <- list()
+  }
   #all_results <- data.frame(Team = character(), GP = integer(), Points = integer(), W = integer(), L = integer(), OTL = integer(), SOL = integer(), SOW = integer(), Rank = integer(), ConfRank = integer(), DivRank = integer(), Playoffs = integer())
 
   all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts, .packages=c("HockeyModel")) %dopar%{ #, DCPredictErrorRecover = DCPredictErrorRecover) %dopar% {
@@ -256,7 +261,9 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
     table<-buildStats(results)
   }
 
-  close(pb)
+  if(progress){
+    close(pb)
+  }
   parallel::stopCluster(cl)
   gc(verbose = FALSE)
 

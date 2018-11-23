@@ -5,7 +5,7 @@
 \title{Simulate the remainder of the season}
 \usage{
 simulateSeason(odds_table, scores = HockeyModel::scores, nsims = 10000,
-  schedule = HockeyModel::schedule)
+  schedule = HockeyModel::schedule, progress = FALSE)
 }
 \arguments{
 \item{odds_table}{A dataframe with HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, and Date}
@@ -15,6 +15,8 @@ simulateSeason(odds_table, scores = HockeyModel::scores, nsims = 10000,
 \item{nsims}{number of simulations to run}
 
 \item{schedule}{Future unplayed games. Defaults to HockeyModel::schedule}
+
+\item{progress}{whether to show a progress bar.}
 }
 \value{
 a data frame of results

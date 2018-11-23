@@ -93,10 +93,11 @@ buildStats<-function(scores = HockeyModel::scores){
 #' @param scores Past (historical) season scores. Defaults to HockeyModel::Scores
 #' @param schedule Future unplayed games. Defaults to HockeyModel::schedule
 #' @param nsims number of simulations to run
+#' @param progress whether to show a progress bar.
 #'
 #' @return a data frame of results
 #' @export
-simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule){
+simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, progress = FALSE){
   teamlist<-c()
   if(!is.null(scores)){
     season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
@@ -127,8 +128,9 @@ simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, 
                             DivRank = rep(NA, n * nsims),
                             Playoffs = rep(NA, n * nsims),
                             stringsAsFactors = FALSE)
-
-  pb<-dplyr::progress_estimated(nsims)
+  if(progress){
+    pb<-dplyr::progress_estimated(nsims)
+  }
   for(i in 1:nsims){
     #Generate Games results once
     tmp<-odds_table
@@ -165,7 +167,9 @@ simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, 
     all_results[(n*(i-1) + 1):(n*i),]$DivRank <- table$DivRank
     all_results[(n*(i-1) + 1):(n*i),]$Playoffs <- table$Playoffs
 
-    pb$tick()$print()
+    if(progress){
+      pb$tick()$print()
+    }
   }
 
   summary_results<-all_results %>%
@@ -203,10 +207,11 @@ simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, 
 #' @param schedule Future unplayed games. Defaults to HockeyModel::schedule
 #' @param nsims number of simulations to run
 #' @param cores number of cores to use in parallel.
+#' @param progress whether to show a progress bar.
 #'
 #' @return a data frame of results
 #' @export
-simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, cores = parallel::detectCores() - 1){
+simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, cores = parallel::detectCores() - 1, progress = FALSE){
   teamlist<-c()
   if(!is.null(scores)){
     season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
@@ -242,9 +247,13 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
   `%dopar%` <- foreach::`%dopar%`
   cl<-parallel::makeCluster(cores)
   doSNOW::registerDoSNOW(cl)
-  pb<-utils::txtProgressBar(max = nsims, style = 3)
-  progress <- function(n) utils::setTxtProgressBar(pb, n)
-  opts <- list(progress = progress)
+  if(progress){
+    pb<-utils::txtProgressBar(max = nsims, style = 3)
+    progress <- function(n) utils::setTxtProgressBar(pb, n)
+    opts <- list(progress = progress)
+  } else {
+    opts <- list()
+  }
   all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts) %dopar% {
     #Generate Games results once
     tmp<-odds_table
@@ -271,7 +280,9 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
 
     table
   }
-  close(pb)
+  if(progress){
+    close(pb)
+  }
   parallel::stopCluster(cl)
   gc(verbose = FALSE)
 
