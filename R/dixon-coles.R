@@ -44,7 +44,7 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
                                    label=quote(Team)
                                    )
                      ) +
-    ggplot2::ggtitle("Attack and Defence Parameters") +
+    ggplot2::ggtitle("Current Team Attack & Defense Ratings", subtitle = paste0("As of ", Sys.Date(), ". Chart by @BulsinkB")) +
     ggplot2::xlab("Attack") +
     ggplot2::ylab("Defence") +
     ggplot2::geom_point() +
@@ -604,14 +604,14 @@ dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), sco
     score<-scores[scores$Date < day,]
     sched<-schedule[schedule$Date >= day,]
     preds<-NULL
-    preds<-try(dcRealSeasonPredict(nsims=min(1e5, floor(2e6/nrow(sched))), scores=score, schedule = sched, ...), silent = TRUE)
+    preds<-try(remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE), silent = TRUE)
     if(!is.null(preds) & 'summary_results' %in% names(preds)){
       message('Saving Prediction file...')
       saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))
     } else {
       message('Error occurred, retrying', d, '.')
       preds<-NULL
-      preds<-try(dcRealSeasonPredict(nsims=min(1e5, floor(2e6/nrow(sched))), scores=score, schedule = sched, ...), silent = TRUE)
+      preds<-try(remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE), silent = TRUE)
       if(!is.null(preds) & 'summary_results' %in% names(preds)){
         message('Saving Prediction file...')
         saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))

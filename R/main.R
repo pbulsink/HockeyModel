@@ -112,11 +112,11 @@ ratings <- function(m = HockeyModel::m, ...) {
 }
 
 tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, ...){
-  rtweet::post_tweet(status = "Predicted odds for today's #NHL games",
+  rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
                      media = file.path(graphic_dir, "today_odds.png"), token = token)
   my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
   reply_id<-my_timeline$status_id[1]
-  rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
+  rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
                      media = file.path(graphic_dir, "current_rating.png"),
                      in_reply_to_status_id = reply_id, token = token)
 
@@ -124,7 +124,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), ")."),
+  rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                      media = file.path(graphic_dir, "point_predict.png"), token = token)
 
   my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
@@ -134,7 +134,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  rtweet::post_tweet(status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), ")."),
+  rtweet::post_tweet(status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                      media = file.path(graphic_dir, "playoff_odds.png"),
                      in_reply_to_status_id = reply_id, token = token)
 
@@ -145,7 +145,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  rtweet::post_tweet(status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), ")."),
+  rtweet::post_tweet(status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                      media = file.path(graphic_dir, "president_odds.png"),
                      in_reply_to_status_id = reply_id, token = token)
 
@@ -171,20 +171,32 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   sc<-modelparams$schedule
   if(Sys.Date() %in% sc$Date){
     message("Creating graphics...")
+
     today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
-    ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
+    png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(today)
+    dev.off()
+    #ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
 
     playoff <- playoffOdds()
-    ggplot2::ggsave(file.path(graphic_dir, 'playoff_odds.png'), plot = playoff, width = 11, height = 8.5, units = "in")
+    png(filename = file.path(graphic_dir, 'playoff_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(playoff)
+    dev.off()
 
     president <- presidentOdds()
-    ggplot2::ggsave(file.path(graphic_dir, 'president_odds.png'), plot = president, width = 11, height = 8.5, units = "in")
+    png(filename = file.path(graphic_dir, 'president_odds'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(president)
+    dev.off()
 
     point <- pointPredict()
-    ggplot2::ggsave(file.path(graphic_dir, 'point_predict.png'), plot = point, width = 11, height = 8.5, units = "in")
+    png(filename = file.path(graphic_dir, 'point_predict.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(point)
+    dev.off
 
     rating <- ratings(m = modelparams$m)
-    ggplot2::ggsave(file.path(graphic_dir, 'current_rating.png'), plot = rating, width = 11, height = 8.5, units = "in")
+    png(filename = file.path(graphic_dir, 'current_rating.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(rating)
+    dev.off()
 
     message("Posting Tweets...")
     tweet(graphic_dir, token = token, ...)
@@ -242,7 +254,7 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
                    format(round(as.numeric(preds[preds$Team == team, 'meanPoints']), digits = 1), nsmall = 1),
                    " points, now expecting ",
                    format(round(as.numeric(current_preds[current_preds$Team == team, 'meanPoints']), digits = 1), nsmall = 1),
-                   ". ",
+                   ". #HockeyTwitter",
                    teamColours[teamColours$Team == team, "Hashtag"])
 
     rtweet::post_tweet(status = status,
@@ -278,7 +290,7 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  rtweet::post_tweet(status = "Missed your team? Expand this thread to find them! #NHL",
+  rtweet::post_tweet(status = "Missed your team? Expand this thread to find them! #NHL #HockeyTwitter",
                      in_reply_to_status_id = reply_id,
                      token = token)
 }
@@ -307,8 +319,10 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
     home<-games[g,"HomeTeam"]
     away<-games[g,"AwayTeam"]
     plt<-plot_game(home = home, away = away, m=m, rho=rho)
-    ggplot2::ggsave(file.path(graphic_dir, 'predicted_goals.png'), plot = plt, width = 11, height = 8.5, units = "in")
-    status<-paste0(teamColours[teamColours$Team == home, "Hashtag"], " at ", teamColours[teamColours$Team == away, "Hashtag"], " predicted goals.")
+    png(filename = file.path(graphic_dir, 'predicted_goals.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(plt)
+    dev.off()
+    status<-paste0(teamColours[teamColours$Team == home, "Hashtag"], " at ", teamColours[teamColours$Team == away, "Hashtag"], " predicted goals. #HockeyTwitter")
     rtweet::post_tweet(status = status,
                        media = file.path(graphic_dir, 'predicted_goals.png'),
                        token = token)

@@ -29,3 +29,4 @@ rsconnect/
 env.RData
 inst/doc
 Rplots.pdf
+prediction_results/graphics/predicted_goals.png

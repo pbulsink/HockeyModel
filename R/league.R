@@ -19,7 +19,7 @@ buildStats<-function(scores = HockeyModel::scores){
       OTL = sum(!!dplyr::sym('Result') == 0.25),
       SOL = sum(!!dplyr::sym('Result') == 0.4),
       L = sum(!!dplyr::sym('Result') == 0),
-      P = !!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL')
+      P = as.numeric(!!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL'))
       ) %>%
     dplyr::ungroup()
   tmp2<-scores %>%
@@ -32,7 +32,7 @@ buildStats<-function(scores = HockeyModel::scores){
       OTL = sum(!!dplyr::sym('Result') == 0.75),
       SOL = sum(!!dplyr::sym('Result') == 0.6),
       L = sum(!!dplyr::sym('Result') == 1),
-      P = !!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL')
+      P = as.numeric(!!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL'))
       ) %>%
     dplyr::ungroup()
 
@@ -285,6 +285,7 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
   }
   parallel::stopCluster(cl)
   gc(verbose = FALSE)
+  message('generating summary')
 
   summary_results<-all_results %>%
     dplyr::group_by(!!dplyr::sym('Team')) %>%
