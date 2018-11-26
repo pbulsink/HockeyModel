@@ -585,16 +585,14 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date("2018-10-01"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, today = TRUE, filedir = "./prediction_results", ...){
+dcPredictMultipleDays<-function(start=as.Date("2018-10-03"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, today = TRUE, filedir = "./prediction_results", ...){
 
   if(!dir.exists(filedir)){
     dir.create(filedir, recursive = TRUE)
   }
 
-  predict_dates<-unique(scores$Date[scores$Date >= start & scores$Date <= end])
-  if(today){
-    predict_dates<-unique(c(predict_dates, Sys.Date()))
-  }
+  predict_dates<-seq(from = start, to = end, by = 1)
+
   schedule$Date<-as.Date(schedule$Date)
 
   message("Running predictions for ", length(predict_dates), " day(s).")
