@@ -579,19 +579,18 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #' @param end Last day to predict. Default today
 #' @param scores HockeyModel::scores
 #' @param schedule hockeyModel::schedule
-#' @param today whether to predict for today also
 #' @param filedir Where to save prediction files.
 #' @param ... Additional parameters to pass to dcRealSeasonPredict
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date("2018-10-03"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, today = TRUE, filedir = "./prediction_results", ...){
+dcPredictMultipleDays<-function(start=as.Date("2018-10-03"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = "./prediction_results", ...){
 
   if(!dir.exists(filedir)){
     dir.create(filedir, recursive = TRUE)
   }
 
-  predict_dates<-seq(from = start, to = end, by = 1)
+  predict_dates<-seq(from = end, to = start, by = -1)
 
   schedule$Date<-as.Date(schedule$Date)
 

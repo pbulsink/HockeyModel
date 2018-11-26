@@ -4,7 +4,7 @@
 \alias{dcPredictMultipleDays}
 \title{DC Predict Multiple Days}
 \usage{
-dcPredictMultipleDays(start = as.Date("2018-10-01"), end = Sys.Date(),
+dcPredictMultipleDays(start = as.Date("2018-10-03"), end = Sys.Date(),
   scores = HockeyModel::scores, schedule = HockeyModel::schedule,
   today = TRUE, filedir = "./prediction_results", ...)
 }
