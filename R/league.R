@@ -415,6 +415,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
   #make plot
   p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes_(x=quote(predictionDate), y=quote(Playoffs), colour = quote(Team))) +
     ggalt::geom_xspline(spline_shape = 0.5) +
+    #ggplot2::geom_line() +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
@@ -564,7 +565,7 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
 #'
 #' @export
 plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
-  todayodds<-todayDC(today = today, rho = rho, m = m, schedule = schedule, ...)
+  todayodds<-todayDC(today = today, rho = rho, m = m, schedule = schedule)
 
   #add odds for each team in OT/SO
   todayodds$HomeWinOT<-(todayodds$HomeWin / (todayodds$HomeWin + todayodds$AwayWin)) * todayodds$Draw
@@ -585,6 +586,12 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
                   teamColours[teamColours$Team == todayodds[i, 'AwayTeam'], 'Hex'])
     plotalpha <- c(plotalpha, 1, 0.7, 0.7, 1)
   }
+
+  #Prepare instructions to read
+  text_home <- grid::textGrob("Home Win", gp = grid::gpar(fontsize = 10), hjust = 0)
+  text_away <- grid::textGrob("Away Win", gp = grid::gpar(fontsize = 10), hjust = 1)
+  otlabel.y <- todayodds[nrow(todayodds), "HomeWin"] + todayodds[nrow(todayodds), "Draw"]/2
+  text_ot <- grid::textGrob("OT/SO Decision", gp = grid::gpar(fontsize = 10), hjust = 0.5)
 
   #build plot
   p<-ggplot2::ggplot(melted[melted$variable %in% c('HomeWin','HomeWinOT', 'AwayWinOT', 'AwayWin'),],
@@ -611,22 +618,12 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
     ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT + 0.02, hjust = 0, label = format(round(todayodds$AwayWinOT, 3), nsmall = 3)) +
     ggplot2::coord_flip()
 
-  #Add instructions to read
-  text_home <- grid::textGrob("Home Win", gp = grid::gpar(fontsize = 10), hjust = 0)
-  text_away <- grid::textGrob("Away Win", gp = grid::gpar(fontsize = 10), hjust = 1)
-  otlabel.y <- todayodds[nrow(todayodds), "HomeWin"] + todayodds[nrow(todayodds), "Draw"]/2
-  text_ot <- grid::textGrob("OT/SO Decision", gp = grid::gpar(fontsize = 10), hjust = 0.5)
-  p<-p +
-    ggplot2::annotation_custom(text_home, xmin=nrow(todayodds) + min(0.1*(nrow(todayodds)), 1), ymin = 0.01, ymax = .01) +
-    ggplot2::annotation_custom(text_away, xmin=nrow(todayodds) + min(0.1*(nrow(todayodds)), 1), ymin = 0.99, ymax = .99)  +
-    ggplot2::annotation_custom(text_ot, xmin=nrow(todayodds) + min(0.1*(nrow(todayodds)), 1), ymin = otlabel.y, ymax = otlabel.y)
-
   #Turn off clipping so the instructions can show
-  gt <- ggplot2::ggplot_gtable(ggplot2::ggplot_build(p))
-  gt$layout$clip[gt$layout$name == "panel"] <- "off"
+  #gt <- ggplot2::ggplot_gtable(ggplot2::ggplot_build(p))
+  #gt$layout$clip[gt$layout$name == "panel"] <- "off"
   #grid::grid.draw(gt)
 
-  return(gt)
+  return(p)
 
 }
 

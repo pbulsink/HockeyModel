@@ -172,31 +172,54 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   if(Sys.Date() %in% sc$Date){
     message("Creating graphics...")
 
+    #generate plots
     today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
+    playoff <- playoffOdds()
+    president <- presidentOdds()
+    point <- pointPredict()
+    rating <- ratings(m = modelparams$m)
+
+    Sys.sleep(15)
+
+    while(dev.cur()!=1){
+      dev.off()
+    }
+
+    #save to files.
     png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(today)
-    dev.off()
-    #ggplot2::ggsave(file.path(graphic_dir, 'today_odds.png'), plot = today, width = 11, height = 8.5, units = "in")
+    Sys.sleep(5)
+    while(dev.cur()!=1){
+      dev.off()
+    }
 
-    playoff <- playoffOdds()
     png(filename = file.path(graphic_dir, 'playoff_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(playoff)
-    dev.off()
+    Sys.sleep(5)
+    while(dev.cur()!=1){
+      dev.off()
+    }
 
-    president <- presidentOdds()
-    png(filename = file.path(graphic_dir, 'president_odds'), width = 11, height = 8.5, units = 'in', res = 300)
+    png(filename = file.path(graphic_dir, 'president_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(president)
-    dev.off()
+    Sys.sleep(5)
+    while(dev.cur()!=1){
+      dev.off()
+    }
 
-    point <- pointPredict()
     png(filename = file.path(graphic_dir, 'point_predict.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(point)
-    dev.off
+    Sys.sleep(5)
+    while(dev.cur()!=1){
+      dev.off()
+    }
 
-    rating <- ratings(m = modelparams$m)
     png(filename = file.path(graphic_dir, 'current_rating.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(rating)
-    dev.off()
+    Sys.sleep(5)
+    while(dev.cur()!=1){
+      dev.off()
+    }
 
     message("Posting Tweets...")
     tweet(graphic_dir, token = token, ...)
@@ -321,7 +344,9 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
     plt<-plot_game(home = home, away = away, m=m, rho=rho)
     png(filename = file.path(graphic_dir, 'predicted_goals.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(plt)
-    dev.off()
+    while(dev.cur()!=1){
+      dev.off()
+    }
     status<-paste0(teamColours[teamColours$Team == home, "Hashtag"], " at ", teamColours[teamColours$Team == away, "Hashtag"], " predicted goals. #HockeyTwitter")
     rtweet::post_tweet(status = status,
                        media = file.path(graphic_dir, 'predicted_goals.png'),
