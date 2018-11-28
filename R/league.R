@@ -215,34 +215,16 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
   teamlist<-c()
   if(!is.null(scores)){
     season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
-
     season_sofar <- season_sofar[,c('Date','HomeTeam','AwayTeam','Result')]
-
-    teamlist<-c(teamlist, sort(unique(c(as.character(season_sofar$HomeTeam), as.character(season_sofar$AwayTeam)))))
   } else {
     season_sofar<-NULL
   }
 
   teamlist<-c(teamlist, sort(unique(c(as.character(schedule$Home), as.character(schedule$Away)))))
 
-  if(!is.finite(cores)) cores <- 2
-
-  n<-length(teamlist)
-
-  # all_results <- data.frame(Team = rep(teamlist, nsims),
-  #                           SimNo = rep(1:nsims, each = n),
-  #                           Points = rep(NA, n * nsims),
-  #                           W = rep(NA, n*nsims),
-  #                           L = rep(NA, n * nsims),
-  #                           OTW = rep(NA, n * nsims),
-  #                           SOW = rep(NA, n * nsims),
-  #                           OTL = rep(NA, n * nsims),
-  #                           SOL = rep(NA, n * nsims),
-  #                           Rank = rep(NA, n * nsims),
-  #                           ConfRank = rep(NA, n * nsims),
-  #                           DivRank = rep(NA, n * nsims),
-  #                           Playoffs = rep(NA, n * nsims),
-  #                           stringsAsFactors = FALSE)
+  if(!is.finite(cores)) {
+    cores <- 2
+  }
 
   `%dopar%` <- foreach::`%dopar%`
   cl<-parallel::makeCluster(cores)
@@ -285,7 +267,6 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
   }
   parallel::stopCluster(cl)
   gc(verbose = FALSE)
-  message('generating summary')
 
   summary_results<-all_results %>%
     dplyr::group_by(!!dplyr::sym('Team')) %>%
