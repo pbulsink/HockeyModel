@@ -1,64 +1,65 @@
-odds_table<-remainderSeasonDC(odds = TRUE)
-odds_table$Result <- NA
+loopless_sim<-function(nsims=1e4, odds_table = NULL, season_sofar=NULL){
+  if(is.null(odds_table)){
+    odds_table<-remainderSeasonDC(odds = TRUE)
+  }
+  odds_table$Result <- NA
 
-season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
-last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
-odds_table<-odds_table[odds_table$Date > last_scores_date, ]
+  if(is.null(season_sofar)){
+    season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+  }
 
-season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
+  last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
+  odds_table<-odds_table[odds_table$Date > last_scores_date, ]
 
-season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
+  season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
+  season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
 
+  all_season<-rbind(season_sofar, odds_table)
 
-all_season<-rbind(season_sofar, odds_table)
+  season_length<-nrow(all_season)
 
-season_length<-nrow(all_season)
+  multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
 
-nsims<-1e3
+  multi_season$r1<-runif(n=season_length*nsims)
+  multi_season$r2<-runif(n=season_length*nsims)
+  multi_season$r3<-runif(n=season_length*nsims)
 
-all_season$r1<-all_results$r2<-all_results$r3<-NA
+  multi_season<-multi_season %>%
+    mutate_cond(is.na(Result), Result = 1*(as.numeric(r1<HomeWin)) +
+                       0.75 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 > 0.5) * as.numeric(r3 < 0.75))) +
+                       0.6 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 > 0.5) * as.numeric (r3 > 0.75))) +
+                       0.4 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 < 0.5) * as.numeric (r3 > 0.75))) +
+                       0.25 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 < 0.5) * as.numeric (r3 < 0.75))) +
+                       0)
 
-multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
+  multi_season$r1<-multi_season$r2<-multi_season$r3<-multi_season$HomeWin <- multi_season$AwayWin <- multi_season$Draw <- NULL
+  multi_season$sim<-rep(1:nsims, each = season_length)
 
-multi_season$r1<-runif(n=season_length*nsims)
-multi_season$r2<-runif(n=season_length*nsims)
-multi_season$r3<-runif(n=season_length*nsims)
+  teams<-unique(multi_season$HomeTeam)
+  teams<-as.character(teams[order(teams)])
+  n<-length(teams)
 
-mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
-  condition <- eval(substitute(condition), .data, envir)
-  .data[condition, ] <- .data[condition, ] %>% dplyr::mutate(...)
-  .data
+  all_results <- data.frame(Team = rep(teams, nsims),
+                            SimNo = rep(1:nsims, each = n),
+                            Points = rep(NA, n * nsims),
+                            W = rep(NA, n*nsims),
+                            L = rep(NA, n * nsims),
+                            OTW = rep(NA, n * nsims),
+                            SOW = rep(NA, n * nsims),
+                            OTL = rep(NA, n * nsims),
+                            SOL = rep(NA, n * nsims),
+                            Rank = rep(NA, n * nsims),
+                            ConfRank = rep(NA, n * nsims),
+                            DivRank = rep(NA, n * nsims),
+                            Playoffs = rep(NA, n * nsims),
+                            stringsAsFactors = FALSE)
+
+  all_results<-lapply_league(multi_season = multi_season, nsims = nsims, all_results = all_results, teams = teams)
+  all_results<-playoffs(all_results=all_results, nsims = nsims)
+
+  return(all_results)
 }
 
-multi_season<-multi_season %>%
-  mutate_cond(is.na(Result), Result = 1*(as.numeric(r1<HomeWin)) +
-                     0.75 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 > 0.5) * as.numeric(r3 < 0.75))) +
-                     0.6 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 > 0.5) * as.numeric (r3 > 0.75))) +
-                     0.4 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 < 0.5) * as.numeric (r3 > 0.75))) +
-                     0.25 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 < 0.5) * as.numeric (r3 < 0.75))) +
-                     0)
-
-multi_season$r1<-multi_season$r2<-multi_season$r3<-multi_season$HomeWin <- multi_season$AwayWin <- multi_season$Draw <- NULL
-multi_season$sim<-rep(1:nsims, each = season_length)
-
-teams<-unique(ms2$HomeTeam)
-teams<-as.character(teams[order(teams)])
-n<-length(teams)
-
-all_results <- data.frame(Team = rep(teams, nsims),
-                          SimNo = rep(1:nsims, each = n),
-                          Points = rep(NA, n * nsims),
-                          W = rep(NA, n*nsims),
-                          L = rep(NA, n * nsims),
-                          OTW = rep(NA, n * nsims),
-                          SOW = rep(NA, n * nsims),
-                          OTL = rep(NA, n * nsims),
-                          SOL = rep(NA, n * nsims),
-                          Rank = rep(NA, n * nsims),
-                          ConfRank = rep(NA, n * nsims),
-                          DivRank = rep(NA, n * nsims),
-                          Playoffs = rep(NA, n * nsims),
-                          stringsAsFactors = FALSE)
 
 applyteam<-function(multi_season, team, nsims){
   th<-multi_season[multi_season$HomeTeam == team,]
@@ -73,7 +74,7 @@ applyteam<-function(multi_season, team, nsims){
   return(list(w=w,l=l,otw=otw,otl=otl,sow=sow,sol=sol))
 }
 
-lapply_league<-function(multi_season, nsims, all_results){
+lapply_league<-function(multi_season, nsims, all_results, teams){
   teamresults<-function(team, multi_season, nsims){
     return(applyteam(multi_season, team, nsims))
   }
@@ -92,9 +93,7 @@ lapply_league<-function(multi_season, nsims, all_results){
   return(all_results)
 }
 
-all_results<-lapply_league(multi_season = multi_season, nsims = nsims, all_results = all_results)
-
-playoffs<-function(all_results){
+playoffs<-function(all_results, nsims){
   for(i in 1:nsims){
     sresult<-all_results[all_results$SimNo == i,]
     sresult$Rank <- rank(-sresult$Points, ties.method = 'random')
@@ -118,6 +117,13 @@ playoffs<-function(all_results){
   return(all_results)
 }
 
-all_results<-playoffs(all_results)
+mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
+  condition <- eval(substitute(condition), .data, envir)
+  .data[condition, ] <- .data[condition, ] %>% dplyr::mutate(...)
+  .data
+}
 
-microbenchmark::microbenchmark('seasontable' = buildStats(scores = HockeyModel::scores[HockeyModel::scores$Date > as.Date("2018-10-01")]))
+#odds<-remainderSeasonDC(odds = TRUE, regress = TRUE)
+
+#microbenchmark::microbenchmark('old' = HockeyModel:::simulateSeason(odds_table = odds, nsims = 1e2, progress = FALSE),
+                               #'new' = loopless_sim(nsims = 1e2, odds_table = odds))
