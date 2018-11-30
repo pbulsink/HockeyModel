@@ -115,10 +115,23 @@ historicalPoints<-function(sc){
     b<-buildStats(s)
     b$Season <- i
 
-
     points<-dplyr::bind_rows(points, b[,colnames(b) %in% c('Team', 'Season', 'Points')])
 
   }
 
   return(points)
+}
+
+#' Conditional Mutate
+#' @description Mutate at condition. useful in dplyr pipes.
+#'
+#' @param .data Data passed in
+#' @param condition Condition whether to peform mutate
+#' @param ... mutate to happen
+#' @param envir environment to cary through.
+#' @keywords internal
+mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
+  condition <- eval(substitute(condition), .data, envir)
+  .data[condition, ] <- .data[condition, ] %>% dplyr::mutate(...)
+  .data
 }

@@ -672,6 +672,147 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
     ggplot2::ggtitle("Predicted Goals", subtitle = paste0(away, " at ", home, " on ", Sys.Date(),"\nWin Odds - Away: ", format(round(odds[[3]], 3), nsmall = 3), " - Home: ", format(round(odds[[1]], 3), nsmall = 3), " - OT/SO: ", format(round(odds[[2]], 3), nsmall = 3)))
 
   return(p)
-
 }
+
+#' 'Loopless' simulation
+#'
+#' @param nsims number of simulations
+#' @param cores number of cores in parallel to process
+#' @param odds_table The odds table, if any
+#' @param season_sofar Season to this point
+#'
+#' @return a two member list, of all results and summary results
+#' @export
+loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, odds_table = NULL, season_sofar=NULL){
+
+  nsims <- floor(nsims/cores)
+
+  if(is.null(odds_table)){
+    odds_table<-remainderSeasonDC(odds = TRUE)
+  }
+  odds_table$Result <- NA
+
+  if(is.null(season_sofar)){
+    season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+  }
+
+  last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
+  odds_table<-odds_table[odds_table$Date > last_scores_date, ]
+
+  season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
+  season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
+
+  all_season<-rbind(season_sofar, odds_table)
+
+  `%dopar%` <- foreach::`%dopar%`
+  cl<-parallel::makeCluster(cores)
+  doSNOW::registerDoSNOW(cl)
+
+  all_results <- foreach::foreach(i=1:nsims, .combine='rbind') %dopar% {
+    all_results<-sim_engine(all_season = all_season, nsims = nsims)
+    return(all_results)
+  }
+
+  parallel::stopCluster(cl)
+  gc(verbose = FALSE)
+
+
+  summary_results<-all_results %>%
+    dplyr::group_by(!!dplyr::sym('Team')) %>%
+    dplyr::summarise(
+      Playoffs = mean(!!dplyr::sym('Playoffs')),
+      meanPoints = mean(!!dplyr::sym('Points'), na.rm = TRUE),
+      maxPoints = max(!!dplyr::sym('Points'), na.rm = TRUE),
+      minPoints = min(!!dplyr::sym('Points'), na.rm = TRUE),
+      meanWins = mean(!!dplyr::sym('W'), na.rm = TRUE),
+      maxWins = max(!!dplyr::sym('W'), na.rm = TRUE),
+      Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
+      meanRank = mean(!!dplyr::sym('Rank'), na.rm = TRUE),
+      bestRank = min(!!dplyr::sym('Rank'), na.rm = TRUE),
+      meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      meanDivRank = mean(!!dplyr::sym('DivRank'), na.rm = TRUE),
+      bestDivRank = min(!!dplyr::sym('DivRank'), na.rm = TRUE),
+      sdPoints = stats::sd(!!dplyr::sym('Points'), na.rm = TRUE),
+      sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
+      sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
+      sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
+    )
+
+  return(all_results = all_results, summary_results = summary_results)
+}
+
+#' Simulation engine to be parallelized or used in single core
+#'
+#' @param all_season One seasons' scores & odds schedule
+#' @param nsims Number of simulations to run
+#'
+#' @return results of each season's simulation, as one long data frame score table.
+#' @export
+sim_engine<-function(all_season, nsims){
+
+  season_length<-nrow(all_season)
+
+  multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
+  multi_season$sim<-rep(1:nsims, each = season_length)
+  multi_season$r1<-runif(n=nrow(multi_season))
+  multi_season$r2<-runif(n=nrow(multi_season))
+  multi_season$r3<-runif(n=nrow(multi_season))
+
+  multi_season<-multi_season %>%
+    mutate_cond(is.na(Result), Result = 1*(as.numeric(r1<HomeWin)) +
+                  0.75 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 > 0.5) * as.numeric(r3 < 0.75))) +
+                  0.6 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 > 0.5) * as.numeric (r3 > 0.75))) +
+                  0.4 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 < 0.5) * as.numeric (r3 > 0.75))) +
+                  0.25 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 < 0.5) * as.numeric (r3 < 0.75))) +
+                  0)
+
+  multi_season$r1<-multi_season$r2<-multi_season$r3<-multi_season$HomeWin <- multi_season$AwayWin <- multi_season$Draw <- NULL
+
+  long_season<-data.frame(Team = c(as.character(multi_season$HomeTeam), as.character(multi_season$AwayTeam)), stringsAsFactors = FALSE)
+  long_season$Result<-c(multi_season$Result, 1-multi_season$Result)
+  long_season$SimNo<-c(multi_season$sim, multi_season$sim)
+
+  rm(multi_season)
+
+  all_results<-long_season %>%
+    group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
+    summarise(W = sum(!!dplyr::sym('Result') == 1),
+              OTW = sum(!!dplyr::sym('Result') == 0.75),
+              SOW = sum(!!dplyr::sym('Result') == 0.6),
+              SOL = sum(!!dplyr::sym('Result') == 0.4),
+              OTL = sum(!!dplyr::sym('Result') == 0.25),
+              L = sum(!!dplyr::sym('Result') == 0)) %>%
+    as.data.frame()
+
+  rm(long_season)
+
+  all_results$Points<-all_results$W*2 + all_results$OTW*2 + all_results$SOW*2 + all_results$OTL + all_results$SOL
+
+  #Sort Playoffs
+  for(i in 1:nsims){
+    sresult<-all_results[all_results$SimNo == i,]
+    sresult$Rank <- rank(-sresult$Points, ties.method = 'random')
+    #division spots
+    for(division in nhl_divisions) {
+      sresult[sresult$Team %in% division, "DivRank"] <- rank(sresult[sresult$Team %in% division, "Rank"])
+      sresult[sresult$Team %in% division, "Playoffs"] <- as.numeric(sresult[sresult$Team %in% division, "DivRank"] < 4)
+    }
+    #wildcard
+    for(conference in nhl_conferences) {
+      conf<-unname(conference)
+      sresult[sresult$Team %in% conf, "ConfRank"] <- rank(sresult[sresult$Team %in% conf, "Rank"])
+      sresult[sresult$Team %in% conf & sresult$Playoffs == 0, "Playoffs"] <- as.numeric(sresult[sresult$Team %in% conf & sresult$Playoffs == 0, "ConfRank"]<3)
+    }
+
+    all_results[all_results$SimNo == i, 'Rank']<-sresult$Rank
+    all_results[all_results$SimNo == i, "Playoffs"]<-sresult$Playoffs
+    all_results[all_results$SimNo == i, 'ConfRank']<-sresult$ConfRank
+    all_results[all_results$SimNo == i, "DivRank"]<-sresult$DivRank
+  }
+
+  return(all_results)
+}
+
 
