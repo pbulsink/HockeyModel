@@ -713,7 +713,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, odds_tabl
   cl<-parallel::makeCluster(cores)
   doSNOW::registerDoSNOW(cl)
 
-  all_results <- foreach::foreach(i=1:nsims, .combine='rbind') %dopar% {
+  all_results <- foreach::foreach(i=1:cores, .combine='rbind', .packages = "HockeyModel") %dopar% {
     all_results<-sim_engine(all_season = all_season, nsims = nsims)
     return(all_results)
   }
@@ -745,7 +745,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, odds_tabl
       sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
     )
 
-  return(all_results = all_results, summary_results = summary_results)
+  return(summary_results = summary_results, raw_results = all_results)
 }
 
 #' Simulation engine to be parallelized or used in single core
@@ -765,8 +765,10 @@ sim_engine<-function(all_season, nsims){
   multi_season$r2<-stats::runif(n=nrow(multi_season))
   multi_season$r3<-stats::runif(n=nrow(multi_season))
 
+  Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call.
+
   multi_season<-multi_season %>%
-    mutate_cond(is.na(!!dplyr::sym('Result')), Result = 1*(as.numeric(!!dplyr::sym('r1')<!!dplyr::sym('HomeWin'))) +
+    mutate_cond(is.na(!!Result), Result = 1*(as.numeric(!!dplyr::sym('r1')<!!dplyr::sym('HomeWin'))) +
                   0.75 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
                                        !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
                             (as.numeric(!!dplyr::sym('r2') > 0.5) * as.numeric(!!dplyr::sym('r3') < 0.75))) +
