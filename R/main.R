@@ -181,44 +181,44 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
     Sys.sleep(15)
 
-    while(dev.cur()!=1){
-      dev.off()
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
     }
 
     #save to files.
-    png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(today)
     Sys.sleep(5)
-    while(dev.cur()!=1){
-      dev.off()
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
     }
 
-    png(filename = file.path(graphic_dir, 'playoff_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    grDevices::png(filename = file.path(graphic_dir, 'playoff_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(playoff)
     Sys.sleep(5)
-    while(dev.cur()!=1){
-      dev.off()
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
     }
 
-    png(filename = file.path(graphic_dir, 'president_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    grDevices::png(filename = file.path(graphic_dir, 'president_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(president)
     Sys.sleep(5)
-    while(dev.cur()!=1){
-      dev.off()
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
     }
 
-    png(filename = file.path(graphic_dir, 'point_predict.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    grDevices::png(filename = file.path(graphic_dir, 'point_predict.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(point)
     Sys.sleep(5)
-    while(dev.cur()!=1){
-      dev.off()
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
     }
 
-    png(filename = file.path(graphic_dir, 'current_rating.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    grDevices::png(filename = file.path(graphic_dir, 'current_rating.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(rating)
     Sys.sleep(5)
-    while(dev.cur()!=1){
-      dev.off()
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
     }
 
     message("Posting Tweets...")
@@ -342,10 +342,10 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
     home<-games[g,"HomeTeam"]
     away<-games[g,"AwayTeam"]
     plt<-plot_game(home = home, away = away, m=m, rho=rho)
-    png(filename = file.path(graphic_dir, 'predicted_goals.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    grDevices::png(filename = file.path(graphic_dir, 'predicted_goals.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(plt)
-    while(dev.cur()!=1){
-      dev.off()
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
     }
     status<-paste0(teamColours[teamColours$Team == home, "Hashtag"], " at ", teamColours[teamColours$Team == away, "Hashtag"], " predicted goals. #HockeyTwitter")
     rtweet::post_tweet(status = status,

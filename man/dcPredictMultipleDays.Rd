@@ -6,7 +6,7 @@
 \usage{
 dcPredictMultipleDays(start = as.Date("2018-10-03"), end = Sys.Date(),
   scores = HockeyModel::scores, schedule = HockeyModel::schedule,
-  today = TRUE, filedir = "./prediction_results", ...)
+  filedir = "./prediction_results", ...)
 }
 \arguments{
 \item{start}{First day to predict. Default start of season}
@@ -16,8 +16,6 @@ dcPredictMultipleDays(start = as.Date("2018-10-03"), end = Sys.Date(),
 \item{scores}{HockeyModel::scores}
 
 \item{schedule}{hockeyModel::schedule}
-
-\item{today}{whether to predict for today also}
 
 \item{filedir}{Where to save prediction files.}
 

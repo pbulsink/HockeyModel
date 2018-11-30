@@ -17,4 +17,3 @@ a numeric value (typically -0.5 to 0)
 \description{
 Generate a 'rho' factor for low scoring games
 }
-\keyword{internal}

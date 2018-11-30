@@ -415,7 +415,7 @@ getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.0042
 #' @param scores the historical scores to evaluate
 #'
 #' @return a numeric value (typically -0.5 to 0)
-#' @keywords internal
+#' @export
 getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
   if (is.null(m)){
     getM(scores)

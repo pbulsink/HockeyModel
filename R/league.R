@@ -528,7 +528,11 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
       ggplot2::geom_segment(x = ngames, y = cp, xend = 82, yend = maxq, alpha = 0.2, colour = colour)+
       ggplot2::geom_segment(x = ngames, y = cp, xend = 82, yend = minq, alpha = 0.2, colour = colour)
 
-    ggplot2::ggsave(filename = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", team)), '.png')), plot = plt, width = 11, height = 8.5, units = "in")
+    grDevices::png(filename = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", team)), '.png')), width = 11, height = 8.5, units = 'in', res = 300)
+    print(plt)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
   }
 }
 
@@ -693,6 +697,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, odds_tabl
   odds_table$Result <- NA
 
   if(is.null(season_sofar)){
+    scores<-HockeyModel::scores
     season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
   }
 
@@ -756,16 +761,24 @@ sim_engine<-function(all_season, nsims){
 
   multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
   multi_season$sim<-rep(1:nsims, each = season_length)
-  multi_season$r1<-runif(n=nrow(multi_season))
-  multi_season$r2<-runif(n=nrow(multi_season))
-  multi_season$r3<-runif(n=nrow(multi_season))
+  multi_season$r1<-stats::runif(n=nrow(multi_season))
+  multi_season$r2<-stats::runif(n=nrow(multi_season))
+  multi_season$r3<-stats::runif(n=nrow(multi_season))
 
   multi_season<-multi_season %>%
-    mutate_cond(is.na(Result), Result = 1*(as.numeric(r1<HomeWin)) +
-                  0.75 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 > 0.5) * as.numeric(r3 < 0.75))) +
-                  0.6 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 > 0.5) * as.numeric (r3 > 0.75))) +
-                  0.4 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 < 0.5) * as.numeric (r3 > 0.75))) +
-                  0.25 * (as.numeric(r1 > HomeWin & r1 < (HomeWin + Draw)) * (as.numeric(r2 < 0.5) * as.numeric (r3 < 0.75))) +
+    mutate_cond(is.na(!!dplyr::sym('Result')), Result = 1*(as.numeric(!!dplyr::sym('r1')<!!dplyr::sym('HomeWin'))) +
+                  0.75 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
+                                       !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
+                            (as.numeric(!!dplyr::sym('r2') > 0.5) * as.numeric(!!dplyr::sym('r3') < 0.75))) +
+                  0.6 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
+                                      !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
+                           (as.numeric(!!dplyr::sym('r2') > 0.5) * as.numeric (!!dplyr::sym('r3') > 0.75))) +
+                  0.4 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
+                                      !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
+                           (as.numeric(!!dplyr::sym('r2') < 0.5) * as.numeric (!!dplyr::sym('r3') > 0.75))) +
+                  0.25 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
+                                       !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
+                            (as.numeric(!!dplyr::sym('r2') < 0.5) * as.numeric (!!dplyr::sym('r3') < 0.75))) +
                   0)
 
   multi_season$r1<-multi_season$r2<-multi_season$r3<-multi_season$HomeWin <- multi_season$AwayWin <- multi_season$Draw <- NULL
@@ -777,8 +790,8 @@ sim_engine<-function(all_season, nsims){
   rm(multi_season)
 
   all_results<-long_season %>%
-    group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
-    summarise(W = sum(!!dplyr::sym('Result') == 1),
+    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
+    dplyr::summarise(W = sum(!!dplyr::sym('Result') == 1),
               OTW = sum(!!dplyr::sym('Result') == 0.75),
               SOW = sum(!!dplyr::sym('Result') == 0.6),
               SOL = sum(!!dplyr::sym('Result') == 0.4),
@@ -789,6 +802,9 @@ sim_engine<-function(all_season, nsims){
   rm(long_season)
 
   all_results$Points<-all_results$W*2 + all_results$OTW*2 + all_results$SOW*2 + all_results$OTL + all_results$SOL
+
+  nhl_divisions <- HockeyModel::nhl_divisions
+  nhl_conferences <- HockeyModel::nhl_conferences
 
   #Sort Playoffs
   for(i in 1:nsims){

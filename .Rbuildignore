@@ -1,3 +1,5 @@
+^Meta$
+^doc$
 ^prediction_results$
 ^.*\.Rproj$
 ^\.Rproj\.user$
