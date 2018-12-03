@@ -765,7 +765,7 @@ sim_engine<-function(all_season, nsims){
   multi_season$r2<-stats::runif(n=nrow(multi_season))
   multi_season$r3<-stats::runif(n=nrow(multi_season))
 
-  Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call.
+  Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call calmed it.
 
   multi_season<-multi_season %>%
     mutate_cond(is.na(!!Result), Result = 1*(as.numeric(!!dplyr::sym('r1')<!!dplyr::sym('HomeWin'))) +

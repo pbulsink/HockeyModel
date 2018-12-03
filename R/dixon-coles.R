@@ -55,28 +55,6 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
   return(p)
 }
 
-# plotDCHistory <- function(teamlist = NULL){
-#   if(is.null(teamlist)){
-#     teamlist<-as.character(unique(HockeyModel::m$data$Home))
-#   }
-#
-#   p <- ggplot2::ggplot(data = mdaily,
-#                   ggplot2::aes_(x=quote(Attack),
-#                                 y=quote(Defence),
-#                                 colour = quote(Team),
-#                                 label = quote(Team)
-#                                 )
-#                   ) +
-#     ggplot2::geom_point(alpha = 0.7, show.legend = FALSE ) +
-#     ggplot2::labs(title = 'Date: {frame_time}', x = 'Attack', y = 'Defence') +
-#     ggrepel::geom_text_repel(force=2, max.iter=5000) +
-#     ggplot2::theme_minimal() +
-#     gganimate::transition_time(quote(Date)) +
-#     gganimate::ease_aes('linear')
-#
-#   return(p)
-# }
-
 #' DC Predictions Today
 #'
 #' @param today Generate predictions for this date. Defaults to today
@@ -375,8 +353,6 @@ tau_singular <- function(xx, yy, lambda, mu, rho) {
 #' @export
 tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 
-
-
 #' Fast Dixon-Coles model fitting 'm'.
 #'
 #' @description Produces a DC model
@@ -489,7 +465,13 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
   DrawProbability <- sum(diag(probability_matrix))
   AwayWinProbability <- sum(probability_matrix[upper.tri(probability_matrix)])
 
-  return(c(HomeWinProbability, DrawProbability, AwayWinProbability))
+  #Simple Adjust for underpredicting odds
+  HomeWinProbability <- HomeWinProbability * (0.43469786 / 0.4558628)
+  AwayWinProbability <- AwayWinProbability * (0.33333333 / 0.3597192)
+  DrawProbability <- DrawProbability * (0.2319688 / 0.1755118)
+  odds <- normalizeOdds(c(HomeWinProbability, DrawProbability, AwayWinProbability))
+
+  return(odds)
 }
 
 #' DC Weight
