@@ -35,7 +35,7 @@ getSeason <- function(gamedate){
   if(length(gamedate) == 1){
     return(gs(gamedate))
   } else if (length(gamedate) > 1) {
-    return(vgs(gamedate))
+    return(unname(vgs(gamedate)))
   }
 }
 
@@ -100,6 +100,10 @@ normalizeOdds<-function(odds){
 historicalPoints<-function(sc){
   points<-tibble::tibble(Team = character(), Season = character(), Points = integer())
 
+  sc$Season<-getSeason(sc$Date)
+
+  sc<-droplevels(sc)
+
   for (i in unique(sc$Season)){
     if(i == "20122013"){
       next
@@ -111,7 +115,9 @@ historicalPoints<-function(sc){
     }
 
     s<-sc[sc$Season == i,]
-    s<-sc[1:ngames, ]
+    if(ngames < nrow(s)){
+      s<-s[1:ngames, ]
+    }
     b<-buildStats(s)
     b$Season <- i
 
