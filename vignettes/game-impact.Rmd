@@ -23,50 +23,50 @@ This is particularly important near the end of the season (~10 games left) for t
 
 One way to predict this would be to run simulations at each of the outcomes and compare. 
 
-For example, let's work a game from 2018-11-23:
+For example, let's work a game from 2018-12-18:
 ```{r make_score_schedule}
 scores<-HockeyModel::scores
 scores<-scores[scores$Date > as.Date("2008-08-01"),]
-scores<-scores[scores$Date < as.Date("2018-11-22"),]
+scores<-scores[scores$Date < as.Date("2018-12-07"),]
 max_score_date<-max(HockeyModel::scores$Date)
-schedule<-rbind(HockeyModel::scores[HockeyModel::scores$Date > as.Date("2018-11-22"), c('Date', 'HomeTeam', 'AwayTeam')], 
+schedule<-rbind(HockeyModel::scores[HockeyModel::scores$Date > as.Date("2018-12-07"), c('Date', 'HomeTeam', 'AwayTeam')], 
                 HockeyModel::schedule[HockeyModel::schedule$Date > max_score_date, ])
 ```
 
-Now, the first game after this point in the season is: `r knitr::kable(head(schedule,1), row.names = FALSE)`.
+Now, the first game after this point in the season is: `r knitr::kable(head(schedule,1), row.names = FALSE)`
 
 For this point in the season, we can get our rho and m parameters to know we're simulating for the team strength as it was then:
 ```{r get_rho_m, message = FALSE, error = FALSE, warning=FALSE}
-m<-getM(scores = scores, currentDate = as.Date("2018-11-22"))
+m<-getM(scores = scores, currentDate = as.Date("2018-12-07"))
 rho<-getRho(scores = scores, m = m)
 ```
 
-With these factors, we can predict the season. in particular, we'll look for the playoff odds of both Anaheim and Vancouver.
+With these factors, we can predict the season. in particular, we'll look for the playoff odds of both Arizona and San Jose.
 ```{r season_predict, include=FALSE}
-predictions<-remainderSeasonDC(nsims = 1e3, schedule = schedule, rho=rho, m=m, regress = TRUE)
-ana<-as.numeric(predictions$summary_results[predictions$summary_results$Team == 'Anaheim Ducks', 'Playoffs'])
-van<-as.numeric(predictions$summary_results[predictions$summary_results$Team == 'Vancouver Canucks', 'Playoffs'])
+predictions<-remainderSeasonDC(nsims = 2e3, schedule = schedule, rho=rho, m=m, regress = TRUE)
+ari<-as.numeric(predictions$summary_results[predictions$summary_results$Team == 'Arizona Coyotes', 'Playoffs'])
+sjs<-as.numeric(predictions$summary_results[predictions$summary_results$Team == 'San Jose Sharks', 'Playoffs'])
 ```
 ```{r season_predict_fake, eval=FALSE}
 predictions<-remainderSeasonDC(schedule = schedule, scores = scores, rho=rho, m=m, regress = TRUE)
 ```
 
-At this date, Anaheim has a playoff odds of `r round(ana*100, 2)`%, and Vancouver has a `r round(van*100, 2)`% shot at making it into the post-season.
+At this date, Arizona has a playoff odds of `r round(ari*100, 2)`%, and San Jose has a `r round(sjs*100, 2)`% shot at making it into the post-season.
 
 Having predicted the season from this point, what happens if we modify things a bit?
 
-Let's say Anaheim wins. The exact score won't matter, but we can add in a 3-2 score for a placeholder.
-```{r anaheim_win}
+Let's say Arizona wins. The exact score won't matter, but we can add in a 3-2 score for a placeholder.
+```{r Arizona_win}
 result<-data.frame(Date = as.Date("2018-11-23"), 
-                   AwayTeam = "Vancouver Canucks", 
+                   AwayTeam = "San Jose Sharks", 
                    AwayGoals = 2,
-                   HomeTeam = "Anaheim Ducks", 
+                   HomeTeam = "Arizona Coyotes", 
                    HomeGoals = 3,
                    OTStatus = "",
                    League = "NHL",
                    Tie = FALSE,
-                   Winner = "Anaheim Ducks",
-                   Loser = "Vancouver Canucks",
+                   Winner = "Arizona Coyotes",
+                   Loser = "San Jose Sharks",
                    Result = 1
                    )
 #add the results to scores
@@ -74,23 +74,23 @@ newscores<-rbind(scores, result)
 #remove the game from schedule
 newschedule<-schedule[2:nrow(schedule),]
 
-new_predict<-remainderSeasonDC(nsims = 1e3, schedule = newschedule, scores = newscores, rho=rho, m=m, regress = TRUE)
+new_predict<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = newscores, rho=rho, m=m, regress = TRUE)
 ```
 
-With this, we can see that Anaheim's chances increased:
+With this, we can see that Arizona's chances changed:
 ```{r chances}
-ana_previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Anaheim Ducks", "Playoffs"])
-ana_new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Anaheim Ducks", "Playoffs"])
-print(paste0("Was: ", round(ana_previous_chance*100, 2), "%, now: ", round(ana_new_chance*100, 2), "%, change of ", round((ana_new_chance-ana_previous_chance)*100, 2), "%."))
+ari_previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Arizona Coyotes", "Playoffs"])
+ari_new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Arizona Coyotes", "Playoffs"])
+print(paste0("Was: ", round(ari_previous_chance*100, 2), "%, now: ", round(ari_new_chance*100, 2), "%, change of ", round((ari_new_chance-ari_previous_chance)*100, 2), "%."))
 ```
 
 ```{r include = FALSE}
-van_previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Vancouver Canucks", "Playoffs"])
-van_new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Vancouver Canucks", "Playoffs"])
-ari_previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Arizona Coyotes", "Playoffs"])
-ari_new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Arizona Coyotes", "Playoffs"])
+sjs_previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "San Jose Sharks", "Playoffs"])
+sjs_new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "San Jose Sharks", "Playoffs"])
+edm_previous_chance<-as.numeric(predictions$summary_results[predictions$summary_results$Team == "Edmonton Oilers", "Playoffs"])
+edm_new_chance<-as.numeric(new_predict$summary_results[new_predict$summary_results$Team == "Edmonton Oilers", "Playoffs"])
 ```
-Of course, nothing happens in isolation. The chances for a few other teams changed too. Vancouver's odds changed by `r round((van_new_chance-van_previous_chance)*100, 2)`%, but Arizona's chanced changed too, by `r round((ari_new_chance-ari_previous_chance)*100, 2)`%.
+Of course, nothing happens in isolation. The chances for a few other teams changed too. San Jose's odds changed by `r round((sjs_new_chance-sjs_previous_chance)*100, 2)`%, but Edmonton's chanced changed too, by `r round((edm_new_chance-edm_previous_chance)*100, 2)`%.
 
 Similarly, we can calculate the result after a OT, SO result, or loss, and see the impact of each.
 ```{r results, include = FALSE}
@@ -106,8 +106,8 @@ home_so$Result <- 0.6
 away_win<-result
 away_win$HomeGoals <-2
 away_win$AwayGoals <- 3
-away_win$Winner <- 'Vancouver Canucks'
-away_win$Loser <- 'Anaheim Ducks'
+away_win$Winner <- 'San Jose Sharks'
+away_win$Loser <- 'Arizona Coyotes'
 away_win$Result <- 0
 
 away_ot <- away_win
@@ -125,45 +125,45 @@ away_win_score<-rbind(scores, away_win)
 away_ot_score<-rbind(scores, away_ot)
 away_so_score<-rbind(scores, away_so)
 
-predict_home_ot<-remainderSeasonDC(nsims = 1e3, schedule = newschedule, scores = home_ot_score, rho=rho, m=m, regress = TRUE)
-predict_home_so<-remainderSeasonDC(nsims = 1e3, schedule = newschedule, scores = home_so_score, rho=rho, m=m, regress = TRUE)
-predict_away_win<-remainderSeasonDC(nsims = 1e3, schedule = newschedule, scores = away_win_score, rho=rho, m=m, regress = TRUE)
-predict_away_ot<-remainderSeasonDC(nsims = 1e3, schedule = newschedule, scores = away_ot_score, rho=rho, m=m, regress = TRUE)
-predict_away_so<-remainderSeasonDC(nsims = 1e3, schedule = newschedule, scores = away_so_score, rho=rho, m=m, regress = TRUE)
+predict_home_ot<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = home_ot_score, rho=rho, m=m, regress = TRUE)
+predict_home_so<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = home_so_score, rho=rho, m=m, regress = TRUE)
+predict_away_win<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = away_win_score, rho=rho, m=m, regress = TRUE)
+predict_away_ot<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = away_ot_score, rho=rho, m=m, regress = TRUE)
+predict_away_so<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = away_so_score, rho=rho, m=m, regress = TRUE)
 
-ana_home_ot_chance<-as.numeric(predict_home_ot$summary_results[predict_home_ot$summary_results$Team == "Anaheim Ducks", "Playoffs"])
-ana_home_so_chance<-as.numeric(predict_home_so$summary_results[predict_home_so$summary_results$Team == "Anaheim Ducks", "Playoffs"])
-ana_away_chance<-as.numeric(predict_away_win$summary_results[predict_away_win$summary_results$Team == "Anaheim Ducks", "Playoffs"])
-ana_away_ot_chance<-as.numeric(predict_away_ot$summary_results[predict_away_ot$summary_results$Team == "Anaheim Ducks", "Playoffs"])
-ana_away_so_chance<-as.numeric(predict_away_so$summary_results[predict_away_so$summary_results$Team == "Anaheim Ducks", "Playoffs"])
+ari_home_ot_chance<-as.numeric(predict_home_ot$summary_results[predict_home_ot$summary_results$Team == "Arizona Coyotes", "Playoffs"])
+ari_home_so_chance<-as.numeric(predict_home_so$summary_results[predict_home_so$summary_results$Team == "Arizona Coyotes", "Playoffs"])
+ari_away_chance<-as.numeric(predict_away_win$summary_results[predict_away_win$summary_results$Team == "Arizona Coyotes", "Playoffs"])
+ari_away_ot_chance<-as.numeric(predict_away_ot$summary_results[predict_away_ot$summary_results$Team == "Arizona Coyotes", "Playoffs"])
+ari_away_so_chance<-as.numeric(predict_away_so$summary_results[predict_away_so$summary_results$Team == "Arizona Coyotes", "Playoffs"])
 
-van_home_ot_chance<-as.numeric(predict_home_ot$summary_results[predict_home_ot$summary_results$Team == "Vancouver Canucks", "Playoffs"])
-van_home_so_chance<-as.numeric(predict_home_so$summary_results[predict_home_so$summary_results$Team == "Vancouver Canucks", "Playoffs"])
-van_away_chance<-as.numeric(predict_away_win$summary_results[predict_away_win$summary_results$Team == "Vancouver Canucks", "Playoffs"])
-van_away_ot_chance<-as.numeric(predict_away_ot$summary_results[predict_away_ot$summary_results$Team == "Vancouver Canucks", "Playoffs"])
-van_away_so_chance<-as.numeric(predict_away_so$summary_results[predict_away_so$summary_results$Team == "Vancouver Canucks", "Playoffs"]) 
+sjs_home_ot_chance<-as.numeric(predict_home_ot$summary_results[predict_home_ot$summary_results$Team == "San Jose Sharks", "Playoffs"])
+sjs_home_so_chance<-as.numeric(predict_home_so$summary_results[predict_home_so$summary_results$Team == "San Jose Sharks", "Playoffs"])
+sjs_away_chance<-as.numeric(predict_away_win$summary_results[predict_away_win$summary_results$Team == "San Jose Sharks", "Playoffs"])
+sjs_away_ot_chance<-as.numeric(predict_away_ot$summary_results[predict_away_ot$summary_results$Team == "San Jose Sharks", "Playoffs"])
+sjs_away_so_chance<-as.numeric(predict_away_so$summary_results[predict_away_so$summary_results$Team == "San Jose Sharks", "Playoffs"]) 
 
 impact<-data.frame(Scenario = c("Home Win", "Home OT Win", "Home SO Win", "Away SO Win", "Away OT Win", "Away Win"), 
-                   "Home Team (Anaheim Ducks)" = c(ana_new_chance - ana_previous_chance,
-                                                   ana_home_ot_chance - ana_previous_chance,
-                                                   ana_home_so_chance - ana_previous_chance,
-                                                   ana_away_so_chance - ana_previous_chance,
-                                                   ana_away_ot_chance - ana_previous_chance,
-                                                   ana_away_chance - ana_previous_chance
+                   "Home Team (Arizona Coyotes)" = c(ari_new_chance - ari_previous_chance,
+                                                   ari_home_ot_chance - ari_previous_chance,
+                                                   ari_home_so_chance - ari_previous_chance,
+                                                   ari_away_so_chance - ari_previous_chance,
+                                                   ari_away_ot_chance - ari_previous_chance,
+                                                   ari_away_chance - ari_previous_chance
                    ),
-                   "Away Team (Vancouver Canucks)" = c(van_new_chance - van_previous_chance,
-                                                       van_home_ot_chance - van_previous_chance,
-                                                       van_home_so_chance - van_previous_chance,
-                                                       van_away_so_chance - van_previous_chance,
-                                                       van_away_ot_chance - van_previous_chance,
-                                                       van_away_chance - van_previous_chance)
+                   "Away Team (San Jose Sharks)" = c(sjs_new_chance - sjs_previous_chance,
+                                                       sjs_home_ot_chance - sjs_previous_chance,
+                                                       sjs_home_so_chance - sjs_previous_chance,
+                                                       sjs_away_so_chance - sjs_previous_chance,
+                                                       sjs_away_ot_chance - sjs_previous_chance,
+                                                       sjs_away_chance - sjs_previous_chance)
                    )
-impact$Home.Team..Anaheim.Ducks.<-round(impact$Home.Team..Anaheim.Ducks.*100, 2)
-impact$Away.Team..Vancouver.Canucks.<-round(impact$Away.Team..Vancouver.Canucks.*100, 2)
+impact$Home.Team..Arizona.Coyotes.<-round(impact$Home.Team..Arizona.Coyotes.*100, 2)
+impact$Away.Team..San.Jose.Sharks.<-round(impact$Away.Team..San.Jose.Sharks.*100, 2)
 ```
 
 ```{r, echo = FALSE}
 knitr::kable(impact)
 ```
 
-With nsims set to `1e3`, these can be vary noisy odds. Sometimes even Vancouver's odds can go up when Anaheim wins.  For better simulations, try `1e4` or `1e5` to smooth out the simulation repeatability and lock in a value. 
+With nsims set to `2e3`, these can be vary noisy odds. Sometimes even San Jose's odds can go up when Arizona wins.  For better simulations, try `1e4` or `1e5` to smooth out the simulation repeatability and lock in a value. 

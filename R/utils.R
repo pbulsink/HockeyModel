@@ -59,6 +59,26 @@ getDivision<-function(team){
   }
 }
 
+getConference<-function(team){
+  gconf <- function(t){
+    nhl_conferences <- HockeyModel::nhl_conferences
+    d<-grep(t, nhl_conferences)
+    if(length(d) != 1) {
+      return (NA)
+    } else {
+      return(names(nhl_conferences)[d])
+    }
+  }
+
+  vgconf<-Vectorize(gconf)
+
+  if(length(team) == 1) {
+    return(gconf(team))
+  } else {
+    return(as.vector(vgconf(team)))
+  }
+}
+
 getShortTeam<-function(team){
   team_short<-list(
     "Anaheim Ducks" = "ANA", "Arizona Coyotes" = "ARI", "Boston Bruins" = "BOS", "Buffalo Sabres" ="BUF",

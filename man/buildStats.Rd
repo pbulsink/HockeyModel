@@ -4,7 +4,7 @@
 \alias{buildStats}
 \title{Bulid Stats Table}
 \usage{
-buildStats(scores = HockeyModel::scores)
+buildStats(scores)
 }
 \arguments{
 \item{scores}{scores to use to build stats table}

@@ -6,7 +6,7 @@
 #'
 #' @return a stats table (as tibble)
 #' @export
-buildStats<-function(scores = HockeyModel::scores){
+buildStats<-function(scores){
   scores<-droplevels(scores)
   teamlist <- sort(unique(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))))
   tmp1<-scores %>%
@@ -20,7 +20,7 @@ buildStats<-function(scores = HockeyModel::scores){
       SOL = sum(!!dplyr::sym('Result') == 0.4),
       L = sum(!!dplyr::sym('Result') == 0),
       P = as.numeric(!!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL'))
-      ) %>%
+    ) %>%
     dplyr::ungroup()
   tmp2<-scores %>%
     dplyr::group_by(!!dplyr::sym('AwayTeam')) %>%
@@ -33,10 +33,10 @@ buildStats<-function(scores = HockeyModel::scores){
       SOL = sum(!!dplyr::sym('Result') == 0.6),
       L = sum(!!dplyr::sym('Result') == 1),
       P = as.numeric(!!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL'))
-      ) %>%
+    ) %>%
     dplyr::ungroup()
 
-  team_stats<-tibble::tibble(
+  team_stats<-data.frame(
     Team=teamlist,
     GP = tmp1$GP + tmp2$GP,
     Points = tmp1$P + tmp2$P,
@@ -45,8 +45,9 @@ buildStats<-function(scores = HockeyModel::scores){
     OTL = tmp1$OTL + tmp2$OTL,
     OTW = tmp1$OTW + tmp2$OTW,
     SOL = tmp1$SOL + tmp2$SOL,
-    SOW = tmp1$SOW + tmp2$SOW
-    )
+    SOW = tmp1$SOW + tmp2$SOW,
+    stringsAsFactors = FALSE
+  )
 
   nhl_conferences <- HockeyModel::nhl_conferences
   nhl_divisions <- HockeyModel::nhl_divisions
@@ -66,26 +67,14 @@ buildStats<-function(scores = HockeyModel::scores){
   team_stats$Playoffs <- 0
   #Top three from each division
   team_stats$Playoffs[team_stats$DivRank <= 3] <- 1
-  for(i in 1:16){
-    if(sum(team_stats[team_stats$Team %in% nhl_conferences$East, 'Playoffs'])<8){
-      team_stats[(team_stats$Team %in% nhl_conferences$East & team_stats$ConfRank == i), 'Playoffs'] <- 1
-    } else {
-      #Enough playoff teams
-      break
-    }
-  }
-  for(i in 1:16){
-    if(sum(team_stats[team_stats$Team %in% nhl_conferences$West, 'Playoffs'])<8){
-      team_stats[(team_stats$Team %in% nhl_conferences$West & team_stats$ConfRank == i), 'Playoffs'] <- 1
-    } else {
-      #Enough playoff teams
-      break
-    }
-  }
 
-  return(team_stats)
+  #Two more teams from each conference, organized by conference rank, not currently in the playoffs
+  team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$East, 'Playoffs'][order(team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$East, 'ConfRank'])][1:2] <- 1
+
+  team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$West, 'Playoffs'][order(team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$West, 'ConfRank'])][1:2] <- 1
+
+  return(tibble::as.tibble(team_stats))
 }
-
 
 #' Simulate the remainder of the season
 #'
