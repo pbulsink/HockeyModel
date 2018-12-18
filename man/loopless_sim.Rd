@@ -8,7 +8,7 @@ loopless_sim(nsims = 1e+05, cores = parallel::detectCores() - 1,
   odds_table = NULL, season_sofar = NULL)
 }
 \arguments{
-\item{nsims}{number of simulations}
+\item{nsims}{number of simulations to run (approximate)}
 
 \item{cores}{number of cores in parallel to process}
 
