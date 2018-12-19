@@ -736,7 +736,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, odds_tabl
       sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
     )
 
-  return(summary_results = summary_results, raw_results = all_results)
+  return(list(summary_results = summary_results, raw_results = all_results))
 }
 
 #' Simulation engine to be parallelized or used in single core
@@ -817,7 +817,7 @@ sim_engine<-function(all_season, nsims){
     mutate_cond(!!dplyr::sym('Playoffs') == 0 & !!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>%
     dplyr::select(!!dplyr::sym('SimNo'), !!dplyr::sym('Team'), !!dplyr::sym('W'), !!dplyr::sym('OTW'),
                   !!dplyr::sym('SOW'), !!dplyr::sym('SOL'), !!dplyr::sym('OTL'), !!dplyr::sym('Points'),
-                  !!dplyr::sym('Rank'), !!dplyr::sym('Playoffs'))
+                  !!dplyr::sym('Rank'), !!dplyr::sym('ConfRank'), !!dplyr::sym('DivRank'), !!dplyr::sym('Playoffs'))
 
   # #Sort Playoffs
   # for(i in 1:nsims){
