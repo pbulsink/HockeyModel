@@ -277,7 +277,7 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
                    format(round(as.numeric(preds[preds$Team == team, 'meanPoints']), digits = 1), nsmall = 1),
                    " points, now expecting ",
                    format(round(as.numeric(current_preds[current_preds$Team == team, 'meanPoints']), digits = 1), nsmall = 1),
-                   ". #HockeyTwitter",
+                   ". #HockeyTwitter ",
                    teamColours[teamColours$Team == team, "Hashtag"])
 
     rtweet::post_tweet(status = status,
