@@ -12,7 +12,7 @@ sim_engine(all_season, nsims)
 \item{nsims}{Number of simulations to run}
 }
 \value{
-results of each season's simulation, as one long data frame score table.
+results of `nsims` season simulations, as one long data frame score table.
 }
 \description{
 Simulation engine to be parallelized or used in single core

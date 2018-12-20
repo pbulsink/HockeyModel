@@ -5,16 +5,21 @@
 \title{'Loopless' simulation}
 \usage{
 loopless_sim(nsims = 1e+05, cores = parallel::detectCores() - 1,
-  odds_table = NULL, season_sofar = NULL)
+  schedule = HockeyModel::schedule, scores = HockeyModel::scores,
+  rho = HockeyModel::rho, m = HockeyModel::m)
 }
 \arguments{
 \item{nsims}{number of simulations to run (approximate)}
 
 \item{cores}{number of cores in parallel to process}
 
-\item{odds_table}{The odds table, if any}
+\item{schedule}{games to play}
 
-\item{season_sofar}{Season to this point}
+\item{scores}{Season to this point}
+
+\item{rho}{rho factor to pass. default HockeyModel::rho}
+
+\item{m}{m model to pass. default HockeyModel::m}
 }
 \value{
 a two member list, of all results and summary results
