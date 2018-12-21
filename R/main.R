@@ -111,15 +111,21 @@ ratings <- function(m = HockeyModel::m, ...) {
   return(plotDC(m=m, ...))
 }
 
-tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, ...){
-  rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
-                     media = file.path(graphic_dir, "today_odds.png"), token = token)
-  my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
-  reply_id<-my_timeline$status_id[1]
-  rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
-                     media = file.path(graphic_dir, "current_rating.png"),
-                     in_reply_to_status_id = reply_id, token = token)
+tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, games_today = FALSE, ...){
 
+  if(games_today){
+    #don't try tweet todays' games if none exist
+    rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
+                      media = file.path(graphic_dir, "today_odds.png"), token = token)
+    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+    reply_id<-my_timeline$status_id[1]
+    rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
+                      media = file.path(graphic_dir, "current_rating.png"),
+                      in_reply_to_status_id = reply_id, token = token)
+  } else {
+    rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
+                       media = file.path(graphic_dir, "current_rating.png"))
+  }
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
@@ -162,6 +168,10 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, ...){
   #message("Reminder, run updateModel() first.")
   #Sys.sleep(5)
+  if(lubridate::month(Sys.Date()) %in% c(7:9)){
+    stop('No off-season predictions')
+  }
+
   modelparams<-updateModel(...)
   updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
 
@@ -169,22 +179,12 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     dir.create(graphic_dir, recursive = TRUE)
   }
   sc<-modelparams$schedule
-  if(Sys.Date() %in% sc$Date){
-    message("Creating graphics...")
+
+  message("Creating graphics...")
 
     #generate plots
+  if(Sys.Date() %in% sc$Date){
     today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
-    playoff <- playoffOdds()
-    president <- presidentOdds()
-    point <- pointPredict()
-    rating <- ratings(m = modelparams$m)
-
-    Sys.sleep(15)
-
-    while(grDevices::dev.cur()!=1){
-      grDevices::dev.off()
-    }
-
     #save to files.
     grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(today)
@@ -192,45 +192,56 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     while(grDevices::dev.cur()!=1){
       grDevices::dev.off()
     }
-
-    grDevices::png(filename = file.path(graphic_dir, 'playoff_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
-    print(playoff)
-    Sys.sleep(5)
-    while(grDevices::dev.cur()!=1){
-      grDevices::dev.off()
-    }
-
-    grDevices::png(filename = file.path(graphic_dir, 'president_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
-    print(president)
-    Sys.sleep(5)
-    while(grDevices::dev.cur()!=1){
-      grDevices::dev.off()
-    }
-
-    grDevices::png(filename = file.path(graphic_dir, 'point_predict.png'), width = 11, height = 8.5, units = 'in', res = 300)
-    print(point)
-    Sys.sleep(5)
-    while(grDevices::dev.cur()!=1){
-      grDevices::dev.off()
-    }
-
-    grDevices::png(filename = file.path(graphic_dir, 'current_rating.png'), width = 11, height = 8.5, units = 'in', res = 300)
-    print(rating)
-    Sys.sleep(5)
-    while(grDevices::dev.cur()!=1){
-      grDevices::dev.off()
-    }
-
-    message("Posting Tweets...")
-    tweet(graphic_dir, token = token, ...)
-    #until Rtweet has scheduler
-    message("Delaying ", delay, " seconds to space tweets...")
-    Sys.sleep(delay)
-
-    tweetGames(games = sc[sc$Date == Sys.Date(), ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token)
-
   }
-  if(lubridate::day(Sys.Date()) == 20){
+  playoff <- playoffOdds()
+  president <- presidentOdds()
+  point <- pointPredict()
+  rating <- ratings(m = modelparams$m)
+
+  Sys.sleep(15)
+
+  while(grDevices::dev.cur()!=1){
+    grDevices::dev.off()
+  }
+
+  grDevices::png(filename = file.path(graphic_dir, 'playoff_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+  print(playoff)
+  Sys.sleep(5)
+  while(grDevices::dev.cur()!=1){
+    grDevices::dev.off()
+  }
+
+  grDevices::png(filename = file.path(graphic_dir, 'president_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+  print(president)
+  Sys.sleep(5)
+  while(grDevices::dev.cur()!=1){
+    grDevices::dev.off()
+  }
+
+  grDevices::png(filename = file.path(graphic_dir, 'point_predict.png'), width = 11, height = 8.5, units = 'in', res = 300)
+  print(point)
+  Sys.sleep(5)
+  while(grDevices::dev.cur()!=1){
+    grDevices::dev.off()
+  }
+
+  grDevices::png(filename = file.path(graphic_dir, 'current_rating.png'), width = 11, height = 8.5, units = 'in', res = 300)
+  print(rating)
+  Sys.sleep(5)
+  while(grDevices::dev.cur()!=1){
+    grDevices::dev.off()
+  }
+
+  message("Posting Tweets...")
+  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir, toke = token, games_today = Sys.Date() %in% sc$Date, ...)
+  #until Rtweet has scheduler
+  message("Delaying ", delay, " seconds to space tweets...")
+  Sys.sleep(delay)
+
+
+  tweetGames(games = sc[sc$Date == Sys.Date(), ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token, delay=delay)
+
+  if(lubridate::day(Sys.Date()) == 1){
     tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
   }
 }
