@@ -677,11 +677,13 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
 #'
 #' @return a two member list, of all results and summary results
 #' @export
-loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, rho = HockeyModel::rho, m = HockeyModel::m){
+loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, rho = HockeyModel::rho, m = HockeyModel::m, odds_table = NULL){
 
   nsims <- floor(nsims/cores)
 
-  odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, odds = TRUE, rho = rho, m = m)
+  if(is.null(odds_table)){
+    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, odds = TRUE, rho = rho, m = m)
+  }
   odds_table$Result <- NA
 
   season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
@@ -810,7 +812,7 @@ sim_engine<-function(all_season, nsims){
     dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
     mutate_cond(!!dplyr::sym('Playoffs') == 0, Wildcard = rank(!!dplyr::sym('ConfRank'))) %>%
     dplyr::ungroup() %>%
-    mutate_cond(!!dplyr::sym('Playoffs') == 0 & !!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>%
+    mutate_cond(!!dplyr::sym('Playoffs') == 0 & !!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>% #TODO might not work at scale???
     dplyr::select(!!dplyr::sym('SimNo'), !!dplyr::sym('Team'), !!dplyr::sym('W'), !!dplyr::sym('OTW'),
                   !!dplyr::sym('SOW'), !!dplyr::sym('SOL'), !!dplyr::sym('OTL'), !!dplyr::sym('Points'),
                   !!dplyr::sym('Rank'), !!dplyr::sym('ConfRank'), !!dplyr::sym('DivRank'), !!dplyr::sym('Playoffs'))
