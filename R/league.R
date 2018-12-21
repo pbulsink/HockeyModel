@@ -747,6 +747,9 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
 sim_engine<-function(all_season, nsims){
 
   season_length<-nrow(all_season)
+  if(season_length != 1271){
+    warning('Season length not as expected: ', season_length)
+  }
 
   multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
   multi_season$sim<-rep(1:nsims, each = season_length)
@@ -810,13 +813,20 @@ sim_engine<-function(all_season, nsims){
     dplyr::ungroup() %>%
     dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('DivRank') <=3, 1, 0)) %>%
     dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
-    mutate_cond(!!dplyr::sym('Playoffs') == 0, Wildcard = rank(!!dplyr::sym('ConfRank'))) %>%
+    dplyr::arrange(!!dplyr::sym('Playoffs'), !!dplyr::sym('ConfRank')) %>%
+    dplyr::mutate(Wildcard = ifelse(!!dplyr::sym('Playoffs') == 0, dplyr::row_number(), NA)) %>%
     dplyr::ungroup() %>%
-    mutate_cond(!!dplyr::sym('Playoffs') == 0 & !!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>% #TODO might not work at scale???
+    arrange(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
+    #mutate_cond(!!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>% #TODO might not work at scale???
     dplyr::select(!!dplyr::sym('SimNo'), !!dplyr::sym('Team'), !!dplyr::sym('W'), !!dplyr::sym('OTW'),
                   !!dplyr::sym('SOW'), !!dplyr::sym('SOL'), !!dplyr::sym('OTL'), !!dplyr::sym('Points'),
-                  !!dplyr::sym('Rank'), !!dplyr::sym('ConfRank'), !!dplyr::sym('DivRank'), !!dplyr::sym('Playoffs'))
+                  !!dplyr::sym('Wildcard'), !!dplyr::sym('Rank'), !!dplyr::sym('ConfRank'),
+                  !!dplyr::sym('DivRank'), !!dplyr::sym('Playoffs'))
 
+  #Do this by hand as it doesn't seem to want to work in dplyr pipe
+  all_results[!is.na(all_results$Wildcard) & all_results$Wildcard <= 2,]$Playoffs<-1
+
+  all_results$Wildcard<-NULL
 
   return(all_results)
 }
