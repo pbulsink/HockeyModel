@@ -816,7 +816,7 @@ sim_engine<-function(all_season, nsims){
     dplyr::arrange(!!dplyr::sym('Playoffs'), !!dplyr::sym('ConfRank')) %>%
     dplyr::mutate(Wildcard = ifelse(!!dplyr::sym('Playoffs') == 0, dplyr::row_number(), NA)) %>%
     dplyr::ungroup() %>%
-    arrange(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
+    dplyr::arrange(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
     #mutate_cond(!!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>% #TODO might not work at scale???
     dplyr::select(!!dplyr::sym('SimNo'), !!dplyr::sym('Team'), !!dplyr::sym('W'), !!dplyr::sym('OTW'),
                   !!dplyr::sym('SOW'), !!dplyr::sym('SOL'), !!dplyr::sym('OTL'), !!dplyr::sym('Points'),
