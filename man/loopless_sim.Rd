@@ -20,6 +20,8 @@ loopless_sim(nsims = 1e+05, cores = parallel::detectCores() - 1,
 \item{rho}{rho factor to pass. default HockeyModel::rho}
 
 \item{m}{m model to pass. default HockeyModel::m}
+
+\item{odds_table}{odds from remainderSeasonDC(Odds = TRUE), or null}
 }
 \value{
 a two member list, of all results and summary results

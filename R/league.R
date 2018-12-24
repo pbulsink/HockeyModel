@@ -674,6 +674,7 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
 #' @param scores Season to this point
 #' @param rho rho factor to pass. default HockeyModel::rho
 #' @param m m model to pass. default HockeyModel::m
+#' @param odds_table odds from remainderSeasonDC(Odds = TRUE), or null
 #'
 #' @return a two member list, of all results and summary results
 #' @export
