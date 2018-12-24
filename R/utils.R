@@ -149,13 +149,13 @@ historicalPoints<-function(sc){
 }
 
 #' Conditional Mutate
-#' @description Mutate at condition. useful in dplyr pipes.
+#' @description Mutate at condition. useful in dplyr pipes. From StackOverflow https://stackoverflow.com/a/34096575/3933405
 #'
 #' @param .data Data passed in
 #' @param condition Condition whether to peform mutate
 #' @param ... mutate to happen
 #' @param envir environment to cary through.
-#' @keywords internal
+#' @export
 mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
   condition <- eval(substitute(condition), .data, envir)
   .data[condition, ] <- .data[condition, ] %>% dplyr::mutate(...)

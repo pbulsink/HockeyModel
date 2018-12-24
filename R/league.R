@@ -100,7 +100,6 @@ simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, 
 
   teamlist<-c(teamlist, sort(unique(c(as.character(schedule$Home), as.character(schedule$Away)))))
 
-
   n<-length(teamlist)
 
   all_results <- data.frame(Team = rep(teamlist, nsims),
@@ -215,7 +214,7 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
     cores <- 2
   }
 
-  `%dopar%` <- foreach::`%dopar%`
+  `%dopar%` <- foreach::`%dopar%`  # This hack passes R CMD CHK
   cl<-parallel::makeCluster(cores)
   doSNOW::registerDoSNOW(cl)
   if(progress){
@@ -679,26 +678,26 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
 
 #' 'Loopless' simulation
 #'
-#' @param nsims number of simulations
+#' @param nsims number of simulations to run (approximate)
 #' @param cores number of cores in parallel to process
-#' @param odds_table The odds table, if any
-#' @param season_sofar Season to this point
+#' @param schedule games to play
+#' @param scores Season to this point
+#' @param rho rho factor to pass. default HockeyModel::rho
+#' @param m m model to pass. default HockeyModel::m
+#' @param odds_table odds from remainderSeasonDC(Odds = TRUE), or null
 #'
 #' @return a two member list, of all results and summary results
 #' @export
-loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, odds_table = NULL, season_sofar=NULL){
+loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, rho = HockeyModel::rho, m = HockeyModel::m, odds_table = NULL){
 
   nsims <- floor(nsims/cores)
 
   if(is.null(odds_table)){
-    odds_table<-remainderSeasonDC(odds = TRUE)
+    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, odds = TRUE, rho = rho, m = m)
   }
   odds_table$Result <- NA
 
-  if(is.null(season_sofar)){
-    scores<-HockeyModel::scores
-    season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
-  }
+  season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
 
   last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
   odds_table<-odds_table[odds_table$Date > last_scores_date, ]
@@ -709,17 +708,19 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, odds_tabl
   all_season<-rbind(season_sofar, odds_table)
 
   `%dopar%` <- foreach::`%dopar%`
+  #`%do%` <- foreach::`%do%`
   cl<-parallel::makeCluster(cores)
   doSNOW::registerDoSNOW(cl)
 
-  all_results <- foreach::foreach(i=1:cores, .combine='rbind', .packages = "HockeyModel") %dopar% {
-    all_results<-sim_engine(all_season = all_season, nsims = nsims)
+  #Ram management issues. Send smaller chunks more often, hopefully this helps.
+
+  all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
+    all_results<-sim_engine(all_season = all_season, nsims = floor(nsims/5))
     return(all_results)
   }
 
   parallel::stopCluster(cl)
   gc(verbose = FALSE)
-
 
   summary_results<-all_results %>%
     dplyr::group_by(!!dplyr::sym('Team')) %>%
@@ -744,7 +745,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, odds_tabl
       sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
     )
 
-  return(summary_results = summary_results, raw_results = all_results)
+  return(list(summary_results = summary_results, raw_results = all_results))
 }
 
 #' Simulation engine to be parallelized or used in single core
@@ -752,11 +753,14 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, odds_tabl
 #' @param all_season One seasons' scores & odds schedule
 #' @param nsims Number of simulations to run
 #'
-#' @return results of each season's simulation, as one long data frame score table.
+#' @return results of `nsims` season simulations, as one long data frame score table.
 #' @export
 sim_engine<-function(all_season, nsims){
 
   season_length<-nrow(all_season)
+  if(season_length != 1271){
+    warning('Season length not as expected: ', season_length)
+  }
 
   multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
   multi_season$sim<-rep(1:nsims, each = season_length)
@@ -804,30 +808,36 @@ sim_engine<-function(all_season, nsims){
 
   all_results$Points<-all_results$W*2 + all_results$OTW*2 + all_results$SOW*2 + all_results$OTL + all_results$SOL
 
-  nhl_divisions <- HockeyModel::nhl_divisions
-  nhl_conferences <- HockeyModel::nhl_conferences
+  all_results$Conference <- getConference(all_results$Team)
+  all_results$Division <- getDivision(all_results$Team)
+  all_results$Wildcard <- NA
 
-  #Sort Playoffs
-  for(i in 1:nsims){
-    sresult<-all_results[all_results$SimNo == i,]
-    sresult$Rank <- rank(-sresult$Points, ties.method = 'random')
-    #division spots
-    for(division in nhl_divisions) {
-      sresult[sresult$Team %in% division, "DivRank"] <- rank(sresult[sresult$Team %in% division, "Rank"])
-      sresult[sresult$Team %in% division, "Playoffs"] <- as.numeric(sresult[sresult$Team %in% division, "DivRank"] < 4)
-    }
-    #wildcard
-    for(conference in nhl_conferences) {
-      conf<-unname(conference)
-      sresult[sresult$Team %in% conf, "ConfRank"] <- rank(sresult[sresult$Team %in% conf, "Rank"])
-      sresult[sresult$Team %in% conf & sresult$Playoffs == 0, "Playoffs"] <- as.numeric(sresult[sresult$Team %in% conf & sresult$Playoffs == 0, "ConfRank"]<3)
-    }
+  all_results <- all_results %>%
+    dplyr::group_by(!!dplyr::sym('SimNo')) %>%
+    dplyr::mutate(Rank = rank(-!!dplyr::sym('Points'), ties.method = 'random')) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
+    dplyr::mutate(ConfRank = rank(!!dplyr::sym('Rank'))) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Division')) %>%
+    dplyr::mutate(DivRank = rank(!!dplyr::sym('ConfRank'))) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('DivRank') <=3, 1, 0)) %>%
+    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
+    dplyr::arrange(!!dplyr::sym('Playoffs'), !!dplyr::sym('ConfRank')) %>%
+    dplyr::mutate(Wildcard = ifelse(!!dplyr::sym('Playoffs') == 0, dplyr::row_number(), NA)) %>%
+    dplyr::ungroup() %>%
+    dplyr::arrange(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
+    #mutate_cond(!!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>% #TODO might not work at scale???
+    dplyr::select(!!dplyr::sym('SimNo'), !!dplyr::sym('Team'), !!dplyr::sym('W'), !!dplyr::sym('OTW'),
+                  !!dplyr::sym('SOW'), !!dplyr::sym('SOL'), !!dplyr::sym('OTL'), !!dplyr::sym('Points'),
+                  !!dplyr::sym('Wildcard'), !!dplyr::sym('Rank'), !!dplyr::sym('ConfRank'),
+                  !!dplyr::sym('DivRank'), !!dplyr::sym('Playoffs'))
 
-    all_results[all_results$SimNo == i, 'Rank']<-sresult$Rank
-    all_results[all_results$SimNo == i, "Playoffs"]<-sresult$Playoffs
-    all_results[all_results$SimNo == i, 'ConfRank']<-sresult$ConfRank
-    all_results[all_results$SimNo == i, "DivRank"]<-sresult$DivRank
-  }
+  #Do this by hand as it doesn't seem to want to work in dplyr pipe
+  all_results[!is.na(all_results$Wildcard) & all_results$Wildcard <= 2,]$Playoffs<-1
+
+  all_results$Wildcard<-NULL
 
   return(all_results)
 }

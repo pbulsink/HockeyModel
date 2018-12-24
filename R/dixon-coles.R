@@ -285,7 +285,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonDC <- function(nsims=10000, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, regress = FALSE, ...){
+remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, regress = TRUE, ...){
 
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
@@ -581,28 +581,35 @@ dcPredictMultipleDays<-function(start=as.Date("2018-10-03"), end=Sys.Date(), sco
     d<-as.Date(day, origin="1970-01-01")
     message('Predictions as of: ', d)
     score<-scores[scores$Date < day,]
+    score<-score[score$Date > as.Date("2008-08-01"),]
     sched<-schedule[schedule$Date >= day,]
+    m.day<-getM(scores = score, currentDate = d)
+    rho.day<-getRho(m = m.day, scores = score)
     preds<-NULL
     preds<-tryCatch(expr = {
-                      remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE)
-                    },
-                    error = function(error) {
-                      message('An error occurred:')
-                      message(error)
-                      return(NULL)
-                    })
+      message("Predicting with Loopless Sim")
+      #remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE)
+      loopless_sim(nsims = 1e5, scores = score, schedule = sched, rho = rho.day, m= m.day)
+    },
+    error = function(error) {
+      message('An error occurred:')
+      message(error)
+      return(NULL)
+    })
     if(!is.null(preds) & 'summary_results' %in% names(preds)){
       message('Saving Prediction file...')
       saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))
     } else {
       message('An error occurred, retrying ', d, '.')
       preds<-NULL
-      preds<-tryCatch(expr = remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE),
-                      error = function(error) {
-                        message('An error occurred:')
-                        message(error)
-                        return(NULL)
-                      })
+      preds<-tryCatch(expr = {
+          message("Predicting with Old Version Sim")
+          remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE)
+        }, error = function(error) {
+          message('An error occurred:')
+          message(error)
+          return(NULL)
+        })
       if(!is.null(preds) & 'summary_results' %in% names(preds)){
         message('Saving Prediction file...')
         saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))

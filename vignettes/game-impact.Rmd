@@ -43,7 +43,7 @@ rho<-getRho(scores = scores, m = m)
 
 With these factors, we can predict the season. in particular, we'll look for the playoff odds of both Arizona and San Jose.
 ```{r season_predict, include=FALSE}
-predictions<-remainderSeasonDC(nsims = 2e3, schedule = schedule, rho=rho, m=m, regress = TRUE)
+predictions<-loopless_sim(cores = 1, nsims = 1e3, schedule = schedule, rho=rho, m=m)
 ari<-as.numeric(predictions$summary_results[predictions$summary_results$Team == 'Arizona Coyotes', 'Playoffs'])
 sjs<-as.numeric(predictions$summary_results[predictions$summary_results$Team == 'San Jose Sharks', 'Playoffs'])
 ```
@@ -74,7 +74,7 @@ newscores<-rbind(scores, result)
 #remove the game from schedule
 newschedule<-schedule[2:nrow(schedule),]
 
-new_predict<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = newscores, rho=rho, m=m, regress = TRUE)
+new_predict<-loopless_sim(cores = 1, nsims = 1e3, schedule = newschedule, scores = newscores, rho=rho, m=m)
 ```
 
 With this, we can see that Arizona's chances changed:
@@ -125,11 +125,11 @@ away_win_score<-rbind(scores, away_win)
 away_ot_score<-rbind(scores, away_ot)
 away_so_score<-rbind(scores, away_so)
 
-predict_home_ot<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = home_ot_score, rho=rho, m=m, regress = TRUE)
-predict_home_so<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = home_so_score, rho=rho, m=m, regress = TRUE)
-predict_away_win<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = away_win_score, rho=rho, m=m, regress = TRUE)
-predict_away_ot<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = away_ot_score, rho=rho, m=m, regress = TRUE)
-predict_away_so<-remainderSeasonDC(nsims = 2e3, schedule = newschedule, scores = away_so_score, rho=rho, m=m, regress = TRUE)
+predict_home_ot<-loopless_sim(cores = 1, nsims = 1e3, schedule = newschedule, scores = home_ot_score, rho=rho, m=m)
+predict_home_so<-loopless_sim(cores = 1, nsims = 1e3, schedule = newschedule, scores = home_so_score, rho=rho, m=m)
+predict_away_win<-loopless_sim(cores = 1, nsims = 1e3, schedule = newschedule, scores = away_win_score, rho=rho, m=m)
+predict_away_ot<-loopless_sim(cores = 1, nsims = 1e3, schedule = newschedule, scores = away_ot_score, rho=rho, m=m)
+predict_away_so<-loopless_sim(cores = 1, nsims = 1e3, schedule = newschedule, scores = away_so_score, rho=rho, m=m)
 
 ari_home_ot_chance<-as.numeric(predict_home_ot$summary_results[predict_home_ot$summary_results$Team == "Arizona Coyotes", "Playoffs"])
 ari_home_so_chance<-as.numeric(predict_home_so$summary_results[predict_home_so$summary_results$Team == "Arizona Coyotes", "Playoffs"])
@@ -166,4 +166,4 @@ impact$Away.Team..San.Jose.Sharks.<-round(impact$Away.Team..San.Jose.Sharks.*100
 knitr::kable(impact)
 ```
 
-With nsims set to `2e3`, these can be vary noisy odds. Sometimes even San Jose's odds can go up when Arizona wins.  For better simulations, try `1e4` or `1e5` to smooth out the simulation repeatability and lock in a value. 
+With nsims set to `1e3`, these can be vary noisy odds. Sometimes even San Jose's odds can go up when Arizona wins.  For better simulations, try `1e4` or `1e5` to smooth out the simulation repeatability and lock in a value. 
