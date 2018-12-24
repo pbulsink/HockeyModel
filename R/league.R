@@ -372,9 +372,19 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
   #Set divisions to logical order
   all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
   #make team label appear properly later with ggrepel
-  all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
-                                  as.character(paste0(getShortTeam(all_predictions$Team), '\n', signif(all_predictions$Playoffs*100, digits = 2), '%')),
-                                  NA_character_)
+  playoff_odds<-all_predictions[all_predictions$predictionDate == lastdate,]$Playoffs
+  label<-format(round(playoff_odds*100, digits = 0), nsmall = 0, trim = TRUE)
+  label[label == '100' & playoff_odds > 0.999]<-'~100'
+  label[label == '100' & playoff_odds != 1]<-'>99.5'
+  label[playoff_odds == 1]<-'100'
+  label[label == '0' & playoff_odds < 0.001]<-'~0'
+  label[label == '0' & playoff_odds != 0]<-'<0.5'
+  label[playoff_odds == 0]<-'0'
+
+  label<-paste0(getShortTeam(all_predictions[all_predictions$predictionDate == lastdate, ]$Team), '\n', label, '%', sep = '')
+
+  all_predictions$label <- NA_character_
+  all_predictions[all_predictions$predictionDate == lastdate,]$label <- label
 
   #Build and trim team colours for plot
   teamColoursList<-as.vector(teamColours$Hex)
@@ -499,7 +509,7 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
     qteam<-q[q$Team == team, ]
     qpoints<-qteam$meanPoints
     maxq<-qteam$meanPoints + 2*(qteam$sdPoints)
-    minq<-qteam$meanPoints + 2*(qteam$sdPoints)
+    minq<-qteam$meanPoints - 2*(qteam$sdPoints)
 
     plt <- ggplot2::ggplot(teamscores, ggplot2::aes_(x = quote(GameNum), y = quote(cPoints), colour = quote(Venue))) +
       ggplot2::geom_point() +
