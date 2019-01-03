@@ -622,3 +622,47 @@ dcPredictMultipleDays<-function(start=as.Date("2018-10-03"), end=Sys.Date(), sco
 
   return(TRUE)
 }
+
+
+#' Get Season Metrics
+#'
+#' @description Calculates the Log Loss and Accuracy of the model by re-estimating m and rho daily and creating game odds
+#'
+#' @return a list of log loss and accuracy for the season
+#' @export
+getSeasonMetricsDC<-function(){
+  sched<-schedule
+  sched$Home.WLD<-sched$Away.WLD<-sched$Draw.WLD<-sched$Home.WL<-sched$Away.WL<-sched$Result<-NA
+  season.sofar<-scores[scores$Date > "2018-10-01", ]
+
+  for (day in as.Date(unique(season.sofar$Date))) {
+    d<-as.Date(day, origin="1970-01-01")
+    message('Results as of: ', d)
+    score<-scores[scores$Date < day,]
+    score<-score[score$Date > as.Date("2008-08-01"),]
+    m.day<-getM(scores = score, currentDate = d)
+    rho.day<-getRho(m = m.day, scores = score)
+
+    p<-todayDC(today = d, rho = rho.day, m = m.day)
+
+
+    sched[sched$Date == d, "Home.WLD"]<-p$HomeWin
+    sched[sched$Date == d, "Away.WLD"]<-p$AwayWin
+    sched[sched$Date == d, "Draw.WLD"]<-p$Draw
+    sched[sched$Date == d, "Result"]<-season.sofar[season.sofar$Date == d, "Result"]
+  }
+
+  sched$Home.WL<-(sched$Home.WLD/(sched$Home.WLD + sched$Away.WLD))*sched$Draw.WLD + sched$Home.WLD
+  sched$Away.WL<-(sched$Away.WLD/(sched$Home.WLD + sched$Away.WLD))*sched$Draw.WLD + sched$Away.WLD
+
+  sched<-sched[complete.cases(sched), ]
+
+  logloss<-MLmetrics::LogLoss(y_pred = sched$Home.WL, y_true = sched$Result > 0.5)
+  accuracy <- MLmetrics::Accuracy(y_pred = sched$Home.WL>0.5, y_true = sched$Result > 0.5)
+
+  multipreds<-matrix(data = c(sched$Away.WLD, sched$Draw.WLD, sched$Home.WLD), ncol = 3, dimnames = list(NULL, c("Away", "Draw", "Home")), byrow = FALSE)
+
+  logloss_multi<-MLmetrics::MultiLogLoss(y_pred = multipreds, y_true = factor(as.character(sched$Result), levels = c("0", "0.25", "0.4", "0.5", "0.6", "0.75", "1"), labels = c("Away", "Draw", "Draw", "Draw", "Draw", "Draw", "Home")))
+
+  return(list("LogLoss" = logloss, "Accuracy" = accuracy))
+}
