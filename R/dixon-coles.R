@@ -657,12 +657,12 @@ getSeasonMetricsDC<-function(){
 
   sched<-sched[complete.cases(sched), ]
 
-  logloss<-MLmetrics::LogLoss(y_pred = sched$Home.WL, y_true = sched$Result > 0.5)
-  accuracy <- MLmetrics::Accuracy(y_pred = sched$Home.WL>0.5, y_true = sched$Result > 0.5)
+  logloss<-logLoss(predicted = sched$Home.WL, actual = sched$Result)
+  accuracy <- accuracy(predicted = sched$Home.WL>0.5, actual = sched$Result > 0.5)
 
-  multipreds<-matrix(data = c(sched$Away.WLD, sched$Draw.WLD, sched$Home.WLD), ncol = 3, dimnames = list(NULL, c("Away", "Draw", "Home")), byrow = FALSE)
+  #multipreds<-matrix(data = c(sched$Away.WLD, sched$Draw.WLD, sched$Home.WLD), ncol = 3, dimnames = list(NULL, c("Away", "Draw", "Home")), byrow = FALSE)
 
-  logloss_multi<-MLmetrics::MultiLogLoss(y_pred = multipreds, y_true = factor(as.character(sched$Result), levels = c("0", "0.25", "0.4", "0.5", "0.6", "0.75", "1"), labels = c("Away", "Draw", "Draw", "Draw", "Draw", "Draw", "Home")))
+  #logloss_multi<-MLmetrics::MultiLogLoss(y_pred = multipreds, y_true = factor(as.character(sched$Result), levels = c("0", "0.25", "0.4", "0.5", "0.6", "0.75", "1"), labels = c("Away", "Draw", "Draw", "Draw", "Draw", "Draw", "Home")))
 
   return(list("LogLoss" = logloss, "Accuracy" = accuracy))
 }

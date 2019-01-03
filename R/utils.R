@@ -161,3 +161,41 @@ mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
   .data[condition, ] <- .data[condition, ] %>% dplyr::mutate(...)
   .data
 }
+
+
+#' Log Loss Calculator
+#'
+#' @param predicted Predicted odds of an event occuring
+#' @param actual If the event occured (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0
+#'
+#' @return a log loss value for the event(s)
+#' @export
+logLoss<-function(predicted, actual){
+  stopifnot(length(predicted) == length(actual))
+  predicted[predicted == 0]<-1e-15
+  predicted[predicted == 1]<-1-1e-15
+
+  actual <- as.numeric(actual > 0.5)
+
+  ll<-(actual * log(predicted)) + ((1-actual) * log(1-predicted))
+
+  return(-(sum(ll)/length(predicted)))
+}
+
+#' Accuracy Calculator
+#'
+#' @param predicted Predicted odds of an event occuring. needen't be of set {0,1}
+#' @param actual If the event occured (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0
+#'
+#' @return a percentage of correct predictions
+#' @export
+accuracy<-function(predicted, actual){
+  stopifnot(length(predicted) == length(actual))
+
+  predicted <- as.numeric(predicted > 0.5)
+  actual <- as.numeric(actual > 0.5)
+
+  accuracy <- sum(as.numeric(predicted == actual))/length(predicted)
+
+  return(accuracy)
+}
