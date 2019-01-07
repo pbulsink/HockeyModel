@@ -244,6 +244,11 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   if(lubridate::day(Sys.Date()) == 1){
     tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
   }
+
+  if(lubridate::wday(lubridate::now()) == 1) {
+    #On sunday post metrics
+    tweetMetrics(token = token)
+  }
 }
 
 #' Tweet Pace Plots
@@ -274,11 +279,6 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
 
   teamlist<-unique(preds$Team)
 
-  rtweet::post_tweet(paste0("Here are team pace plots as of ", Sys.Date(), ". Plots show original predicted points range and current predicted range."))
-
-  my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
-  reply_id<-my_timeline$status_id[1]
-
   for(team in teamlist){
     ngames <- sum(sum(scores$HomeTeam == team), sum(scores$AwayTeam == team))
     status<-paste0(team,
@@ -295,10 +295,7 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
                        media = file.path(graphic_dir,
                                          subdir,
                                          paste0(tolower(gsub(" ", "_", team)), '.png')),
-                       in_reply_to_status_id = reply_id,
                        token = token)
-    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
-    reply_id<-my_timeline$status_id[1]
 
     #until Rtweet has scheduler
     message("Delaying ", delay, " seconds to space tweets...")
@@ -323,10 +320,6 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
-
-  rtweet::post_tweet(status = "Missed your team? Expand this thread to find them! #NHL #HockeyTwitter",
-                     in_reply_to_status_id = reply_id,
-                     token = token)
 }
 
 #' Tweet Game Plots
@@ -369,4 +362,20 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
   }
+}
+
+#' Tweet Metrics
+#' @description Tweet the metrics (Log Loss and Accuracy)
+#' @param token rtweet token
+#'
+#' @return NULL
+#' @export
+tweetMetrics<-function(token = rtweet::get_token){
+  metrics<-getSeasonMetricsDC()
+
+  status <- paste0("Metrics as of ", Sys.Date(),
+                   "\nLog Loss: ", round(metrics$LogLoss, 4),
+                   "\nAccuracy: ", round(metrics$Accuracy * 100, 2), " %\n#HockeyTwitter")
+
+  rtweet::post_tweet(status = status, token = token)
 }
