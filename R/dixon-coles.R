@@ -628,9 +628,12 @@ dcPredictMultipleDays<-function(start=as.Date("2018-10-03"), end=Sys.Date(), sco
 #'
 #' @description Calculates the Log Loss and Accuracy of the model by re-estimating m and rho daily and creating game odds
 #'
+#' @param schedule HockeyModel::schedule used to help with calculations
+#' @param scores HockeyModel::scores used to compare to predictions
+#'
 #' @return a list of log loss and accuracy for the season
 #' @export
-getSeasonMetricsDC<-function(){
+getSeasonMetricsDC<-function(schedule = HockeyModel::schedule, scores = HockeyModel::scores){
   sched<-schedule
   sched$Home.WLD<-sched$Away.WLD<-sched$Draw.WLD<-sched$Home.WL<-sched$Away.WL<-sched$Result<-NA
   season.sofar<-scores[scores$Date > "2018-10-01", ]
@@ -655,7 +658,7 @@ getSeasonMetricsDC<-function(){
   sched$Home.WL<-(sched$Home.WLD/(sched$Home.WLD + sched$Away.WLD))*sched$Draw.WLD + sched$Home.WLD
   sched$Away.WL<-(sched$Away.WLD/(sched$Home.WLD + sched$Away.WLD))*sched$Draw.WLD + sched$Away.WLD
 
-  sched<-sched[complete.cases(sched), ]
+  sched<-sched[stats::complete.cases(sched), ]
 
   logloss<-logLoss(predicted = sched$Home.WL, actual = sched$Result)
   accuracy <- accuracy(predicted = sched$Home.WL>0.5, actual = sched$Result > 0.5)

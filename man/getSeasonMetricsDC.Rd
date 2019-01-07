@@ -4,7 +4,13 @@
 \alias{getSeasonMetricsDC}
 \title{Get Season Metrics}
 \usage{
-getSeasonMetricsDC()
+getSeasonMetricsDC(schedule = HockeyModel::schedule,
+  scores = HockeyModel::scores)
+}
+\arguments{
+\item{schedule}{HockeyModel::schedule used to help with calculations}
+
+\item{scores}{HockeyModel::scores used to compare to predictions}
 }
 \value{
 a list of log loss and accuracy for the season
