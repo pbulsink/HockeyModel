@@ -742,7 +742,16 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
       sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
       sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
       sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
+      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE),
+      p_rank1 = sum(!!dplyr::sym('ConfRank') == 1 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
+      p_rank2 = sum(!!dplyr::sym('ConfRank') == 2 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
+      # Solving 3 & 4 & 5 & 6 doesn't *really* matter, because 3/4 play the 5/6 within their own division.
+      # In 2nd round, 1/8 or 2/7 play the 3/6 or 4/5 from their own division. No re-seeding occurs.
+      # See: https://en.wikipedia.org/wiki/Stanley_Cup_playoffs#Current_format
+      p_rank_34 = sum(!!dplyr::sym('DivRank') == 2)/dplyr::n(),
+      p_rank_56 = sum(!!dplyr::sym('DivRank') == 3)/dplyr::n(),
+      p_rank7 = sum(!!dplyr::sym('Wildcard') == 1)/dplyr::n(),
+      p_rank8 = sum(!!dplyr::sym('Wildcard') == 2)/dplyr::n()
     )
 
   return(list(summary_results = summary_results, raw_results = all_results))
@@ -836,8 +845,9 @@ sim_engine<-function(all_season, nsims){
 
   #Do this by hand as it doesn't seem to want to work in dplyr pipe
   all_results[!is.na(all_results$Wildcard) & all_results$Wildcard <= 2,]$Playoffs<-1
+  all_results$Wildcard[is.na(all_results$Wildcard)]<-0
 
-  all_results$Wildcard<-NULL
+  #all_results$Wildcard<-NULL
 
   return(all_results)
 }
