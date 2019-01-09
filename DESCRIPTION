@@ -37,6 +37,5 @@ Suggests:
     knitr,
     rmarkdown,
     MLmetrics,
-    testthat,
-    imager
+    testthat
 VignetteBuilder: knitr
