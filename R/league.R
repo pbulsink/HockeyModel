@@ -852,4 +852,27 @@ sim_engine<-function(all_season, nsims){
   return(all_results)
 }
 
+playoff_solver<-function(all_results){
+  #Imagine 4 teams make the playoffs. A, B, C, D.
+  #Seed 1 plays 4, and 2 plays 3.
 
+  #Odds of a win for A against each of B, C, and D
+  ab<-0.5
+  ac<-0.4
+  ad<-0.6
+
+  #Simple small playoff ranking odds. Teams are columns,
+  #odds at each playoff spot are rows
+  podds<-matrix(data = c(0.4, 0.1, 0.2, 0.3,
+                         0.3, 0.4, 0.1, 0.2,
+                         0.2, 0.3, 0.4, 0.1,
+                         0.1, 0.2, 0.3, 0.4),
+                nrow = 4, byrow = TRUE,
+                dimnames = list(1:4, LETTERS[1:4]))
+
+  #Odds that a 'wins' against each team, for each seeded position.
+  podds[1,1]*(podds[4,2]*ab + podds[4,3]*ac + podds[4,4]*ad) +
+    podds[2,1]*(podds[3,2]*ab + podds[3,3]*ac + podds[3,4]*ad) +
+    podds[3,1]*(podds[2,2]*ab + podds[2,3]*ac + podds[2,4]*ad) +
+    podds[4,1]*(podds[1,2]*ab + podds[1,3]*ac + podds[1,4]*ad)
+}
