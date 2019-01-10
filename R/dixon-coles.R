@@ -97,7 +97,7 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
 #' @export
 playoffDC <- function(home, away, nsims=1e5, rho=HockeyModel::rho, m = HockeyModel::m){
   #Odds of home ice advantage team win at home
-  homeodds<-DCPredcit(home=home, away=away, m=m, rho=rho)
+  homeodds<-DCPredict(home=home, away=away, m=m, rho=rho)
   homeodds<-normalizeOdds(c(homeodds[1], homeodds[3]))[1]
   #Odds of home ice advantage team win away
   awayodds<-DCPredict(home=away, away=home, m=m, rho=rho)
