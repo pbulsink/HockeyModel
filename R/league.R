@@ -852,7 +852,50 @@ sim_engine<-function(all_season, nsims){
   return(all_results)
 }
 
-playoff_solver<-function(all_results){
+playoffSolver<-function(all_results = NULL){
+  if(is.null(all_results)){
+    filelist<-list.files(path = "./prediction_results")
+    pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
+    pdates<-pdates[pdates != 'graphics']
+    lastp<-as.Date(max(pdates))
+    all_results<-readRDS(file.path("./prediction_results", paste0(lastp,"-predictions.RDS")))
+  } else {
+    summary_results<-all_results
+  }
+
+  summary_results<-all_results$summary_results
+
+  #Convention: p# is odds of making it out of the round #. p0 is making playoffs, p1 is making out of 1st round, etc. so p4 is win cup.
+
+  #make 1st round win odds matrix
+  p0<-summary_results %>%
+    dplyr::select(Team, p_rank1, p_rank2, p_rank_34, p_rank_56, p_rank7, p_rank8, meanRank) %>%
+    dplyr::mutate(p_rank3 = p_rank_34,
+                  p_rank4 = p_rank_34,
+                  p_rank5 = p_rank_56,
+                  p_rank6 = p_rank_56) %>%
+    dplyr::select(Team, p_rank1, p_rank2, p_rank3, p_rank4, p_rank5, p_rank6, p_rank7, p_rank8, meanRank)
+
+  p0$Division<-getDivision(p0$Team)
+  p0$Conference<-getConference(p0$Team)
+  p1<-p0
+  p1$p_rank1 <- p1$p_rank2 <- p1$p_rank3 <- p1$p_rank4 <- p1$p_rank5 <- p1$p_rank6 <- p1$p_rank7 <- p1$p_rank8 <- 0
+
+  for (team in p1$Team){
+    #pass to a function solving a teams' odds of progressing (sorting opponent, etc.)
+    p1[p1$Team == team, ]<-team_progression_odds(round = 1, team = team, odds = p0)
+  }
+  #make 2nd round win odds matrix
+
+
+  #make 3rd round win odds matrix
+
+
+  #make cup win odds matrix
+
+
+
+
   #Imagine 4 teams make the playoffs. A, B, C, D.
   #Seed 1 plays 4, and 2 plays 3.
 
@@ -875,4 +918,57 @@ playoff_solver<-function(all_results){
     podds[2,1]*(podds[3,2]*ab + podds[3,3]*ac + podds[3,4]*ad) +
     podds[3,1]*(podds[2,2]*ab + podds[2,3]*ac + podds[2,4]*ad) +
     podds[4,1]*(podds[1,2]*ab + podds[1,3]*ac + podds[1,4]*ad)
+}
+
+team_progression_odds<-function(round, team, odds){
+  #Very many errors, in all likelihood. Also slow.
+  ranks<-paste('p_rank', c(1:8), sep = '')
+
+  team_odds<-as.numeric(odds[odds$Team == team, ranks])
+  c_opponents<-odds[odds$Conference == getConference(team),]$Team
+  c_opponents<-c_opponents[c_opponents != team]
+  d_opponents<-odds[odds$Division == getDivision(team),]$Team
+  d_opponents<-d_opponents[d_opponents != team]
+  #home_opponents are cup opponents against whom 'team' would be the home team, away_opponents are against better teams, who 'team' would be the away team.
+  l_home_opponents<-odds[(odds$Conference != getConference(team) & odds$meanRank > odds[odds$Team == team,]$meanRank),]$Team
+  l_away_opponents<-odds[(odds$Conference != getConference(team) & odds$meanRank < odds[odds$Team == team,]$meanRank),]$Team
+
+  if(round == 1){
+    o1<-sapply(c_opponents, function(x) odds[odds$Team == x, 'p_rank8'] * playoffDC(home = team, away = x)[1])*team_odds[1]
+    o2<-sapply(c_opponents, function(x) odds[odds$Team == x, 'p_rank7'] * playoffDC(home = team, away = x)[1])*team_odds[2]
+
+    o3<-sapply(d_opponents, function(x) odds[odds$Team == x, 'p_rank6'] * playoffDC(home = team, away = x)[1])*team_odds[3]
+    o4<-o3
+
+    o6<-sapply(d_opponents, function(x) odds[odds$Team == x, 'p_rank3'] * playoffDC(home = x, away = team)[2])*team_odds[6]
+    o5<-o6
+
+    o7<-sapply(c_opponents, function(x) odds[odds$Team == x, 'p_rank2'] * playoffDC(home = x, away = team)[2])*team_odds[7]
+    o8<-sapply(c_opponents, function(x) odds[odds$Team == x, 'p_rank1'] * playoffDC(home = x, away = team)[2])*team_odds[8]
+
+    return(c(o1,o2,o3,o4,o5,o6,o7,o8))
+
+  } else if (round == 2){
+    o1<-sapply(d_opponents, function(x) odds[odds$Team == x, 'p_rank4'] * playoffDC(home = team, away = x))*team_odds[1]
+    o2<-sapply(d_opponents, function(x) odds[odds$Team == x, 'p_rank3'] * playoffDC(home = team, away = x))*team_odds[2]
+
+    o3<-sapply(d_opponents, function(x) odds[odds$Team == x, 'p_rank2'] * playoffDC(home = x, away = team))*team_odds[3]
+    o4<-sapply(d_opponents, function(x) odds[odds$Team == x, 'p_rank1'] * playoffDC(home = x, away = team))*team_odds[4]
+
+    return(c(o1,o2,o3,o4))
+
+  } else if (round == 3){
+    o1<-sapply(c_opponents, function(x) odds[odds$Team == x, 'p_rank2'] * playoffDC(home = team, away = x))*team_odds[1]
+    o2<-sapply(c_opponents, function(x) odds[odds$Team == x, 'p_rank1'] * playoffDC(home = x, away = team))*team_odds[2]
+
+    return(c(o1,o2))
+
+  } else if (round == 4){
+    o1<-sapply(l_home_opponents, function(x) odds[odds$Team == x, 'p_rank1'] * playoffDC(home = team, away = x))
+    o2<-sapply(l_away_opponents, function(x) odds[odds$Team == x, 'p_rank1'] * playoffDC(home = x, away = team))
+
+    return(o1+o2)
+  } else {
+    stop("Round must be in [1..4]")
+  }
 }
