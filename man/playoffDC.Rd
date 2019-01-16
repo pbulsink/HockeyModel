@@ -2,25 +2,27 @@
 % Please edit documentation in R/dixon-coles.R
 \name{playoffDC}
 \alias{playoffDC}
-\title{Predict the odds of a playoff series}
+\title{Playoff Odds DC}
 \usage{
-playoffDC(home, away, nsims = 1e+05, rho = HockeyModel::rho,
-  m = HockeyModel::m)
+playoffDC(home, away, rho = HockeyModel::rho, m = HockeyModel::m,
+  home_wins = 0, away_wins = 0)
 }
 \arguments{
-\item{home}{The team with home ice advantage}
+\item{home}{Series Home Ice Advantage Team Name}
 
-\item{away}{The opponent team}
+\item{away}{Away (Opponent) Team Name}
 
-\item{nsims}{number of simulations to run}
+\item{rho}{HockeyModel::rho}
 
-\item{rho}{HockeyModel::rho if nothing}
+\item{m}{HockeyModel::m}
 
-\item{m}{HockeyModel::m if nothing}
+\item{home_wins}{Number of wins for home ice advantage team thus far in series}
+
+\item{away_wins}{Number of wins for away team thus far in series}
 }
 \value{
-a list of home & away team odds for the playoff series
+home ice advantage team odds to win series
 }
 \description{
-Predict the odds of a playoff series
+Playoff Odds DC
 }

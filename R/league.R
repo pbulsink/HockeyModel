@@ -852,6 +852,78 @@ sim_engine<-function(all_season, nsims){
   return(all_results)
 }
 
+#' Statistical Playoff Series Odds Solver
+#'
+#' @description Given home and away win odds, produce the odds of the 'home advantage' team winning the series. From \url{http://www.stat.umn.edu/geyer/playoff.html}, modified to function with odds determination.
+#' @references \url{http://www.stat.umn.edu/geyer/playoff.html}
+#'
+#' @param home_odds Team odds with home-ice advantage at home
+#' @param away_odds Team odds with home-ice advantage at away (on the road)
+#' @param home_win Number of home ice advantage team wins thus far in the series. Default to 0 (prediction before series start)
+#' @param away_win Number of away team wins thus far in the series
+#'
+#' @return numeric odds of home team win series (1-odds for away odds)
+#' @export
+playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0){
+  ngames <- 7
+  game_home <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE)
+  game_to <- 4
+
+  p1_home<-home_odds
+  p1_road<-away_odds
+
+  if (p1_home < 0 | p1_home > 1 | p1_road < 0 | p1_road > 1){
+    stop("impossible odds")
+  }
+
+  home_win <- as.integer(home_win)
+  away_win <- as.integer(away_win)
+
+  if (home_win < 0 | away_win < 0){
+    stop("negative number of wins impossible")
+  }
+  if (home_win >= game_to | away_win >= game_to){
+    stop("series already won")
+  }
+
+  games_played <- home_win + away_win
+
+  if (games_played > ngames){
+    stop("total wins greater than games impossible")
+  }
+  if (games_played == ngames){
+    stop("nothing to do, series over")
+  }
+
+  x.g <- games_played
+  x.w1 <- home_win
+  x.w2 <- away_win
+  x.p <- 1.0
+  finished_series <- NULL
+  for (i in (games_played + 1):ngames) {
+    p1now <- ifelse(game_home[i], p1_home, p1_road)
+    l <- length(x.g)
+    y.w1 <- c(x.w1 + 1, x.w1[l])
+    y.w2 <- c(x.w2[1], x.w2 + 1)
+    y.g <- c(x.g + 1, x.g[1] + 1)
+    y.p <- c(x.p * p1now, 0)
+    y.p <- y.p + c(0, x.p * (1 - p1now))
+    unfinished_series <- y.w1 < game_to & y.w2 < game_to
+    if (any(! unfinished_series)) {
+      series <- cbind(y.g, y.w1, y.w2, y.p)
+      finished_series <- rbind(finished_series, series[! unfinished_series, ])
+    }
+    x.g <- y.g[unfinished_series]
+    x.w1 <- y.w1[unfinished_series]
+    x.w2 <- y.w2[unfinished_series]
+    x.p <- y.p[unfinished_series]
+  }
+
+  p1total <- sum(finished_series[finished_series[,2] == game_to, 4])
+
+  return(p1total)
+}
+
 playoffSolver<-function(all_results = NULL){
   if(is.null(all_results)){
     filelist<-list.files(path = "./prediction_results")

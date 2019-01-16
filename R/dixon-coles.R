@@ -85,17 +85,19 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
   return(preds)
 }
 
-#' Predict the odds of a playoff series
+
+#' Playoff Odds DC
 #'
-#' @param home The team with home ice advantage
-#' @param away The opponent team
-#' @param nsims number of simulations to run
-#' @param rho HockeyModel::rho if nothing
-#' @param m HockeyModel::m if nothing
+#' @param home Series Home Ice Advantage Team Name
+#' @param away Away (Opponent) Team Name
+#' @param rho HockeyModel::rho
+#' @param m HockeyModel::m
+#' @param home_wins Number of wins for home ice advantage team thus far in series
+#' @param away_wins Number of wins for away team thus far in series
 #'
-#' @return a list of home & away team odds for the playoff series
+#' @return home ice advantage team odds to win series
 #' @export
-playoffDC <- function(home, away, nsims=1e5, rho=HockeyModel::rho, m = HockeyModel::m){
+playoffDC <- function(home, away, rho=HockeyModel::rho, m = HockeyModel::m, home_wins = 0, away_wins = 0){
   #Odds of home ice advantage team win at home
   homeodds<-DCPredict(home=home, away=away, m=m, rho=rho)
   homeodds<-normalizeOdds(c(homeodds[1], homeodds[3]))[1]
@@ -103,15 +105,10 @@ playoffDC <- function(home, away, nsims=1e5, rho=HockeyModel::rho, m = HockeyMod
   awayodds<-DCPredict(home=away, away=home, m=m, rho=rho)
   awayodds<-normalizeOdds(c(awayodds[3], awayodds[1]))[1]
 
-  #7 game series
-  g7<-c(homeodds, homeodds, awayodds, awayodds, homeodds, awayodds, homeodds)
-
-  sims<-rep(g7, nsims)
-
-  #For nsims simulations, number of series where home team has 4+ wins
-  homewin<-sum(sapply(1:nsims, function(y) sum(sapply(X = g7, function (x) sample(c(1,0), size = 1, prob = c(x, 1-x))))>=4))/nsims
-  return(list(HomeWin = homewin, AwayWin = 1-homewin))
+  homewin<-playoffSeriesOdds(homeodds, awayodds, home_wins, away_wins)
+  return(homewin)
 }
+
 
 #' DC Simulate season with reevaluation every n days
 #'
