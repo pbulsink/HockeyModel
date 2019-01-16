@@ -744,7 +744,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
       sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
       sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE),
       p_rank1 = sum(!!dplyr::sym('ConfRank') == 1 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
-      p_rank2 = sum(!!dplyr::sym('ConfRank') == 2 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
+      p_rank2 = sum(!!dplyr::sym('ConfRank') != 1 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
       # Solving 3 & 4 & 5 & 6 doesn't *really* matter, because 3/4 play the 5/6 within their own division.
       # In 2nd round, 1/8 or 2/7 play the 3/6 or 4/5 from their own division. No re-seeding occurs.
       # See: https://en.wikipedia.org/wiki/Stanley_Cup_playoffs#Current_format
