@@ -966,45 +966,39 @@ playoffSolver<-function(all_results = NULL){
     p1[p1$Team == team, ranks]<-team_progression_odds(round = 1, team = team, odds = p0)
   }
 
+  p1$p_rank18<-p1$p_rank1 + p1$p_rank8
+  p1$p_rank27<-p1$p_rank2 + p1$p_rank7
+  p1$p_rank36<-p1$p_rank3 + p1$p_rank6
+  p1$p_rank45<-p1$p_rank4 + p1$p_rank5
+  p1[,ranks]<-p2[,ranks]<-p3[,ranks]<-p4[,ranks]<-NULL
+
+  #Fix normalization fixes.
+  ranks<-c('p_rank18', 'p_rank27', 'p_rank36', 'p_rank45')
+  p1[, ranks]<-p1[, ranks]*(8/sum(p1[,ranks]))
+
   #make 2nd round win odds matrix
+  p2$cfodds<-0
   for (team in p2$Team){
-    #pass to a function solving a teams' odds of progressing (sorting opponent, etc.)
-    p2[p2$Team == team, ranks]<-team_progression_odds(round = 2, team = team, odds = p1)
+    p2[p2$Team == team, ]$cfodds<-team_progression_odds(round = 2, team = team, odds = p1)
+  }
+  p2$cfodds<-p2$cfodds*(4/sum(p2$cfodds))
+
+  #make 3rd round win odds matrix+
+  p3$fodds<-0
+  for(team in p3$Team){
+    p3[p3$Team == team, ]$fodds<-team_progression_odds(round = 3, team = team, odds = p2)
   }
 
-
-  #make 3rd round win odds matrix
-  p3[,ranks]<-NULL
-  p3$cfodds<-sum(p2[,ranks])
-
+  p3$fodds<-p3$fodds*(2/sum(p3$fodds))
 
   #make cup win odds matrix
+  p4$cupodds<-0
+  for(team in p4$Team){
+    p4[p4$Team == team, ]$cupodds<-team_progression_odds(round = 4, team = team, odds = p3)
+  }
+  p4$cupodds<-p4$cupodds * (1/sum(p4$cupodds))
 
-
-
-
-  #Imagine 4 teams make the playoffs. A, B, C, D.
-  #Seed 1 plays 4, and 2 plays 3.
-
-  #Odds of a win for A against each of B, C, and D
-  ab<-0.5
-  ac<-0.4
-  ad<-0.6
-
-  #Simple small playoff ranking odds. Teams are columns,
-  #odds at each playoff spot are rows
-  podds<-matrix(data = c(0.4, 0.1, 0.2, 0.3,
-                         0.3, 0.4, 0.1, 0.2,
-                         0.2, 0.3, 0.4, 0.1,
-                         0.1, 0.2, 0.3, 0.4),
-                nrow = 4, byrow = TRUE,
-                dimnames = list(1:4, LETTERS[1:4]))
-
-  #Odds that a 'wins' against each team, for each seeded position.
-  podds[1,1]*(podds[4,2]*ab + podds[4,3]*ac + podds[4,4]*ad) +
-    podds[2,1]*(podds[3,2]*ab + podds[3,3]*ac + podds[3,4]*ad) +
-    podds[3,1]*(podds[2,2]*ab + podds[2,3]*ac + podds[2,4]*ad) +
-    podds[4,1]*(podds[1,2]*ab + podds[1,3]*ac + podds[1,4]*ad)
+  #Summarize Data
 }
 
 #' Team Progression Odds
@@ -1017,9 +1011,7 @@ playoffSolver<-function(all_results = NULL){
 #' @export
 team_progression_odds<-function(round, team, odds){
   #Very many errors, in all likelihood. Also slow.
-  ranks<-paste('p_rank', c(1:8), sep = '')
 
-  team_odds<-as.numeric(odds[odds$Team == team, names(odds) %in% ranks])
   c_opponents<-odds[odds$Conference == getConference(team),]$Team
   c_opponents<-c_opponents[c_opponents != team]
   d_opponents<-odds[odds$Division == getDivision(team),]$Team
@@ -1031,6 +1023,9 @@ team_progression_odds<-function(round, team, odds){
   f_away_opponents<-odds[(odds$Conference != getConference(team) & odds$meanRank < odds[odds$Team == team,]$meanRank),]$Team
 
   if(round == 1){
+    ranks<-paste('p_rank', c(1:8), sep = '')
+
+    team_odds<-as.numeric(odds[odds$Team == team, names(odds) %in% ranks])
     o1<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank8/sum(odds[odds$Team %in% c_opponents,]$p_rank8)) *
                      playoffDC(home = team, away = x)),
             na.rm = TRUE)*team_odds[1]
@@ -1055,80 +1050,68 @@ team_progression_odds<-function(round, team, odds){
     return(c(o1,o2,o3,o4,o5,o6,o7,o8))
 
   } else if (round == 2){
-    #First & second place plays 3/4 5/6 winner from division.
-    o1<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank3/sum(odds[odds$Team %in% d_opponents,]$p_rank3)) *
+
+    team_odds<-as.numeric(odds[odds$Team == team, c('p_rank18', 'p_rank27', 'p_rank36', 'p_rank45')])
+    #1/8 winner plays 3/4 or 5/6 winner from division. noramlization are *2 because we're summing together 2 avenues using the same team_odds.
+    o1<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank36/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank36))) *
                      playoffDC(home = team, away = x)),
             na.rm = TRUE)*team_odds[1] +
-      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank5/sum(odds[odds$Team %in% d_opponents,]$p_rank5)) *
+      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank45/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank45))) *
                    playoffDC(home = team, away = x)),
           na.rm = TRUE)*team_odds[1]
 
-    o2<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank3/sum(odds[odds$Team %in% d_opponents,]$p_rank3)) *
+    o2<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank36/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank36))) *
                      playoffDC(home = team, away = x)),
             na.rm = TRUE)*team_odds[2] +
-      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank5/sum(odds[odds$Team %in% d_opponents,]$p_rank5)) *
+      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank45/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank45))) *
                    playoffDC(home = team, away = x)),
           na.rm = TRUE)*team_odds[2]
 
-    #3/4/5/6 play 1/2/7/8. 1/2 would be from division, but 7/8 aren't reseeded and could be from conference.
-    o3<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank1/sum(odds[odds$Team %in% d_opponents,]$p_rank1)) *
+    o3<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank27/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank27))) *
                      playoffDC(home = team, away = x)),
             na.rm = TRUE)*team_odds[3] +
-      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank2/sum(odds[odds$Team %in% d_opponents,]$p_rank2)) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[3] +
-      sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank7/sum(odds[odds$Team %in% c_opponents,]$p_rank7)) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[3] +
-      sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank8/sum(odds[odds$Team %in% c_opponents,]$p_rank8)) *
+      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank27/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank27))) *
                    playoffDC(home = team, away = x)),
           na.rm = TRUE)*team_odds[3]
 
-    o4<-o3
-    o6<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank1/sum(odds[odds$Team %in% d_opponents,]$p_rank1)) *
+    o4<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank18/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank18))) *
                      playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[6] +
-      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank2/sum(odds[odds$Team %in% d_opponents,]$p_rank2)) *
+            na.rm = TRUE)*team_odds[4] +
+      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank18/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank18))) *
                    playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[6] +
-      sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank7/sum(odds[odds$Team %in% c_opponents,]$p_rank7)) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[6] +
-      sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank8/sum(odds[odds$Team %in% c_opponents,]$p_rank8)) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[6]
-    o5<-o6
+          na.rm = TRUE)*team_odds[4]
 
-    #7/8 aren't reseeeded! opponents only from conference
-    o7<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank3/sum(odds[odds$Team %in% c_opponents,]$p_rank3)) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[7] +
-      sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank5/sum(odds[odds$Team %in% c_opponents,]$p_rank5)) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[7]
-
-    o8<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank3/sum(odds[odds$Team %in% c_opponents,]$p_rank3)) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[8] +
-      sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank5/sum(odds[odds$Team %in% c_opponents,]$p_rank5)) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[8]
-
-    return(c(o1,o2,o3,o4,o5,o6,o7,o8))
+    return(o1+o2+o3+o4)
 
   } else if (round == 3){
-    o1<-sum(sapply(cf_home_opponents, function(x) (odds[odds$Team == x, ]$cfodds/sum(odds[odds$Team %in% cf_home_opponents,]$cfodds)) * playoffDC(home = team, away = x)),
-            na.rm = TRUE) * odds[odds$Team == team, ]$cfodds
-    o2<-sum(sapply(cf_away_opponents, function(x) (odds[odds$Team == x, ]$cfodds/sum(odds[odds$Team %in% cf_away_opponents,]$cfodds)) * playoffDC(home = x, away = team)),
-            na.rm = TRUE) * odds[odds$Team == team, ]$cfodds
+    if(length(cf_home_opponents)>0){
+      o1<-sum(sapply(cf_home_opponents, function(x) (odds[odds$Team == x, ]$cfodds/sum(odds[odds$Team %in% c_opponents,]$cfodds)) * playoffDC(home = team, away = x)),
+              na.rm = TRUE) * odds[odds$Team == team, ]$cfodds
+    } else {
+      o1<-0
+    }
+    if(length(cf_away_opponents)>0){
+      o2<-sum(sapply(cf_away_opponents, function(x) (odds[odds$Team == x, ]$cfodds/sum(odds[odds$Team %in% c_opponents,]$cfodds)) * playoffDC(home = x, away = team)),
+              na.rm = TRUE) * odds[odds$Team == team, ]$cfodds
+    } else {
+      o2 <- 0
+    }
 
     return(o1+o2)
 
   } else if (round == 4){
-    o1<-sum(sapply(f_home_opponents, function(x) (odds[odds$Team == x, ]$fodds/sum(odds[odds$Team %in% f_home_opponents,]$fodds)) * playoffDC(home = team, away = x)),
-            na.rm = TRUE) * odds[odds$Team == team, ]$fodds
-    o2<-sum(sapply(f_away_opponents, function(x) (odds[odds$Team == x, ]$fodds/sum(odds[odds$Team %in% f_away_opponents,]$fodds)) * playoffDC(home = x, away = team)),
-            na.rm = TRUE) * odds[odds$Team == team, ]$fodds
+    if(length(f_home_opponents) > 0) {
+      o1 <- sum(sapply(f_home_opponents, function(x) (odds[odds$Team == x, ]$fodds/sum(odds[odds$Conference != odds[odds$Team == team,]$Conference,]$fodds)) * playoffDC(home = team, away = x)),
+                na.rm = TRUE) * odds[odds$Team == team, ]$fodds
+    } else {
+      o1 <- 0
+    }
+    if(length(f_away_opponents) > 0){
+      o2 <- sum(sapply(f_away_opponents, function(x) (odds[odds$Team == x, ]$fodds/sum(odds[odds$Conference != odds[odds$Team == team,]$Conference,]$fodds)) * playoffDC(home = x, away = team)),
+                na.rm = TRUE) * odds[odds$Team == team, ]$fodds
+    } else {
+      o2 <- 0
+    }
 
     return(o1+o2)
   } else {
