@@ -924,6 +924,12 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0){
   return(p1total)
 }
 
+#' Playoff solver: chances of making each round & winning cup
+#'
+#' @param all_results if available, the results from simulations. Else loaded
+#'
+#' @return a tibble of playoff odds
+#' @export
 playoffSolver<-function(all_results = NULL){
   if(is.null(all_results)){
     filelist<-list.files(path = "./prediction_results")
@@ -944,12 +950,13 @@ playoffSolver<-function(all_results = NULL){
 
   #make 1st round win odds matrix. p34 and p56 are combined odds for two positions, so /2 for individual position odds
   p0<-summary_results %>%
-    dplyr::select(Team, p_rank1, p_rank2, p_rank_34, p_rank_56, p_rank7, p_rank8, meanRank) %>%
-    dplyr::mutate(p_rank3 = p_rank_34/2,
-                  p_rank4 = p_rank_34/2,
-                  p_rank5 = p_rank_56/2,
-                  p_rank6 = p_rank_56/2) %>%
-    dplyr::select(Team, p_rank1, p_rank2, p_rank3, p_rank4, p_rank5, p_rank6, p_rank7, p_rank8, meanRank)
+    dplyr::mutate(p_rank3 = !!dplyr::sym('p_rank_34')/2,
+                  p_rank4 = !!dplyr::sym('p_rank_34')/2,
+                  p_rank5 = !!dplyr::sym('p_rank_56')/2,
+                  p_rank6 = !!dplyr::sym('p_rank_56')/2) %>%
+    dplyr::select(!!dplyr::sym('Team'), !!dplyr::sym('p_rank1'), !!dplyr::sym('p_rank2'), !!dplyr::sym('p_rank3'),
+                  !!dplyr::sym('p_rank4'), !!dplyr::sym('p_rank5'), !!dplyr::sym('p_rank6'), !!dplyr::sym('p_rank7'),
+                  !!dplyr::sym('p_rank8'), !!dplyr::sym('meanRank'))
 
   p0<-p0[sum(p0$p_rank1, p0$p_rank2, p0$p_rank3, p0$p_rank5, p0$p_rank7, p0$p_rank8)>0,]
   p0$Division<-getDivision(p0$Team)
@@ -959,22 +966,22 @@ playoffSolver<-function(all_results = NULL){
   p2<-p3<-p4<-p1
 
 
-  ranks<-paste('p_rank', c(1:8), sep = '')
+  ranks1<-paste('p_rank', c(1:8), sep = '')
 
   for (team in p1$Team){
     #pass to a function solving a teams' odds of progressing (sorting opponent, etc.)
-    p1[p1$Team == team, ranks]<-team_progression_odds(round = 1, team = team, odds = p0)
+    p1[p1$Team == team, ranks1]<-team_progression_odds(round = 1, team = team, odds = p0)
   }
 
   p1$p_rank18<-p1$p_rank1 + p1$p_rank8
   p1$p_rank27<-p1$p_rank2 + p1$p_rank7
   p1$p_rank36<-p1$p_rank3 + p1$p_rank6
   p1$p_rank45<-p1$p_rank4 + p1$p_rank5
-  p1[,ranks]<-p2[,ranks]<-p3[,ranks]<-p4[,ranks]<-NULL
+  p1[,ranks1]<-p2[,ranks1]<-p3[,ranks1]<-p4[,ranks1]<-NULL
 
   #Fix normalization fixes.
-  ranks<-c('p_rank18', 'p_rank27', 'p_rank36', 'p_rank45')
-  p1[, ranks]<-p1[, ranks]*(8/sum(p1[,ranks]))
+  ranks2<-c('p_rank18', 'p_rank27', 'p_rank36', 'p_rank45')
+  p1[, ranks2]<-p1[, ranks2]*(8/sum(p1[,ranks2]))
 
   #make 2nd round win odds matrix
   p2$cfodds<-0
@@ -999,6 +1006,18 @@ playoffSolver<-function(all_results = NULL){
   p4$cupodds<-p4$cupodds * (1/sum(p4$cupodds))
 
   #Summarize Data
+  playoff_odds<-tibble::tibble(Team = summary_results$Team,
+                       Win_First_Round = 0,
+                       Win_Second_Round = 0,
+                       Win_Conference = 0,
+                       Win_Cup = 0
+                       )
+  playoff_odds$Win_First_Round = p1$p_rank18 + p1$p_rank27 + p1$p_rank36 + p1$p_rank45
+  playoff_odds$Win_Second_Round = p2$cfodds
+  playoff_odds$Win_Conference = p3$fodds
+  playoff_odds$Win_Cup = p4$cupodds
+
+  return(playoff_odds)
 }
 
 #' Team Progression Odds
