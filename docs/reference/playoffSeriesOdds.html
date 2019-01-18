@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Playoff Odds DC — playoffDC • HockeyModel</title>
+<title>Statistical Playoff Series Odds Solver — playoffSeriesOdds • HockeyModel</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Playoff Odds DC — playoffDC" />
+<meta property="og:title" content="Statistical Playoff Series Odds Solver — playoffSeriesOdds" />
 
-<meta property="og:description" content="Playoff Odds DC" />
+<meta property="og:description" content="Given home and away win odds, produce the odds of the 'home advantage' team winning the series. From http://www.stat.umn.edu/geyer/playoff.html, modified to function with odds determination." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -111,52 +111,47 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Playoff Odds DC</h1>
-    <small class="dont-index">Source: <a href='https://github.com/pbulsink/HockeyModel/blob/master/R/dixon-coles.R'><code>R/dixon-coles.R</code></a></small>
-    <div class="hidden name"><code>playoffDC.Rd</code></div>
+    <h1>Statistical Playoff Series Odds Solver</h1>
+    <small class="dont-index">Source: <a href='https://github.com/pbulsink/HockeyModel/blob/master/R/league.R'><code>R/league.R</code></a></small>
+    <div class="hidden name"><code>playoffSeriesOdds.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Playoff Odds DC</p>
+    <p>Given home and away win odds, produce the odds of the 'home advantage' team winning the series. From <a href='http://www.stat.umn.edu/geyer/playoff.html'>http://www.stat.umn.edu/geyer/playoff.html</a>, modified to function with odds determination.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>playoffDC</span>(<span class='no'>home</span>, <span class='no'>away</span>, <span class='kw'>rho</span> <span class='kw'>=</span> <span class='kw pkg'>HockeyModel</span><span class='kw ns'>::</span><span class='no'><a href='https://www.rdocumentation.org/packages/HockeyModel/topics/rho'>rho</a></span>, <span class='kw'>m</span> <span class='kw'>=</span> <span class='kw pkg'>HockeyModel</span><span class='kw ns'>::</span><span class='no'><a href='https://www.rdocumentation.org/packages/HockeyModel/topics/m'>m</a></span>,
-  <span class='kw'>home_wins</span> <span class='kw'>=</span> <span class='fl'>0</span>, <span class='kw'>away_wins</span> <span class='kw'>=</span> <span class='fl'>0</span>)</pre>
+    <pre class="usage"><span class='fu'>playoffSeriesOdds</span>(<span class='no'>home_odds</span>, <span class='no'>away_odds</span>, <span class='kw'>home_win</span> <span class='kw'>=</span> <span class='fl'>0</span>, <span class='kw'>away_win</span> <span class='kw'>=</span> <span class='fl'>0</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>home</th>
-      <td><p>Series Home Ice Advantage Team Name</p></td>
+      <th>home_odds</th>
+      <td><p>Team odds with home-ice advantage at home</p></td>
     </tr>
     <tr>
-      <th>away</th>
-      <td><p>Away (Opponent) Team Name</p></td>
+      <th>away_odds</th>
+      <td><p>Team odds with home-ice advantage at away (on the road)</p></td>
     </tr>
     <tr>
-      <th>rho</th>
-      <td><p>HockeyModel::rho</p></td>
+      <th>home_win</th>
+      <td><p>Number of home ice advantage team wins thus far in the series. Default to 0 (prediction before series start)</p></td>
     </tr>
     <tr>
-      <th>m</th>
-      <td><p>HockeyModel::m</p></td>
-    </tr>
-    <tr>
-      <th>home_wins</th>
-      <td><p>Number of wins for home ice advantage team thus far in series</p></td>
-    </tr>
-    <tr>
-      <th>away_wins</th>
-      <td><p>Number of wins for away team thus far in series</p></td>
+      <th>away_win</th>
+      <td><p>Number of away team wins thus far in the series</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>home ice advantage team odds to win series</p>
+    <p>numeric odds of home team win series (1-odds for away odds)</p>
+    
+    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+
+    <p><a href='http://www.stat.umn.edu/geyer/playoff.html'>http://www.stat.umn.edu/geyer/playoff.html</a></p>
     
 
   </div>
@@ -166,6 +161,8 @@
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#references">References</a></li>
           </ul>
 
   </div>

@@ -4,9 +4,9 @@ author: "Philip Bulsink"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Model Description}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  \VignetteEncoding{UTF-8}{inputenc}
 ---
 
 ```{r setup, include = FALSE}
