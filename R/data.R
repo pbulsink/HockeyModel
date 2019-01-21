@@ -91,24 +91,6 @@
 #' @format a single numerical value
 "rho"
 
-#' Generalized Davidson Bradley-Terry model
-#' Results of fitting Bradley Terry Model with Generalized Davidson terms
-#'
-#' @format a gnm Bradley Terry Davidson model
-"fittedBT"
-
-#' Bradley-Terry formatted data
-#' Data formatted for Bradley Terry Model with Generalized Davidson terms
-#'
-#' @format a data frame
-"dataBT"
-
-#' Simple Bradley-Terry model
-#' Results of fitting Bradley Terry Model
-#'
-#' @format a gnm Bradley Terry Davidson model
-"fittedBTSimple"
-
 #' Team Colours
 #' Hex and RGB team colours (primary & secondary where applicable), and path to team logos
 #'
