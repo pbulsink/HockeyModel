@@ -43,15 +43,18 @@ rho<-getRho(scores = scores, m = m)
 
 With these factors, we can predict the season. in particular, we'll look for the playoff odds of both Arizona and San Jose.
 ```{r season_predict, include=FALSE}
-predictions<-loopless_sim(nsims = 1e4, schedule = schedule, rho=rho, m=m)
+scores<-scores[scores$Date > as.Date('2018-10-01'),]
+start_stats<-buildStats(scores)
+
+predictions<-loopless_sim(nsims = 1e4, schedule = schedule, rho=rho, m=m, scores = scores, cores= 2)
 ari<-as.numeric(predictions$summary_results[predictions$summary_results$Team == 'Arizona Coyotes', 'Playoffs'])
 sjs<-as.numeric(predictions$summary_results[predictions$summary_results$Team == 'San Jose Sharks', 'Playoffs'])
 ```
 ```{r season_predict_fake, eval=FALSE}
-predictions<-remainderSeasonDC(schedule = schedule, scores = scores, rho=rho, m=m, regress = TRUE)
+predictions<-loopless_sim(nsims = 1e4, schedule = schedule, rho=rho, m=m, scores = scores, cores= 2)
 ```
 
-At this date, Arizona has a playoff odds of `r round(ari*100, 2)`%, and San Jose has a `r round(sjs*100, 2)`% shot at making it into the post-season.
+At this date, Arizona has `r start_stats[start_stats$Team == 'Arizona Coyotes',]$Points` points in `r start_stats[start_stats$Team == 'Arizona Coyotes',]$GP` games played, and playoff odds of `r round(ari*100, 2)`%. Likewise, San Jose has `r start_stats[start_stats$Team == 'San Jose Sharks',]$Points` points in `r start_stats[start_stats$Team == 'San Jose Sharks',]$GP` games played and has a `r round(sjs*100, 2)`% shot at making it into the post-season.
 
 Having predicted the season from this point, what happens if we modify things a bit?
 
@@ -74,7 +77,7 @@ newscores<-rbind(scores, result)
 #remove the game from schedule
 newschedule<-schedule[2:nrow(schedule),]
 
-new_predict<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = newscores, rho=rho, m=m)
+new_predict<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = newscores, rho=rho, m=m, cores= 2)
 ```
 
 With this, we can see that Arizona's chances changed:
@@ -125,11 +128,11 @@ away_win_score<-rbind(scores, away_win)
 away_ot_score<-rbind(scores, away_ot)
 away_so_score<-rbind(scores, away_so)
 
-predict_home_ot<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = home_ot_score, rho=rho, m=m)
-predict_home_so<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = home_so_score, rho=rho, m=m)
-predict_away_win<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = away_win_score, rho=rho, m=m)
-predict_away_ot<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = away_ot_score, rho=rho, m=m)
-predict_away_so<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = away_so_score, rho=rho, m=m)
+predict_home_ot<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = home_ot_score, rho=rho, m=m, cores= 2)
+predict_home_so<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = home_so_score, rho=rho, m=m, cores= 2)
+predict_away_win<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = away_win_score, rho=rho, m=m, cores= 2)
+predict_away_ot<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = away_ot_score, rho=rho, m=m, cores= 2)
+predict_away_so<-loopless_sim(nsims = 1e4, schedule = newschedule, scores = away_so_score, rho=rho, m=m, cores= 2)
 
 ari_home_ot_chance<-as.numeric(predict_home_ot$summary_results[predict_home_ot$summary_results$Team == "Arizona Coyotes", "Playoffs"])
 ari_home_so_chance<-as.numeric(predict_home_so$summary_results[predict_home_so$summary_results$Team == "Arizona Coyotes", "Playoffs"])
