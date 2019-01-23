@@ -554,13 +554,13 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
   if(!(team %in% teamlist) & !(opponent %in% opponentlist)){
     lambda <- NA
   } else if(!(team %in% teamlist)){
-    teamp<-min(rlist::list.match(m$coefficients, 'Team'))  # lowest goals scored for new team
+    teamp<-min(m$coefficients[grep('Team', names(m$coefficients))])  # lowest goals scored for new team
     opponentp<-m$coefficients[paste0('Opponent', opponent)]
 
     lambda<-exp(teamp+opponentp+homeice)
   } else if (!(opponent %in% opponentlist)){
     teamp<-m$coefficients[paste0('Team', team)]
-    opponentp<-max(rlist::list.match(m$coefficients, 'Opponent'))  # most goals allowed for new team
+    opponentp<-max(m$coefficients[grep('Opponent', names(m$coefficients))])  # most goals allowed for new team
 
     lambda<-exp(teamp+opponentp+homeice)
   } else {
@@ -687,10 +687,6 @@ getSeasonMetricsDC<-function(schedule = HockeyModel::schedule, scores = HockeyMo
 
   logloss<-logLoss(predicted = sched$Home.WL, actual = sched$Result)
   accuracy <- accuracy(predicted = sched$Home.WL>0.5, actual = sched$Result > 0.5)
-
-  #multipreds<-matrix(data = c(sched$Away.WLD, sched$Draw.WLD, sched$Home.WLD), ncol = 3, dimnames = list(NULL, c("Away", "Draw", "Home")), byrow = FALSE)
-
-  #logloss_multi<-MLmetrics::MultiLogLoss(y_pred = multipreds, y_true = factor(as.character(sched$Result), levels = c("0", "0.25", "0.4", "0.5", "0.6", "0.75", "1"), labels = c("Away", "Draw", "Draw", "Draw", "Draw", "Draw", "Home")))
 
   return(list("LogLoss" = logloss, "Accuracy" = accuracy))
 }

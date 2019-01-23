@@ -20,13 +20,11 @@ Imports:
     parallel,
     doSNOW,
     foreach,
-    rlist,
     usethis,
     reshape2,
     rtweet,
     git2r,
     lubridate,
-    gganimate,
     ggalt
 Remotes:
   pbulsink/HockeyScrapR
@@ -36,6 +34,5 @@ RoxygenNote: 6.1.1
 Suggests: 
     knitr,
     rmarkdown,
-    MLmetrics,
     testthat
 VignetteBuilder: knitr
