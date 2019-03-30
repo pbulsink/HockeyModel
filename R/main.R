@@ -130,31 +130,34 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
-                     media = file.path(graphic_dir, "point_predict.png"), token = token)
+  if(Sys.Date <= as.Date('2019-04-06')){
+    #TODO Doesn't yet programattically know that reg. season is done. Fix this summer.
 
-  my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
-  reply_id<-my_timeline$status_id[1]
+    rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
+                       media = file.path(graphic_dir, "point_predict.png"), token = token)
 
-  #until Rtweet has scheduler
-  message("Delaying ", delay, " seconds to space tweets...")
-  Sys.sleep(delay)
+    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+    reply_id<-my_timeline$status_id[1]
 
-  rtweet::post_tweet(status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
-                     media = file.path(graphic_dir, "playoff_odds.png"),
-                     in_reply_to_status_id = reply_id, token = token)
+    #until Rtweet has scheduler
+    message("Delaying ", delay, " seconds to space tweets...")
+    Sys.sleep(delay)
 
-  my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
-  reply_id<-my_timeline$status_id[1]
+    rtweet::post_tweet(status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
+                       media = file.path(graphic_dir, "playoff_odds.png"),
+                       in_reply_to_status_id = reply_id, token = token)
 
-  #until Rtweet has scheduler
-  message("Delaying ", delay, " seconds to space tweets...")
-  Sys.sleep(delay)
+    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+    reply_id<-my_timeline$status_id[1]
 
-  rtweet::post_tweet(status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
-                     media = file.path(graphic_dir, "president_odds.png"),
-                     in_reply_to_status_id = reply_id, token = token)
+    #until Rtweet has scheduler
+    message("Delaying ", delay, " seconds to space tweets...")
+    Sys.sleep(delay)
 
+    rtweet::post_tweet(status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
+                       media = file.path(graphic_dir, "president_odds.png"),
+                       in_reply_to_status_id = reply_id, token = token)
+  }
 }
 
 #' Daily functions, rolled into one call
@@ -233,7 +236,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   }
 
   message("Posting Tweets...")
-  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir, toke = token, games_today = Sys.Date() %in% sc$Date, ...)
+  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir, token = token, games_today = Sys.Date() %in% sc$Date, ...)
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
