@@ -373,12 +373,13 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
 #'
 #' @return NULL
 #' @export
-tweetMetrics<-function(token = rtweet::get_token){
+tweetMetrics<-function(token = rtweet::get_token()){
   metrics<-getSeasonMetricsDC()
 
   status <- paste0("Metrics as of ", Sys.Date(),
                    "\nLog Loss: ", round(metrics$LogLoss, 4),
                    "\nAccuracy: ", round(metrics$Accuracy * 100, 2), " %\n#HockeyTwitter")
+  message(status)
 
   rtweet::post_tweet(status = status, token = token)
 }
