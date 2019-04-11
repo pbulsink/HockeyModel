@@ -199,3 +199,20 @@ accuracy<-function(predicted, actual){
 
   return(accuracy)
 }
+
+
+#' Add Series Win
+#'
+#' @param series the full series dataframe
+#' @param winner Team to add a win to
+#'
+#' @return updated series
+#' @export
+addSeriesWin<-function(series, winner){
+  index<-which(winner == series, arr.ind = TRUE)
+  if(length(index) == 2){
+    series[index[1],index[2]+2]<-series[index[1],index[2]+2] + 1
+  }
+  updateSeries(series = series)
+  return(series)
+}

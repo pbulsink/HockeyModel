@@ -176,7 +176,11 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   }
 
   modelparams<-updateModel(...)
-  updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
+  in_reg_season<-FALSE
+  if(Sys.Date()<= as.Date("2019-04-06")){
+    in_reg_season<-TRUE
+    updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
+  }
 
   if(!dir.exists(graphic_dir)){
     dir.create(graphic_dir, recursive = TRUE)
@@ -196,47 +200,49 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
       grDevices::dev.off()
     }
   }
-  playoff <- playoffOdds()
-  president <- presidentOdds()
-  point <- pointPredict()
-  rating <- ratings(m = modelparams$m)
+  if(in_reg_season){
+    playoff <- playoffOdds()
+    president <- presidentOdds()
+    point <- pointPredict()
+    rating <- ratings(m = modelparams$m)
 
-  Sys.sleep(15)
+    Sys.sleep(15)
 
-  while(grDevices::dev.cur()!=1){
-    grDevices::dev.off()
-  }
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
 
-  grDevices::png(filename = file.path(graphic_dir, 'playoff_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
-  print(playoff)
-  Sys.sleep(5)
-  while(grDevices::dev.cur()!=1){
-    grDevices::dev.off()
-  }
+    grDevices::png(filename = file.path(graphic_dir, 'playoff_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(playoff)
+    Sys.sleep(5)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
 
-  grDevices::png(filename = file.path(graphic_dir, 'president_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
-  print(president)
-  Sys.sleep(5)
-  while(grDevices::dev.cur()!=1){
-    grDevices::dev.off()
-  }
+    grDevices::png(filename = file.path(graphic_dir, 'president_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(president)
+    Sys.sleep(5)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
 
-  grDevices::png(filename = file.path(graphic_dir, 'point_predict.png'), width = 11, height = 8.5, units = 'in', res = 300)
-  print(point)
-  Sys.sleep(5)
-  while(grDevices::dev.cur()!=1){
-    grDevices::dev.off()
-  }
+    grDevices::png(filename = file.path(graphic_dir, 'point_predict.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(point)
+    Sys.sleep(5)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
 
-  grDevices::png(filename = file.path(graphic_dir, 'current_rating.png'), width = 11, height = 8.5, units = 'in', res = 300)
-  print(rating)
-  Sys.sleep(5)
-  while(grDevices::dev.cur()!=1){
-    grDevices::dev.off()
+    grDevices::png(filename = file.path(graphic_dir, 'current_rating.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(rating)
+    Sys.sleep(5)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
   }
 
   message("Posting Tweets...")
-  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir, token = token, games_today = Sys.Date() %in% sc$Date, ...)
+  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir, games_today = Sys.Date() %in% sc$Date, ...)
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
@@ -244,11 +250,11 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   tweetGames(games = sc[sc$Date == Sys.Date(), ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token, delay=delay)
 
-  if(lubridate::day(Sys.Date()) == 1){
+  if(lubridate::day(Sys.Date()) == 1 & in_reg_season){
     tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
   }
 
-  if(lubridate::wday(lubridate::now()) == 1) {
+  if(lubridate::wday(lubridate::now()) == 1 & in_reg_season) {
     #On sunday post metrics
     tweetMetrics(token = token)
   }
@@ -382,4 +388,31 @@ tweetMetrics<-function(token = rtweet::get_token()){
   message(status)
 
   rtweet::post_tweet(status = status, token = token)
+}
+
+#' Tweet Series
+#' @description Tweet the series odds graphics
+#'
+#' @param series series data
+#' @param graphic_dir directory to save the image
+#' @param token rtweet token
+#'
+#' @return NULL
+#' @export
+tweetSeries<-function(series = HockeyModel::series, token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/"){
+  while(grDevices::dev.cur()!=1){
+    grDevices::dev.off()
+  }
+  plt<-plot_playoff_series_odds(series = series)
+  grDevices::png(filename = file.path(graphic_dir, 'series_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+  print(plt)
+  while(grDevices::dev.cur()!=1){
+    grDevices::dev.off()
+  }
+
+  status <- paste0("#NHL Playoff Series Odds before games on ", Sys.Date(), "\n#HockeyTwitter")
+
+  rtweet::post_tweet(status = status,
+                     media = file.path(graphic_dir, 'series_odds.png'),
+                     token = token)
 }

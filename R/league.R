@@ -611,6 +611,77 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
 }
 
 
+#' Plot Today's Playoff Series Odds
+#'
+#' @param series A data frame of home team, away team, home wins, away wins
+#' @param rho HockeyModel::rho or a custom value
+#' @param m HockeyModel::m or a custom value
+#' @param schedule HockeyModel::schedule or a custom value
+#' @param teamColours HockeyModel::teamColours or a custom value
+#' @param ... additional parameters to pass
+#'
+#' @return a ggplot image of odds
+#'
+#' @export
+plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
+
+  series$HomeOdds<-apply(series, MARGIN = 1, FUN = function(x) playoffWin(x[1], x[2], x[3], x[4]))
+  series$AwayOdds<-1-series$HomeOdds
+
+  #For now, drop won games:
+  series$HomeWins <- series$AwayWins <- NULL
+
+
+  #Melt data to work with ggplot
+  melted<-reshape2::melt(series, id.vars = c('HomeTeam', 'AwayTeam'))
+  melted$variable<-factor(x = melted$variable, levels = c("AwayOdds", "HomeOdds"), ordered = TRUE)
+  melted$HomeTeam <- factor(x = melted$HomeTeam, levels = melted$HomeTeam[1:(length(melted$HomeTeam)/2)], ordered = TRUE)
+
+  #Make colour list for plot
+  plotcolors<-c()
+  for(i in 1:nrow(series)){
+    plotcolors<-c(plotcolors,
+                  teamColours[teamColours$Team == series[i, 'HomeTeam'], 'Hex'],
+                  teamColours[teamColours$Team == series[i, 'AwayTeam'], 'Hex'])
+  }
+
+  #Prepare instructions to read
+  text_home <- grid::textGrob("Home Win", gp = grid::gpar(fontsize = 10), hjust = 0)
+  text_away <- grid::textGrob("Away Win", gp = grid::gpar(fontsize = 10), hjust = 1)
+
+  #build plot
+  p<-ggplot2::ggplot(melted[melted$variable %in% c('HomeOdds','AwayOdds'),],
+                     ggplot2::aes_(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
+    ggplot2::geom_bar(stat = "identity", position='fill', fill = plotcolors, colour = 'white') +
+
+    ggplot2::xlab("") +
+    ggplot2::ylab("Series Odds") +
+    ggplot2::ggtitle(paste0("Predictions for Playoff Series Before Games on ", Sys.Date()), subtitle = "Chart by @BulsinkB") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(axis.text.y = ggplot2::element_blank(),
+                   axis.ticks.y = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_rect(fill = "white"),
+                   panel.border = ggplot2::element_blank(),
+                   panel.grid= ggplot2::element_blank(),
+                   plot.margin = ggplot2::unit(c(2,1,1,1), "lines"))+
+    ggplot2::scale_y_continuous(expand = ggplot2::expand_scale(add = 0.3),
+                                breaks = c(0,0.5,1)) +
+    ggplot2::annotate("text", x = series$HomeTeam, y = -.01, hjust = 1, label = series$HomeTeam) +
+    ggplot2::annotate("text", x = series$HomeTeam, y = 1.01, hjust = 0, label = series$AwayTeam) +
+    ggplot2::annotate("label", x = series$HomeTeam, y = 0.01, hjust = 0, label = format(round(series$HomeOdds, 3), nsmall = 3)) +
+    ggplot2::annotate("label", x = series$HomeTeam, y= .99, hjust = 1, label = format(round(series$AwayOdds, 3), nsmall = 3)) +
+    ggplot2::coord_flip()
+
+  #Turn off clipping so the instructions can show
+  #gt <- ggplot2::ggplot_gtable(ggplot2::ggplot_build(p))
+  #gt$layout$clip[gt$layout$name == "panel"] <- "off"
+  #grid::grid.draw(gt)
+
+  return(p)
+
+}
+
+
 #' Plot single game expected goals
 #'
 #' @param home The Home Team
@@ -852,6 +923,22 @@ sim_engine<-function(all_season, nsims){
   return(all_results)
 }
 
+#' Playoff Win Calculator
+#'
+#' @description wraps PlayoffSeriesOdds with odds generator for a given home and away team
+#' @param home_team Home Ice Advantage Team
+#' @param away_team Opponent Team
+#' @param home_wins Home Ice Advantage Team Wins in Series
+#' @param away_wins Opponent Team Wins in Series
+#'
+#' @return Odds from 0-1
+#' @export
+playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0){
+  home_odds<-DCPredict(home = home_team, away = away_team)
+  away_odds<-1-DCPredict(home = away_team, away = home_team)
+  return(playoffSeriesOdds(home_odds = home_odds, away_odds = away_odds, home_win = home_wins, away_win = away_wins))
+}
+
 #' Statistical Playoff Series Odds Solver
 #'
 #' @description Given home and away win odds, produce the odds of the 'home advantage' team winning the series. From \url{http://www.stat.umn.edu/geyer/playoff.html}, modified to function with odds determination.
@@ -872,7 +959,7 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0){
   p1_home<-home_odds
   p1_road<-away_odds
 
-  if (p1_home < 0 | p1_home > 1 | p1_road < 0 | p1_road > 1){
+  if (p1_home < 0 || p1_home > 1 || p1_road < 0 || p1_road > 1){
     stop("impossible odds")
   }
 
@@ -882,8 +969,13 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0){
   if (home_win < 0 | away_win < 0){
     stop("negative number of wins impossible")
   }
-  if (home_win >= game_to | away_win >= game_to){
-    stop("series already won")
+  if (home_win >= game_to) {
+    message("series already won")
+    return(1)
+  }
+  if (away_win >= game_to) {
+    message("series already won")
+    return(0)
   }
 
   games_played <- home_win + away_win
