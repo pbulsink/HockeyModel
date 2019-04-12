@@ -208,10 +208,12 @@ accuracy<-function(predicted, actual){
 #'
 #' @return updated series
 #' @export
-addSeriesWin<-function(series, winner){
+addSeriesWin<-function(winner, series=HockeyModel::series){
   index<-which(winner == series, arr.ind = TRUE)
   if(length(index) == 2){
     series[index[1],index[2]+2]<-series[index[1],index[2]+2] + 1
+  } else {
+    stop('Winning team series not found')
   }
   updateSeries(series = series)
   return(series)

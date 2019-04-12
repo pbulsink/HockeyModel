@@ -130,7 +130,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if(Sys.Date <= as.Date('2019-04-06')){
+  if(Sys.Date() <= as.Date('2019-04-06')){
     #TODO Doesn't yet programattically know that reg. season is done. Fix this summer.
 
     rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),

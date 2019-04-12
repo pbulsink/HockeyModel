@@ -4,12 +4,12 @@
 \alias{addSeriesWin}
 \title{Add Series Win}
 \usage{
-addSeriesWin(series, winner)
+addSeriesWin(winner, series = HockeyModel::series)
 }
 \arguments{
-\item{series}{the full series dataframe}
-
 \item{winner}{Team to add a win to}
+
+\item{series}{the full series dataframe}
 }
 \value{
 updated series
