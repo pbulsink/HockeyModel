@@ -133,7 +133,7 @@ updateSchedule <- function(data_dir = "./data-raw/"){
 #'
 #' @export
 updateScores <- function(data_dir = "./data-raw/"){
-  new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0)
+  new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0, playoffs = TRUE, last_playoffs = TRUE)
   if(nrow(new_scores) != nrow(scores)){
     #new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))
     #new_scores$HomeTeam<-factor(new_scores$HomeTeam, levels = levels(scores$HomeTeam))
@@ -153,24 +153,18 @@ updateScores <- function(data_dir = "./data-raw/"){
 #' @export
 updateSeries<-function(series = NULL){
   if(is.null(series)){
-    series<-data.frame('HomeTeam' = c("Tampa Bay Lightning",
-                                     "Boston Bruins",
-                                     "Washington Capitals",
-                                     "New York Islanders",
-                                     "Nashville Predators",
-                                     "Winnipeg Jets",
-                                     "Calgary Flames",
-                                     "San Jose Sharks"),
+    series<-data.frame('HomeTeam' = c("Boston Bruins",
+                                      "New York Islanders",
+                                      "St. Louis Blues",
+                                      "San Jose Sharks"
+                                     ),
                        'AwayTeam' = c("Columbus Blue Jackets",
-                                     "Toronto Maple Leafs",
-                                     "Carolina Hurricanes",
-                                     "Pittsburgh Penguins",
-                                     "Dallas Stars",
-                                     "St. Louis Blues",
-                                     "Colorado Avalanche",
-                                     "Vegas Golden Knights"),
-                       'HomeWins' = c(0,0,0,1,0,0,0,1),
-                       'AwayWins' = c(1,0,0,0,1,1,0,0),
+                                      "Carolina Hurricanes",
+                                      "Dallas Stars",
+                                      "Colorado Avalanche"
+                                     ),
+                       'HomeWins' = c(1,0,1,0),
+                       'AwayWins' = c(0,0,0,0),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)
