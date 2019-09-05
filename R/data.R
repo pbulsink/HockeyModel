@@ -31,9 +31,9 @@
 #' @source \url{http://www.hockey-reference.com/}
 "advanced_scores"
 
-#' Schedule for 2018-2019.
+#' Schedule for current season.
 #'
-#' A dataframe with the schedule (no scores included) for 2018-2019.
+#' A dataframe with the schedule (no scores included) for current season.
 #'
 #' @format A data frame with  variables:
 #' \describe{
@@ -113,7 +113,7 @@ buildTeamColours <- function(){
 #'
 #' @export
 updateSchedule <- function(data_dir = "./data-raw/"){
-  new_schedule<-HockeyScrapR::getSchedule(data_dir = data_dir, from_date=as.Date("2018-10-01"))
+  new_schedule<-HockeyScrapR::getSchedule(data_dir = data_dir, from_date=as.Date(getCurrentSeasonStartDate()))
   new_schedule<-new_schedule[,c('Date', 'Visitor', 'Home')]
   new_schedule<-data.frame("Date" = new_schedule$Date, "HomeTeam" = new_schedule$Home, "AwayTeam" = new_schedule$Visitor)
   new_schedule$Date <- as.Date(new_schedule$Date)
@@ -153,10 +153,10 @@ updateScores <- function(data_dir = "./data-raw/"){
 #' @export
 updateSeries<-function(series = NULL){
   if(is.null(series)){
-    series<-data.frame('HomeTeam' = c("Boston Bruins", "San Jose Sharks"),
-                       'AwayTeam' = c("Carolina Hurricanes", "St. Louis Blues"),
-                       'HomeWins' = c(0,0),
-                       'AwayWins' = c(0,0),
+    series<-data.frame('HomeTeam' = c(),
+                       'AwayTeam' = c(),
+                       'HomeWins' = c(),
+                       'AwayWins' = c(),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)
