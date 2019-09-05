@@ -283,8 +283,8 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
   pdates<-pdates[pdates != 'graphics']
   lastp<-as.Date(max(pdates))
   current_preds<-readRDS(file.path(prediction_dir, paste0(lastp,"-predictions.RDS")))
-  preds<-readRDS(file.path(prediction_dir, "2018-10-03-predictions.RDS"))
-  scores<-scores[scores$Date > as.Date("2018-10-03"), ]
+  preds<-readRDS(file.path(prediction_dir, paste0(getCurrentSeasonStartDate(), "-predictions.RDS")))
+  scores<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()), ]
 
   teamlist<-unique(preds$Team)
 

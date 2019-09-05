@@ -150,7 +150,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   if(regress){
     last_game_date<-as.Date(max(scores$Date))
     season_end_date <- as.Date(max(schedule$Date))
-    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date('2018-10-01'), 'Date'], schedule[schedule$Date > as.Date('2018-10-01'), 'Date'])))
+    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date(getCurrentSeasonStartDate()), 'Date'], schedule[schedule$Date > as.Date(getCurrentSeasonStartDate()), 'Date'])))
     season_length <- as.integer(season_end_date) - as.integer(season_start_date)
     remaining_length <- as.integer(season_end_date) - as.integer(last_game_date)
     expected_mean<-2.835184
@@ -177,7 +177,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
     results$HomeGoals<-NA
     results$AwayGoals<-NA
     results$Result<-NA
-    results<-dplyr::bind_rows(dcscores[dcscores$Date > as.Date("2018-10-01"),], results)
+    results<-dplyr::bind_rows(dcscores[dcscores$Date > as.Date(getCurrentSeasonStartDate()),], results)
 
     lastdate<-as.Date(schedule$Date[[1]])
 
@@ -321,7 +321,7 @@ remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule 
 
   if(regress){
     season_end_date <- as.Date(max(schedule$Date))
-    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date('2018-10-01'), 'Date'], schedule[schedule$Date > as.Date('2018-10-01'), 'Date'])))
+    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date(getCurrentSeasonStartDate()), 'Date'], schedule[schedule$Date > as.Date(getCurrentSeasonStartDate()), 'Date'])))
     season_length <- as.integer(season_end_date) - as.integer(season_start_date)
     remaining_length <- as.integer(season_end_date) - as.integer(last_game_date)
     expected_mean<-2.835184
@@ -591,7 +591,7 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date("2018-10-03"), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = "./prediction_results", ...){
+dcPredictMultipleDays<-function(start=as.Date(getCurrentSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = "./prediction_results", ...){
 
   if(!dir.exists(filedir)){
     dir.create(filedir, recursive = TRUE)
@@ -661,7 +661,7 @@ dcPredictMultipleDays<-function(start=as.Date("2018-10-03"), end=Sys.Date(), sco
 getSeasonMetricsDC<-function(schedule = HockeyModel::schedule, scores = HockeyModel::scores){
   sched<-schedule
   sched$Home.WLD<-sched$Away.WLD<-sched$Draw.WLD<-sched$Home.WL<-sched$Away.WL<-sched$Result<-NA
-  season.sofar<-scores[scores$Date > "2018-10-01", ]
+  season.sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()), ]
 
   for (day in as.Date(unique(season.sofar$Date))) {
     d<-as.Date(day, origin="1970-01-01")
