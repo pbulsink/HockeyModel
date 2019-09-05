@@ -153,10 +153,10 @@ updateScores <- function(data_dir = "./data-raw/"){
 #' @export
 updateSeries<-function(series = NULL){
   if(is.null(series)){
-    series<-data.frame('HomeTeam' = c("Boston Bruins", "San Jose Sharks"),
-                       'AwayTeam' = c("Carolina Hurricanes", "St. Louis Blues"),
-                       'HomeWins' = c(0,0),
-                       'AwayWins' = c(0,0),
+    series<-data.frame('HomeTeam' = c("Boston Bruins"),
+                       'AwayTeam' = c("St. Louis Blues"),
+                       'HomeWins' = c(0),
+                       'AwayWins' = c(0),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)
