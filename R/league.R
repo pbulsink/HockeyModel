@@ -1229,3 +1229,6 @@ team_progression_odds<-function(round, team, odds){
     stop("Round must be in [1..4]")
   }
 }
+
+
+#ggplot(preds$raw_results, aes(x = Points, y = Team)) + geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2)
