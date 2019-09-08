@@ -132,8 +132,8 @@ updateSchedule <- function(data_dir = "./data-raw/"){
 #' @return True, if successful update or validation, `scores` is a built in data
 #'
 #' @export
-updateScores <- function(data_dir = "./data-raw/"){
-  new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0, playoffs = TRUE, last_playoffs = TRUE)
+updateScores <- function(data_dir = "./data-raw/", last_playoffs = FALSE){
+  new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0, playoffs = TRUE, last_playoffs = last_playoffs)
   if(nrow(new_scores) != nrow(scores)){
     #new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))
     #new_scores$HomeTeam<-factor(new_scores$HomeTeam, levels = levels(scores$HomeTeam))

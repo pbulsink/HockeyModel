@@ -3,7 +3,7 @@
 \docType{data}
 \name{schedule}
 \alias{schedule}
-\title{Schedule for 2018-2019.}
+\title{Schedule for current season.}
 \format{A data frame with  variables:
 \describe{
   \item{Date}{Date of the game played/to be played}
@@ -17,6 +17,6 @@
 schedule
 }
 \description{
-A dataframe with the schedule (no scores included) for 2018-2019.
+A dataframe with the schedule (no scores included) for current season.
 }
 \keyword{datasets}

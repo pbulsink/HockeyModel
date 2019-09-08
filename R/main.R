@@ -7,7 +7,7 @@
 #'
 #' @export
 updateModel <- function(...){
-  scores<-updateScores(...)
+  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"))
   schedule<-updateSchedule(...)
   dcparams<-updateDC(scores = scores, ...)
   #devtools::install(local = FALSE)
@@ -177,7 +177,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   modelparams<-updateModel(...)
   in_reg_season<-FALSE
-  if(Sys.Date()<= as.Date("2019-04-06")){
+  if(Sys.Date()<= as.Date("2020-04-04")){
     in_reg_season<-TRUE
     updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
   }
@@ -273,7 +273,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 #' @export
 tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/", subdir = "pace", prediction_dir = "./prediction_results/", token = rtweet::get_token(), scores = HockeyModel::scores, teamColours = HockeyModel::teamColours){
   #make sure we're working with the most up-to-date info.
-  scores<-updateScores()
+  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"))
 
   #Make Pace Plots
   plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores = scores)

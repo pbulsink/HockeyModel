@@ -770,13 +770,18 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
 
   season_sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
 
-  last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
-  odds_table<-odds_table[odds_table$Date > last_scores_date, ]
+  if(nrow(season_sofar) > 0){
 
-  season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
-  season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
+    last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
+    odds_table<-odds_table[odds_table$Date > last_scores_date, ]
 
-  all_season<-rbind(season_sofar, odds_table)
+    season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
+    season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
+
+    all_season<-rbind(season_sofar, odds_table)
+  } else {
+    all_season <- odds_table
+  }
 
   `%dopar%` <- foreach::`%dopar%`
   #`%do%` <- foreach::`%do%`
