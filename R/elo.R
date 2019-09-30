@@ -24,7 +24,7 @@ updateELO <- function(scores=scores){
   s<-scores[c('Date','HomeTeam','AwayTeam','Result')]
   s$Diff<-scores$HomeGoals - scores$AwayGoals
   elos=calculateEloRatings(schedule=s, ratings_history = elos)
-  devtools::use_data(elos, overwrite = TRUE)
+  usethis::use_data(elos, overwrite = TRUE)
 }
 
 plotELO <- function(){
