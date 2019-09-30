@@ -89,7 +89,7 @@ buildStats<-function(scores){
 simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, progress = FALSE){
   teamlist<-c()
   if(!is.null(scores)){
-    season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+    season_sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
 
     season_sofar <- season_sofar[,c('Date','HomeTeam','AwayTeam','Result')]
 
@@ -202,7 +202,7 @@ simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, 
 simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, cores = parallel::detectCores() - 1, progress = FALSE){
   teamlist<-c()
   if(!is.null(scores)){
-    season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+    season_sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
     season_sofar <- season_sofar[,c('Date','HomeTeam','AwayTeam','Result')]
   } else {
     season_sofar<-NULL
@@ -473,12 +473,12 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
 #'
 #' @export
 plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdir = 'pace', prediction_dir = "./prediction_results", scores=HockeyModel::scores, teamColours = HockeyModel::teamColours){
-  sc<-scores[scores$Date > as.Date("2018-10-01"),]
+  sc<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
 
   teamlist<-unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
 
   #Get old and most recent predictions
-  p<-readRDS(file.path(prediction_dir, "2018-10-03-predictions.RDS"))
+  p<-readRDS(file.path(prediction_dir, paste0(getCurrentSeasonStartDate(), "-predictions.RDS")))
 
   filelist<-list.files(path = prediction_dir)
   pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
@@ -768,15 +768,20 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
   }
   odds_table$Result <- NA
 
-  season_sofar<-scores[scores$Date > as.Date("2018-08-01"),]
+  season_sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
 
-  last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
-  odds_table<-odds_table[odds_table$Date > last_scores_date, ]
+  if(nrow(season_sofar) > 0){
 
-  season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
-  season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
+    last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
+    odds_table<-odds_table[odds_table$Date > last_scores_date, ]
 
-  all_season<-rbind(season_sofar, odds_table)
+    season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
+    season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
+
+    all_season<-rbind(season_sofar, odds_table)
+  } else {
+    all_season <- odds_table
+  }
 
   `%dopar%` <- foreach::`%dopar%`
   #`%do%` <- foreach::`%do%`

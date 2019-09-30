@@ -23,7 +23,6 @@ Imports:
     usethis,
     reshape2,
     rtweet,
-    git2r,
     lubridate,
     ggalt,
     ggridges

@@ -31,9 +31,9 @@
 #' @source \url{http://www.hockey-reference.com/}
 "advanced_scores"
 
-#' Schedule for 2018-2019.
+#' Schedule for current season.
 #'
-#' A dataframe with the schedule (no scores included) for 2018-2019.
+#' A dataframe with the schedule (no scores included) for current season.
 #'
 #' @format A data frame with  variables:
 #' \describe{
@@ -113,7 +113,7 @@ buildTeamColours <- function(){
 #'
 #' @export
 updateSchedule <- function(data_dir = "./data-raw/"){
-  new_schedule<-HockeyScrapR::getSchedule(data_dir = data_dir, from_date=as.Date("2018-10-01"))
+  new_schedule<-HockeyScrapR::getSchedule(data_dir = data_dir, from_date=as.Date(getCurrentSeasonStartDate()))
   new_schedule<-new_schedule[,c('Date', 'Visitor', 'Home')]
   new_schedule<-data.frame("Date" = new_schedule$Date, "HomeTeam" = new_schedule$Home, "AwayTeam" = new_schedule$Visitor)
   new_schedule$Date <- as.Date(new_schedule$Date)
@@ -129,11 +129,13 @@ updateSchedule <- function(data_dir = "./data-raw/"){
 #' @description Updates the scores of all finished games.
 #'
 #' @param data_dir The data storage directory
+#' @param last_playoffs Trigger to pass to \code{\link{HockeyScrapR::updateScores}}
+#'
 #' @return True, if successful update or validation, `scores` is a built in data
 #'
 #' @export
-updateScores <- function(data_dir = "./data-raw/"){
-  new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0, playoffs = TRUE, last_playoffs = TRUE)
+updateScores <- function(data_dir = "./data-raw/", last_playoffs = FALSE){
+  new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0, playoffs = TRUE, last_playoffs = last_playoffs)
   if(nrow(new_scores) != nrow(scores)){
     #new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))
     #new_scores$HomeTeam<-factor(new_scores$HomeTeam, levels = levels(scores$HomeTeam))
@@ -153,10 +155,10 @@ updateScores <- function(data_dir = "./data-raw/"){
 #' @export
 updateSeries<-function(series = NULL){
   if(is.null(series)){
-    series<-data.frame('HomeTeam' = c("Boston Bruins"),
-                       'AwayTeam' = c("St. Louis Blues"),
-                       'HomeWins' = c(0),
-                       'AwayWins' = c(0),
+    series<-data.frame('HomeTeam' = c(),
+                       'AwayTeam' = c(),
+                       'HomeWins' = c(),
+                       'AwayWins' = c(),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)

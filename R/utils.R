@@ -13,6 +13,23 @@ cleanModel <- function(cm) {
   cm
 }
 
+#' Get Current Season
+#'
+#' @return current season (as 20172018 format) based on today's date
+#' @export
+getCurrentSeason <- function(){
+  getSeason(Sys.Date())
+}
+
+#' Get Current Season Start Date
+#'
+#' @return current season's nominal start date (Oct 01) as character, e.g. "2019-10-01"
+#' @export
+getCurrentSeasonStartDate <- function(){
+  year <- as.integer(strftime(Sys.Date(), '%Y'))
+  return(paste0(year, "-10-01"))
+}
+
 #' Get Season from Game Date
 #'
 #' @param gamedate The date of the game to check for season
@@ -128,7 +145,7 @@ historicalPoints<-function(sc){
     if(i == "20122013"){
       next
     }
-    if(i == "20172018"){
+    if(as.numeric(i) >= 20172018){
       ngames<-1271
     } else {
       ngames<-1230

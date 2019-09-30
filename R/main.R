@@ -7,7 +7,7 @@
 #'
 #' @export
 updateModel <- function(...){
-  scores<-updateScores(...)
+  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"))
   schedule<-updateSchedule(...)
   dcparams<-updateDC(scores = scores, ...)
   #devtools::install(local = FALSE)
@@ -130,7 +130,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if(Sys.Date() <= as.Date('2019-04-06')){
+  if(Sys.Date() <= as.Date('2020-04-04')){
     #TODO Doesn't yet programattically know that reg. season is done. Fix this summer.
 
     rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
@@ -177,7 +177,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   modelparams<-updateModel(...)
   in_reg_season<-FALSE
-  if(Sys.Date()<= as.Date("2019-04-06")){
+  if(Sys.Date()<= as.Date("2020-04-04")){
     in_reg_season<-TRUE
     updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
   }
@@ -273,7 +273,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 #' @export
 tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/", subdir = "pace", prediction_dir = "./prediction_results/", token = rtweet::get_token(), scores = HockeyModel::scores, teamColours = HockeyModel::teamColours){
   #make sure we're working with the most up-to-date info.
-  scores<-updateScores()
+  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"))
 
   #Make Pace Plots
   plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores = scores)
@@ -283,8 +283,8 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
   pdates<-pdates[pdates != 'graphics']
   lastp<-as.Date(max(pdates))
   current_preds<-readRDS(file.path(prediction_dir, paste0(lastp,"-predictions.RDS")))
-  preds<-readRDS(file.path(prediction_dir, "2018-10-03-predictions.RDS"))
-  scores<-scores[scores$Date > as.Date("2018-10-03"), ]
+  preds<-readRDS(file.path(prediction_dir, paste0(getCurrentSeasonStartDate(), "-predictions.RDS")))
+  scores<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()), ]
 
   teamlist<-unique(preds$Team)
 

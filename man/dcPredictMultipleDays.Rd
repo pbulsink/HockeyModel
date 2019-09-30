@@ -4,9 +4,10 @@
 \alias{dcPredictMultipleDays}
 \title{DC Predict Multiple Days}
 \usage{
-dcPredictMultipleDays(start = as.Date("2018-10-03"), end = Sys.Date(),
-  scores = HockeyModel::scores, schedule = HockeyModel::schedule,
-  filedir = "./prediction_results", ...)
+dcPredictMultipleDays(start = as.Date(getCurrentSeasonStartDate()),
+  end = Sys.Date(), scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule, filedir = "./prediction_results",
+  ...)
 }
 \arguments{
 \item{start}{First day to predict. Default start of season}
