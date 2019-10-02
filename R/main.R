@@ -276,6 +276,7 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
   scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"))
 
   #Make Pace Plots
+  plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir, scores = scores)
   plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores = scores)
 
   filelist<-list.files(path = prediction_dir)
@@ -329,6 +330,19 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
+
+  rtweet::post_tweet(status = "#NHL Eastern Conference Team final point likelihoods:",
+                     media = file.path(graphic_dir,
+                                       subdir,
+                                       'eastlikelihood.png'),
+                     token = token)
+  #until Rtweet has scheduler
+  message("Delaying ", delay/2, " seconds to space tweets...")
+  Sys.sleep(delay/2)
+
+  rtweet::post_tweet(status = "#NHL Western Conference Team final point likelihoods:",
+                     media = file.path(graphic_dir,subdir,'westlikelihood.png'),
+                     token = token)
 }
 
 #' Tweet Game Plots

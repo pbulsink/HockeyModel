@@ -24,7 +24,8 @@ Imports:
     reshape2,
     rtweet,
     lubridate,
-    ggalt
+    ggalt,
+    ggridges
 Remotes:
   pbulsink/HockeyScrapR
 URL: https://github.com/pbulsink/HockeyModel

@@ -1234,3 +1234,63 @@ team_progression_odds<-function(round, team, odds){
     stop("Round must be in [1..4]")
   }
 }
+
+#' Team Point Predict Plot
+#'
+#' @param preds Raw predictions to generate ggridges point likelyhood plot. Otherwise will generate with current m, rho, scores and schedule in HockeyModel.
+#' @param graphic_dir Directory to save plot images
+#' @param subdir Subdirectory to save plot images
+#' @param ... Additional parameters to pass to loopless sim
+#'
+#' @return two plots in list, as $eastplot and $westplot
+#' @export
+plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_results/graphics', subdir = 'pace', ...) {
+
+  if(is.null(preds)){
+    preds<-loopless_sim(...)
+  }
+
+  east_preds<-preds$raw_results
+  east_preds<-east_preds[east_preds$Team %in% HockeyModel::nhl_conferences$East,]
+  west_preds<-preds$raw_results
+  west_preds<-west_preds[west_preds$Team %in% HockeyModel::nhl_conferences$West,]
+
+  teamColoursList<-as.vector(teamColours$Hex)
+  names(teamColoursList)<-teamColours$Team
+  east_colour <- teamColoursList[names(teamColoursList) %in% east_preds$Team]
+  west_colour <- teamColoursList[names(teamColoursList) %in% west_preds$Team]
+
+
+  eastplot<-ggplot2::ggplot(east_preds, ggplot2::aes_(x = quote(Points), y = quote(Team), fill=quote(Team))) +
+    ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from = 55, to = 135)+
+    ggplot2::scale_fill_manual(values = east_colour) +
+    ggplot2::labs(x = 'Predicted Point Likelyhood',
+                  y = 'Team',
+                  title = paste0("Predicted Point Likelyhoods for Eastern Conference by Season End - ", HockeyModel:::getCurrentSeason()),
+                  caption = paste0("P Bulsink (@BulsinkB) | ", Sys.Date()))+
+    ggridges::theme_ridges(grid = FALSE) +
+    ggplot2::theme(legend.position = "none")
+
+  westplot<-ggplot2::ggplot(west_preds, ggplot2::aes_(x = quote(Points), y = quote(Team), fill=quote(Team))) +
+    ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from = 55, to = 135)+
+    ggplot2::scale_fill_manual(values = west_colour) +
+    ggplot2::labs(x = 'Predicted Point Likelyhood',
+                  y = 'Team',
+                  title = paste0("Predicted Point Likelyhoods for Western Conference by Season End - ", HockeyModel:::getCurrentSeason()),
+                  caption = paste0("P Bulsink (@BulsinkB) | ", Sys.Date()))+
+    ggridges::theme_ridges(grid = FALSE) +
+    ggplot2::theme(legend.position = "none")
+
+
+  grDevices::png(filename = file.path(graphic_dir, subdir, 'eastlikelihood.png'), width = 11, height = 8.5, units = 'in', res = 300)
+  print(eastplot)
+  while(grDevices::dev.cur()!=1){
+    grDevices::dev.off()
+  }
+
+  grDevices::png(filename = file.path(graphic_dir, subdir, 'westlikelihood.png'), width = 11, height = 8.5, units = 'in', res = 300)
+  print(eastplot)
+  while(grDevices::dev.cur()!=1){
+    grDevices::dev.off()
+  }
+}
