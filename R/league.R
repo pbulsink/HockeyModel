@@ -339,9 +339,10 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
-    ggplot2::xlab("Date") +
-    ggplot2::ylab("Points") +
-    ggplot2::ggtitle(paste0("Predicted Points Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
+    ggplot2::labs(x = "Date",
+                  y = "Points",
+                  title = paste0("Predicted Points Over the Past ", past_days, " Days"),
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
@@ -398,9 +399,10 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
-    ggplot2::xlab("Date") +
-    ggplot2::ylab("Plaoff Odds") +
-    ggplot2::ggtitle(paste0("Playoff Odds Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
+    ggplot2::labs(x = "Date",
+                  y = "Playoff Odds",
+                  title = paste0("Playoff Odds Over the Past ", past_days, " Days"),
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
@@ -451,9 +453,10 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
     ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
-    ggplot2::xlab("Date") +
-    ggplot2::ylab("President's Trophy Odds") +
-    ggplot2::ggtitle(paste0("President's Trophy Odds Over the Past ", past_days, " Days"), subtitle = "Chart by @BulsinkB") +
+    ggplot2::labs(x = "Date",
+                  y = "President's Trophy Odds",
+                  title = paste0("President's Trophy Odds Over the Past ", past_days, " Days"),
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
@@ -515,10 +518,12 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
       ggplot2::geom_point() +
       ggplot2::scale_x_continuous(limits = c(0, 82)) +
       ggplot2::scale_y_continuous(limits = c(0, 164)) +
+      ggplot2::labs(x = "Game Number",
+                    y = "Points",
+                    title = "Points Pace",
+                    subtitle = paste0(team, ' Expected Points: ', format(round(qpoints, 1), nsmall = 1)),
+                    caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
       ggplot2::theme_minimal() +
-      ggplot2::ggtitle('Points Pace', subtitle = paste0(team, ' Expected Points: ', format(round(qpoints, 1), nsmall = 1), "\nChart by @BulsinkB"))+
-      ggplot2::ylab('Points') +
-      ggplot2::xlab('Game Number') +
       ggplot2::geom_segment(x = 0, y = 0, xend = 82, yend = ppoints, alpha = 0.05, colour = 'grey')+
       ggplot2::geom_segment(x = 0, y = 0, xend = 82, yend = maxp, alpha = 0.05, colour = 'grey')+
       ggplot2::geom_segment(x = 0, y = 0, xend = 82, yend = minp, alpha = 0.05, colour = 'grey')+
@@ -580,10 +585,11 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
   p<-ggplot2::ggplot(melted[melted$variable %in% c('HomeWin','HomeWinOT', 'AwayWinOT', 'AwayWin'),],
                      ggplot2::aes_(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
     ggplot2::geom_bar(stat = "identity", position='fill', fill = plotcolors, alpha = plotalpha, colour = 'white') +
-   #ggplot2::scale_y_continuous(fill = plotcolors, alpha = plotalpha) +
-    ggplot2::xlab("") +
-    ggplot2::ylab("Result Odds") +
-    ggplot2::ggtitle(paste0("Predictions for Games ", Sys.Date()), subtitle = "Chart by @BulsinkB") +
+    ggplot2::labs(x = "",
+                  y = "Result Odds",
+                  title = "Predictions for Games",
+                  subtitle = paste0("Games played on ", Sys.Date()),
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_bw() +
     ggplot2::theme(axis.text.y = ggplot2::element_blank(),
                    axis.ticks.y = ggplot2::element_blank(),
@@ -653,10 +659,11 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
   p<-ggplot2::ggplot(melted[melted$variable %in% c('HomeOdds','AwayOdds'),],
                      ggplot2::aes_(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
     ggplot2::geom_bar(stat = "identity", position='fill', fill = plotcolors, colour = 'white') +
-
-    ggplot2::xlab("") +
-    ggplot2::ylab("Series Odds") +
-    ggplot2::ggtitle(paste0("Predictions for Playoff Series Before Games on ", Sys.Date()), subtitle = "Chart by @BulsinkB") +
+    ggplot2::labs(x = "",
+                  y = "Series Odds",
+                  title = "Predictions for Playoff Series",
+                  subtitle = paste0("Before Games on ", Sys.Date()),
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_bw() +
     ggplot2::theme(axis.text.y = ggplot2::element_blank(),
                    axis.ticks.y = ggplot2::element_blank(),
@@ -731,7 +738,6 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
   p <- ggplot2::ggplot(data = goals, ggplot2::aes_(x = quote(Goals), y = quote(Density), fill = quote(Team))) +
     #ggplot2::geom_point() +
     ggplot2::geom_area(position = "identity", alpha = 0.6) +
-    ggplot2::theme_minimal() +
     ggplot2::geom_vline(xintercept = mu,linetype="dashed") +
     ggplot2::geom_vline(xintercept = lambda,linetype="dashed") +
     ggplot2::scale_x_continuous(limits = c(0, 8)) +
@@ -739,10 +745,13 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
     ggplot2::scale_color_manual(labels = c(home, away), values = plotcolors)+
     ggplot2::annotate(geom = 'label', x = mu, y = 0.0, label = paste0(away, "\nPredicted Goals:", format(round(mu, 2), nsmall = 2)), hjust = home_hjust, vjust = 0) +
     ggplot2::annotate(geom = 'label', x = lambda, y = 0.0, label = paste0(home, "\nPredicted Goals:",format(round(lambda, 2), nsmall = 2)), hjust = 1-home_hjust, vjust = 0) +
-    ggplot2::xlab('Predicted Team Goals') +
-    ggplot2::ylab('Odds') +
+    ggplot2::labs(x = "Predicted Team Goals",
+                  y = "Odds",
+                  title = "Predicted Goals",
+                  subtitle =  paste0(away, " at ", home, " on ", Sys.Date(),"\nWin Odds - Away: ", format(round(odds[[3]], 3), nsmall = 3), " - Home: ", format(round(odds[[1]], 3), nsmall = 3), " - OT/SO: ", format(round(odds[[2]], 3), nsmall = 3)),
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+    ggplot2::theme_minimal()
     ggplot2::theme(legend.position = "none") +
-    ggplot2::ggtitle("Predicted Goals", subtitle = paste0(away, " at ", home, " on ", Sys.Date(),"\nWin Odds - Away: ", format(round(odds[[3]], 3), nsmall = 3), " - Home: ", format(round(odds[[1]], 3), nsmall = 3), " - OT/SO: ", format(round(odds[[2]], 3), nsmall = 3)))
 
   return(p)
 }
@@ -1267,7 +1276,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
     ggplot2::labs(x = 'Predicted Point Likelyhood',
                   y = 'Team',
                   title = paste0("Predicted Point Likelyhoods for Eastern Conference by Season End - ", HockeyModel:::getCurrentSeason()),
-                  caption = paste0("P Bulsink (@BulsinkB) | ", Sys.Date()))+
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggridges::theme_ridges(grid = FALSE) +
     ggplot2::theme(legend.position = "none")
 
@@ -1277,7 +1286,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
     ggplot2::labs(x = 'Predicted Point Likelyhood',
                   y = 'Team',
                   title = paste0("Predicted Point Likelyhoods for Western Conference by Season End - ", HockeyModel:::getCurrentSeason()),
-                  caption = paste0("P Bulsink (@BulsinkB) | ", Sys.Date()))+
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggridges::theme_ridges(grid = FALSE) +
     ggplot2::theme(legend.position = "none")
 
@@ -1289,7 +1298,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
   }
 
   grDevices::png(filename = file.path(graphic_dir, subdir, 'westlikelihood.png'), width = 11, height = 8.5, units = 'in', res = 300)
-  print(eastplot)
+  print(westplot)
   while(grDevices::dev.cur()!=1){
     grDevices::dev.off()
   }

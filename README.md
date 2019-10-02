@@ -10,7 +10,7 @@ Current predictions are below, and are always posted on twitter at [@BulsinkBot]
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png" alt="Team Rankings">
 
 ## Today's Games
-<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png" alt="Today's Games">
+<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png" alt="Today's Games">
 
 ## Total Point Predictions
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/point_predict.png" alt="Total Point Predictions">

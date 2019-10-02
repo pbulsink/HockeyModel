@@ -44,12 +44,14 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
                                    label=quote(Team)
                                    )
                      ) +
-    ggplot2::ggtitle("Current Team Attack & Defense Ratings", subtitle = paste0("As of ", Sys.Date(), ". Chart by @BulsinkB")) +
-    ggplot2::xlab("Attack") +
-    ggplot2::ylab("Defence") +
     ggplot2::geom_point() +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggrepel::geom_text_repel(force=2, max.iter=5000) +
+    ggplot2::labs(x = "Attack",
+                  y = "Defence",
+                  title = "Current Team Attack & Defense Ratings",
+                  subtitle = paste0("As of ", Sys.Date()),
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position="none")
   return(p)

@@ -27,7 +27,7 @@ getCurrentSeason <- function(){
 #' @export
 getCurrentSeasonStartDate <- function(){
   year <- as.integer(strftime(Sys.Date(), '%Y'))
-  return(paste0(year, "-10-01"))
+  return(paste0(year, "-10-02"))
 }
 
 #' Get Season from Game Date
