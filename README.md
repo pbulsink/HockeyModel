@@ -4,7 +4,7 @@ This is a model to predict NHL game winners & their likely performance for the r
 
 Read more about the package at [https://pbulsink.github.io/HockeyModel](https://pbulsink.github.io/HockeyModel)
 
-Current predictions are below, and are always posted on twitter at [BulsinkBot](https://www.twitter.com/BulsinkB).
+Current predictions are below, and are always posted on twitter at [@BulsinkBot](https://www.twitter.com/BulsinkB).
 
 ## Team Ranking
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png" alt="Team Rankings">
@@ -15,6 +15,8 @@ Current predictions are below, and are always posted on twitter at [BulsinkBot](
 ## Total Point Predictions
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/point_predict.png" alt="Total Point Predictions">
 
+## Point Liklihood Ranges
+<img src="https://raw.githubusercontent.com/pbulsink/HockeyModel/master/prediction_results/graphics/pace/westlikelihood.png" width="425" alt="West Coast Team Point Liklihood"/> <img src="https://raw.githubusercontent.com/pbulsink/HockeyModel/master/prediction_results/graphics/pace/eastlikelihood.png" width="425" alt="East Coast Team Point Liklihood"/> 
 
 ## Playoff Odds
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/playoff_odds.png" alt="Playoff Odds">
@@ -23,7 +25,6 @@ Current predictions are below, and are always posted on twitter at [BulsinkBot](
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/president_odds.png" alt="President's Trophy Odds">
 
 # To Do
-
-- Twitter user [@MOCallanain](https://www.twitter.com/MOCallanain) highlighted that the predicted tie rate is ~<0.2, when in actuality it's higher. Likely due to teams playing for loser point, can we parameterize the model to include a tie boost? 
-- Prep playoff chance impact plots for Feb-April usage.
+- Twitter user [@MOCallanain](https://www.twitter.com/MOCallanain) highlighted that the predicted tie rate is < ~0.2, when in actuality it's higher. Likely due to teams playing for loser point, can we parameterize the model to include a tie boost? Model currently rescales to increase odds to a reasonable amount.
+- 
 
