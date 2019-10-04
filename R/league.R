@@ -1274,7 +1274,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
     ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from = 55, to = 135)+
     ggplot2::scale_fill_manual(values = east_colour) +
     ggplot2::labs(x = 'Predicted Point Likelyhood',
-                  y = 'Team',
+                  y = '',
                   title = paste0("Predicted Point Likelyhoods for Eastern Conference by Season End - ", HockeyModel:::getCurrentSeason()),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggridges::theme_ridges(grid = FALSE) +
@@ -1284,7 +1284,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
     ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from = 55, to = 135)+
     ggplot2::scale_fill_manual(values = west_colour) +
     ggplot2::labs(x = 'Predicted Point Likelyhood',
-                  y = 'Team',
+                  y = '',
                   title = paste0("Predicted Point Likelyhoods for Western Conference by Season End - ", HockeyModel:::getCurrentSeason()),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggridges::theme_ridges(grid = FALSE) +
