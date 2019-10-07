@@ -750,8 +750,8 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
                   title = "Predicted Goals",
                   subtitle =  paste0(away, " at ", home, " on ", Sys.Date(),"\nWin Odds - Away: ", format(round(odds[[3]], 3), nsmall = 3), " - Home: ", format(round(odds[[1]], 3), nsmall = 3), " - OT/SO: ", format(round(odds[[2]], 3), nsmall = 3)),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
-    ggplot2::theme_minimal()
-    ggplot2::theme(legend.position = "none") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position = "none")
 
   return(p)
 }
