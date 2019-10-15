@@ -456,7 +456,8 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
     ggplot2::labs(x = "Date",
                   y = "President's Trophy Odds",
                   title = paste0("President's Trophy Odds Over the Past ", past_days, " Days"),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()),
+                  subtitle = "Teams with < 1% odds hidden for simplicity")+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
