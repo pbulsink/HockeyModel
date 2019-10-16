@@ -33,3 +33,6 @@ inst/doc
 Rplots.pdf
 prediction_results/graphics/predicted_goals.png
 */.DS_Store
+dailyupdate.bat
+dailyupdate.R
+*.Rout
