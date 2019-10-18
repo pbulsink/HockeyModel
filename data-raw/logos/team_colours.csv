@@ -1,35 +1,35 @@
-Team,Hex,R,G,B,Hashtag
-Anaheim Ducks,#F47A38,252,76,2,#LetsGoDucks
-Arizona Coyotes,#8C2633,140,38,51,#Yotes
-Boston Bruins,#FFB81C,252,181,20,#NHLBruins
-Buffalo Sabres,#002654,0,38,84,#Sabres50
-Calgary Flames,#C8102E,200,16,46,#Flames
-Carolina Hurricanes,#CC0000,226,24,54,#LetsGoCanes
-Columbus Blue Jackets,#002654,0,38,84,#CBJ
-Chicago Blackhawks,#CF0A2C,207,10,44,#Blackhawks
-Colorado Avalanche,#6F263D,111,38,61,#GoAvsGo
-Dallas Stars,#006847,0,104,71,#GoStars
-Detroit Red Wings,#CE1126,206,17,38,#LGRW
-Edmonton Oilers,#041E42,4,30,66,#LetsGoOilers
-Florida Panthers,#041E42,4,30,66,#FlaPanthers
-Los Angeles Kings,#111111,17,17,17,#GoKingsGo
-Minnesota Wild,#154734,2,73,48,#MNWild
-Montreal Canadiens,#AF1E2D,175,30,45,#GoHabsGo
-Nashville Predators,#FFB81C,255,184,28,#Preds
-New Jersey Devils,#CE1126,206,17,38,#NJDevils
-New York Islanders,#00539B,0,83,155,#Isles
-New York Rangers,#0038A8,0,56,168,#NYR
-Ottawa Senators,#E31837,200,16,46,#GoSensGo
-Philadelphia Flyers,#F74902,247,73,2,#FlyOrDie
-Pittsburgh Penguins,#FCB514,252,181,20,#LetsGoPens
-St. Louis Blues,#002F87,0,47,135,#STLBlues
-San Jose Sharks,#006D75,0,109,117,#SJSharks
-Tampa Bay Lightning,#002868,0,40,104,#GoBolts
-Toronto Maple Leafs,#003E7E,0,62,126,#LeafsForever
-Vancouver Canucks,#001F5B,0,31,91,#Canucks
-Vegas Golden Knights,#B4975A,185,151,91,#VegasBorn
-Washington Capitals,#C8102E,200,16,46,#ALLCAPS
-Winnipeg Jets,#041E42,4,30,66,#GoJetsGo
-Hartford Whalers,#00205B,0,32,91,
-Minnesota North Stars,#009639,0,150,57,
-Quebec Nordiques,#DA291C,218,41,28,
+Team,Hex,R,G,B,Hashtag,ShortCode
+Anaheim Ducks,#F47A38,252,76,2,#LetsGoDucks,ANA
+Arizona Coyotes,#8C2633,140,38,51,#Yotes,ARI
+Boston Bruins,#FFB81C,252,181,20,#NHLBruins,BOS
+Buffalo Sabres,#002654,0,38,84,#Sabres50,BUF
+Calgary Flames,#C8102E,200,16,46,#Flames,CGY
+Carolina Hurricanes,#CC0000,226,24,54,#LetsGoCanes,CAR
+Columbus Blue Jackets,#002654,0,38,84,#CBJ,CBJ
+Chicago Blackhawks,#CF0A2C,207,10,44,#Blackhawks,CHI
+Colorado Avalanche,#6F263D,111,38,61,#GoAvsGo,COL
+Dallas Stars,#006847,0,104,71,#GoStars,DAL
+Detroit Red Wings,#CE1126,206,17,38,#LGRW,DET
+Edmonton Oilers,#041E42,4,30,66,#LetsGoOilers,EDM
+Florida Panthers,#041E42,4,30,66,#FlaPanthers,FLA
+Los Angeles Kings,#111111,17,17,17,#GoKingsGo,LAK
+Minnesota Wild,#154734,2,73,48,#MNWild,MIN
+Montreal Canadiens,#AF1E2D,175,30,45,#GoHabsGo,MTL
+Nashville Predators,#FFB81C,255,184,28,#Preds,NSH
+New Jersey Devils,#CE1126,206,17,38,#NJDevils,NJD
+New York Islanders,#00539B,0,83,155,#Isles,NYI
+New York Rangers,#0038A8,0,56,168,#PlayLikeANewYorker,NYR
+Ottawa Senators,#E31837,200,16,46,#GoSensGo,OTT
+Philadelphia Flyers,#F74902,247,73,2,#FlyOrDie,PHI
+Pittsburgh Penguins,#FCB514,252,181,20,#LetsGoPens,PIT
+St. Louis Blues,#002F87,0,47,135,#STLBlues,STL
+San Jose Sharks,#006D75,0,109,117,#SJSharks,SJS
+Tampa Bay Lightning,#002868,0,40,104,#GoBolts,TBL
+Toronto Maple Leafs,#003E7E,0,62,126,#LeafsForever,TOR
+Vancouver Canucks,#001F5B,0,31,91,#Canucks,VAN
+Vegas Golden Knights,#B4975A,185,151,91,#VegasBorn,VGK
+Washington Capitals,#C8102E,200,16,46,#ALLCAPS,WSH
+Winnipeg Jets,#041E42,4,30,66,#GoJetsGo,WIN
+Hartford Whalers,#00205B,0,32,91,,HFD
+Minnesota North Stars,#009639,0,150,57,,MNS
+Quebec Nordiques,#DA291C,218,41,28,,QUE
