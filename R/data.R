@@ -129,7 +129,7 @@ updateSchedule <- function(data_dir = "./data-raw/"){
 #' @description Updates the scores of all finished games.
 #'
 #' @param data_dir The data storage directory
-#' @param last_playoffs Trigger to pass to \code{\link{HockeyScrapR::updateScores}}
+#' @param last_playoffs Trigger to pass to \code{\link[HockeyScrapR]{updateScores}}
 #'
 #' @return True, if successful update or validation, `scores` is a built in data
 #'

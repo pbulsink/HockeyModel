@@ -9,7 +9,7 @@ updateScores(data_dir = "./data-raw/", last_playoffs = FALSE)
 \arguments{
 \item{data_dir}{The data storage directory}
 
-\item{last_playoffs}{Trigger to pass to \code{\link{HockeyScrapR::updateScores}}}
+\item{last_playoffs}{Trigger to pass to \code{\link[HockeyScrapR]{updateScores}}}
 }
 \value{
 True, if successful update or validation, `scores` is a built in data

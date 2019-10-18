@@ -365,6 +365,9 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
   if(nrow(games) == 0){
     stop("No games to tweet")
   }
+
+  teamColours <- HockeyModel::teamColours
+
   for(g in 1:nrow(games)){
     home<-games[g,"HomeTeam"]
     away<-games[g,"AwayTeam"]
@@ -374,7 +377,7 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
     while(grDevices::dev.cur()!=1){
       grDevices::dev.off()
     }
-    status<-paste0(teamColours[teamColours$Team == away, "Hashtag"], " at ", teamColours[teamColours$Team == home, "Hashtag"], " predicted goals. #", getShortTeam(away),"vs",getshortteam(home)," #HockeyTwitter")
+    status<-paste0(teamColours[teamColours$Team == away, "Hashtag"], " at ", teamColours[teamColours$Team == home, "Hashtag"], " predicted goals. #", getShortTeam(away),"vs",getShortTeam(home)," #HockeyTwitter")
     rtweet::post_tweet(status = status,
                        media = file.path(graphic_dir, 'predicted_goals.png'),
                        token = token)

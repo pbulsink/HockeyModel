@@ -476,6 +476,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
   west_preds<-preds$raw_results
   west_preds<-west_preds[west_preds$Team %in% HockeyModel::nhl_conferences$West,]
 
+  teamColours <- HockeyModel::teamColours
   teamColoursList<-as.vector(teamColours$Hex)
   names(teamColoursList)<-teamColours$Team
   east_colour <- teamColoursList[names(teamColoursList) %in% east_preds$Team]
@@ -487,7 +488,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
     ggplot2::scale_fill_manual(values = east_colour) +
     ggplot2::labs(x = 'Predicted Point Likelyhood',
                   y = '',
-                  title = paste0("Predicted Point Likelyhoods for Eastern Conference by Season End - ", HockeyModel:::getCurrentSeason()),
+                  title = paste0("Predicted Point Likelyhoods for Eastern Conference by Season End - ", getCurrentSeason()),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggridges::theme_ridges(grid = FALSE) +
     ggplot2::theme(legend.position = "none")
@@ -497,7 +498,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
     ggplot2::scale_fill_manual(values = west_colour) +
     ggplot2::labs(x = 'Predicted Point Likelyhood',
                   y = '',
-                  title = paste0("Predicted Point Likelyhoods for Western Conference by Season End - ", HockeyModel:::getCurrentSeason()),
+                  title = paste0("Predicted Point Likelyhoods for Western Conference by Season End - ", getCurrentSeason()),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggridges::theme_ridges(grid = FALSE) +
     ggplot2::theme(legend.position = "none")
