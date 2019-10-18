@@ -424,7 +424,7 @@ tweetSeries<-function(series = HockeyModel::series, token = rtweet::get_token(),
     grDevices::dev.off()
   }
 
-  status <- paste0("#NHL Playoff Series Odds before games on ", Sys.Date(), "\n#HockeyTwitter")
+  status <- paste0("#NHL Playoff Series Odds before games on ", Sys.Date(), " #HockeyTwitter")
 
   rtweet::post_tweet(status = status,
                      media = file.path(graphic_dir, 'series_odds.png'),
