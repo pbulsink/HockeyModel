@@ -255,8 +255,13 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   }
 
   if(lubridate::wday(lubridate::now()) == 1 & in_reg_season) {
-    #On sunday post metrics
+    #On Sunday post metrics
     tweetMetrics(token = token)
+  }
+
+  if(lubridate::wday(lubridate::now()) == 3 & in_reg_season) {
+    #On Tuesday post expected points (likelyhood)
+    tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
   }
 }
 
@@ -276,7 +281,6 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
   scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"))
 
   #Make Pace Plots
-  plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir, scores = scores)
   plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores = scores)
 
   filelist<-list.files(path = prediction_dir)
@@ -326,11 +330,22 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
                      token = token)
   my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
   reply_id<-my_timeline$status_id[1]
+}
 
-  #until Rtweet has scheduler
-  message("Delaying ", delay, " seconds to space tweets...")
-  Sys.sleep(delay)
+#' Tweet Likelihood plots (ggridges)
+#'
+#' @param delay time to delay. Default 5 min
+#' @param graphic_dir graphics directory
+#' @param subdir subdirectory - usually 'preds'
+#' @param token rtweeet token
+#' @param scores updated scores
+#
+#' @export
+tweetLikelihoods <- function(delay = 60*5, graphic_dir = "./prediction_results/graphics/", subdir = "pace", token = rtweet::get_token(), scores = HockeyModel::scores) {
+  #make likelihood plots
+  plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir, scores = scores)
 
+  #Tweet them out
   rtweet::post_tweet(status = "#NHL Eastern Conference Team final point likelihoods:",
                      media = file.path(graphic_dir,
                                        subdir,
@@ -433,3 +448,4 @@ tweetSeries<-function(series = HockeyModel::series, token = rtweet::get_token(),
                      media = file.path(graphic_dir, 'series_odds.png'),
                      token = token)
 }
+
