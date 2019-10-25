@@ -1,3 +1,10 @@
+#' Clean a model
+#'
+#' @description reduce the size of a model for better long-term storage.
+#'
+#' @param cm model to clean
+#'
+#' @return a smaller model, ready for saving
 cleanModel <- function(cm) {
   #from http://www.win-vector.com/blog/2014/05/trimming-the-fat-from-glm-models-in-r/
   cm$y <- c()
@@ -13,6 +20,7 @@ cleanModel <- function(cm) {
   cm
 }
 
+
 #' Get Current Season
 #'
 #' @return current season (as 20172018 format) based on today's date
@@ -20,6 +28,7 @@ cleanModel <- function(cm) {
 getCurrentSeason <- function(){
   getSeason(Sys.Date())
 }
+
 
 #' Get Current Season Start Date
 #'
@@ -29,6 +38,7 @@ getCurrentSeasonStartDate <- function(){
   year <- as.integer(strftime(Sys.Date(), '%Y'))
   return(paste0(year, "-10-02"))
 }
+
 
 #' Get Season from Game Date
 #'
@@ -56,6 +66,12 @@ getSeason <- function(gamedate){
   }
 }
 
+
+#' Get the division of a team or vector of teams
+#'
+#' @param team a single team or vector of teams
+#'
+#' @return the division (or vector of divisions) for the team(s)
 getDivision<-function(team){
   gd <- function(t){
     nhl_divisions <- HockeyModel::nhl_divisions
@@ -76,6 +92,12 @@ getDivision<-function(team){
   }
 }
 
+
+#' Get the conference of a team or vector of teams
+#'
+#' @param team a single team or vector of teams
+#'
+#' @return the conference (or vector of conferences) for the team(s)
 getConference<-function(team){
   gconf <- function(t){
     nhl_conferences <- HockeyModel::nhl_conferences
@@ -96,6 +118,12 @@ getConference<-function(team){
   }
 }
 
+
+#' Get a Team's short code
+#'
+#' @param team a single team or vector of teams
+#'
+#' @return the team's (or teams') short code(s)
 getShortTeam<-function(team){
   team_short<-list(
     "Anaheim Ducks" = "ANA", "Arizona Coyotes" = "ARI", "Boston Bruins" = "BOS", "Buffalo Sabres" ="BUF",
@@ -122,6 +150,7 @@ getShortTeam<-function(team){
   }
 }
 
+
 #' Normalize Odds
 #'
 #' @param odds a vector of odds to normalize
@@ -134,6 +163,12 @@ normalizeOdds<-function(odds){
   return(odds)
 }
 
+
+#' Get Historical Points for all teams listed in a scores frame
+#'
+#' @param sc scores frame
+#'
+#' @return a tibble of season points for each team that season(s)
 historicalPoints<-function(sc){
   points<-tibble::tibble(Team = character(), Season = character(), Points = integer())
 
@@ -164,6 +199,7 @@ historicalPoints<-function(sc){
 
   return(points)
 }
+
 
 #' Conditional Mutate
 #' @description Mutate at condition. useful in dplyr pipes. From StackOverflow https://stackoverflow.com/a/34096575/3933405
@@ -198,6 +234,7 @@ logLoss<-function(predicted, actual){
 
   return(-(sum(ll)/length(predicted)))
 }
+
 
 #' Accuracy Calculator
 #'
@@ -235,6 +272,7 @@ addSeriesWin<-function(winner, series=HockeyModel::series){
   updateSeries(series = series)
   return(series)
 }
+
 
 #' Check Colour Delta
 #'
