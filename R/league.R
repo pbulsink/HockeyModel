@@ -73,7 +73,7 @@ buildStats<-function(scores){
 
   team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$West, 'Playoffs'][order(team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$West, 'ConfRank'])][1:2] <- 1
 
-  return(tibble::as.tibble(team_stats))
+  return(tibble::as_tibble(team_stats))
 }
 
 #' Simulate the remainder of the season
