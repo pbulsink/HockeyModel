@@ -267,11 +267,8 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
   plotcolors<-c()
   plotalpha<-c()
   for(i in 1:nrow(todayodds)){
-    plotcolors<-c(plotcolors,
-                  teamColours[teamColours$Team == todayodds[i, 'HomeTeam'], 'Hex'],
-                  teamColours[teamColours$Team == todayodds[i, 'HomeTeam'], 'Hex'],
-                  teamColours[teamColours$Team == todayodds[i, 'AwayTeam'], 'Hex'],
-                  teamColours[teamColours$Team == todayodds[i, 'AwayTeam'], 'Hex'])
+    tc <- getTeamColours(home = todayodds[i, 'HomeTeam'], away= todayodds[i, 'AwayTeam'])
+    plotcolors<-c(plotcolors, tc$home, tc$home, tc$away, tc$away)
     plotalpha <- c(plotalpha, 1, 0.7, 0.7, 1)
   }
 
@@ -346,9 +343,8 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
   #Make colour list for plot
   plotcolors<-c()
   for(i in 1:nrow(series)){
-    plotcolors<-c(plotcolors,
-                  teamColours[teamColours$Team == series[i, 'HomeTeam'], 'Hex'],
-                  teamColours[teamColours$Team == series[i, 'AwayTeam'], 'Hex'])
+    tc <- getTeamColours(home = series[i, 'HomeTeam'], away= series[i, 'AwayTeam'])
+    plotcolors<-c(plotcolors, tc$home, tc$away)
   }
 
   #Prepare instructions to read
@@ -428,8 +424,8 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
 
   goals<-reshape2::melt(goals, id = "Goals", variable.name = "Team", value.name = "Density")
 
-  plotcolors<-c(teamColours[teamColours$Team == home, "Hex"],
-                teamColours[teamColours$Team == away, "Hex"])
+  tc<-getTeamColours(home = home, away = away)
+  plotcolors<-c(tc$home,tc$away)
 
   home_hjust<-1-(mu>lambda)
 
@@ -515,4 +511,82 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
   while(grDevices::dev.cur()!=1){
     grDevices::dev.off()
   }
+}
+
+
+#' Get Team Colours
+#'
+#' @description Given a home and away team, return a set of two colours that correspond one to each team, yet are not too similar to eachother. Instead of returning Blue and Blue for Buffalo and Tampa, change Buffalo to their Gold
+#'
+#' @param home Home Team colours to get
+#' @param away Away Team's colours to get
+#' @param delta Colour delta required. Default 0.15. See [colourDelta]. Must be between 0 and 1
+#' @param teamColours HockeyModel::TeamColours, or other provided (optional)
+#'
+#' @return a list with two items: home & away, each containing the appropriate hex colour value
+#' @export
+#'
+#' @examples
+#' getTeamColours("Buffalo Sabres", "Tampa Bay Lightning")
+getTeamColours<-function(home, away, delta = 0.15, teamColours = HockeyModel::teamColours){
+  stopifnot(home %in% teamColours$Team)
+  stopifnot(away %in% teamColours$Team)
+  stopifnot(is.numeric(delta))
+  stopifnot(delta<1)
+  stopifnot(delta>=0)
+
+  #Get primary & alternate colour for home and away
+  hprimary<-teamColours[teamColours$Team == home, 'Hex']
+  aprimary<-teamColours[teamColours$Team == away, 'Hex']
+  halt<-teamColours[teamColours$Team == home, 'AltHex']
+  aalt<-teamColours[teamColours$Team == away, 'AltHex']
+
+  #record deltas to send most different colour incase no best option appears
+  ppdelta <- colourDelta(hprimary, aprimary)
+  padelta <- colourDelta(hprimary, aalt)
+  apdelta <- colourDelta(halt, aprimary)
+  aadelta <- colourDelta(halt, aalt)
+
+  if(ppdelta < delta){
+    #Colours too similar
+    #Try away team alternate colour
+    if(padelta < delta){
+      #Still too similar, try home team alternate
+      if(apdelta < delta){
+        #Still too similar, try both alternates
+        if(aadelta < delta){
+          #all too similar, just use best delta
+          message('No Great Colour Separation')
+          bestdelta<-max(c(ppdelta, padelta, apdelta, aadelta))
+          if(ppdelta == bestdelta){
+            h<-hprimary
+            a<-aprimary
+          } else if(padelta == bestdelta){
+            h<-hprimary
+            a<-aalt
+          } else if(apdelta == bestdelta){
+            h<-halt
+            a<-aprimary
+          } else {
+            h <- halt
+            a <- aalt
+          }
+        } else {
+          h <- halt
+          a <- aalt
+        }
+      } else {
+        h <- halt
+        a<-aprimary
+      }
+    } else {
+      h<-hprimary
+      a<-aalt
+    }
+  } else {
+    h<-hprimary
+    a<-aprimary
+  }
+
+  return(list('home' = h, 'away' = a))
 }
