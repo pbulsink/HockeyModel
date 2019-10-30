@@ -24,7 +24,10 @@ Current predictions are below, and are always posted on twitter at [@BulsinkBot]
 ## President's Trophy Odds
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/president_odds.png" alt="President's Trophy Odds">
 
+# Recent Changes
+- Implemented Ridges plot for expected end-of-season points per team. 
+- Lots of teams have blue or red primary colours. Implemented new algorithm to use an alternate colour for one or both teams if the primary colours are too similar.
+- Backend code changes for ease of editing/updating.
+
 # To Do
 - Twitter user [@MOCallanain](https://www.twitter.com/MOCallanain) highlighted that the predicted tie rate is < ~0.2, when in actuality it's higher. Likely due to teams playing for loser point, can we parameterize the model to include a tie boost? Model currently rescales to increase odds to a reasonable amount.
-- 
-
