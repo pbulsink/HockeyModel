@@ -304,11 +304,6 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
     ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT + 0.02, hjust = 0, label = format(round(todayodds$AwayWinOT, 3), nsmall = 3)) +
     ggplot2::coord_flip()
 
-  #Turn off clipping so the instructions can show
-  #gt <- ggplot2::ggplot_gtable(ggplot2::ggplot_build(p))
-  #gt$layout$clip[gt$layout$name == "panel"] <- "off"
-  #grid::grid.draw(gt)
-
   return(p)
 
 }
@@ -375,11 +370,6 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
     ggplot2::annotate("label", x = series$HomeTeam, y= .99, hjust = 1, label = format(round(series$AwayOdds, 3), nsmall = 3)) +
     ggplot2::coord_flip()
 
-  #Turn off clipping so the instructions can show
-  #gt <- ggplot2::ggplot_gtable(ggplot2::ggplot_build(p))
-  #gt$layout$clip[gt$layout$name == "panel"] <- "off"
-  #grid::grid.draw(gt)
-
   return(p)
 
 }
@@ -432,7 +422,6 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
   odds<-DCPredict(home = home, away = away)
 
   p <- ggplot2::ggplot(data = goals, ggplot2::aes_(x = quote(Goals), y = quote(Density), fill = quote(Team))) +
-    #ggplot2::geom_point() +
     ggplot2::geom_area(position = "identity", alpha = 0.6) +
     ggplot2::geom_vline(xintercept = mu,linetype="dashed") +
     ggplot2::geom_vline(xintercept = lambda,linetype="dashed") +
@@ -447,7 +436,9 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
                   subtitle =  paste0(away, " at ", home, " on ", Sys.Date(),"\nWin Odds - Away: ", format(round(odds[[3]], 3), nsmall = 3), " - Home: ", format(round(odds[[1]], 3), nsmall = 3), " - OT/SO: ", format(round(odds[[2]], 3), nsmall = 3)),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
-    ggplot2::theme(legend.position = "none")
+    ggplot2::theme(legend.title = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_rect(fill = 'white', colour = 'white'),
+                   legend.position = c(0.85, 0.85))
 
   return(p)
 }
