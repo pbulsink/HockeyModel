@@ -384,8 +384,8 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
   teamColours <- HockeyModel::teamColours
 
   for(g in 1:nrow(games)){
-    home<-games[g,"HomeTeam"]
-    away<-games[g,"AwayTeam"]
+    home<-as.character(games[g,"HomeTeam"])
+    away<-as.character(games[g,"AwayTeam"])
     plt<-plot_game(home = home, away = away, m=m, rho=rho)
     grDevices::png(filename = file.path(graphic_dir, 'predicted_goals.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(plt)
