@@ -33,3 +33,14 @@ test_that("Metrics are correctly calculated", {
   expect_equal(accuracy(0.4, 1), 0)
   expect_equal(accuracy(c(0.4, 0.6), c(1,1)), 0.5)
 })
+
+test_that("Colours are correctly compared", {
+  expect_equal(hexToRGB("#000000"), c(0,0,0))
+  expect_equal(hexToRGB("#FFFFFF"), c(255, 255, 255))
+  expect_equal(hexToRGB("#101010"), c(16,16,16))
+
+  expect_equal(colourDelta("#000000", "#000000"), 0)
+  expect_equal(colourDelta("#000000", "#FFFFFF"), 1)
+
+  expect_equal(colourDelta("#0000FF", "#000000"), 1/3)
+})
