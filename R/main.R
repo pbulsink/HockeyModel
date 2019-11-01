@@ -108,7 +108,7 @@ pointPredict <- function(...){
 #' @return today's ratings ggplot object
 #' @export
 ratings <- function(m = HockeyModel::m, ...) {
-  return(plotDC(m=m, ...))
+  return(plot_team_rating(m=m, ...))
 }
 
 tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, games_today = FALSE, ...){
