@@ -284,7 +284,7 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
     ggplot2::geom_bar(stat = "identity", position='fill', fill = plotcolors, alpha = plotalpha, colour = 'white') +
     ggplot2::labs(x = "",
                   y = "Result Odds",
-                  title = "Predictions for Games",
+                  title = "Predictions for Today's Games",
                   subtitle = paste0("Games played on ", Sys.Date()),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_bw() +
@@ -301,7 +301,7 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
     ggplot2::annotate("label", x = todayodds$HomeTeam, y = 0.01, hjust = 0, label = format(round(todayodds$HomeWin, 3), nsmall = 3)) +
     ggplot2::annotate("label", x = todayodds$HomeTeam, y= .99, hjust = 1, label = format(round(todayodds$AwayWin, 3), nsmall = 3)) +
     ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT - 0.01, hjust = 1, label = format(round(todayodds$HomeWinOT, 3), nsmall = 3)) +
-    ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT + 0.02, hjust = 0, label = format(round(todayodds$AwayWinOT, 3), nsmall = 3)) +
+    ggplot2::annotate("label", x = todayodds$HomeTeam, y=todayodds$HomeWin + todayodds$HomeWinOT + 0.01, hjust = 0, label = format(round(todayodds$AwayWinOT, 3), nsmall = 3)) +
     ggplot2::coord_flip()
 
   return(p)
@@ -502,6 +502,62 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
   while(grDevices::dev.cur()!=1){
     grDevices::dev.off()
   }
+}
+
+#' Plot Team Rating
+#'
+#' @description Produces a plot of offensive and defensive ratings of teams, 0 centred (not scaled).
+#'
+#' @param m HockeyModel::m
+#' @param teamlist select a subset of teams, if desired
+#'
+#' @return a ggplot2 plot
+plot_team_rating<-function(m = HockeyModel::m, teamlist = NULL){
+  if(is.null(teamlist)){
+    teamlist<-as.character(unique(m$data$Team))
+  }
+  #Note: invert defence because positive is better defence makes more sense
+  team_params <- data.frame(Attack = as.numeric(m$coefficients[1:length(teamlist)]),
+                            Defence = c(0, -m$coefficients[(length(teamlist)+1):(length(teamlist)*2-1)]),
+                            Team = sort(teamlist))
+
+  #Standardize data
+  team_params$Attack <- (team_params$Attack - mean(team_params$Attack))/sd(team_params$Attack)
+  team_params$Defence <- (team_params$Defence - mean(team_params$Defence))/sd(team_params$Defence)
+
+  #Build and trim team colours for plot
+  teamColoursList<-as.vector(HockeyModel::teamColours$Hex)
+  names(teamColoursList)<-HockeyModel::teamColours$Team
+  teamColoursList<-teamColoursList[names(teamColoursList) %in% teamlist]
+
+  p<-ggplot2::ggplot(team_params,
+                     ggplot2::aes_(x=quote(Attack),
+                                   y=quote(Defence),
+                                   color=quote(Team),
+                                   label=quote(Team)
+                     )
+  ) +
+    ggplot2::geom_hline(yintercept = 0, colour = 'grey', size = 1)+
+    ggplot2::geom_vline(xintercept = 0, colour = 'grey', size = 1)+
+    ggplot2::geom_point() +
+    ggplot2::scale_colour_manual(values = teamColoursList) +
+    ggplot2::labs(x = "Offence",
+                  y = "Defence",
+                  title = "Current Team Offence & Defence Ratings",
+                  subtitle = paste0("As of ", Sys.Date()),
+                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+    ggplot2::theme_minimal() +
+    ggplot2::coord_cartesian(xlim = c(-max(abs(team_params$Attack))+0.1,
+                                      max(abs(team_params$Attack))+0.1),
+                             ylim = c(-max(abs(team_params$Defence))+0.1,
+                                      max(abs(team_params$Defence))+0.1))+
+    ggrepel::geom_text_repel(force=2, max.iter=5000) +
+    ggplot2::annotate("label", x = -max(abs(team_params$Attack)), y = -max(abs(team_params$Defence)), hjust = 0, vjust = 0, label = "Bad") +
+    ggplot2::annotate("label", x = max(abs(team_params$Attack)), y = max(abs(team_params$Defence)), hjust = 1, vjust = 1, label = "Good") +
+    ggplot2::annotate("label", x = -max(abs(team_params$Attack)), y = max(abs(team_params$Defence)), hjust = 0, vjust = 1, label = "Calm") +
+    ggplot2::annotate("label", x = max(abs(team_params$Attack)), y = -max(abs(team_params$Defence)), hjust = 1, vjust = 0, label = "Frantic") +
+    ggplot2::theme(legend.position="none")
+  return(p)
 }
 
 
