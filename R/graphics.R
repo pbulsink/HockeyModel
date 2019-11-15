@@ -522,8 +522,8 @@ plot_team_rating<-function(m = HockeyModel::m, teamlist = NULL){
                             Team = sort(teamlist))
 
   #Standardize data
-  team_params$Attack <- (team_params$Attack - mean(team_params$Attack))/sd(team_params$Attack)
-  team_params$Defence <- (team_params$Defence - mean(team_params$Defence))/sd(team_params$Defence)
+  team_params$Attack <- (team_params$Attack - mean(team_params$Attack))/stats::sd(team_params$Attack)
+  team_params$Defence <- (team_params$Defence - mean(team_params$Defence))/stats::sd(team_params$Defence)
 
   #Build and trim team colours for plot
   teamColoursList<-as.vector(HockeyModel::teamColours$Hex)

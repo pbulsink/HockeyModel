@@ -7,9 +7,9 @@
 #'
 #' @export
 updateModel <- function(...){
-  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"))
+  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"), ...)
   schedule<-updateSchedule(...)
-  dcparams<-updateDC(scores = scores, ...)
+  dcparams<-updateDC(scores = scores)
   #devtools::install(local = FALSE)
   #.rs.restartR()
   #require(HockeyModel)

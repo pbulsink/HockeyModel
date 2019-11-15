@@ -1,0 +1,55 @@
+---
+title: "Basic Usage"
+author: "Philip Bulsink"
+date: "2019-11-15"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Basic Usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette will describe basic usage of the model to predict games and generate graphics. 
+
+```{r setup}
+library(HockeyModel)
+```
+
+At it's most simple, we'll ask the model to retrieve the required data and predict results. You can specify a particular raw data location if you prefer by changing the data_dir parameter.
+
+```{r update, eval=FALSE}
+model <- updateModel(data_dir = devtools::package_file("data-raw"))
+```
+
+We can call this directly because the package has historical data already saved within it. This historical data can always be viewed by calling `HockeyModel::scores`, in an interactive session, or more simply just `scores` if the package is loaded. Of course, this will return all historical data for the NHL and WHL since their inceptions, so it may be more interesting to subset this data. For examples, scores since the start of the 2019-2020 season can be viewed by calling `scores[scores$Date > as.Date("2019-10-01"),]`. 
+
+Having performed the model update and retrieved the parameters by calling `model <- updateModel()` above, we can generate predictions for today's game(s).
+
+```{r today_odds, eval=FALSE}
+todayOdds(rho = model$rho, m = model$m, schedule = model$schedule, scores = model$scores)
+```
+
+<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png" alt="Today's Game Odds">
+
+Playoff odds, president trophy odds, expected points, etc. can all be generated as well. Start by updating the predictions, then generate the images. Depending on how long it has been since predictions were generated, this may take some time. 
+
+```{r projected_points, eval = FALSE}
+updatePredictions(scores = model$scores, schedule = model$schedule)
+playoffOdds()
+```
+
+<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/playoff_odds.png" alt="Playoff Odds">
+
+There's a playoff solver placed in the package. It works only before the playoffs start through the end of the first round, and returns a tibble of likely playoff position and progression for each team as a `tidyverse::tibble`. There is no graphic associated, and the results aren't guaranteed to be accurate. We'll look at what these playoff odds looked like toward the end of last season (2018-2019). We'll download the predictions file from that date so we don't have to generate it ourselves.
+
+```{r playoff_solver}
+playoffSolver(all_results = readRDS(url("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2019-04-01-predictions.RDS","rb")))
+```
+
