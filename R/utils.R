@@ -282,7 +282,7 @@ addSeriesWin<-function(winner, series=HockeyModel::series){
 #' @param hex2 colour two, as hex code #XXXXXX
 #'
 #' @return a value from 0 (identical) to 1 (completely opposite, black & white)
-#'
+#' @export
 #' @examples
 #' #colour similarity between FLA and TBL primary colours
 #' colourDelta("#041E42","#002868")
@@ -302,7 +302,7 @@ colourDelta<-function(hex1, hex2){
 #' @param hex colour as hex code #XXXXXX
 #'
 #' @return vector of three numbers, R, G, B from 0 to 255
-#'
+#' @export
 #' @examples
 #' hexToRGB("#FFFFFF")
 hexToRGB <- function(hex){
