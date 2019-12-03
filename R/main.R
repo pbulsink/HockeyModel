@@ -111,7 +111,7 @@ ratings <- function(m = HockeyModel::m, ...) {
   return(plot_team_rating(m=m, ...))
 }
 
-tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, games_today = FALSE, ...){
+tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*10, games_today = FALSE, ...){
 
   if(games_today){
     #don't try tweet todays' games if none exist
@@ -168,7 +168,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 #' @param ... Items to pass to update and plot functions.
 #'
 #' @export
-dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*15, ...){
+dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*10, ...){
   #message("Reminder, run updateModel() first.")
   #Sys.sleep(5)
   if(lubridate::month(Sys.Date()) %in% c(7:9)){
@@ -371,7 +371,7 @@ tweetLikelihoods <- function(delay = 60*5, graphic_dir = "./prediction_results/g
 #' @param teamColours HockeyModel::teamColours or a custom value
 #'
 #' @export
-tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date == Sys.Date(), ], delay = 60*15, graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m, rho = HockeyModel::rho, token = rtweet::get_token(), teamColours = HockeyModel::teamColours){
+tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date == Sys.Date(), ], delay = 60*10, graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m, rho = HockeyModel::rho, token = rtweet::get_token(), teamColours = HockeyModel::teamColours){
   #Tweet each game
   if(!dir.exists(graphic_dir)){
     dir.create(graphic_dir, recursive = TRUE)
