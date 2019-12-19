@@ -440,6 +440,12 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
                    legend.background = ggplot2::element_rect(fill = 'white', colour = 'white'),
                    legend.position = c(0.85, 0.85))
 
+  ## ALT:
+  ## data <- tibble(x=c(0:9,0:9), team=c(rep("Home", 10), rep("Away", 10)))
+  ## data$y <- NA
+  ## data$y[1:10]<-dpois(0:9, 3.8)
+  ## data$y[11:20]<-dpois(0:9, 2.7)
+  ## ggplot()+geom_col(data = data[1:10,], mapping = aes(x = x, y = y, fill=team), alpha = .3) + geom_col(data = data[11:20,], mapping = aes(x = x, y = y, fill=team), alpha = .3) + geom_vline(xintercept = 2.7) + geom_vline(xintercept = 3.8) + annotate(geom="label", x = 2.7, y=0, label="Away\nxG=2.7") + annotate(geom = "label", x = 3.8, y = 0, label="Home\nxG=3.8") + xlab("Goals") + ylab("Odds") + ggtitle("Expected Goals", subtitle = "Fake Game 2019-12-19") + scale_x_continuous(breaks = c(0:9))
   return(p)
 }
 
