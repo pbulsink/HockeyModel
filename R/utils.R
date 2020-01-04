@@ -35,8 +35,7 @@ getCurrentSeason8 <- function(){
 #' @return current season's nominal start date (Oct 01) as character, e.g. "2019-10-01"
 #' @export
 getCurrentSeasonStartDate <- function(){
-  year <- as.integer(strftime(Sys.Date(), '%Y'))
-  return(paste0(year, "-10-02"))
+  return(paste0(strtrim(getSeason(Sys.Date()), 4), "-10-02"))
 }
 
 
