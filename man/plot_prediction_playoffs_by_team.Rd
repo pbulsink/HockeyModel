@@ -4,9 +4,11 @@
 \alias{plot_prediction_playoffs_by_team}
 \title{Plot Playoff Odds}
 \usage{
-
-  plot_prediction_playoffs_by_team(all_predictions = compile_predictions(),
-  past_days = 14, teamColours = HockeyModel::teamColours)
+plot_prediction_playoffs_by_team(
+  all_predictions = compile_predictions(),
+  past_days = 14,
+  teamColours = HockeyModel::teamColours
+)
 }
 \arguments{
 \item{all_predictions}{the compiled predictions}

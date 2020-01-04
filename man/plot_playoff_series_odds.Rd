@@ -4,10 +4,14 @@
 \alias{plot_playoff_series_odds}
 \title{Plot Today's Playoff Series Odds}
 \usage{
-plot_playoff_series_odds(series = HockeyModel::series,
-  rho = HockeyModel::rho, m = HockeyModel::m,
+plot_playoff_series_odds(
+  series = HockeyModel::series,
+  rho = HockeyModel::rho,
+  m = HockeyModel::m,
   schedule = HockeyModel::schedule,
-  teamColours = HockeyModel::teamColours, ...)
+  teamColours = HockeyModel::teamColours,
+  ...
+)
 }
 \arguments{
 \item{series}{A data frame of home team, away team, home wins, away wins}

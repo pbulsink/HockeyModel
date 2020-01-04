@@ -25,7 +25,7 @@ cleanModel <- function(cm) {
 #'
 #' @return current season (as 20172018 format) based on today's date
 #' @export
-getCurrentSeason <- function(){
+getCurrentSeason8 <- function(){
   getSeason(Sys.Date())
 }
 

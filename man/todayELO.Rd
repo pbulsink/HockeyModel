@@ -4,8 +4,12 @@
 \alias{todayELO}
 \title{Elo Predictions Today}
 \usage{
-todayELO(today = Sys.Date(), elos = HockeyModel::elos,
-  schedule = HockeyModel::schedule, pDraw = 0.2)
+todayELO(
+  today = Sys.Date(),
+  elos = HockeyModel::elos,
+  schedule = HockeyModel::schedule,
+  pDraw = 0.2
+)
 }
 \arguments{
 \item{today}{Generate predictions for this date. Defaults to today}

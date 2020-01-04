@@ -4,8 +4,12 @@
 \alias{getTeamColours}
 \title{Get Team Colours}
 \usage{
-getTeamColours(home, away, delta = 0.15,
-  teamColours = HockeyModel::teamColours)
+getTeamColours(
+  home,
+  away,
+  delta = 0.15,
+  teamColours = HockeyModel::teamColours
+)
 }
 \arguments{
 \item{home}{Home Team colours to get}

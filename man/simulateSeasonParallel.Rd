@@ -4,9 +4,14 @@
 \alias{simulateSeasonParallel}
 \title{Simulate the remainder of the season}
 \usage{
-simulateSeasonParallel(odds_table, scores = HockeyModel::scores,
-  nsims = 10000, schedule = HockeyModel::schedule,
-  cores = parallel::detectCores() - 1, progress = FALSE)
+simulateSeasonParallel(
+  odds_table,
+  scores = HockeyModel::scores,
+  nsims = 10000,
+  schedule = HockeyModel::schedule,
+  cores = parallel::detectCores() - 1,
+  progress = FALSE
+)
 }
 \arguments{
 \item{odds_table}{A dataframe with HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, and Date}

@@ -4,9 +4,13 @@
 \alias{tweetLikelihoods}
 \title{Tweet Likelihood plots (ggridges)}
 \usage{
-tweetLikelihoods(delay = 60 * 5,
-  graphic_dir = "./prediction_results/graphics/", subdir = "pace",
-  token = rtweet::get_token(), scores = HockeyModel::scores)
+tweetLikelihoods(
+  delay = 60 * 5,
+  graphic_dir = "./prediction_results/graphics/",
+  subdir = "pace",
+  token = rtweet::get_token(),
+  scores = HockeyModel::scores
+)
 }
 \arguments{
 \item{delay}{time to delay. Default 5 min}

@@ -486,7 +486,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
     ggplot2::scale_fill_manual(values = east_colour) +
     ggplot2::labs(x = 'Predicted Point Likelyhood',
                   y = '',
-                  title = paste0("Predicted Point Likelyhoods for Eastern Conference by Season End - ", getCurrentSeason()),
+                  title = paste0("Predicted Point Likelyhoods for Eastern Conference by Season End - ", getCurrentSeason8()),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggridges::theme_ridges(grid = FALSE) +
     ggplot2::theme(legend.position = "none")
@@ -496,7 +496,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
     ggplot2::scale_fill_manual(values = west_colour) +
     ggplot2::labs(x = 'Predicted Point Likelyhood',
                   y = '',
-                  title = paste0("Predicted Point Likelyhoods for Western Conference by Season End - ", getCurrentSeason()),
+                  title = paste0("Predicted Point Likelyhoods for Western Conference by Season End - ", getCurrentSeason8()),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggridges::theme_ridges(grid = FALSE) +
     ggplot2::theme(legend.position = "none")

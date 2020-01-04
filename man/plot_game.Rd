@@ -4,8 +4,14 @@
 \alias{plot_game}
 \title{Plot single game expected goals}
 \usage{
-plot_game(home, away, m = HockeyModel::m, rho = HockeyModel::rho,
-  maxgoal = 10, teamColours = HockeyModel::teamColours)
+plot_game(
+  home,
+  away,
+  m = HockeyModel::m,
+  rho = HockeyModel::rho,
+  maxgoal = 10,
+  teamColours = HockeyModel::teamColours
+)
 }
 \arguments{
 \item{home}{The Home Team}

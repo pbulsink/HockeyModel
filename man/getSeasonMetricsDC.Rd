@@ -4,8 +4,10 @@
 \alias{getSeasonMetricsDC}
 \title{Get Season Metrics}
 \usage{
-getSeasonMetricsDC(schedule = HockeyModel::schedule,
-  scores = HockeyModel::scores)
+getSeasonMetricsDC(
+  schedule = HockeyModel::schedule,
+  scores = HockeyModel::scores
+)
 }
 \arguments{
 \item{schedule}{HockeyModel::schedule used to help with calculations}

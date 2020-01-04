@@ -4,9 +4,14 @@
 \alias{remainderSeasonELO}
 \title{ELO remainder of season}
 \usage{
-remainderSeasonELO(nsims = 10000, scores = HockeyModel::scores,
-  schedule = HockeyModel::schedule, odds = FALSE,
-  elos = HockeyModel::elos, ...)
+remainderSeasonELO(
+  nsims = 10000,
+  scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule,
+  odds = FALSE,
+  elos = HockeyModel::elos,
+  ...
+)
 }
 \arguments{
 \item{nsims}{Number of simulations}

@@ -4,8 +4,11 @@
 \alias{plot_prediction_points_by_team}
 \title{Plot Predicted Points}
 \usage{
-plot_prediction_points_by_team(all_predictions = compile_predictions(),
-  past_days = 14, teamColours = HockeyModel::teamColours)
+plot_prediction_points_by_team(
+  all_predictions = compile_predictions(),
+  past_days = 14,
+  teamColours = HockeyModel::teamColours
+)
 }
 \arguments{
 \item{all_predictions}{the compiled predictions}

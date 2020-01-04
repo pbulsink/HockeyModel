@@ -4,8 +4,12 @@
 \alias{dailySummary}
 \title{Daily functions, rolled into one call}
 \usage{
-dailySummary(graphic_dir = "./prediction_results/graphics/",
-  token = rtweet::get_token(), delay = 60 * 15, ...)
+dailySummary(
+  graphic_dir = "./prediction_results/graphics/",
+  token = rtweet::get_token(),
+  delay = 60 * 10,
+  ...
+)
 }
 \arguments{
 \item{graphic_dir}{Directory for graphic files}

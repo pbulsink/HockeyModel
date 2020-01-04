@@ -4,9 +4,14 @@
 \alias{todayDC}
 \title{DC Predictions Today}
 \usage{
-todayDC(today = Sys.Date(), rho = HockeyModel::rho,
-  m = HockeyModel::m, schedule = HockeyModel::schedule,
-  expected_mean = NULL, season_percent = NULL)
+todayDC(
+  today = Sys.Date(),
+  rho = HockeyModel::rho,
+  m = HockeyModel::m,
+  schedule = HockeyModel::schedule,
+  expected_mean = NULL,
+  season_percent = NULL
+)
 }
 \arguments{
 \item{today}{Generate predictions for this date. Defaults to today}

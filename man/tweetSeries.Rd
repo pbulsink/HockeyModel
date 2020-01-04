@@ -4,8 +4,11 @@
 \alias{tweetSeries}
 \title{Tweet Series}
 \usage{
-tweetSeries(series = HockeyModel::series, token = rtweet::get_token(),
-  graphic_dir = "./prediction_results/graphics/")
+tweetSeries(
+  series = HockeyModel::series,
+  token = rtweet::get_token(),
+  graphic_dir = "./prediction_results/graphics/"
+)
 }
 \arguments{
 \item{series}{series data}

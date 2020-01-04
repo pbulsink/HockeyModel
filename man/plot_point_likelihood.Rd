@@ -4,8 +4,12 @@
 \alias{plot_point_likelihood}
 \title{Team Point Predict Plot}
 \usage{
-plot_point_likelihood(preds = NULL,
-  graphic_dir = "./prediction_results/graphics", subdir = "pace", ...)
+plot_point_likelihood(
+  preds = NULL,
+  graphic_dir = "./prediction_results/graphics",
+  subdir = "pace",
+  ...
+)
 }
 \arguments{
 \item{preds}{Raw predictions to generate ggridges point likelyhood plot. Otherwise will generate with current m, rho, scores and schedule in HockeyModel.}

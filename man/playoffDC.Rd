@@ -4,8 +4,14 @@
 \alias{playoffDC}
 \title{Playoff Odds DC}
 \usage{
-playoffDC(home, away, rho = HockeyModel::rho, m = HockeyModel::m,
-  home_wins = 0, away_wins = 0)
+playoffDC(
+  home,
+  away,
+  rho = HockeyModel::rho,
+  m = HockeyModel::m,
+  home_wins = 0,
+  away_wins = 0
+)
 }
 \arguments{
 \item{home}{Series Home Ice Advantage Team Name}

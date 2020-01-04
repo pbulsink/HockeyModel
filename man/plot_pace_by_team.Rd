@@ -4,9 +4,13 @@
 \alias{plot_pace_by_team}
 \title{Plot Pace by team}
 \usage{
-plot_pace_by_team(graphic_dir = "./prediction_results/graphics",
-  subdir = "pace", prediction_dir = "./prediction_results",
-  scores = HockeyModel::scores, teamColours = HockeyModel::teamColours)
+plot_pace_by_team(
+  graphic_dir = "./prediction_results/graphics",
+  subdir = "pace",
+  prediction_dir = "./prediction_results",
+  scores = HockeyModel::scores,
+  teamColours = HockeyModel::teamColours
+)
 }
 \arguments{
 \item{graphic_dir}{The graphics directory}

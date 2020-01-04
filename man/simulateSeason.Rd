@@ -4,8 +4,13 @@
 \alias{simulateSeason}
 \title{Simulate the remainder of the season}
 \usage{
-simulateSeason(odds_table, scores = HockeyModel::scores, nsims = 10000,
-  schedule = HockeyModel::schedule, progress = FALSE)
+simulateSeason(
+  odds_table,
+  scores = HockeyModel::scores,
+  nsims = 10000,
+  schedule = HockeyModel::schedule,
+  progress = FALSE
+)
 }
 \arguments{
 \item{odds_table}{A dataframe with HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, and Date}

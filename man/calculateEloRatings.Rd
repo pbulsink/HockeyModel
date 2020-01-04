@@ -4,10 +4,16 @@
 \alias{calculateEloRatings}
 \title{Calculate ELO for multiple seasons}
 \usage{
-calculateEloRatings(schedule = HockeyModel::scores[, c("Date",
-  "HomeTeam", "AwayTeam", "HomeGoals", "AwayGoals", "Result")],
-  ratings_history = NULL, k = 8, mean_value = 1505,
-  new_teams = 1300, regress_strength = 3, home_adv = 35)
+calculateEloRatings(
+  schedule = HockeyModel::scores[, c("Date", "HomeTeam", "AwayTeam", "HomeGoals",
+    "AwayGoals", "Result")],
+  ratings_history = NULL,
+  k = 8,
+  mean_value = 1505,
+  new_teams = 1300,
+  regress_strength = 3,
+  home_adv = 35
+)
 }
 \arguments{
 \item{schedule}{The schedule with game results, format as a df with Date, HomeTeam, AwayTeam, Result, HomeGoals, AwayGoals}

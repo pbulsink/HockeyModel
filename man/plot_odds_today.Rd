@@ -4,9 +4,14 @@
 \alias{plot_odds_today}
 \title{Plot Today's Odds}
 \usage{
-plot_odds_today(today = Sys.Date(), rho = HockeyModel::rho,
-  m = HockeyModel::m, schedule = HockeyModel::schedule,
-  teamColours = HockeyModel::teamColours, ...)
+plot_odds_today(
+  today = Sys.Date(),
+  rho = HockeyModel::rho,
+  m = HockeyModel::m,
+  schedule = HockeyModel::schedule,
+  teamColours = HockeyModel::teamColours,
+  ...
+)
 }
 \arguments{
 \item{today}{The day's odds to plot. Default today.}

@@ -4,11 +4,15 @@
 \alias{tweetPace}
 \title{Tweet Pace Plots}
 \usage{
-tweetPace(delay = 60 * 5,
-  graphic_dir = "./prediction_results/graphics/", subdir = "pace",
+tweetPace(
+  delay = 60 * 5,
+  graphic_dir = "./prediction_results/graphics/",
+  subdir = "pace",
   prediction_dir = "./prediction_results/",
-  token = rtweet::get_token(), scores = HockeyModel::scores,
-  teamColours = HockeyModel::teamColours)
+  token = rtweet::get_token(),
+  scores = HockeyModel::scores,
+  teamColours = HockeyModel::teamColours
+)
 }
 \arguments{
 \item{delay}{Delay between posted tweets}

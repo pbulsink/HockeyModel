@@ -4,9 +4,15 @@
 \alias{loopless_sim}
 \title{'Loopless' simulation}
 \usage{
-loopless_sim(nsims = 1e+05, cores = parallel::detectCores() - 1,
-  schedule = HockeyModel::schedule, scores = HockeyModel::scores,
-  rho = HockeyModel::rho, m = HockeyModel::m, odds_table = NULL)
+loopless_sim(
+  nsims = 1e+05,
+  cores = parallel::detectCores() - 1,
+  schedule = HockeyModel::schedule,
+  scores = HockeyModel::scores,
+  rho = HockeyModel::rho,
+  m = HockeyModel::m,
+  odds_table = NULL
+)
 }
 \arguments{
 \item{nsims}{number of simulations to run (approximate)}

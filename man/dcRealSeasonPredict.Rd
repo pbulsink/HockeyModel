@@ -4,9 +4,15 @@
 \alias{dcRealSeasonPredict}
 \title{DC Simulate season with reevaluation every n days}
 \usage{
-dcRealSeasonPredict(nsims = 1e+05, scores = HockeyModel::scores,
-  schedule = HockeyModel::schedule, cores = parallel::detectCores() -
-  1, ndays = 7, regress = FALSE, progress = FALSE)
+dcRealSeasonPredict(
+  nsims = 1e+05,
+  scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule,
+  cores = parallel::detectCores() - 1,
+  ndays = 7,
+  regress = FALSE,
+  progress = FALSE
+)
 }
 \arguments{
 \item{nsims}{number of simulations}

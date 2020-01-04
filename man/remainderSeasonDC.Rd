@@ -4,9 +4,14 @@
 \alias{remainderSeasonDC}
 \title{DC remainder of season}
 \usage{
-remainderSeasonDC(nsims = 10000, scores = HockeyModel::scores,
-  schedule = HockeyModel::schedule, odds = FALSE, regress = TRUE,
-  ...)
+remainderSeasonDC(
+  nsims = 10000,
+  scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule,
+  odds = FALSE,
+  regress = TRUE,
+  ...
+)
 }
 \arguments{
 \item{nsims}{Number of simulations}
