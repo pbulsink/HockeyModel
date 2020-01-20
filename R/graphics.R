@@ -482,17 +482,18 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_result
 
 
   eastplot<-ggplot2::ggplot(east_preds, ggplot2::aes_(x = quote(Points), y = quote(Team), fill=quote(Team))) +
-    ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from = 55, to = 135)+
+    ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from = 50, to = 135)+
     ggplot2::scale_fill_manual(values = east_colour) +
     ggplot2::labs(x = 'Predicted Point Likelyhood',
                   y = '',
                   title = paste0("Predicted Point Likelyhoods for Eastern Conference by Season End - ", getCurrentSeason8()),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggridges::theme_ridges(grid = FALSE) +
-    ggplot2::theme(legend.position = "none")
+    ggplot2::theme(legend.position = "none",
+                   panel.grid.major.y = ggplot2::element_line(size=.1, color="grey"))
 
   westplot<-ggplot2::ggplot(west_preds, ggplot2::aes_(x = quote(Points), y = quote(Team), fill=quote(Team))) +
-    ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from = 55, to = 135)+
+    ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from = 50, to = 135)+
     ggplot2::scale_fill_manual(values = west_colour) +
     ggplot2::labs(x = 'Predicted Point Likelyhood',
                   y = '',
