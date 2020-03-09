@@ -696,7 +696,7 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE){
     east_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$East,], caption_text = "Eastern Conference")
     west_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$West,], caption_text = "Western Conference")
 
-    playoff_odds<-list(east_odds, west_odds)
+    playoff_odds<-list('east' = east_odds, 'west' = west_odds)
   }
   return(playoff_odds)
 }

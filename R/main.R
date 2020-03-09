@@ -247,8 +247,33 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-
   tweetGames(games = sc[sc$Date == Sys.Date(), ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token, delay=delay)
+
+  if(lubridate::month(Sys.Date()) %in% c(3,4) & in_reg_season){
+    playoff_odds<-playoffSolver()
+    #save to files.
+    grDevices::png(filename = file.path(graphic_dir, 'east_playoff_odds.png'), width = 760, height = 620, units = 'px', res = 300)
+    print(playoff_odds$east)
+    Sys.sleep(5)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
+    grDevices::png(filename = file.path(graphic_dir, 'west_playoff_odds.png'), width = 760, height = 620, units = 'px', res = 300)
+    print(playoff_odds$west)
+    Sys.sleep(5)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
+
+    rtweet::post_tweet(status = "#NHL Eastern and Western Conference Playoff & #StanleyCup Odds #HockeyTwitter",
+                       media = c(file.path(graphic_dir,subdir, 'east_playoff_odds.png'),
+                                 file.path(graphic_dir,subdir, 'west_playoff_odds.png')),
+                       token = token)
+    #until Rtweet has scheduler
+    message("Delaying ", delay/2, " seconds to space tweets...")
+    Sys.sleep(delay/2)
+
+  }
 
   if(lubridate::day(Sys.Date()) == 1 & in_reg_season){
     tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
