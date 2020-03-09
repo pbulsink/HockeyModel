@@ -578,11 +578,12 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0){
 
 #' Playoff solver: chances of making each round & winning cup
 #'
-#' @param all_results if available, the results from simulations. Else loaded
+#' @param all_results if available, the results from simulations. Else loaded.
+#' @param pretty_format Whether to return a pretty table or raw data.
 #'
 #' @return a tibble of playoff odds
 #' @export
-playoffSolver<-function(all_results = NULL){
+playoffSolver<-function(all_results = NULL, pretty_format = TRUE){
   if(is.null(all_results)){
     filelist<-list.files(path = "./prediction_results")
     pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
@@ -659,16 +660,44 @@ playoffSolver<-function(all_results = NULL){
 
   #Summarize Data
   playoff_odds<-tibble::tibble(Team = summary_results$Team,
+                       Make_Playoffs = 0,
                        Win_First_Round = 0,
                        Win_Second_Round = 0,
                        Win_Conference = 0,
                        Win_Cup = 0
                        )
+  playoff_odds$Make_Playoffs = p0$p_rank1 + p0$p_rank2 + p0$p_rank3 + p0$p_rank4 + p0$p_rank5 + p0$p_rank6 + p0$p_rank7 + p0$p_rank8
   playoff_odds$Win_First_Round = p1$p_rank18 + p1$p_rank27 + p1$p_rank36 + p1$p_rank45
   playoff_odds$Win_Second_Round = p2$cfodds
   playoff_odds$Win_Conference = p3$fodds
   playoff_odds$Win_Cup = p4$cupodds
 
+  if(pretty_format){
+
+    format_playoff_odds<-function(playoff_odds, caption_text){
+      playoff_odds$Make_Playoffs = round(playoff_odds$Make_Playoffs*100, 2)
+      playoff_odds$Win_First_Round = round(playoff_odds$Win_First_Round*100, 2)
+      playoff_odds$Win_Second_Round = round(playoff_odds$Win_Second_Round*100, 2)
+      playoff_odds$Win_Conference = round(playoff_odds$Win_Conference*100, 2)
+      playoff_odds$Win_Cup = round(playoff_odds$Win_Cup*100, 2)
+
+      playoff_odds<-formattable::formattable(playoff_odds,
+                                             col.names = c("Team", "Make Playoffs", "Win 1st Round", "Win 2nd Round", "Win Conference", "Win Cup"),
+                                             caption = paste0(caption_text, " Playoff Odds as of ", Sys.Date(), " | P. Bulsink (@BulsinkB)"),
+                                             align = c('l', rep("r", 5)),
+                                             list(
+                                               `Team` = formattable::formatter("span", style = ~formattable::style(font.weight = "bold")),
+                                               formattable::area(col = 2:6) ~ function(x) formattable::percent(x/100, digits = 2),
+                                               formattable::area(col = 2:6) ~ formattable::color_tile("#fefffe", "#3ccc3c")
+                                               ))
+    }
+
+    playoff_odds<-dplyr::arrange(playoff_odds, desc(Win_Cup))
+    east_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$East,], caption_text = "Eastern Conference")
+    west_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$West,], caption_text = "Western Conference")
+
+    playoff_odds<-list(east_odds, west_odds)
+  }
   return(playoff_odds)
 }
 
