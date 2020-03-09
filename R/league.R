@@ -683,7 +683,7 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE){
 
       playoff_odds<-formattable::formattable(playoff_odds,
                                              col.names = c("Team", "Make Playoffs", "Win 1st Round", "Win 2nd Round", "Win Conference", "Win Cup"),
-                                             caption = paste0(caption_text, " Playoff Odds as of ", Sys.Date(), " | P. Bulsink (@BulsinkB)"),
+                                             caption = paste0(caption_text, " Playoff Odds as of ", lastp, " | P. Bulsink (@BulsinkB)"),
                                              align = c('l', rep("r", 5)),
                                              list(
                                                `Team` = formattable::formatter("span", style = ~formattable::style(font.weight = "bold")),
