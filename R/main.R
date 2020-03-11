@@ -266,8 +266,8 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     }
 
     rtweet::post_tweet(status = "#NHL Eastern and Western Conference Playoff & #StanleyCup Odds #HockeyTwitter",
-                       media = c(file.path(graphic_dir,subdir, 'east_playoff_odds.png'),
-                                 file.path(graphic_dir,subdir, 'west_playoff_odds.png')),
+                       media = c(file.path(graphic_dir, 'east_playoff_odds.png'),
+                                 file.path(graphic_dir, 'west_playoff_odds.png')),
                        token = token)
     #until Rtweet has scheduler
     message("Delaying ", delay/2, " seconds to space tweets...")

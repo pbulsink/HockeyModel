@@ -4,10 +4,12 @@
 \alias{playoffSolver}
 \title{Playoff solver: chances of making each round & winning cup}
 \usage{
-playoffSolver(all_results = NULL)
+playoffSolver(all_results = NULL, pretty_format = TRUE)
 }
 \arguments{
-\item{all_results}{if available, the results from simulations. Else loaded}
+\item{all_results}{if available, the results from simulations. Else loaded.}
+
+\item{pretty_format}{Whether to return a pretty table or raw data.}
 }
 \value{
 a tibble of playoff odds
