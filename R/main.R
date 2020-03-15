@@ -252,18 +252,8 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   if(lubridate::month(Sys.Date()) %in% c(3,4) & in_reg_season){
     playoff_odds<-playoffSolver()
     #save to files.
-    grDevices::png(filename = file.path(graphic_dir, 'east_playoff_odds.png'), width = 760, height = 620, units = 'px', res = 300)
-    print(playoff_odds$east)
-    Sys.sleep(5)
-    while(grDevices::dev.cur()!=1){
-      grDevices::dev.off()
-    }
-    grDevices::png(filename = file.path(graphic_dir, 'west_playoff_odds.png'), width = 760, height = 620, units = 'px', res = 300)
-    print(playoff_odds$west)
-    Sys.sleep(5)
-    while(grDevices::dev.cur()!=1){
-      grDevices::dev.off()
-    }
+    export_formattable(playoff_odds$east, file.path(graphic_dir, 'east_playoff_odds.png'))
+    export_formattable(playoff_odds$west, file.path(graphic_dir, 'west_playoff_odds.png'))
 
     rtweet::post_tweet(status = "#NHL Eastern and Western Conference Playoff & #StanleyCup Odds #HockeyTwitter",
                        media = c(file.path(graphic_dir, 'east_playoff_odds.png'),

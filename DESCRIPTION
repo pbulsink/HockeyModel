@@ -26,12 +26,13 @@ Imports:
     lubridate,
     ggalt,
     ggridges,
-    formattable
+    formattable,
+    htmltools
 Remotes:
   pbulsink/HockeyScrapR
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Suggests: 
     knitr,
     rmarkdown,
