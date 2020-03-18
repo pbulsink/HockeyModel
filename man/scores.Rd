@@ -4,7 +4,8 @@
 \name{scores}
 \alias{scores}
 \title{Historical NHL and WHA scores.}
-\format{A data frame with  variables:
+\format{
+A data frame with  variables:
 \describe{
   \item{Date}{Date of the game}
   \item{AwayTeam}{Name of visiting team}
@@ -17,7 +18,8 @@
   \item{Winner}{Name of the winning team}
   \item{Loser}{Name of the losing team}
   \item{Result}{Coded home win = 0, visitor win = 1}
-}}
+}
+}
 \source{
 \url{http://www.hockey-reference.com/}
 }

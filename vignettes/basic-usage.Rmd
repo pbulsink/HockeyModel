@@ -50,6 +50,6 @@ playoffOdds()
 There's a playoff solver placed in the package. It works only before the playoffs start through the end of the first round, and returns a tibble of likely playoff position and progression for each team as a `tidyverse::tibble`. There is no graphic associated, and the results aren't guaranteed to be accurate. We'll look at what these playoff odds looked like toward the end of last season (2018-2019). We'll download the predictions file from that date so we don't have to generate it ourselves.
 
 ```{r playoff_solver}
-playoffSolver(all_results = readRDS(url("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2019-04-01-predictions.RDS","rb")))
+playoffSolver(all_results = readRDS(url("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2019-04-01-predictions.RDS","rb")), pretty_format = FALSE)
 ```
 

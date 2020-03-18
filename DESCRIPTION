@@ -27,7 +27,8 @@ Imports:
     ggalt,
     ggridges,
     formattable,
-    htmltools
+    htmltools,
+    webshot
 Remotes:
   pbulsink/HockeyScrapR
 URL: https://github.com/pbulsink/HockeyModel

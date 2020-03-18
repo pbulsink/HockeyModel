@@ -591,6 +591,8 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE){
     lastp<-as.Date(max(pdates))
     all_results<-readRDS(file.path("./prediction_results", paste0(lastp,"-predictions.RDS")))
     summary_results<-all_results
+  } else {
+    lastp = Sys.Date()
   }
 
   if('summary_results' %in% names(all_results)){
@@ -692,7 +694,7 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE){
                                                ))
     }
 
-    playoff_odds<-dplyr::arrange(playoff_odds, desc(Win_Cup))
+    playoff_odds<-dplyr::arrange(playoff_odds, dplyr::desc(!!dplyr::sym("Win_Cup")))
     east_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$East,], caption_text = "Eastern Conference")
     west_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$West,], caption_text = "Western Conference")
 

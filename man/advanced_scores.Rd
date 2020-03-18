@@ -4,7 +4,9 @@
 \name{advanced_scores}
 \alias{advanced_scores}
 \title{Historical NHL scores with Advanced Stats}
-\format{A data frame with  variables}
+\format{
+A data frame with  variables
+}
 \source{
 \url{http://www.hockey-reference.com/}
 }

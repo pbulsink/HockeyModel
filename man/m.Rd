@@ -4,7 +4,9 @@
 \name{m}
 \alias{m}
 \title{Dixon Coles' `m`}
-\format{a glm model fit}
+\format{
+a glm model fit
+}
 \usage{
 m
 }

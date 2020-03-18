@@ -28,6 +28,9 @@ Current predictions are below, and are always posted on twitter at [@BulsinkBot]
 - Implemented Ridges plot for expected end-of-season points per team. 
 - Lots of teams have blue or red primary colours. Implemented new algorithm to use an alternate colour for one or both teams if the primary colours are too similar.
 - Backend code changes for ease of editing/updating.
+- Added playoff changes for each round and winning the cup, including posting to Twitter daily in March and April. Odds are posted as a table image (such as the Eastern Conference below):
+<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/east_playoff_odds.png" alt="Eastern Conference Playoff Progression Odds">
 
 # To Do
 - Twitter user [@MOCallanain](https://www.twitter.com/MOCallanain) highlighted that the predicted tie rate is < ~0.2, when in actuality it's higher. Likely due to teams playing for loser point, can we parameterize the model to include a tie boost? Model currently rescales to increase odds to a reasonable amount.
+- Currently, only scores are used for model generation. Moneypuck has an expansive expected goals model available for download and updated regularly (see [http://moneypuck.com/data.htm]). Deriving the team performance by expected goals instead of actual could reduce the impact of luck on expected future performance. 

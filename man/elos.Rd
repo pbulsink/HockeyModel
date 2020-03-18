@@ -4,7 +4,9 @@
 \name{elos}
 \alias{elos}
 \title{Elo History}
-\format{A sparse dataframe with columns for each historical and active team (WHL and NHL) and each row a date}
+\format{
+A sparse dataframe with columns for each historical and active team (WHL and NHL) and each row a date
+}
 \usage{
 elos
 }

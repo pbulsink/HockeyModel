@@ -4,11 +4,13 @@
 \name{nhl_conferences}
 \alias{nhl_conferences}
 \title{NHL Conferences}
-\format{A list of vectors:
+\format{
+A list of vectors:
 \describe{
   \item{East}{Teams in the East conference}
   \item{West}{Teams in the West conference}
-}}
+}
+}
 \source{
 \url{http://www.nhl.com/}
 }

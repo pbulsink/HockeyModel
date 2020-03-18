@@ -4,7 +4,9 @@
 \name{rho}
 \alias{rho}
 \title{Dixon Coles' `rho`}
-\format{a single numerical value}
+\format{
+a single numerical value
+}
 \usage{
 rho
 }

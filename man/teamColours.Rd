@@ -5,7 +5,9 @@
 \alias{teamColours}
 \title{Team Colours
 Hex and RGB team colours (primary & secondary where applicable), and path to team logos}
-\format{a data frame of colours & logos}
+\format{
+a data frame of colours & logos
+}
 \usage{
 teamColours
 }

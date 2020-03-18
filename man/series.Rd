@@ -4,7 +4,9 @@
 \name{series}
 \alias{series}
 \title{Playoff Series}
-\format{A data frame}
+\format{
+A data frame
+}
 \usage{
 series
 }

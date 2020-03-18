@@ -4,13 +4,15 @@
 \name{nhl_divisions}
 \alias{nhl_divisions}
 \title{NHL Divisions}
-\format{A list of vectors:
+\format{
+A list of vectors:
 \describe{
   \item{Atlantic}{Teams in the Atlantic division}
   \item{Central}{Teams in the Central division}
   \item{Metropolitan}{Teams in the Metropolitan division}
   \item{Pacific}{Teams in the Pacific division}
-}}
+}
+}
 \source{
 \url{http://www.nhl.com/}
 }

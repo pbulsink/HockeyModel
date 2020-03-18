@@ -4,12 +4,14 @@
 \name{schedule}
 \alias{schedule}
 \title{Schedule for current season.}
-\format{A data frame with  variables:
+\format{
+A data frame with  variables:
 \describe{
   \item{Date}{Date of the game played/to be played}
   \item{AwayTeam}{Name of the visiting team}
   \item{HomeTeam}{Name of the home team}
-}}
+}
+}
 \source{
 \url{http://www.hockey-reference.com/}
 }
