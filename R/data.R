@@ -112,11 +112,12 @@ buildTeamColours <- function(){
 #' @return True, if successful update or validation, `schedule` is a built in data
 #'
 #' @export
-updateSchedule <- function(data_dir = "./data-raw/"){
+updateSchedule <- function(data_dir = "./data-raw"){
   new_schedule<-HockeyScrapR::getSchedule(data_dir = data_dir, from_date=as.Date(getCurrentSeasonStartDate()))
   new_schedule<-new_schedule[,c('Date', 'Visitor', 'Home')]
   new_schedule<-data.frame("Date" = new_schedule$Date, "HomeTeam" = new_schedule$Home, "AwayTeam" = new_schedule$Visitor)
   new_schedule$Date <- as.Date(new_schedule$Date)
+  new_schedule<-new_schedule[!(new_schedule$Date > as.Date('2020-03-11') & new_schedule$Date < as.Date('2020-04-05')),]
   if(nrow(new_schedule) != nrow(schedule)){
     schedule <- new_schedule
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
@@ -134,7 +135,7 @@ updateSchedule <- function(data_dir = "./data-raw/"){
 #' @return True, if successful update or validation, `scores` is a built in data
 #'
 #' @export
-updateScores <- function(data_dir = "./data-raw/", last_playoffs = FALSE){
+updateScores <- function(data_dir = "./data-raw", last_playoffs = FALSE){
   new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0, playoffs = TRUE, last_playoffs = last_playoffs)
   if(nrow(new_scores) != nrow(scores)){
     #new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))
@@ -165,9 +166,35 @@ updateSeries<-function(series = NULL){
   return(series)
 }
 
+updateCovid <- function(covidSeries=NULL){
+  #https://www.sportingnews.com/us/nhl/news/nhl-2020-stanley-cup-playoffs-everything-we-know-about-resumption/36kbfimlv0nr13v1o1kusxhr2
+  if(is.null(covidSeries)){
+    covidSeries<-list(
+      east_rr=data.frame('Teams' = c(),
+                         stringsAsFactors = FALSE),
+      west_rr=data.frame('Teams' = c(),
+                         stringsAsFactors = FALSE),
+      play_in=data.frame('HomeTeam'=c(),
+                         'AwayTeam'=c(),
+                         'HomeWins'=c(),
+                         'AwayWins'=c(),
+                         stringsAsFactors = FALSE)
+    )
+  }
+  usethis::use_data(covidSeries, overwrite = TRUE)
+  return(covidSeries)
+}
+
 #' Playoff Series
 #'
 #' Manually Updated Playoff Series Status.
 #'
 #' @format A data frame
 "series"
+
+#' Covid Series
+#'
+#' Manually Updated series for 2020 COVID Playoff format
+#'
+#' @format A list of data frames
+"covidSeries"
