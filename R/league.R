@@ -728,7 +728,7 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
       playoff_odds$Win_Second_Round = round(playoff_odds$Win_Second_Round*100, 2)
       playoff_odds$Win_Conference = round(playoff_odds$Win_Conference*100, 2)
       playoff_odds$Win_Cup = round(playoff_odds$Win_Cup*100, 2)
-
+      rownames(playoff_odds)<-NULL
       playoff_odds<-formattable::formattable(playoff_odds,
                                              col.names = c("Team", "Make Playoffs", "Win 1st Round", "Win 2nd Round", "Win Conference", "Win Cup"),
                                              caption = paste0(caption_text, " Playoff Odds as of ", lastp, " | P. Bulsink (@BulsinkB)"),
@@ -741,7 +741,6 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
     }
 
     playoff_odds<-dplyr::arrange(playoff_odds, dplyr::desc(!!dplyr::sym("Win_Cup")))
-    rownames(playoff_odds)<-NULL
     east_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$East,], caption_text = "Eastern Conference")
     west_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$West,], caption_text = "Western Conference")
 
