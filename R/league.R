@@ -652,16 +652,21 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
   p1$p_rank45<-p1$p_rank4 + p1$p_rank5
   p1[,ranks1]<-p2[,ranks1]<-p3[,ranks1]<-p4[,ranks1]<-NULL
 
-  #Fix normalization fixes.
+  #Fix normalization fixes
   ranks2<-c('p_rank18', 'p_rank27', 'p_rank36', 'p_rank45')
   p1[, ranks2]<-p1[, ranks2]*(8/sum(p1[,ranks2]))
+  p1[p1$Conference == "East", ranks2]<-p1[p1$Conference == "East", ranks2]*(4/sum(p1[p1$Conference == "East", ranks2]))
+  p1[p1$Conference == "West", ranks2]<-p1[p1$Conference == "West", ranks2]*(4/sum(p1[p1$Conference == "West", ranks2]))
 
   #make 2nd round win odds matrix
   p2$cfodds<-0
   for (team in p2$Team){
     p2[p2$Team == team, ]$cfodds<-team_progression_odds(round = 2, team = team, odds = p1)
   }
-  p2$cfodds<-p2$cfodds*(4/sum(p2$cfodds))
+
+  p2[p2$Conference == "East", ]$cfodds <- p2[p2$Conference == "East", ]$cfodds*(2/sum(p2[p2$Conference == "East", ]$cfodds))
+  p2[p2$Conference == "West", ]$cfodds <- p2[p2$Conference == "West", ]$cfodds*(2/sum(p2[p2$Conference == "West", ]$cfodds))
+  #p2$cfodds<-p2$cfodds*(4/sum(p2$cfodds))
 
   #make 3rd round win odds matrix+
   p3$fodds<-0
@@ -669,7 +674,9 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
     p3[p3$Team == team, ]$fodds<-team_progression_odds(round = 3, team = team, odds = p2)
   }
 
-  p3$fodds<-p3$fodds*(2/sum(p3$fodds))
+  p3[p3$Conference == "East", ]$fodds <- p3[p3$Conference == "East", ]$fodds*(1/sum(p3[p3$Conference == "East", ]$fodds))
+  p3[p3$Conference == "West", ]$fodds <- p3[p3$Conference == "West", ]$fodds*(1/sum(p3[p3$Conference == "West", ]$fodds))
+  #p3$fodds<-p3$fodds*(2/sum(p3$fodds))
 
   #make cup win odds matrix
   p4$cupodds<-0
@@ -734,6 +741,7 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
     }
 
     playoff_odds<-dplyr::arrange(playoff_odds, dplyr::desc(!!dplyr::sym("Win_Cup")))
+    rownames(playoff_odds)<-NULL
     east_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$East,], caption_text = "Eastern Conference")
     west_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$West,], caption_text = "Western Conference")
 
