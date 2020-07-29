@@ -12,7 +12,8 @@ DCPredict(
   maxgoal = 8,
   scores = HockeyModel::scores,
   expected_mean = NULL,
-  season_percent = NULL
+  season_percent = NULL,
+  draws = TRUE
 )
 }
 \arguments{
@@ -31,9 +32,11 @@ DCPredict(
 \item{expected_mean}{the mean lambda & mu, used only for regression}
 
 \item{season_percent}{the percent complete of the season, used for regression}
+
+\item{draws}{Whether draws are allowed. Default True}
 }
 \value{
-a list of home win, draw, and away win probability
+a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
 }
 \description{
 Using Dixon Coles technique, predict odds each of home win, draw, and away win.

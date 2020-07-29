@@ -54,7 +54,7 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position="none")
-  return(p)
+  return
 }
 
 #' DC Predictions Today
@@ -454,10 +454,11 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
+#' @param draws Whether draws are allowed. Default True
 #'
-#' @return a list of home win, draw, and away win probability
+#' @return a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
 #' @export
-DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL) {
+DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, draws=TRUE) {
   if(is.null(m)){
     m <- getM(scores = scores)
   }
@@ -498,6 +499,11 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
   DrawProbability <- DrawProbability * (0.2319688 / 0.1755118)
   odds <- normalizeOdds(c(HomeWinProbability, DrawProbability, AwayWinProbability))
 
+  if(!draws){
+    HomeWinProbability<-HomeWinProbability+normalizeOdds(c(HomeWinProbability, AwayWinProbability))[1]*DrawProbability
+    AwayWinProbability<-AwayWinProbability+normalizeOdds(c(HomeWinProbability, AwayWinProbability))[2]*DrawProbability
+    odds<-normalizeOdds(c(HomeWinProbability, AwayWinProbability))
+  }
   return(odds)
 }
 

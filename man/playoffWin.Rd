@@ -4,7 +4,7 @@
 \alias{playoffWin}
 \title{Playoff Win Calculator}
 \usage{
-playoffWin(home_team, away_team, home_wins = 0, away_wins = 0)
+playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, ...)
 }
 \arguments{
 \item{home_team}{Home Ice Advantage Team}

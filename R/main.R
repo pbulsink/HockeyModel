@@ -7,7 +7,7 @@
 #'
 #' @export
 updateModel <- function(...){
-  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"), ...)
+  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-08-01"), ...)
   schedule<-updateSchedule(...)
   dcparams<-updateDC(scores = scores)
   #devtools::install(local = FALSE)
@@ -171,15 +171,17 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*10, ...){
   #message("Reminder, run updateModel() first.")
   #Sys.sleep(5)
-  if(lubridate::month(Sys.Date()) %in% c(7:9)){
+  if(lubridate::month(Sys.Date()) %in% c(7:9) & lubridate::year((Sys.Date()) != 2020)){
     stop('No off-season predictions')
   }
 
   modelparams<-updateModel(...)
   in_reg_season<-FALSE
-  if(Sys.Date()<= as.Date("2020-04-04")){
+  if(Sys.Date()<= as.Date("2020-08-10")){
     in_reg_season<-TRUE
-    updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
+    if(Sys.Date()<=as.Date("2020-04-10")){
+      updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
+    }
   }
 
   if(!dir.exists(graphic_dir)){
@@ -265,19 +267,19 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   }
 
-  if(lubridate::day(Sys.Date()) == 1 & in_reg_season){
-    tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
-  }
-
-  if(lubridate::wday(lubridate::now()) == 1 & in_reg_season) {
-    #On Sunday post metrics
-    tweetMetrics(token = token)
-  }
-
-  if(lubridate::wday(lubridate::now()) == 3 & in_reg_season) {
-    #On Tuesday post expected points (likelyhood)
-    tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
-  }
+  # if(lubridate::day(Sys.Date()) == 1 & in_reg_season){
+  #   tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
+  # }
+  #
+  # if(lubridate::wday(lubridate::now()) == 1 & in_reg_season) {
+  #   #On Sunday post metrics
+  #   tweetMetrics(token = token)
+  # }
+  #
+  # if(lubridate::wday(lubridate::now()) == 3 & in_reg_season) {
+  #   #On Tuesday post expected points (likelyhood)
+  #   tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
+  # }
 }
 
 #' Tweet Pace Plots

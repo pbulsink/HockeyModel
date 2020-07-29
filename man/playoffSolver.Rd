@@ -4,10 +4,10 @@
 \alias{playoffSolver}
 \title{Playoff solver: chances of making each round & winning cup}
 \usage{
-playoffSolver(all_results = NULL, pretty_format = TRUE)
+playoffSolver(all_results = NULL, pretty_format = TRUE, p0 = NULL)
 }
 \arguments{
-\item{all_results}{if available, the results from simulations. Else loaded.}
+\item{all_results}{if available, the results from simulations. Else loaded. Summary results can be submitted here.}
 
 \item{pretty_format}{Whether to return a pretty table or raw data.}
 }

@@ -11,7 +11,8 @@ loopless_sim(
   scores = HockeyModel::scores,
   rho = HockeyModel::rho,
   m = HockeyModel::m,
-  odds_table = NULL
+  odds_table = NULL,
+  season_sofar = NULL
 )
 }
 \arguments{

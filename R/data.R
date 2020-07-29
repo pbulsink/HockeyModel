@@ -170,14 +170,22 @@ updateCovid <- function(covidSeries=NULL){
   #https://www.sportingnews.com/us/nhl/news/nhl-2020-stanley-cup-playoffs-everything-we-know-about-resumption/36kbfimlv0nr13v1o1kusxhr2
   if(is.null(covidSeries)){
     covidSeries<-list(
-      east_rr=data.frame('Teams' = c(),
+      east_rr=data.frame('Teams' = c("Boston Bruins", "Tampa Bay Lightning",
+                                     "Washington Capitals", "Philadelphia Flyers"),
                          stringsAsFactors = FALSE),
-      west_rr=data.frame('Teams' = c(),
+      west_rr=data.frame('Teams' = c("St. Louis Blues", "Colorado Avalanche",
+                                     "Vegas Golden Knights", "Dallas Stars"),
                          stringsAsFactors = FALSE),
-      play_in=data.frame('HomeTeam'=c(),
-                         'AwayTeam'=c(),
-                         'HomeWins'=c(),
-                         'AwayWins'=c(),
+      play_in=data.frame('HomeTeam'=c("Pittsburgh Penguins", "Carolina Hurricanes",
+                                      "New York Islanders", "Toronto Maple Leafs",
+                                      "Edmonton Oilers", "Nashville Predators",
+                                      "Vancouver Canucks", "Calgary Flames"),
+                         'AwayTeam'=c("Montreal Canadiens", "New York Rangers",
+                                      "Florida Panthers", "Columbus Blue Jackets",
+                                      "Chicago Blackhawks", "Arizona Coyotes",
+                                      "Minnesota Wild", "Winnipeg Jets"),
+                         'HomeWins'=c(0,0,0,0,0,0,0,0),
+                         'AwayWins'=c(0,0,0,0,0,0,0,0),
                          stringsAsFactors = FALSE)
     )
   }
@@ -194,7 +202,21 @@ updateCovid <- function(covidSeries=NULL){
 
 #' Covid Series
 #'
-#' Manually Updated series for 2020 COVID Playoff format
+#' Manually Updated series for 2020 COVID Playoff play-in games
 #'
 #' @format A list of data frames
 "covidSeries"
+
+#' Covid Scheduele
+#'
+#' Manually created schedule for 2020 COVID Playoff play-in games
+#'
+#' @format a data frame
+"covidSchedule"
+
+#' Covid Scores
+#'
+#' Manually updated scores for east and west round robin play-ins
+#'
+#' @format a data frame
+"covidScores"

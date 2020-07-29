@@ -4,7 +4,14 @@
 \alias{playoffSeriesOdds}
 \title{Statistical Playoff Series Odds Solver}
 \usage{
-playoffSeriesOdds(home_odds, away_odds, home_win = 0, away_win = 0)
+playoffSeriesOdds(
+  home_odds,
+  away_odds,
+  home_win = 0,
+  away_win = 0,
+  ngames = NULL,
+  game_home = NULL
+)
 }
 \arguments{
 \item{home_odds}{Team odds with home-ice advantage at home}
