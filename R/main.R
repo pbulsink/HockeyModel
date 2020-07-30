@@ -7,7 +7,7 @@
 #'
 #' @export
 updateModel <- function(...){
-  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-08-01"), ...)
+  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-07-29"), ...)
   schedule<-updateSchedule(...)
   dcparams<-updateDC(scores = scores)
   #devtools::install(local = FALSE)
@@ -130,7 +130,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if(Sys.Date() <= as.Date('2020-04-04')){
+  if(Sys.Date() <= as.Date('2020-07-29')){
     #TODO Doesn't yet programattically know that reg. season is done. Fix this summer.
 
     rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
@@ -177,7 +177,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   modelparams<-updateModel(...)
   in_reg_season<-FALSE
-  if(Sys.Date()<= as.Date("2020-08-10")){
+  if(Sys.Date()<= as.Date("2020-7-29")){
     in_reg_season<-TRUE
     if(Sys.Date()<=as.Date("2020-04-10")){
       updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)

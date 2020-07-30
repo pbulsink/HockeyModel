@@ -893,11 +893,19 @@ covid_play_in_solver<-function(covidSeries = HockeyModel::covidSeries, covidSche
 
   east_play_in<-covidSchedule[covidSchedule$HomeTeam %in% covidSeries$east_rr$Teams,]
   west_play_in<-covidSchedule[covidSchedule$HomeTeam %in% covidSeries$west_rr$Teams,]
-  # east_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$east_rr$Teams,]
-  # west_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$west_rr$Teams,]
+  east_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$east_rr$Teams,]
+  east_scores<-east_scores[east_scores$Date < Sys.Date(),]
+  if(nrow(east_scores) == 0){
+    east_scores <- NA
+  }
+  west_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$west_rr$Teams,]
+  west_scores<-west_scores[west_scores$Date < Sys.Date(),]
+  if(nrow(west_scores) == 0){
+    west_scores <- NA
+  }
 
-  east_raw<-loopless_sim(nsims = 1e4, schedule = east_play_in, season_sofar = NA)$raw_results
-  west_raw<-loopless_sim(nsims = 1e4, schedule = west_play_in, season_sofar = NA)$raw_results
+  east_raw<-loopless_sim(nsims = 1e5, schedule = east_play_in, season_sofar = east_scores)$raw_results
+  west_raw<-loopless_sim(nsims = 1e5, schedule = west_play_in, season_sofar = west_scores)$raw_results
 
   #nrow(eastresults$raw_results[eastresults$raw_results$Team == "Boston Bruins" & eastresults$raw_results$Rank == 1,])/nrow(eastresults$raw_results) * 4
 
