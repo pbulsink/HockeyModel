@@ -36,7 +36,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
   p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes_(x=quote(predictionDate), y=quote(meanPoints), colour = quote(Team))) +
     ggalt::geom_xspline(spline_shape = 0.5) +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
-    ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
+    ggplot2::scale_x_date(expand = ggplot2::expansion(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::labs(x = "Date",
                   y = "Points",
@@ -96,7 +96,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
     ggalt::geom_xspline(spline_shape = 0.5) +
     #ggplot2::geom_line() +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
-    ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
+    ggplot2::scale_x_date(expand = ggplot2::expansion(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::labs(x = "Date",
                   y = "Playoff Odds",
@@ -150,7 +150,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
   p<-ggplot2::ggplot(data=all_predictions, ggplot2::aes_(x=quote(predictionDate), y=quote(Presidents), colour = quote(Team))) +
     ggalt::geom_xspline(spline_shape = 0.5) +
     ggplot2::facet_wrap( ~ facet, ncol = length(unique(all_predictions$Division))) +
-    ggplot2::scale_x_date(expand = ggplot2::expand_scale(mult = c(0,.33))) +
+    ggplot2::scale_x_date(expand = ggplot2::expansion(mult = c(0,.33))) +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::labs(x = "Date",
                   y = "President's Trophy Odds",
@@ -262,14 +262,16 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
   #Melt data to work with ggplot
   melted<-reshape2::melt(todayodds, id.vars = c('HomeTeam', 'AwayTeam'))
   melted$variable<-factor(x = melted$variable, levels = c("AwayWin", "AwayWinOT", "Draw", "HomeWinOT", "HomeWin"), ordered = TRUE)
+  melted<-melted[melted$variable != "Draw",]
 
-  #Make colour and alpha lists for plot
-  plotcolors<-c()
-  plotalpha<-c()
-  for(i in 1:nrow(todayodds)){
-    tc <- getTeamColours(home = todayodds[i, 'HomeTeam'], away= todayodds[i, 'AwayTeam'])
-    plotcolors<-c(plotcolors, tc$home, tc$home, tc$away, tc$away)
-    plotalpha <- c(plotalpha, 1, 0.7, 0.7, 1)
+  melted$alpha<-1
+  melted$colour<-""
+  for(i in 1:nrow(melted)){
+    melted[i,]$alpha<-ifelse(melted[i,]$variable %in% c("HomeWin", "AwayWin"), yes=1, no=0.7)
+    tc <- getTeamColours(home = melted[i, 'HomeTeam'], away=melted[i, 'AwayTeam'])
+    melted[i,]$colour<-ifelse(melted[i,]$variable %in% c("HomeWin", "HomeWinOT"),
+                              yes=tc$home,
+                              no =tc$away)
   }
 
   #Prepare instructions to read
@@ -279,9 +281,10 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
   text_ot <- grid::textGrob("OT/SO Decision", gp = grid::gpar(fontsize = 10), hjust = 0.5)
 
   #build plot
-  p<-ggplot2::ggplot(melted[melted$variable %in% c('HomeWin','HomeWinOT', 'AwayWinOT', 'AwayWin'),],
+  #p<-ggplot2::ggplot(melted[melted$variable %in% c('HomeWin','HomeWinOT', 'AwayWinOT', 'AwayWin'),],
+  p<-ggplot2::ggplot(melted,
                      ggplot2::aes_(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
-    ggplot2::geom_bar(stat = "identity", position='fill', fill = plotcolors, alpha = plotalpha, colour = 'white') +
+    ggplot2::geom_bar(stat = "identity", position='fill', fill = melted$colour, alpha = melted$alpha, colour = 'white') +
     ggplot2::labs(x = "",
                   y = "Result Odds",
                   title = "Predictions for Today's Games",
@@ -294,7 +297,7 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
                    panel.border = ggplot2::element_blank(),
                    panel.grid= ggplot2::element_blank(),
                    plot.margin = ggplot2::unit(c(2,1,1,1), "lines"))+
-    ggplot2::scale_y_continuous(expand = ggplot2::expand_scale(add = 0.3),
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(add = 0.3),
                                 breaks = c(0,0.5,1)) +
     ggplot2::annotate("text", x = todayodds$HomeTeam, y = -.01, hjust = 1, label = todayodds$HomeTeam) +
     ggplot2::annotate("text", x = todayodds$HomeTeam, y = 1.01, hjust = 0, label = todayodds$AwayTeam) +
@@ -334,12 +337,13 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
   melted<-reshape2::melt(series, id.vars = c('HomeTeam', 'AwayTeam'))
   melted$variable<-factor(x = melted$variable, levels = c("AwayOdds", "HomeOdds"), ordered = TRUE)
   melted$HomeTeam <- factor(x = melted$HomeTeam, levels = melted$HomeTeam[1:(length(melted$HomeTeam)/2)], ordered = TRUE)
+  melted$colour = ""
 
-  #Make colour list for plot
-  plotcolors<-c()
-  for(i in 1:nrow(series)){
-    tc <- getTeamColours(home = series[i, 'HomeTeam'], away= series[i, 'AwayTeam'])
-    plotcolors<-c(plotcolors, tc$home, tc$away)
+  for(i in 1:nrow(melted)){
+    tc <- getTeamColours(home = melted[i, 'HomeTeam'], away= melted[i, 'AwayTeam'])
+    melted[i,]$colour<-ifelse(melted[i,]$variable == "HomeOdds",
+                              yes=tc$home,
+                              no=tc$away)
   }
 
   #Prepare instructions to read
@@ -349,7 +353,7 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
   #build plot
   p<-ggplot2::ggplot(melted[melted$variable %in% c('HomeOdds','AwayOdds'),],
                      ggplot2::aes_(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
-    ggplot2::geom_bar(stat = "identity", position='fill', fill = plotcolors, colour = 'white') +
+    ggplot2::geom_bar(stat = "identity", position='fill', fill = melted$colour, colour = 'white') +
     ggplot2::labs(x = "",
                   y = "Series Odds",
                   title = "Predictions for Playoff Series",
@@ -362,7 +366,7 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
                    panel.border = ggplot2::element_blank(),
                    panel.grid= ggplot2::element_blank(),
                    plot.margin = ggplot2::unit(c(2,1,1,1), "lines"))+
-    ggplot2::scale_y_continuous(expand = ggplot2::expand_scale(add = 0.3),
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(add = 0.3),
                                 breaks = c(0,0.5,1)) +
     ggplot2::annotate("text", x = series$HomeTeam, y = -.01, hjust = 1, label = series$HomeTeam) +
     ggplot2::annotate("text", x = series$HomeTeam, y = 1.01, hjust = 0, label = series$AwayTeam) +
