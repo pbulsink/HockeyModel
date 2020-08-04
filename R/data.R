@@ -184,22 +184,22 @@ updateCovid <- function(covidSeries=NULL){
                                       "Florida Panthers", "Columbus Blue Jackets",
                                       "Chicago Blackhawks", "Arizona Coyotes",
                                       "Minnesota Wild", "Winnipeg Jets"),
-                         'HomeWins'=c(0,  # Pittsburgh
-                                      0,  # Carolina
-                                      0,  # NY Isles
+                         'HomeWins'=c(1,  # Pittsburgh
+                                      2,  # Carolina
+                                      1,  # NY Isles
                                       0,  # Toronto
-                                      0,  # Edmonton
+                                      1,  # Edmonton
                                       0,  # Nashville
                                       0,  # Vancouver
-                                      0), # Calgary
-                         'AwayWins'=c(0,  # Montreal
+                                      1), # Calgary
+                         'AwayWins'=c(1,  # Montreal
                                       0,  # NY Rangers
                                       0,  # Florida
-                                      0,  # Columbus
-                                      0,  # Chicago
-                                      0,  # Arizona
-                                      0,  # Minnesota
-                                      0), # Winnipeg
+                                      1,  # Columbus
+                                      1,  # Chicago
+                                      1,  # Arizona
+                                      1,  # Minnesota
+                                      1), # Winnipeg
                          stringsAsFactors = FALSE)
     )
   }
@@ -207,34 +207,11 @@ updateCovid <- function(covidSeries=NULL){
   return(covidSeries)
 }
 
-updateCovidScores<-function(){
-  covidScores = data.frame("Date" = c("2020-08-02", "2020-08-02",
-                                      "2020-08-03", "2020-08-03",
-                                      "2020-08-05", "2020-08-05",
-                                      "2020-08-06", "2020-08-06",
-                                      "2020-08-07", "2020-08-07",
-                                      "2020-08-08", "2020-08-08"),
-                           "HomeTeam" = c("Boston Bruins", "Colorado Avalanche",
-                                          "Tampa Bay Lightning", "Vegas Golden Knights",
-                                          "Boston Bruins", "Dallas Stars",
-                                          "Philadelphia Flyers", "St. Louis Blues",
-                                          "Washington Capitals", "Colorado Avalanche",
-                                          "Tampa Bay Lightning", "St. Louis Blues"),
-                           "AwayTeam" = c("Philadelphia Flyers", "St. Louis Blues",
-                                          "Washington Capitals", "Dallas Stars",
-                                          "Tampa Bay Lightning", "Colorado Avalanche",
-                                          "Washington Capitals", "Vegas Golden Knights",
-                                          "Boston Bruins", "Vegas Golden Knights",
-                                          "Philadelphia Flyers", "Dallas Stars"),
-                           "HomeGoals" = c(0,0,0,0,0,0,0,0,0,0,0,0),
-                           "AwayGoals" = c(0,0,0,0,0,0,0,0,0,0,0,0),
-                           "Tie" = c(""),
-                           "Result" = c(0.5),
-                           "OTStatus" = c(""),
-                           "League" = rep("NHL"),
-                           "Winner" = c(""),
-                           "Loser"= c(""))
-  covidScores$Date<-as.Date(covidScores$Date)
+updateCovidScores<-function(scores = HockeyModel::scores, east = covidSeries$east_rr, west = covidSeries$west_rr){
+  covidScores <- scores[scores$Date > as.Date("2020-07-31"), ]
+  covidScores <- covidScores[covidScores$Date < as.Date("2020-08-09"), ]
+  covidScores <- covidScores[covidScores$HomeTeam %in% c(east$Teams, west$Teams), ]
+
   usethis::use_data(covidScores, overwrite = TRUE)
   return(covidScores)
 }

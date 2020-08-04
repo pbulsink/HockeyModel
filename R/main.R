@@ -171,6 +171,29 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*10, ...){
   #message("Reminder, run updateModel() first.")
   #Sys.sleep(5)
+
+  if(lubridate::year(Sys.Date()) == 2020 & lubridate::month(Sys.Date()) %in% c(7:10)){
+    #COVID RULES
+    modelParams<-updateModel(...)
+    sc<-modelparams$schedule
+
+    if(Sys.Date() %in% sc$Date){
+      today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
+      #save to files.
+      grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+      print(today)
+      Sys.sleep(5)
+      while(grDevices::dev.cur()!=1){
+        grDevices::dev.off()
+      }
+
+      rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
+                         media = file.path(graphic_dir, "today_odds.png"), token = token)
+
+      tweetGames(games = sc[sc$Date == Sys.Date(), ], delay = delay, graphic_dir = graphic_dir, m = modelParams$m, rho = modelParams$rho, token = token)
+    }
+    return(NULL)
+  }
   if(lubridate::month(Sys.Date()) %in% c(7:9) & lubridate::year((Sys.Date()) != 2020)){
     stop('No off-season predictions')
   }
@@ -459,10 +482,38 @@ tweetSeries<-function(series = HockeyModel::series, token = rtweet::get_token(),
     grDevices::dev.off()
   }
 
-  status <- paste0("#NHL Playoff Series Odds before games on ", Sys.Date(), " #HockeyTwitter")
+  status <- paste0("#NHL Playoff Series Odds before games on ", Sys.Date(), " #HockeyTwitter #StanleyCup")
 
   rtweet::post_tweet(status = status,
                      media = file.path(graphic_dir, 'series_odds.png'),
                      token = token)
 }
 
+#' Tweet Playoff Odds
+#'
+#' @description Tweet the formattable graphics with each team's odds of each round/cup win
+#'
+#' @param playoffOdds During COVID, pass covid_play_in_solver(), afterwards change to all_results = all_results
+#'
+#' @param token rtweet token
+#' @param graphic_dir directory to save images
+#'
+#' @return NULL
+#' @export
+tweetPlayoffOdds<-function(playoffOdds=covid_play_in_solver(), token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/"){
+  plts<-playoffSolver(p0=playoffOdds)
+
+  #after COVID use this instead:
+  #plts <- playoffSolver(all_results = playoffOdds)
+
+  export_formattable(f=plts$east, file = file.path(graphic_dir, "east_playoff_odds.png"))
+  export_formattable(f=plts$west, file = file.path(graphic_dir, "west_playoff_odds.png"))
+
+  status<- paste0("#NHL #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
+
+  #Posting Tweet
+  rtweet::post_tweet(status = status,
+                     media = c(file.path(graphic_dir, "east_playoff_odds.png"), file.path(graphic_dir, "west_playoff_odds.png")),
+                     token = token)
+
+}

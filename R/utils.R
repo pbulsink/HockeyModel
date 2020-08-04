@@ -49,7 +49,7 @@ getSeason <- function(gamedate){
   gs<-function(gd){
     year<-as.integer(strftime(gd, '%Y'))
     month<-as.integer(strftime(gd, '%m'))
-    if(month < 8){
+    if(month < 10){
       return(paste0(year-1,year))
     } else {
       return(paste0(year,year+1))

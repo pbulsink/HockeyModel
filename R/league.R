@@ -887,7 +887,7 @@ covid_play_in_solver<-function(covidSeries = HockeyModel::covidSeries, covidSche
   play_in_odds$AwayProgress=0
 
   for(i in 1:nrow(play_in_odds)){
-    play_in_odds[i, "HomeProgress"]<-playoffWin(play_in_odds$HomeTeam[i], play_in_odds$AwayTeam[i], ngames=5, game_home=c(TRUE, TRUE, FALSE, FALSE, TRUE))
+    play_in_odds[i, "HomeProgress"]<-playoffWin(play_in_odds$HomeTeam[i], play_in_odds$AwayTeam[i], ngames=5, game_home=c(TRUE, TRUE, FALSE, FALSE, TRUE), home_wins = play_in_odds$HomeWins[i], away_wins = play_in_odds$AwayWins[i])
     play_in_odds[i, "AwayProgress"]<-1-play_in_odds[i, "HomeProgress"]
   }
 
