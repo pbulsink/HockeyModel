@@ -174,7 +174,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   if(lubridate::year(Sys.Date()) == 2020 & lubridate::month(Sys.Date()) %in% c(7:10)){
     #COVID RULES
-    modelParams<-updateModel(...)
+    modelparams<-updateModel(...)
     sc<-modelparams$schedule
 
     if(Sys.Date() %in% sc$Date){
@@ -190,7 +190,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
       rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
                          media = file.path(graphic_dir, "today_odds.png"), token = token)
 
-      tweetGames(games = sc[sc$Date == Sys.Date(), ], delay = delay, graphic_dir = graphic_dir, m = modelParams$m, rho = modelParams$rho, token = token)
+      tweetGames(games = sc[sc$Date == Sys.Date(), ], delay = delay, graphic_dir = graphic_dir, m = modelparams$m, rho = modelparams$rho, token = token)
     }
     return(NULL)
   }

@@ -185,13 +185,13 @@ updateCovid <- function(covidSeries=NULL){
                                       "Chicago Blackhawks", "Arizona Coyotes",
                                       "Minnesota Wild", "Winnipeg Jets"),
                          'HomeWins'=c(1,  # Pittsburgh
-                                      2,  # Carolina
-                                      1,  # NY Isles
-                                      0,  # Toronto
+                                      3,  # Carolina
+                                      2,  # NY Isles
+                                      1,  # Toronto
                                       1,  # Edmonton
-                                      0,  # Nashville
-                                      0,  # Vancouver
-                                      1), # Calgary
+                                      1,  # Nashville
+                                      1,  # Vancouver
+                                      2), # Calgary
                          'AwayWins'=c(1,  # Montreal
                                       0,  # NY Rangers
                                       0,  # Florida
