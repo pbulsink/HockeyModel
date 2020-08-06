@@ -501,6 +501,9 @@ tweetSeries<-function(series = HockeyModel::series, token = rtweet::get_token(),
 #' @return NULL
 #' @export
 tweetPlayoffOdds<-function(playoffOdds=covid_play_in_solver(), token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/"){
+  #need to drop rows with teams that have no chance
+  playoffOdds <- playoffOdds %>%
+    dplyr::filter(!(!!dplyr::sym('p_rank1') + !!dplyr::sym('p_rank2') + !!dplyr::sym('p_rank3') + !!dplyr::sym('p_rank4') + !!dplyr::sym('p_rank5') + !!dplyr::sym('p_rank6') + !!dplyr::sym('p_rank7') + !!dplyr::sym('p_rank8') == 0))
   plts<-playoffSolver(p0=playoffOdds)
 
   #after COVID use this instead:
