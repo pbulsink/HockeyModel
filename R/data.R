@@ -192,12 +192,12 @@ updateCovid <- function(covidSeries=NULL){
                                       1,  # Nashville
                                       1,  # Vancouver
                                       2), # Calgary
-                         'AwayWins'=c(1,  # Montreal
+                         'AwayWins'=c(2,  # Montreal
                                       0,  # NY Rangers
-                                      0,  # Florida
+                                      1,  # Florida
                                       1,  # Columbus
-                                      1,  # Chicago
-                                      1,  # Arizona
+                                      2,  # Chicago
+                                      2,  # Arizona
                                       1,  # Minnesota
                                       1), # Winnipeg
                          stringsAsFactors = FALSE)
