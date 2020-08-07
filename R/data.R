@@ -190,12 +190,12 @@ updateCovid <- function(covidSeries=NULL){
                                       1,  # Toronto
                                       1,  # Edmonton
                                       1,  # Nashville
-                                      1,  # Vancouver
-                                      2), # Calgary
+                                      2,  # Vancouver
+                                      3), # Calgary
                          'AwayWins'=c(2,  # Montreal
                                       0,  # NY Rangers
                                       1,  # Florida
-                                      1,  # Columbus
+                                      2,  # Columbus
                                       2,  # Chicago
                                       2,  # Arizona
                                       1,  # Minnesota
