@@ -186,18 +186,18 @@ updateCovid <- function(covidSeries=NULL){
                                       "Minnesota Wild", "Winnipeg Jets"),
                          'HomeWins'=c(1,  # Pittsburgh
                                       3,  # Carolina
-                                      2,  # NY Isles
-                                      1,  # Toronto
+                                      3,  # NY Isles
+                                      2,  # Toronto
                                       1,  # Edmonton
                                       1,  # Nashville
-                                      2,  # Vancouver
+                                      3,  # Vancouver
                                       3), # Calgary
-                         'AwayWins'=c(2,  # Montreal
+                         'AwayWins'=c(3,  # Montreal
                                       0,  # NY Rangers
                                       1,  # Florida
                                       2,  # Columbus
-                                      2,  # Chicago
-                                      2,  # Arizona
+                                      3,  # Chicago
+                                      3,  # Arizona
                                       1,  # Minnesota
                                       1), # Winnipeg
                          stringsAsFactors = FALSE)
