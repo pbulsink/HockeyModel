@@ -156,90 +156,120 @@ updateScores <- function(data_dir = "./data-raw", last_playoffs = FALSE){
 #' @export
 updateSeries<-function(series = NULL){
   if(is.null(series)){
-    series<-data.frame('HomeTeam' = c(),
-                       'AwayTeam' = c(),
-                       'HomeWins' = c(),
-                       'AwayWins' = c(),
+    series<-data.frame('HomeTeam' = c("Philadelphia Flyers",
+                                      "Tampa Bay Lightning",
+                                      "Washington Capitals",
+                                      "Boston Bruins",
+                                      "Vegas Golden Knights",
+                                      "Colorado Avalanche",
+                                      "Dallas Stars",
+                                      "St. Louis Blues"),
+                       'AwayTeam' = c("Montreal Canadiens",
+                                      "Columbus Blue Jackets",
+                                      "New York Islanders",
+                                      "Carolina Hurricanes",
+                                      "Chicago Blackhawks",
+                                      "Arizona Coyotes",
+                                      "Calgary Flames",
+                                      "Vancouver Canucks"),
+                       'HomeWins' = c(0,  # Flyers
+                                      0,  # Tampa
+                                      0,  # Washington
+                                      0,  # Boston
+                                      0,  # Vegas
+                                      0,  # Colorado
+                                      0,  # Dallas
+                                      0   # St. Louis
+                                      ),
+                       'AwayWins' = c(0,  # Canadiens
+                                      0,  # Blue Jackets
+                                      0,  # Islanders
+                                      0,  # Carolina
+                                      0,  # Chicago
+                                      0,  # Arizona
+                                      0,  # Calgary
+                                      0   # Vancouver
+                                      ),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)
   return(series)
 }
 
-updateCovid <- function(covidSeries=NULL){
-  #https://www.sportingnews.com/us/nhl/news/nhl-2020-stanley-cup-playoffs-everything-we-know-about-resumption/36kbfimlv0nr13v1o1kusxhr2
-  if(is.null(covidSeries)){
-    covidSeries<-list(
-      east_rr=data.frame('Teams' = c("Boston Bruins", "Tampa Bay Lightning",
-                                     "Washington Capitals", "Philadelphia Flyers"),
-                         stringsAsFactors = FALSE),
-      west_rr=data.frame('Teams' = c("St. Louis Blues", "Colorado Avalanche",
-                                     "Vegas Golden Knights", "Dallas Stars"),
-                         stringsAsFactors = FALSE),
-      play_in=data.frame('HomeTeam'=c("Pittsburgh Penguins", "Carolina Hurricanes",
-                                      "New York Islanders", "Toronto Maple Leafs",
-                                      "Edmonton Oilers", "Nashville Predators",
-                                      "Vancouver Canucks", "Calgary Flames"),
-                         'AwayTeam'=c("Montreal Canadiens", "New York Rangers",
-                                      "Florida Panthers", "Columbus Blue Jackets",
-                                      "Chicago Blackhawks", "Arizona Coyotes",
-                                      "Minnesota Wild", "Winnipeg Jets"),
-                         'HomeWins'=c(1,  # Pittsburgh
-                                      3,  # Carolina
-                                      3,  # NY Isles
-                                      2,  # Toronto
-                                      1,  # Edmonton
-                                      1,  # Nashville
-                                      3,  # Vancouver
-                                      3), # Calgary
-                         'AwayWins'=c(3,  # Montreal
-                                      0,  # NY Rangers
-                                      1,  # Florida
-                                      2,  # Columbus
-                                      3,  # Chicago
-                                      3,  # Arizona
-                                      1,  # Minnesota
-                                      1), # Winnipeg
-                         stringsAsFactors = FALSE)
-    )
-  }
-  usethis::use_data(covidSeries, overwrite = TRUE)
-  return(covidSeries)
-}
-
-updateCovidScores<-function(scores = HockeyModel::scores, east = covidSeries$east_rr, west = covidSeries$west_rr){
-  covidScores <- scores[scores$Date > as.Date("2020-07-31"), ]
-  covidScores <- covidScores[covidScores$Date < as.Date("2020-08-09"), ]
-  covidScores <- covidScores[covidScores$HomeTeam %in% c(east$Teams, west$Teams), ]
-
-  usethis::use_data(covidScores, overwrite = TRUE)
-  return(covidScores)
-}
-
+#' updateCovid <- function(covidSeries=NULL){
+#'   #https://www.sportingnews.com/us/nhl/news/nhl-2020-stanley-cup-playoffs-everything-we-know-about-resumption/36kbfimlv0nr13v1o1kusxhr2
+#'   if(is.null(covidSeries)){
+#'     covidSeries<-list(
+#'       east_rr=data.frame('Teams' = c("Boston Bruins", "Tampa Bay Lightning",
+#'                                      "Washington Capitals", "Philadelphia Flyers"),
+#'                          stringsAsFactors = FALSE),
+#'       west_rr=data.frame('Teams' = c("St. Louis Blues", "Colorado Avalanche",
+#'                                      "Vegas Golden Knights", "Dallas Stars"),
+#'                          stringsAsFactors = FALSE),
+#'       play_in=data.frame('HomeTeam'=c("Pittsburgh Penguins", "Carolina Hurricanes",
+#'                                       "New York Islanders", "Toronto Maple Leafs",
+#'                                       "Edmonton Oilers", "Nashville Predators",
+#'                                       "Vancouver Canucks", "Calgary Flames"),
+#'                          'AwayTeam'=c("Montreal Canadiens", "New York Rangers",
+#'                                       "Florida Panthers", "Columbus Blue Jackets",
+#'                                       "Chicago Blackhawks", "Arizona Coyotes",
+#'                                       "Minnesota Wild", "Winnipeg Jets"),
+#'                          'HomeWins'=c(1,  # Pittsburgh
+#'                                       3,  # Carolina
+#'                                       3,  # NY Isles
+#'                                       2,  # Toronto
+#'                                       1,  # Edmonton
+#'                                       1,  # Nashville
+#'                                       3,  # Vancouver
+#'                                       3), # Calgary
+#'                          'AwayWins'=c(3,  # Montreal
+#'                                       0,  # NY Rangers
+#'                                       1,  # Florida
+#'                                       2,  # Columbus
+#'                                       3,  # Chicago
+#'                                       3,  # Arizona
+#'                                       1,  # Minnesota
+#'                                       1), # Winnipeg
+#'                          stringsAsFactors = FALSE)
+#'     )
+#'   }
+#'   usethis::use_data(covidSeries, overwrite = TRUE)
+#'   return(covidSeries)
+#' }
+#'
+#' updateCovidScores<-function(scores = HockeyModel::scores, east = covidSeries$east_rr, west = covidSeries$west_rr){
+#'   covidScores <- scores[scores$Date > as.Date("2020-07-31"), ]
+#'   covidScores <- covidScores[covidScores$Date < as.Date("2020-08-09"), ]
+#'   covidScores <- covidScores[covidScores$HomeTeam %in% c(east$Teams, west$Teams), ]
+#'
+#'   usethis::use_data(covidScores, overwrite = TRUE)
+#'   return(covidScores)
+#' }
+#'
 #' Playoff Series
 #'
 #' Manually Updated Playoff Series Status.
 #'
 #' @format A data frame
 "series"
-
-#' Covid Series
 #'
-#' Manually Updated series for 2020 COVID Playoff play-in games
+#' #' Covid Series
+#' #'
+#' #' Manually Updated series for 2020 COVID Playoff play-in games
+#' #'
+#' #' @format A list of data frames
+#' "covidSeries"
 #'
-#' @format A list of data frames
-"covidSeries"
-
-#' Covid Scheduele
+#' #' Covid Scheduele
+#' #'
+#' #' Manually created schedule for 2020 COVID Playoff play-in games
+#' #'
+#' #' @format a data frame
+#' "covidSchedule"
 #'
-#' Manually created schedule for 2020 COVID Playoff play-in games
-#'
-#' @format a data frame
-"covidSchedule"
-
-#' Covid Scores
-#'
-#' Manually updated scores for east and west round robin play-ins
-#'
-#' @format a data frame
-"covidScores"
+#' #' Covid Scores
+#' #'
+#' #' Manually updated scores for east and west round robin play-ins
+#' #'
+#' #' @format a data frame
+#' "covidScores"
