@@ -172,23 +172,23 @@ updateSeries<-function(series = NULL){
                                       "Arizona Coyotes",
                                       "Calgary Flames",
                                       "Vancouver Canucks"),
-                       'HomeWins' = c(0,  # Flyers
-                                      0,  # Tampa
+                       'HomeWins' = c(1,  # Flyers
+                                      1,  # Tampa
                                       0,  # Washington
-                                      0,  # Boston
-                                      0,  # Vegas
-                                      0,  # Colorado
-                                      0,  # Dallas
+                                      1,  # Boston
+                                      2,  # Vegas
+                                      1,  # Colorado
+                                      1,  # Dallas
                                       0   # St. Louis
                                       ),
                        'AwayWins' = c(0,  # Canadiens
-                                      0,  # Blue Jackets
+                                      1,  # Blue Jackets
                                       0,  # Islanders
-                                      0,  # Carolina
+                                      1,  # Carolina
                                       0,  # Chicago
                                       0,  # Arizona
-                                      0,  # Calgary
-                                      0   # Vancouver
+                                      1,  # Calgary
+                                      1   # Vancouver
                                       ),
                        stringsAsFactors = FALSE)
   }
