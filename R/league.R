@@ -873,107 +873,107 @@ team_progression_odds<-function(round, team, odds){
 
 #' Covid Play-in Solver
 #'
-#' @description Due to the unique play-in required for 2019-2020 season during the COVID-19 pandemic, this mashes the required odds for play-in teams and round-robin teams of finishing ahead in their series
+#' @ description Due to the unique play-in required for 2019-2020 season during the COVID-19 pandemic, this mashes the required odds for play-in teams and round-robin teams of finishing ahead in their series
 #'
-#' @param covidSeries Defaults to the built-in covid play-inand round-robin series
-#' @param covidSchedule the schedule of games
-#' @param covidScores the result of games, manually updated
+#' @ param covidSeries Defaults to the built-in covid play-inand round-robin series
+#' @ param covidSchedule the schedule of games
+#' @ param covidScores the result of games, manually updated
 #'
-#' @return a list of data frames
-#' @export
-covid_play_in_solver<-function(covidSeries = HockeyModel::covidSeries, covidSchedule=HockeyModel::covidSchedule, covidScores = HockeyModel::covidScores){
-  play_in_odds<-covidSeries$play_in
-  play_in_odds$HomeProgress=0
-  play_in_odds$AwayProgress=0
-
-  for(i in 1:nrow(play_in_odds)){
-    play_in_odds[i, "HomeProgress"]<-playoffWin(play_in_odds$HomeTeam[i], play_in_odds$AwayTeam[i], ngames=5, game_home=c(TRUE, TRUE, FALSE, FALSE, TRUE), home_wins = play_in_odds$HomeWins[i], away_wins = play_in_odds$AwayWins[i])
-    play_in_odds[i, "AwayProgress"]<-1-play_in_odds[i, "HomeProgress"]
-  }
-
-  east_play_in<-covidSchedule[covidSchedule$HomeTeam %in% covidSeries$east_rr$Teams,]
-  west_play_in<-covidSchedule[covidSchedule$HomeTeam %in% covidSeries$west_rr$Teams,]
-  east_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$east_rr$Teams,]
-  east_scores<-east_scores[east_scores$Date < Sys.Date(),]
-  if(nrow(east_scores) == 0){
-    east_scores <- NA
-  }
-  west_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$west_rr$Teams,]
-  west_scores<-west_scores[west_scores$Date < Sys.Date(),]
-  if(nrow(west_scores) == 0){
-    west_scores <- NA
-  }
-
-  east_raw<-loopless_sim(nsims = 1e5, schedule = east_play_in, season_sofar = east_scores)$raw_results
-  west_raw<-loopless_sim(nsims = 1e5, schedule = west_play_in, season_sofar = west_scores)$raw_results
-
-  #nrow(eastresults$raw_results[eastresults$raw_results$Team == "Boston Bruins" & eastresults$raw_results$Rank == 1,])/nrow(eastresults$raw_results) * 4
-
-  east_results<-data.frame(Team = covidSeries$east_rr$Teams)#, p1=numeric(), p2=numeric(), p3=numeric(), p4=numeric())
-  west_results<-data.frame(Team = covidSeries$west_rr$Teams)#, p1=numeric(), p2 = numeric(), p3=numeric(), p4=numeric())
-
-  east_results <- east_results%>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(p1=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 1,])/nrow(east_raw)*4,
-                  p2=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 2,])/nrow(east_raw)*4,
-                  p3=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 3,])/nrow(east_raw)*4,
-                  p4=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 4,])/nrow(east_raw)*4
-    )
-
-  west_results <- west_results %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(p1=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 1,,])/nrow(west_raw)*4,
-                  p2=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 2,])/nrow(west_raw)*4,
-                  p3=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 3,])/nrow(west_raw)*4,
-                  p4=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 4,])/nrow(west_raw)*4
-    )
-
-  #return(list(east_results = east_results, west_results = west_results, play_in_odds = play_in_odds))
-
-  #progression_odds as p0 for playoff solver
-  p0<-dplyr::bind_rows(east_results, west_results)
-  colnames(p0)<-c('Team', 'p_rank1', 'p_rank2', 'p_rank3', 'p_rank4')
-  p0$p_rank5<-p0$p_rank6<-p0$p_rank7<-p0$p_rank8<-0
-  p0<-dplyr::bind_rows(p0, rank_odds_play_in(play_in_odds[1:4,]), rank_odds_play_in(play_in_odds[5:8,]))
-
-  p0[is.na(p0)]<-0
-  p0<-p0 %>%
-    dplyr::relocate(p_rank5, p_rank6, p_rank7, p_rank8, .after=p_rank4)
-  p0$meanRank<-(p0$p_rank1+2*p0$p_rank2+3*p0$p_rank3+4*p0$p_rank4+5*p0$p_rank5+6*p0$p_rank6+7*p0$p_rank7+8*p0$p_rank8)/rowSums(p0[,2:ncol(p0)])
-
-  return(p0)
-}
-
-rank_odds_play_in<-function(progress_odds){
-  p0<-data.frame(Team = c(progress_odds$HomeTeam, rev(progress_odds$AwayTeam)))
-  p0$p_rank5<-c(progress_odds[1,5],
-                progress_odds[2,5]*progress_odds[1,6],
-                progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,6],
-                progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,6],
-                progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,6],
-                0,0,0)
-  p0$p_rank6<-c(0,
-                progress_odds[2,5]*progress_odds[1,5],
-                progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,6],
-                progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,6] + progress_odds[4,5]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,6],
-                progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,6] + progress_odds[4,6]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,6],
-                progress_odds[3,6]*progress_odds[1,6]*progress_odds[2,6],
-                0,0)
-  p0$p_rank7<-c(0,0,
-                progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,5],
-                progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,5]+progress_odds[4,5]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,5]+progress_odds[4,5]*progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,6],
-                progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,5]+progress_odds[4,6]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,5]+progress_odds[4,6]*progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,6],
-                progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,6],
-                progress_odds[2,6]*progress_odds[1,6],
-                0)
-  p0$p_rank8<-c(0,0,0,
-                progress_odds[4,5]*progress_odds[1,5]*progress_odds[2,5]*progress_odds[3,5],
-                progress_odds[4,6]*progress_odds[1,5]*progress_odds[2,5]*progress_odds[3,5],
-                progress_odds[3,6]*progress_odds[1,5]*progress_odds[2,5],
-                progress_odds[2,6]*progress_odds[1,5],
-                progress_odds[1,6])
-  p0
-}
+#' @ return a list of data frames
+#' @ export
+# covid_play_in_solver<-function(covidSeries = HockeyModel::covidSeries, covidSchedule=HockeyModel::covidSchedule, covidScores = HockeyModel::covidScores){
+#   play_in_odds<-covidSeries$play_in
+#   play_in_odds$HomeProgress=0
+#   play_in_odds$AwayProgress=0
+#
+#   for(i in 1:nrow(play_in_odds)){
+#     play_in_odds[i, "HomeProgress"]<-playoffWin(play_in_odds$HomeTeam[i], play_in_odds$AwayTeam[i], ngames=5, game_home=c(TRUE, TRUE, FALSE, FALSE, TRUE), home_wins = play_in_odds$HomeWins[i], away_wins = play_in_odds$AwayWins[i])
+#     play_in_odds[i, "AwayProgress"]<-1-play_in_odds[i, "HomeProgress"]
+#   }
+#
+#   east_play_in<-covidSchedule[covidSchedule$HomeTeam %in% covidSeries$east_rr$Teams,]
+#   west_play_in<-covidSchedule[covidSchedule$HomeTeam %in% covidSeries$west_rr$Teams,]
+#   east_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$east_rr$Teams,]
+#   east_scores<-east_scores[east_scores$Date < Sys.Date(),]
+#   if(nrow(east_scores) == 0){
+#     east_scores <- NA
+#   }
+#   west_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$west_rr$Teams,]
+#   west_scores<-west_scores[west_scores$Date < Sys.Date(),]
+#   if(nrow(west_scores) == 0){
+#     west_scores <- NA
+#   }
+#
+#   east_raw<-loopless_sim(nsims = 1e5, schedule = east_play_in, season_sofar = east_scores)$raw_results
+#   west_raw<-loopless_sim(nsims = 1e5, schedule = west_play_in, season_sofar = west_scores)$raw_results
+#
+#   #nrow(eastresults$raw_results[eastresults$raw_results$Team == "Boston Bruins" & eastresults$raw_results$Rank == 1,])/nrow(eastresults$raw_results) * 4
+#
+#   east_results<-data.frame(Team = covidSeries$east_rr$Teams)#, p1=numeric(), p2=numeric(), p3=numeric(), p4=numeric())
+#   west_results<-data.frame(Team = covidSeries$west_rr$Teams)#, p1=numeric(), p2 = numeric(), p3=numeric(), p4=numeric())
+#
+#   east_results <- east_results%>%
+#     dplyr::rowwise() %>%
+#     dplyr::mutate(p1=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 1,])/nrow(east_raw)*4,
+#                   p2=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 2,])/nrow(east_raw)*4,
+#                   p3=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 3,])/nrow(east_raw)*4,
+#                   p4=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 4,])/nrow(east_raw)*4
+#     )
+#
+#   west_results <- west_results %>%
+#     dplyr::rowwise() %>%
+#     dplyr::mutate(p1=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 1,,])/nrow(west_raw)*4,
+#                   p2=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 2,])/nrow(west_raw)*4,
+#                   p3=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 3,])/nrow(west_raw)*4,
+#                   p4=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 4,])/nrow(west_raw)*4
+#     )
+#
+#   #return(list(east_results = east_results, west_results = west_results, play_in_odds = play_in_odds))
+#
+#   #progression_odds as p0 for playoff solver
+#   p0<-dplyr::bind_rows(east_results, west_results)
+#   colnames(p0)<-c('Team', 'p_rank1', 'p_rank2', 'p_rank3', 'p_rank4')
+#   p0$p_rank5<-p0$p_rank6<-p0$p_rank7<-p0$p_rank8<-0
+#   p0<-dplyr::bind_rows(p0, rank_odds_play_in(play_in_odds[1:4,]), rank_odds_play_in(play_in_odds[5:8,]))
+#
+#   p0[is.na(p0)]<-0
+#   p0<-p0 %>%
+#     dplyr::relocate(p_rank5, p_rank6, p_rank7, p_rank8, .after=p_rank4)
+#   p0$meanRank<-(p0$p_rank1+2*p0$p_rank2+3*p0$p_rank3+4*p0$p_rank4+5*p0$p_rank5+6*p0$p_rank6+7*p0$p_rank7+8*p0$p_rank8)/rowSums(p0[,2:ncol(p0)])
+#
+#   return(p0)
+# }
+#
+# rank_odds_play_in<-function(progress_odds){
+#   p0<-data.frame(Team = c(progress_odds$HomeTeam, rev(progress_odds$AwayTeam)))
+#   p0$p_rank5<-c(progress_odds[1,5],
+#                 progress_odds[2,5]*progress_odds[1,6],
+#                 progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,6],
+#                 progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,6],
+#                 progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,6],
+#                 0,0,0)
+#   p0$p_rank6<-c(0,
+#                 progress_odds[2,5]*progress_odds[1,5],
+#                 progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,6],
+#                 progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,6] + progress_odds[4,5]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,6],
+#                 progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,6] + progress_odds[4,6]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,6],
+#                 progress_odds[3,6]*progress_odds[1,6]*progress_odds[2,6],
+#                 0,0)
+#   p0$p_rank7<-c(0,0,
+#                 progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,5],
+#                 progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,5]+progress_odds[4,5]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,5]+progress_odds[4,5]*progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,6],
+#                 progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,5]+progress_odds[4,6]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,5]+progress_odds[4,6]*progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,6],
+#                 progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,6],
+#                 progress_odds[2,6]*progress_odds[1,6],
+#                 0)
+#   p0$p_rank8<-c(0,0,0,
+#                 progress_odds[4,5]*progress_odds[1,5]*progress_odds[2,5]*progress_odds[3,5],
+#                 progress_odds[4,6]*progress_odds[1,5]*progress_odds[2,5]*progress_odds[3,5],
+#                 progress_odds[3,6]*progress_odds[1,5]*progress_odds[2,5],
+#                 progress_odds[2,6]*progress_odds[1,5],
+#                 progress_odds[1,6])
+#   p0
+# }
 
 
 # rr_solver<-function(teams, ngames=1){
