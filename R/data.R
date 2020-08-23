@@ -158,37 +158,23 @@ updateSeries<-function(series = NULL){
   if(is.null(series)){
     series<-data.frame('HomeTeam' = c("Philadelphia Flyers",
                                       "Tampa Bay Lightning",
-                                      "Washington Capitals",
-                                      "Boston Bruins",
                                       "Vegas Golden Knights",
-                                      "Colorado Avalanche",
-                                      "Dallas Stars",
-                                      "St. Louis Blues"),
-                       'AwayTeam' = c("Montreal Canadiens",
-                                      "Columbus Blue Jackets",
-                                      "New York Islanders",
-                                      "Carolina Hurricanes",
-                                      "Chicago Blackhawks",
-                                      "Arizona Coyotes",
-                                      "Calgary Flames",
-                                      "Vancouver Canucks"),
-                       'HomeWins' = c(1,  # Flyers
-                                      2,  # Tampa
-                                      0,  # Washington
-                                      2,  # Boston
-                                      3,  # Vegas
-                                      2,  # Colorado
-                                      1,  # Dallas
-                                      0   # St. Louis
+                                      "Colorado Avalanche"
                                       ),
-                       'AwayWins' = c(1,  # Canadiens
-                                      1,  # Blue Jackets
-                                      2,  # Islanders
-                                      1,  # Carolina
-                                      0,  # Chicago
-                                      1,  # Arizona
-                                      2,  # Calgary
-                                      2   # Vancouver
+                       'AwayTeam' = c("New York Islanders",
+                                      "Boston Bruins",
+                                      "Vancouver Canucks",
+                                      "Dallas Stars"
+                                      ),
+                       'HomeWins' = c(0,  # Flyers
+                                      0,  # Tampa
+                                      0,  # Vegas
+                                      0  # Colorado
+                                      ),
+                       'AwayWins' = c(0,  # Islanders
+                                      0,  # Bruins
+                                      0,  # Vancouver
+                                      0  # Dallas
                                       ),
                        stringsAsFactors = FALSE)
   }
