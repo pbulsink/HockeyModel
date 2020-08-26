@@ -167,14 +167,14 @@ updateSeries<-function(series = NULL){
                                       "Dallas Stars"
                                       ),
                        'HomeWins' = c(0,  # Flyers
-                                      0,  # Tampa
-                                      0,  # Vegas
+                                      1,  # Tampa
+                                      1,  # Vegas
                                       0  # Colorado
                                       ),
-                       'AwayWins' = c(0,  # Islanders
-                                      0,  # Bruins
-                                      0,  # Vancouver
-                                      0  # Dallas
+                       'AwayWins' = c(1,  # Islanders
+                                      1,  # Bruins
+                                      1,  # Vancouver
+                                      2  # Dallas
                                       ),
                        stringsAsFactors = FALSE)
   }
