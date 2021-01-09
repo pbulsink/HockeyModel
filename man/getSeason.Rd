@@ -4,7 +4,7 @@
 \alias{getSeason}
 \title{Get Season from Game Date}
 \usage{
-getSeason(gamedate)
+getSeason(gamedate = Sys.Date())
 }
 \arguments{
 \item{gamedate}{The date of the game to check for season}

@@ -45,7 +45,7 @@ getCurrentSeasonStartDate <- function(){
 #'
 #' @return a character season id (e.g. 20172018)
 #' @export
-getSeason <- function(gamedate){
+getSeason <- function(gamedate=Sys.Date()){
   gs<-function(gd){
     year<-as.integer(strftime(gd, '%Y'))
     month<-as.integer(strftime(gd, '%m'))
@@ -351,4 +351,18 @@ formatPredsForHockeyVisContest<-function(predictions, candyType = 'Fuzzy Peaches
                   "} }"
   )
   return(output)
+}
+
+gameIDValidator<-function(gameIDs){
+  gidv<-function(gameID){
+    return(is.integer(gameID))
+  }
+
+  vgidv<-Vectorize(gidv)
+
+  if(length(gameIDs) == 1) {
+    return(gconf(gameIDs))
+  } else {
+    return(as.vector(vgidv(gameIDs)))
+  }
 }

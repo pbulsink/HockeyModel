@@ -3,46 +3,7 @@
 \docType{data}
 \name{series}
 \alias{series}
-\title{updateCovid <- function(covidSeries=NULL){
-  #https://www.sportingnews.com/us/nhl/news/nhl-2020-stanley-cup-playoffs-everything-we-know-about-resumption/36kbfimlv0nr13v1o1kusxhr2
-  if(is.null(covidSeries)){
-    covidSeries<-list(
-      east_rr=data.frame('Teams' = c("Boston Bruins", "Tampa Bay Lightning",
-                                     "Washington Capitals", "Philadelphia Flyers"),
-                         stringsAsFactors = FALSE),
-      west_rr=data.frame('Teams' = c("St. Louis Blues", "Colorado Avalanche",
-                                     "Vegas Golden Knights", "Dallas Stars"),
-                         stringsAsFactors = FALSE),
-      play_in=data.frame('HomeTeam'=c("Pittsburgh Penguins", "Carolina Hurricanes",
-                                      "New York Islanders", "Toronto Maple Leafs",
-                                      "Edmonton Oilers", "Nashville Predators",
-                                      "Vancouver Canucks", "Calgary Flames"),
-                         'AwayTeam'=c("Montreal Canadiens", "New York Rangers",
-                                      "Florida Panthers", "Columbus Blue Jackets",
-                                      "Chicago Blackhawks", "Arizona Coyotes",
-                                      "Minnesota Wild", "Winnipeg Jets"),
-                         'HomeWins'=c(1,  # Pittsburgh
-                                      3,  # Carolina
-                                      3,  # NY Isles
-                                      2,  # Toronto
-                                      1,  # Edmonton
-                                      1,  # Nashville
-                                      3,  # Vancouver
-                                      3), # Calgary
-                         'AwayWins'=c(3,  # Montreal
-                                      0,  # NY Rangers
-                                      1,  # Florida
-                                      2,  # Columbus
-                                      3,  # Chicago
-                                      3,  # Arizona
-                                      1,  # Minnesota
-                                      1), # Winnipeg
-                         stringsAsFactors = FALSE)
-    )
-  }
-  usethis::use_data(covidSeries, overwrite = TRUE)
-  return(covidSeries)
-}}
+\title{Playoff Series}
 \format{
 A data frame
 }
@@ -50,9 +11,6 @@ A data frame
 series
 }
 \description{
-
-}
-\details{
-
+Manually Updated Playoff Series Status.
 }
 \keyword{datasets}

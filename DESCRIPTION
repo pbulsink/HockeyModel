@@ -28,9 +28,14 @@ Imports:
     ggridges,
     formattable,
     htmltools,
-    webshot
+    webshot,
+    nhlapi,
+    stringi,
+    goalmodel,
+    progress
 Remotes:
   pbulsink/HockeyScrapR
+  opisthokonta/goalmodel
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
 RoxygenNote: 7.1.1
