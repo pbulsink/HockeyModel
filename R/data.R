@@ -47,6 +47,11 @@
 #' NHL Divisions
 #'
 #' A list of divisions with teams in each vector.
+#' Normally:
+#' list(Atlantic = c("Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers", "Montreal Canadiens", "Ottawa Senators", "Tampa Bay Lightning", "Toronto Maple Leafs"), Central = c("Colorado Avalanche", "Chicago Blackhawks", "Dallas Stars", "Minnesota Wild", "Nashville Predators", "St. Louis Blues", "Winnipeg Jets"), Metropolitan = c("Carolina Hurricanes", "Columbus Blue Jackets", "Philadelphia Flyers", "Pittsburgh Penguins", "New Jersey Devils", "New York Islanders", "New York Rangers", "Washington Capitals"), Pacific = c("Anaheim Ducks", "Arizona Coyotes", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks", "Vancouver Canucks", "Vegas Golden Knights"))
+#'
+#' 2020-2021:
+#' list(North = c("Calgary Flames", "Edmonton Oilers", "Montreal Canadiens", "Ottawa Senators", "Toronto Maple Leafs", "Vancouver Canucks", "Winnipeg Jets"), West = c("Anaheim Ducks", "Arizona Coyotes", "Colorado Avalanche", "Los Angeles Kings", "Minnesota Wild", "San Jose Sharks", "St. Louis Blues", "Vegas Golden Knights"), Central = c("Carolina Hurricanes", "Chicago Blackhawks", "Columbus Blue Jackets", "Dallas Stars", "Detroit Red Wings", "Florida Panthers", "Nashville Predators", "Tampa Bay Lightning"), East = c("Boston Bruins", "Buffalo Sabres", "New Jersey Devils", "New York Islanders", "New York Rangers", "Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals"))
 #'
 #' @format A list of vectors:
 #' \describe{
@@ -166,80 +171,10 @@ updateSeries<-function(series = NULL){
   return(series)
 }
 
-#' updateCovid <- function(covidSeries=NULL){
-#'   #https://www.sportingnews.com/us/nhl/news/nhl-2020-stanley-cup-playoffs-everything-we-know-about-resumption/36kbfimlv0nr13v1o1kusxhr2
-#'   if(is.null(covidSeries)){
-#'     covidSeries<-list(
-#'       east_rr=data.frame('Teams' = c("Boston Bruins", "Tampa Bay Lightning",
-#'                                      "Washington Capitals", "Philadelphia Flyers"),
-#'                          stringsAsFactors = FALSE),
-#'       west_rr=data.frame('Teams' = c("St. Louis Blues", "Colorado Avalanche",
-#'                                      "Vegas Golden Knights", "Dallas Stars"),
-#'                          stringsAsFactors = FALSE),
-#'       play_in=data.frame('HomeTeam'=c("Pittsburgh Penguins", "Carolina Hurricanes",
-#'                                       "New York Islanders", "Toronto Maple Leafs",
-#'                                       "Edmonton Oilers", "Nashville Predators",
-#'                                       "Vancouver Canucks", "Calgary Flames"),
-#'                          'AwayTeam'=c("Montreal Canadiens", "New York Rangers",
-#'                                       "Florida Panthers", "Columbus Blue Jackets",
-#'                                       "Chicago Blackhawks", "Arizona Coyotes",
-#'                                       "Minnesota Wild", "Winnipeg Jets"),
-#'                          'HomeWins'=c(1,  # Pittsburgh
-#'                                       3,  # Carolina
-#'                                       3,  # NY Isles
-#'                                       2,  # Toronto
-#'                                       1,  # Edmonton
-#'                                       1,  # Nashville
-#'                                       3,  # Vancouver
-#'                                       3), # Calgary
-#'                          'AwayWins'=c(3,  # Montreal
-#'                                       0,  # NY Rangers
-#'                                       1,  # Florida
-#'                                       2,  # Columbus
-#'                                       3,  # Chicago
-#'                                       3,  # Arizona
-#'                                       1,  # Minnesota
-#'                                       1), # Winnipeg
-#'                          stringsAsFactors = FALSE)
-#'     )
-#'   }
-#'   usethis::use_data(covidSeries, overwrite = TRUE)
-#'   return(covidSeries)
-#' }
-#'
-#' updateCovidScores<-function(scores = HockeyModel::scores, east = covidSeries$east_rr, west = covidSeries$west_rr){
-#'   covidScores <- scores[scores$Date > as.Date("2020-07-31"), ]
-#'   covidScores <- covidScores[covidScores$Date < as.Date("2020-08-09"), ]
-#'   covidScores <- covidScores[covidScores$HomeTeam %in% c(east$Teams, west$Teams), ]
-#'
-#'   usethis::use_data(covidScores, overwrite = TRUE)
-#'   return(covidScores)
-#' }
-#'
 #' Playoff Series
 #'
 #' Manually Updated Playoff Series Status.
 #'
 #' @format A data frame
 "series"
-#'
-#' #' Covid Series
-#' #'
-#' #' Manually Updated series for 2020 COVID Playoff play-in games
-#' #'
-#' #' @format A list of data frames
-#' "covidSeries"
-#'
-#' #' Covid Scheduele
-#' #'
-#' #' Manually created schedule for 2020 COVID Playoff play-in games
-#' #'
-#' #' @format a data frame
-#' "covidSchedule"
-#'
-#' #' Covid Scores
-#' #'
-#' #' Manually updated scores for east and west round robin play-ins
-#' #'
-#' #' @format a data frame
-#' "covidScores"
+

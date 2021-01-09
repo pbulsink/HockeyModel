@@ -7,7 +7,7 @@
 #'
 #' @export
 updateModel <- function(...){
-  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-07-29"), ...)
+  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2021-05-08"), ...)
   schedule<-updateSchedule(...)
   dcparams<-updateDC(scores = scores)
   #devtools::install(local = FALSE)
@@ -130,7 +130,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if(Sys.Date() <= as.Date('2020-07-29')){
+  if(Sys.Date() <= as.Date('2021-07-29')){
     #TODO Doesn't yet programattically know that reg. season is done. Fix this summer.
 
     rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
@@ -172,37 +172,15 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   #message("Reminder, run updateModel() first.")
   #Sys.sleep(5)
 
-  if(lubridate::year(Sys.Date()) == 2020 & lubridate::month(Sys.Date()) %in% c(7:10)){
-    #COVID RULES
-    modelparams<-updateModel(...)
-    sc<-modelparams$schedule
-
-    if(Sys.Date() %in% sc$Date){
-      today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
-      #save to files.
-      grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
-      print(today)
-      Sys.sleep(5)
-      while(grDevices::dev.cur()!=1){
-        grDevices::dev.off()
-      }
-
-      rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
-                         media = file.path(graphic_dir, "today_odds.png"), token = token)
-
-      tweetGames(games = sc[sc$Date == Sys.Date(), ], delay = delay, graphic_dir = graphic_dir, m = modelparams$m, rho = modelparams$rho, token = token)
-    }
-    return(NULL)
-  }
-  if(lubridate::month(Sys.Date()) %in% c(7:9) & lubridate::year((Sys.Date()) != 2020)){
+  if(lubridate::month(Sys.Date()) %in% c(7:9)){
     stop('No off-season predictions')
   }
 
   modelparams<-updateModel(...)
   in_reg_season<-FALSE
-  if(Sys.Date()<= as.Date("2020-7-29")){
+  if(Sys.Date()<= as.Date("2021-07-29")){
     in_reg_season<-TRUE
-    if(Sys.Date()<=as.Date("2020-04-10")){
+    if(Sys.Date()<=as.Date("2021-05-08")){
       updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
     }
   }
