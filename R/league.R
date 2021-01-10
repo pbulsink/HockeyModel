@@ -327,9 +327,9 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
     season_sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
   }
 
-  if(is.na(season_sofar)) {
-    season_sofar<-scores[NULL,]
-  }
+  #if(is.na(season_sofar)) {
+  #  season_sofar<-scores[NULL,]
+  #}
 
   if(nrow(season_sofar) > 0){
 
