@@ -21,7 +21,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
   #Get division
   all_predictions$Division<-getDivision(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("North", "West", "Central", "East"))
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
                                   as.character(paste0(getShortTeam(all_predictions$Team), '\n', round(all_predictions$meanPoints, digits = 0))),
@@ -70,7 +70,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
   #Get division
   all_predictions$Division<-getDivision(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("North", "West", "Central", "East"))
   #make team label appear properly later with ggrepel
   playoff_odds<-all_predictions[all_predictions$predictionDate == lastdate,]$Playoffs
   label<-format(round(playoff_odds*100, digits = 0), nsmall = 0, trim = TRUE)
@@ -135,7 +135,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
   #Get division
   all_predictions$Division<-getDivision(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("North", "West", "Central", "East"))
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
                                   as.character(paste0(getShortTeam(all_predictions$Team), '\n', signif(all_predictions$Presidents*100, digits = 2), '%')),
