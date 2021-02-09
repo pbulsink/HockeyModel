@@ -111,13 +111,14 @@ buildTeamColours <- function(){
 
 #' Update Schedule
 #'
-#' @description Updates the stored schedule if any games are rescheduled due to any event. Adds playoff games as the schedules are released
+#' @description DEPRECIATED: USE \code{\link{updateScheduleAPI}} Updates the stored schedule if any games are rescheduled due to any event. Adds playoff games as the schedules are released
 #'
 #' @param data_dir The data storage directory
-#' @return True, if successful update or validation, `schedule` is a built in data
+#' @return schedule
 #'
 #' @export
 updateSchedule <- function(data_dir = "./data-raw"){
+  message("Depreciated, use 'updateScheduleAPI'")
   new_schedule<-HockeyScrapR::getSchedule(data_dir = data_dir, from_date=as.Date(getCurrentSeasonStartDate()))
   new_schedule<-new_schedule[,c('Date', 'Visitor', 'Home')]
   new_schedule<-data.frame("Date" = new_schedule$Date, "HomeTeam" = new_schedule$Home, "AwayTeam" = new_schedule$Visitor)
@@ -132,15 +133,16 @@ updateSchedule <- function(data_dir = "./data-raw"){
 
 #' Update Scores
 #'
-#' @description Updates the scores of all finished games.
+#' @description DEPRECIATED: USE \code{\link{updateScoresAPI}} Updates the scores of all finished games.
 #'
 #' @param data_dir The data storage directory
 #' @param last_playoffs Trigger to pass to \code{\link[HockeyScrapR]{updateScores}}
 #'
-#' @return True, if successful update or validation, `scores` is a built in data
+#' @return score
 #'
 #' @export
 updateScores <- function(data_dir = "./data-raw", last_playoffs = FALSE){
+  message("Depreciated, use 'updateScoresAPI'")
   new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0, playoffs = TRUE, last_playoffs = last_playoffs)
   if(nrow(new_scores) != nrow(scores)){
     #new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))

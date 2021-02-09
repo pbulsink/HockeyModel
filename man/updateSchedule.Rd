@@ -10,8 +10,8 @@ updateSchedule(data_dir = "./data-raw")
 \item{data_dir}{The data storage directory}
 }
 \value{
-True, if successful update or validation, `schedule` is a built in data
+schedule
 }
 \description{
-Updates the stored schedule if any games are rescheduled due to any event. Adds playoff games as the schedules are released
+DEPRECIATED: USE \code{\link{updateScheduleAPI}} Updates the stored schedule if any games are rescheduled due to any event. Adds playoff games as the schedules are released
 }

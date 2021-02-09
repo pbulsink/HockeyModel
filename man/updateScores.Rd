@@ -12,8 +12,8 @@ updateScores(data_dir = "./data-raw", last_playoffs = FALSE)
 \item{last_playoffs}{Trigger to pass to \code{\link[HockeyScrapR]{updateScores}}}
 }
 \value{
-True, if successful update or validation, `scores` is a built in data
+score
 }
 \description{
-Updates the scores of all finished games.
+DEPRECIATED: USE \code{\link{updateScoresAPI}} Updates the scores of all finished games.
 }

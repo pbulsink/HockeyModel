@@ -10,7 +10,13 @@
 #' @seealso See [nhlapi::nhl_schedule_seasons()] for alternative schedule requests, and [nhlapi::nhl_games()] for more information on GameID
 getNHLSchedule<-function(season=getSeason()){
   sched<-nhlapi::nhl_schedule_seasons(season)
-  return(processNHLSchedule(sched = sched))
+  if('nhl_get_data_error' %in% class(sched[[1]])){
+    # there was an error
+    warning("There was an error getting the ", season, " schedule from the NHL", call. = FALSE)
+    return(NULL)
+  } else {
+    return(processNHLSchedule(sched = sched))
+  }
 }
 
 processNHLSchedule<-function(sched){
@@ -39,18 +45,28 @@ processNHLSchedule<-function(sched){
   schedule <- clean_names(schedule)
   schedule <- schedule %>%
     dplyr::filter(!!dplyr::sym('GameType') %in% c("P", "R")) %>%
-    dplyr::arrange(!!dplyr::sym('GameID'))
+    dplyr::arrange(!!dplyr::sym('Date'), !!dplyr::sym('GameID'))
   return(schedule)
 }
 
-updateScheduleAPI<-function(schedule = HockeyModel::schedule){
+#' Update schedule using the NHL API
+#'
+#' @param schedule current schedule data
+#' @param save_data whether to write to package data
+#'
+#' @return data frame of schedule, after optionally writing to package data
+#' @export
+updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE){
   sched<-getNHLSchedule(getSeason())
+  stopifnot(!is.null(sched))
   gameIDs<-sched$GameID
   schedule<-schedule %>%
     dplyr::filter(!(!!dplyr::sym('GameID') %in% gameIDs)) %>%
     dplyr::bind_rows(sched) %>%
-    dplyr::arrange(!!dplyr::sym('GameID'))
-  usethis::use_data(schedule, overwrite=TRUE)
+    dplyr::arrange(!!dplyr::sym('Date'), !!dplyr::sym('GameID'))
+  if(save_data){
+    suppressMessages(usethis::use_data(schedule, overwrite=TRUE))
+  }
   return(schedule)
 }
 
@@ -67,13 +83,15 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule){
 #' @seealso See [nhlapi::nhl_games()] for more information on gameIDs
 getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule){
   scores<-NULL
-  sched<-schedule[schedule$Date<=Sys.Date(), ]
   gameIDs <- gameIDs[gameIDs %in% schedule[schedule$Date <= Sys.Date(), "GameID"]]
   pb<-progress::progress_bar$new(
     format = "  getting scores [:bar] :percent eta: :eta",
     total = length(gameIDs), show_after = 5)
   for(g in gameIDs){
     sc<-nhlapi::nhl_games_linescore(g)
+    if('nhl_get_data_error' %in% class(sc[[1]])){
+      next
+    }
     if(sc[[1]]$currentPeriod > 0){
       if(sc[[1]]$currentPeriodTimeRemaining == "Final"){
         dfs<-data.frame("Date" = schedule[schedule$GameID == g, ]$Date,
@@ -94,17 +112,30 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule){
   return(scores)
 }
 
-updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::schedule){
-  lastScoresDate<-scores[nrow(scores), ]$Date
-  if(lastScoresDate<Sys.Date()){
-    if (nrow(schedule[schedule$Date >= lastScoreDate & schedule$Date <= Sys.Date, ])> 0){
-      newscoreID<-schedule[schedule$Date >= lastScoreDate & schedule$Date <= Sys.Date, ]$GameID
-      updatedSc<-getNHLScores(newscoreID)
-      scores<-scores %>%
-        dplyr::filter(!(!!dplyr::sym('GameID') %in% newscoreID)) %>%
-        dplyr::bind_rows(updatedSc) %>%
-        dplyr::arrange(!!dplyr::sym('GameID'))
-      usethis::use_data(scores, overwrite=TRUE)
+#' Update past scores using the NHL API
+#'
+#' @param scores old scores
+#' @param schedule current schedule
+#' @param full_season whether to re-scrape the full season
+#' @param save_data whether to write the data to package
+#'
+#' @return data frame of scores, after optionally writing to package data
+#' @export
+updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::schedule, full_season = FALSE, save_data=FALSE){
+  if(full_season){
+    neededGames<-schedule[schedule$Date > getCurrentSeasonStartDate(), ]$GameID
+  } else {
+    neededGames<-schedule[schedule$Date < Sys.Date(), ]$GameID
+    neededGames<-neededGames[!neededGames %in% scores$GameID]
+  }
+  if(length(neededGames)>0){
+    updatedSc<-getNHLScores(neededGames)
+    scores<-scores %>%
+      dplyr::filter(!(!!dplyr::sym('GameID') %in% neededGames)) %>%
+      dplyr::bind_rows(updatedSc) %>%
+      dplyr::arrange(!!dplyr::sym('GameID'))
+    if (save_data){
+      suppressMessages(usethis::use_data(scores, overwrite=TRUE))
     }
   } else {
     message("Scores are updated to today's date already.")
@@ -124,7 +155,9 @@ clean_names<-function(sc){
                   "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Phoenix Coyotes", "Arizona Coyotes"),
                   "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Atlanta Thrashers", "Winnipeg Jets"),
                   "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Minnesota North Stars", "Dallas Stars"),
-                  "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Quebec Nordiques", "Colorado Avalanche")
+                  "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Quebec Nordiques", "Colorado Avalanche"),
+                  "HomeTeam" = replace(!!dplyr::sym('HomeTeam'), !!dplyr::sym('HomeTeam') == "Chicago Blackhawks", "Chicago"),
+                  "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Chicago Blackhawks", "Chicago")
                   )
   return(sc)
 }

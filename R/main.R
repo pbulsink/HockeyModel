@@ -7,8 +7,8 @@
 #'
 #' @export
 updateModel <- function(...){
-  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2021-05-08"), ...)
-  schedule<-updateSchedule(...)
+  scores<-updateScoresAPI(save_data = T)
+  schedule<-updateScheduleAPI(save_data=T)
   dcparams<-updateDC(scores = scores)
   #devtools::install(local = FALSE)
   #.rs.restartR()
@@ -296,7 +296,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 #' @export
 tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/", subdir = "pace", prediction_dir = "./prediction_results/", token = rtweet::get_token(), scores = HockeyModel::scores, teamColours = HockeyModel::teamColours){
   #make sure we're working with the most up-to-date info.
-  scores<-updateScores(last_playoffs = Sys.Date() > as.Date("2020-04-04"))
+  scores<-updateScoresAPI(save_data = T)
 
   #Make Pace Plots
   plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores = scores)
