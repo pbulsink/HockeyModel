@@ -161,10 +161,10 @@ updateScores <- function(data_dir = "./data-raw", last_playoffs = FALSE){
 #' @export
 updateSeries<-function(series = NULL){
   if(is.null(series)){
-    series<-data.frame('HomeTeam' = c("Tampa Bay Lightning"),
-                       'AwayTeam' = c("Dallas Stars"),
-                       'HomeWins' = c(3),
-                       'AwayWins' = c(2),
+    series<-data.frame('HomeTeam' = c("Colorado Avalanche", "Vegas Golden Knights", "Toronto Maple Leafs", "Edmonton Oilers", "Pittsburgh Penguins", "Washington Capitals", "Carolina Hurricanes", "Florida Panthers"),
+                       'AwayTeam' = c("St. Louis Blues", "Minnesota Wild", "Montreal Canadiens", "Winnipeg Jets", "New York Islanders", "Boston Bruins", "Nashville Predators", "Tampa Bay Lightning"),
+                       'HomeWins' = c(0,0,0,0,0,0,0,0),
+                       'AwayWins' = c(0,0,0,0,0,0,0,0),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)
