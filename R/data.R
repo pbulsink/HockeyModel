@@ -122,7 +122,7 @@ updateSchedule <- function(data_dir = "./data-raw"){
   new_schedule<-new_schedule[,c('Date', 'Visitor', 'Home')]
   new_schedule<-data.frame("Date" = new_schedule$Date, "HomeTeam" = new_schedule$Home, "AwayTeam" = new_schedule$Visitor)
   new_schedule$Date <- as.Date(new_schedule$Date)
-  new_schedule<-new_schedule[!(new_schedule$Date > as.Date('2020-03-11') & new_schedule$Date < as.Date('2020-04-05')),]
+  #new_schedule<-new_schedule[!(new_schedule$Date > as.Date('2020-03-11') & new_schedule$Date < as.Date('2020-04-05')),]
   if(nrow(new_schedule) != nrow(schedule)){
     schedule <- new_schedule
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
@@ -163,8 +163,8 @@ updateSeries<-function(series = NULL){
   if(is.null(series)){
     series<-data.frame('HomeTeam' = c("Colorado Avalanche", "Vegas Golden Knights", "Toronto Maple Leafs", "Edmonton Oilers", "Pittsburgh Penguins", "Washington Capitals", "Carolina Hurricanes", "Florida Panthers"),
                        'AwayTeam' = c("St. Louis Blues", "Minnesota Wild", "Montreal Canadiens", "Winnipeg Jets", "New York Islanders", "Boston Bruins", "Nashville Predators", "Tampa Bay Lightning"),
-                       'HomeWins' = c(0,0,0,0,0,1,0,0),
-                       'AwayWins' = c(0,1,0,0,1,0,0,1),
+                       'HomeWins' = c(2,2,0,0,2,1,2,1),
+                       'AwayWins' = c(0,1,1,1,1,2,0,2),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)
