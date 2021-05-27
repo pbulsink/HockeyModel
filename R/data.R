@@ -166,7 +166,7 @@ updateSeries<-function(series = NULL){
     series<-data.frame('HomeTeam' = c("Colorado Avalanche", "Vegas Golden Knights", "Toronto Maple Leafs", "Edmonton Oilers", "Pittsburgh Penguins", "Washington Capitals", "Carolina Hurricanes", "Florida Panthers"),
                        'AwayTeam' = c("St. Louis Blues", "Minnesota Wild", "Montreal Canadiens", "Winnipeg Jets", "New York Islanders", "Boston Bruins", "Nashville Predators", "Tampa Bay Lightning"),
                        'HomeWins' = c(4,3,3,0,2,1,3,2),
-                       'AwayWins' = c(0,2,1,4,3,4,2,3),
+                       'AwayWins' = c(0,3,1,4,4,4,2,4),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)

@@ -328,13 +328,13 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
 
   series$HomeOdds<-apply(series, MARGIN = 1, FUN = function(x) playoffWin(x[1], x[2], x[3], x[4]))
   series$AwayOdds<-1-series$HomeOdds
-
+  series2<-series
   #For now, drop won games:
-  series$HomeWins <- series$AwayWins <- NULL
+  series2$HomeWins <- series2$AwayWins <- NULL
 
 
   #Melt data to work with ggplot
-  melted<-reshape2::melt(series, id.vars = c('HomeTeam', 'AwayTeam'))
+  melted<-reshape2::melt(series2, id.vars = c('HomeTeam', 'AwayTeam'))
   melted$variable<-factor(x = melted$variable, levels = c("AwayOdds", "HomeOdds"), ordered = TRUE)
   melted$HomeTeam <- factor(x = melted$HomeTeam, levels = melted$HomeTeam[1:(length(melted$HomeTeam)/2)], ordered = TRUE)
   melted$colour = ""
@@ -357,7 +357,7 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
     ggplot2::labs(x = "",
                   y = "Series Odds",
                   title = "Predictions for Playoff Series",
-                  subtitle = paste0("Before Games on ", Sys.Date()),
+                  subtitle = paste0("Before Games on ", Sys.Date(), ". Number of wins in brackets."),
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_bw() +
     ggplot2::theme(axis.text.y = ggplot2::element_blank(),
@@ -370,8 +370,8 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
                                 breaks = c(0,0.5,1)) +
     ggplot2::annotate("text", x = series$HomeTeam, y = -.01, hjust = 1, label = series$HomeTeam) +
     ggplot2::annotate("text", x = series$HomeTeam, y = 1.01, hjust = 0, label = series$AwayTeam) +
-    ggplot2::annotate("label", x = series$HomeTeam, y = 0.01, hjust = 0, label = format(round(series$HomeOdds, 3), nsmall = 3)) +
-    ggplot2::annotate("label", x = series$HomeTeam, y= .99, hjust = 1, label = format(round(series$AwayOdds, 3), nsmall = 3)) +
+    ggplot2::annotate("label", x = series$HomeTeam, y = 0.01, hjust = 0, label = paste0(format(round(series$HomeOdds, 3), nsmall = 3), ' (', series$HomeWins, ')')) +
+    ggplot2::annotate("label", x = series$HomeTeam, y= .99, hjust = 1, label = paste0(format(round(series$AwayOdds, 3), nsmall = 3), ' (', series$AwayWins, ')')) +
     ggplot2::coord_flip()
 
   return(p)
