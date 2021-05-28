@@ -165,14 +165,22 @@ updateSeries<-function(series = NULL){
   if(is.null(series)){
     series<-data.frame('HomeTeam' = c("Colorado Avalanche", "Vegas Golden Knights", "Toronto Maple Leafs", "Edmonton Oilers", "Pittsburgh Penguins", "Washington Capitals", "Carolina Hurricanes", "Florida Panthers"),
                        'AwayTeam' = c("St. Louis Blues", "Minnesota Wild", "Montreal Canadiens", "Winnipeg Jets", "New York Islanders", "Boston Bruins", "Nashville Predators", "Tampa Bay Lightning"),
-                       'HomeWins' = c(4,3,3,0,2,1,3,2),
-                       'AwayWins' = c(0,3,1,4,4,4,2,4),
+                       'HomeWins' = c(4,3,3,0,2,1,4,2),
+                       'AwayWins' = c(0,3,2,4,4,4,2,4),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)
   return(series)
 }
 
+updateSeriesNext<-function(series = NULL){
+  series<-data.frame('HomeTeam' = c("Boston Bruins", "Carolina Hurricanes"),
+                     'AwayTeam' = c("New York Islanders", "Tampa Bay Lightning"),
+                     'HomeWins' = c(0,0),
+                     'AwayWins' = c(0,0),
+                     stringsAsFactors = FALSE)
+
+}
 #' Playoff Series
 #'
 #' Manually Updated Playoff Series Status.
