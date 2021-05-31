@@ -23,14 +23,6 @@
 #' @source \url{http://www.hockey-reference.com/}
 "scores"
 
-#' Historical NHL scores with Advanced Stats
-#'
-#' A dataset containing historical NHL and WHA scores.
-#'
-#' @format A data frame with  variables
-#' @source \url{http://www.hockey-reference.com/}
-"advanced_scores"
-
 #' Schedule for current season.
 #'
 #' A dataframe with the schedule (no scores included) for current season.
@@ -75,12 +67,6 @@
 #' @source \url{http://www.nhl.com/}
 "nhl_conferences"
 
-#' Elo History
-#'
-#' Elo rankings for each team through time.
-#'
-#' @format A sparse dataframe with columns for each historical and active team (WHL and NHL) and each row a date
-"elos"
 
 #' Dixon Coles' `m`
 #'
