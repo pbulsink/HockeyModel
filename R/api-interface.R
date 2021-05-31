@@ -145,8 +145,7 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
 
 clean_names<-function(sc){
   sc <- sc %>%
-    dplyr::mutate("Date" = as.Date(!!dplyr::sym('Date')),
-                  "HomeTeam" = stringi::stri_trans_general(str=!!dplyr::sym('HomeTeam'), 'latin-ascii'),
+    dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str=!!dplyr::sym('HomeTeam'), 'latin-ascii'),
                   "AwayTeam" = stringi::stri_trans_general(str=!!dplyr::sym('AwayTeam'), 'latin-ascii')) %>%
     dplyr::mutate("HomeTeam" = replace(!!dplyr::sym('HomeTeam'), !!dplyr::sym('HomeTeam') == "Phoenix Coyotes", "Arizona Coyotes"),
                   "HomeTeam" = replace(!!dplyr::sym('HomeTeam'), !!dplyr::sym('HomeTeam') == "Atlanta Thrashers", "Winnipeg Jets"),
@@ -159,5 +158,37 @@ clean_names<-function(sc){
                   "HomeTeam" = replace(!!dplyr::sym('HomeTeam'), !!dplyr::sym('HomeTeam') == "Chicago Blackhawks", "Chicago"),
                   "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Chicago Blackhawks", "Chicago")
                   )
+  if('Date' %in% names(sc)){
+    sc <- sc %>%
+      dplyr::mutate("Date" = as.Date(!!dplyr::sym('Date')))
+  }
   return(sc)
+}
+
+
+getAPISeries <- function(season=getCurrentSeason8()){
+  series<-nhlapi::nhl_tournaments_playoffs(expand = 'round.series', seasons = as.character(season))
+  playoffSeries<-data.frame("Round"=integer(), "Series"=integer(), "HomeTeam"=character(), "AwayTeam"=character(),
+                            "HomeWins"=integer(), "AwayWins"=integer(), "HomeSeed"=integer(), "AwaySeed"=integer(), requiredWins=integer())
+  for(rnd in 1:length(series[[1]]$rounds$series)){
+    if('matchupTeams' %in% names(series[[1]]$rounds$series[[rnd]])){
+      for(srs in 1:length(series[[1]]$rounds$series[[rnd]]$matchupTeams)){
+        if(!is.null(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]])){
+          playoffSeries[nrow(playoffSeries)+1, ]<-c(rnd,srs,series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$team.name,
+                                                    series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins,
+                                                    series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seed.rank,
+                                                    series[[1]]$rounds$format.numberOfWins[[rnd]])
+        }
+      }
+    }
+  }
+  if(nrow(playoffSeries) == 0){
+    stop('No Series Data Available')
+  }
+
+  playoffSeries<-clean_names(playoffSeries)
+
+  playoffSeries$Status <- ifelse(playoffSeries$HomeWins == playoffSeries$requiredWins | playoffSeries$AwayWins == playoffSeries$requiredWins, 'Complete', 'Ongoing')
+  playoffSeries$requiredWins <- NULL
+  return(playoffSeries)
 }
