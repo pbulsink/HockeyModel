@@ -166,6 +166,13 @@ clean_names<-function(sc){
 }
 
 
+#' Get Playoff Series using the NHL API
+#' @description Gets the current season (or previous seasons') playoff series information using the NHL API
+#'
+#' @param season Optional, the season's playoff series to retrieve
+#'
+#' @return a data frame with Round, Series, Home and Away Teams, number of wins each, playoff ranking/seed and whether the series is complete
+#' @export
 getAPISeries <- function(season=getCurrentSeason8()){
   series<-nhlapi::nhl_tournaments_playoffs(expand = 'round.series', seasons = as.character(season))
   playoffSeries<-data.frame("Round"=integer(), "Series"=integer(), "HomeTeam"=character(), "AwayTeam"=character(),

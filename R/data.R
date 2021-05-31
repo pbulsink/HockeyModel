@@ -153,30 +153,3 @@ updateScores <- function(data_dir = "./data-raw", last_playoffs = FALSE){
   return(new_scores)
 }
 
-#' Update Series
-#'
-#' @description Updates the saved series data as manually adjusted in the df in the function
-#'
-#' @param series series, if provided, else update function.
-#'
-#' @return series df.
-#' @export
-updateSeries<-function(series = NULL){
-  if(is.null(series)){
-    series<-data.frame('HomeTeam' = c("Tampa Bay Lightning"),
-                       'AwayTeam' = c("Dallas Stars"),
-                       'HomeWins' = c(3),
-                       'AwayWins' = c(2),
-                       stringsAsFactors = FALSE)
-  }
-  usethis::use_data(series, overwrite = TRUE)
-  return(series)
-}
-
-#' Playoff Series
-#'
-#' Manually Updated Playoff Series Status.
-#'
-#' @format A data frame
-"series"
-
