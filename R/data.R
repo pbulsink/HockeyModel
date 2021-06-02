@@ -163,10 +163,10 @@ updateScores <- function(data_dir = "./data-raw", last_playoffs = FALSE){
 #' TODO Get Series from NHL PBP API: https://statsapi.web.nhl.com/api/v1/tournaments/playoffs?expand=round.series,schedule.game.seriesSummary&season=20202021
 updateSeries<-function(series = NULL){
   if(is.null(series)){
-    series<-data.frame('HomeTeam' = c("Toronto Maple Leafs", "Colorado Avalanche", "Boston Bruins", "Carolina Hurricanes"),
-                       'AwayTeam' = c("Montreal Canadiens", "Vegas Golden Knights", "New York Islanders", "Tampa Bay Lightning"),
-                       'HomeWins' = c(3,1,1,0),
-                       'AwayWins' = c(3,0,0,1),
+    series<-data.frame('HomeTeam' = c("Colorado Avalanche", "Winnipeg Jets", "Boston Bruins", "Carolina Hurricanes"),
+                       'AwayTeam' = c("Vegas Golden Knights", "Montreal Canadiens", "New York Islanders", "Tampa Bay Lightning"),
+                       'HomeWins' = c(1,0,1,0),
+                       'AwayWins' = c(0,0,1,1),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)
