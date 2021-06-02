@@ -10,6 +10,8 @@ A data frame with  variables:
   \item{Date}{Date of the game played/to be played}
   \item{AwayTeam}{Name of the visiting team}
   \item{HomeTeam}{Name of the home team}
+  \item{GameID}{Unique GameID for each game}
+  \item{GameType}{Game Type for each game}
 }
 }
 \source{

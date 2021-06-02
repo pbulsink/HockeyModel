@@ -7,12 +7,9 @@
 #'
 #' @export
 updateModel <- function(...){
-  scores<-updateScoresAPI(save_data = T)
-  schedule<-updateScheduleAPI(save_data=T)
+  scores<-updateScoresAPI(save_data = TRUE)
+  schedule<-updateScheduleAPI(save_data = TRUE)
   dcparams<-updateDC(scores = scores)
-  #devtools::install(local = FALSE)
-  #.rs.restartR()
-  #require(HockeyModel)
   return(list(scores = scores, schedule = schedule, m = dcparams$m, rho = dcparams$rho))
 }
 
@@ -52,8 +49,9 @@ todayOdds <- function(date = Sys.Date(), rho = HockeyModel::rho, m = HockeyModel
   if(scores$Date[nrow(scores)] < (date - 7)){
     message('Scores may be out of date. This can affect predictions. Please update if midseason.')
   }
-  if(nrow(schedule[schedule$Date == date, ]) == 0){
-    stop("No games today.")
+  if(nrow(schedule[schedule$Date == date && schedule$GameState != "Postponed", ]) == 0){
+    message("No games today.")
+    return()
   }
   return(plot_odds_today(date, rho = rho, m = m, schedule = schedule, ...))
 }
@@ -65,10 +63,6 @@ todayOdds <- function(date = Sys.Date(), rho = HockeyModel::rho, m = HockeyModel
 #' @return playoff odds ggplot object
 #' @export
 playoffOdds <- function(...){
-  # if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
-  #   message('Scores may be out of date. This can affect predictions. Please update if midseason.')
-  # }
-  # updatePredictions(...)
   return(plot_prediction_playoffs_by_team(...))
 }
 
@@ -79,10 +73,6 @@ playoffOdds <- function(...){
 #' @return president's odds ggplot object
 #' @export
 presidentOdds <- function(...){
-  # if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
-  #   message('Scores may be out of date. This can affect predictions. Please update if midseason.')
-  # }
-  # updatePredictions(...)
   return(plot_prediction_presidents_by_team())
 }
 
@@ -93,10 +83,6 @@ presidentOdds <- function(...){
 #' @return point prediction ggplot object
 #' @export
 pointPredict <- function(...){
-  # if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
-  #   message('Scores may be out of date. This can affect predictions. Please update if midseason.')
-  # }
-  # updatePredictions(...)
   return(plot_prediction_points_by_team())
 }
 
@@ -130,8 +116,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if(Sys.Date() <= as.Date('2021-07-29')){
-    #TODO Doesn't yet programattically know that reg. season is done. Fix this summer.
+  if(Sys.Date() < max(HockeyModel::schedule$Date)){
 
     rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                        media = file.path(graphic_dir, "point_predict.png"), token = token)
@@ -169,26 +154,24 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 #'
 #' @export
 dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*10, ...){
-  #message("Reminder, run updateModel() first.")
-  #Sys.sleep(5)
-
-  if(lubridate::month(Sys.Date()) %in% c(7:9)){
-    stop('No off-season predictions')
-  }
 
   modelparams<-updateModel(...)
-  in_reg_season<-FALSE
-  if(Sys.Date()<= as.Date("2021-07-29")){
-    in_reg_season<-TRUE
-    if(Sys.Date()<=as.Date("2021-05-08")){
-      updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
-    }
+  sc<-modelparams$schedule
+
+  if(Sys.Date() > max(sc$Date)){
+    stop('No future games planned')
   }
+
+  in_reg_season <- FALSE
+  if(Sys.Date() <= max(sc[sc$GameType == "R", ]$Date)){
+    in_reg_season <- TRUE;
+  }
+
+  updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
 
   if(!dir.exists(graphic_dir)){
     dir.create(graphic_dir, recursive = TRUE)
   }
-  sc<-modelparams$schedule
 
   message("Creating graphics...")
 
@@ -245,12 +228,12 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   }
 
   message("Posting Tweets...")
-  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir, games_today = Sys.Date() %in% sc$Date, ...)
+  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir, games_today = Sys.Date() %in% sc[sc$GameState != "Postponed", ]$Date, ...)
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  tweetGames(games = sc[sc$Date == Sys.Date(), ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token, delay=delay)
+  tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token, delay=delay)
 
   if(lubridate::month(Sys.Date()) %in% c(3,4) & in_reg_season){
     playoff_odds<-playoffSolver()
@@ -268,19 +251,19 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   }
 
-  # if(lubridate::day(Sys.Date()) == 1 & in_reg_season){
-  #   tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
-  # }
-  #
-  # if(lubridate::wday(lubridate::now()) == 1 & in_reg_season) {
-  #   #On Sunday post metrics
-  #   tweetMetrics(token = token)
-  # }
-  #
-  # if(lubridate::wday(lubridate::now()) == 3 & in_reg_season) {
-  #   #On Tuesday post expected points (likelyhood)
-  #   tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
-  # }
+  if(lubridate::day(Sys.Date()) == 1 & in_reg_season){
+    tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
+  }
+
+  if(lubridate::wday(lubridate::now()) == 1 & in_reg_season) {
+    #On Sunday post metrics
+    tweetMetrics(token = token)
+  }
+
+  if(lubridate::wday(lubridate::now()) == 3 & in_reg_season) {
+    #On Tuesday post expected points (likelihood)
+    tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
+  }
 }
 
 #' Tweet Pace Plots
@@ -396,7 +379,8 @@ tweetGames<-function(games = HockeyModel::schedule[HockeyModel::schedule$Date ==
   }
 
   if(nrow(games) == 0){
-    stop("No games to tweet")
+    message("No games to tweet")
+    return()
   }
 
   teamColours <- HockeyModel::teamColours
@@ -443,15 +427,20 @@ tweetMetrics<-function(token = rtweet::get_token()){
 #' Tweet Series
 #' @description Tweet the series odds graphics
 #'
-#' @param series series data
 #' @param graphic_dir directory to save the image
 #' @param token rtweet token
 #'
 #' @return NULL
 #' @export
-tweetSeries<-function(series = HockeyModel::series, token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/"){
+tweetSeries<-function(token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/"){
   while(grDevices::dev.cur()!=1){
     grDevices::dev.off()
+  }
+  series<-getAPISeries()
+  series<-series[series$Status == "Ongoing", c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
+  if(nrow(series) == 0){
+    message('No Series to Tweet')
+    return()
   }
   plt<-plot_playoff_series_odds(series = series)
   grDevices::png(filename = file.path(graphic_dir, 'series_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
@@ -460,7 +449,7 @@ tweetSeries<-function(series = HockeyModel::series, token = rtweet::get_token(),
     grDevices::dev.off()
   }
 
-  status <- paste0("#NHL Playoff Series Odds before games on ", Sys.Date(), " #HockeyTwitter #StanleyCup")
+  status <- paste0("TEST TEST TEST #NHL Playoff Series Odds before games on ", Sys.Date(), " #HockeyTwitter #StanleyCup")
 
   rtweet::post_tweet(status = status,
                      media = file.path(graphic_dir, 'series_odds.png'),
@@ -471,21 +460,15 @@ tweetSeries<-function(series = HockeyModel::series, token = rtweet::get_token(),
 #'
 #' @description Tweet the formattable graphics with each team's odds of each round/cup win
 #'
-#' @param playoffOdds During COVID, pass covid_play_in_solver(), afterwards change to all_results = all_results
+#' @param all_results all results, if not most recent (will be loaded by functions)
 #'
 #' @param token rtweet token
 #' @param graphic_dir directory to save images
 #'
 #' @return NULL
 #' @export
-tweetPlayoffOdds<-function(playoffOdds=covid_play_in_solver(), token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/"){
-  #need to drop rows with teams that have no chance
-  playoffOdds <- playoffOdds %>%
-    dplyr::filter(!(!!dplyr::sym('p_rank1') + !!dplyr::sym('p_rank2') + !!dplyr::sym('p_rank3') + !!dplyr::sym('p_rank4') + !!dplyr::sym('p_rank5') + !!dplyr::sym('p_rank6') + !!dplyr::sym('p_rank7') + !!dplyr::sym('p_rank8') == 0))
-  plts<-playoffSolver(p0=playoffOdds)
-
-  #after COVID use this instead:
-  #plts <- playoffSolver(all_results = playoffOdds)
+tweetPlayoffOdds<-function(all_results=NULL, token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/"){
+  plts <- playoffSolver(all_results = all_results)
 
   export_formattable(f=plts$east, file = file.path(graphic_dir, "east_playoff_odds.png"))
   export_formattable(f=plts$west, file = file.path(graphic_dir, "west_playoff_odds.png"))

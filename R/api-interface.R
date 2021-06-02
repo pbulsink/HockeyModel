@@ -10,7 +10,7 @@
 #' @seealso See [nhlapi::nhl_schedule_seasons()] for alternative schedule requests, and [nhlapi::nhl_games()] for more information on GameID
 getNHLSchedule<-function(season=getSeason()){
   sched<-nhlapi::nhl_schedule_seasons(season)
-  if('nhl_get_data_error' %in% class(sched[[1]])){
+  if(length(sched) == 0){
     # there was an error
     warning("There was an error getting the ", season, " schedule from the NHL", call. = FALSE)
     return(NULL)
@@ -20,7 +20,7 @@ getNHLSchedule<-function(season=getSeason()){
 }
 
 processNHLSchedule<-function(sched){
-  schedule<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character())
+  schedule<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameState" = character())
   pb<-progress::progress_bar$new(
     format = "  getting schedule [:bar] :percent eta: :eta",
     total = length(sched), show_after = 5)
@@ -29,13 +29,14 @@ processNHLSchedule<-function(sched){
       next
     }
     for(d in 1:nrow(sched[[y]]$dates)){
-      df<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character())
+      df<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameState" = character())
       for (g in 1:sched[[y]]$dates$totalGames[[d]]){
         dfg<-data.frame("Date" = sched[[y]]$dates$date[[d]],
                         "HomeTeam" = sched[[y]]$dates$games[[d]]$teams.home.team.name[[g]],
                         "AwayTeam" = sched[[y]]$dates$games[[d]]$teams.away.team.name[[g]],
                         "GameID" = sched[[y]]$dates$games[[d]]$gamePk[[g]],
-                        "GameType" = sched[[y]]$dates$games[[d]]$gameType[[g]])
+                        "GameType" = sched[[y]]$dates$games[[d]]$gameType[[g]],
+                        "GameState" = sched[[y]]$dates$games[[d]]$status.detailedState[[g]])
         df<-rbind(df, dfg)
       }
       schedule<-rbind(schedule, df)
@@ -45,9 +46,37 @@ processNHLSchedule<-function(sched){
   schedule <- clean_names(schedule)
   schedule <- schedule %>%
     dplyr::filter(!!dplyr::sym('GameType') %in% c("P", "R")) %>%
-    dplyr::arrange(!!dplyr::sym('Date'), !!dplyr::sym('GameID'))
+    dplyr::arrange(!!dplyr::sym('Date'), dplyr::desc(!!dplyr::sym('GameState')), !!dplyr::sym('GameID'))
+
+  schedule$GameState[is.na(schedule$GameState)] <- "Final"
+
   return(schedule)
 }
+
+
+#' Games Today
+#'
+#' @description given a schedule, it returns todays (or another date's) scheduled games (excluding postponements), or NULL if there are none
+#'
+#' @param schedule the schedule within which to look for games
+#' @param date the date to look for games, as a date
+#' @param all_games whether to return all games scheduled for a date (True) or exclude postponed, rescheduled, in-progress, or completed games (False, default)
+#'
+#' @return Scheduled games (in the format of the schedule) for the requested date, or NULL if none
+#' @export
+games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games = False){
+  stopifnot(lubridate::is.Date(date))
+  todaygames<-processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
+  if(!all_games){
+    todaygames<-todaygames["Scheduled" %in% todaygames$GameState, ]
+  }
+  if (nrow(todaygames) > 0){
+    return(todaygames)
+  } else {
+    return(NULL)
+  }
+}
+
 
 #' Update schedule using the NHL API
 #'
@@ -63,12 +92,13 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE)
   schedule<-schedule %>%
     dplyr::filter(!(!!dplyr::sym('GameID') %in% gameIDs)) %>%
     dplyr::bind_rows(sched) %>%
-    dplyr::arrange(!!dplyr::sym('Date'), !!dplyr::sym('GameID'))
+    dplyr::arrange(!!dplyr::sym('Date'), dplyr::desc(!!dplyr::sym('GameState')), !!dplyr::sym('GameID'))
   if(save_data){
     suppressMessages(usethis::use_data(schedule, overwrite=TRUE))
   }
   return(schedule)
 }
+
 
 #' Get NHL Scores
 #'
@@ -112,6 +142,7 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule){
   return(scores)
 }
 
+
 #' Update past scores using the NHL API
 #'
 #' @param scores old scores
@@ -126,7 +157,7 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
     neededGames<-schedule[schedule$Date > getCurrentSeasonStartDate(), ]$GameID
   } else {
     neededGames<-schedule[schedule$Date < Sys.Date(), ]$GameID
-    neededGames<-neededGames[!neededGames %in% scores$GameID]
+    neededGames<-neededGames[!neededGames %in% scores[scores$GameState != 'Final', ]$GameID]
   }
   if(length(neededGames)>0){
     updatedSc<-getNHLScores(neededGames)
@@ -142,6 +173,7 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
   }
   return(scores)
 }
+
 
 clean_names<-function(sc){
   sc <- sc %>%

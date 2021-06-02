@@ -10,6 +10,8 @@ playoffSolver(all_results = NULL, pretty_format = TRUE, p0 = NULL)
 \item{all_results}{if available, the results from simulations. Else loaded. Summary results can be submitted here.}
 
 \item{pretty_format}{Whether to return a pretty table or raw data.}
+
+\item{p0}{Odds of making the playoffs if a play-in is used.}
 }
 \value{
 a tibble of playoff odds

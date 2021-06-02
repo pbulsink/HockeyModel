@@ -14,11 +14,8 @@
 #'   \item{HomeTeam}{Name of the home team}
 #'   \item{HomeGoals}{Number of goals for the home team}
 #'   \item{OTStatus}{The OT status of the game (none, OT, SO, 2OT, 3OT, ...)}
-#'   \item{League}{NHL or WHA}
-#'   \item{Tie}{Boolean, Tie or Not}
-#'   \item{Winner}{Name of the winning team}
-#'   \item{Loser}{Name of the losing team}
-#'   \item{Result}{Coded home win = 0, visitor win = 1}
+#'   \item{GameID}{Unique GameID for each game}
+#'   \item{GameType}{Game Type for each game}
 #' }
 #' @source \url{http://www.hockey-reference.com/}
 "scores"
@@ -32,6 +29,8 @@
 #'   \item{Date}{Date of the game played/to be played}
 #'   \item{AwayTeam}{Name of the visiting team}
 #'   \item{HomeTeam}{Name of the home team}
+#'   \item{GameID}{Unique GameID for each game}
+#'   \item{GameType}{Game Type for each game}
 #' }
 #' @source \url{http://www.hockey-reference.com/}
 "schedule"

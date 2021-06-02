@@ -21,6 +21,10 @@ playoffSeriesOdds(
 \item{home_win}{Number of home ice advantage team wins thus far in the series. Default to 0 (prediction before series start)}
 
 \item{away_win}{Number of away team wins thus far in the series}
+
+\item{ngames}{Number of games in the series, defaults to 7}
+
+\item{game_home}{vector of T/F for 'home team' home games. Defaults for NHL best of 7 series: \code{c(T,T,F,F,T,F,T)}}
 }
 \value{
 numeric odds of home team win series (1-odds for away odds)

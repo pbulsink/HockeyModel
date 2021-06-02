@@ -12,26 +12,26 @@ buildStats<-function(scores){
   tmp1<-scores %>%
     dplyr::group_by(!!dplyr::sym('HomeTeam')) %>%
     dplyr::summarise(
-      GP = length(!!dplyr::sym('Result')),
-      W = sum(!!dplyr::sym('Result') == 1),
-      OTW = sum(!!dplyr::sym('Result') == 0.75),
-      SOW = sum(!!dplyr::sym('Result') == 0.6),
-      OTL = sum(!!dplyr::sym('Result') == 0.25),
-      SOL = sum(!!dplyr::sym('Result') == 0.4),
-      L = sum(!!dplyr::sym('Result') == 0),
+      GP = dplyr::n(),
+      W = sum(!!dplyr::sym('HomeGoals') > !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == ''),
+      OTW = sum(!!dplyr::sym('HomeGoals') > !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == 'OT'),
+      SOW = sum(!!dplyr::sym('HomeGoals') > !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == 'SO'),
+      OTL = sum(!!dplyr::sym('HomeGoals') < !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == 'OT'),
+      SOL = sum(!!dplyr::sym('HomeGoals') < !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == 'SO'),
+      L = sum(!!dplyr::sym('HomeGoals') < !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == ''),
       P = as.numeric(!!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL'))
     ) %>%
     dplyr::ungroup()
   tmp2<-scores %>%
     dplyr::group_by(!!dplyr::sym('AwayTeam')) %>%
     dplyr::summarise(
-      GP = length(!!dplyr::sym('Result')),
-      W = sum(!!dplyr::sym('Result') == 0),
-      OTW = sum(!!dplyr::sym('Result') == 0.25),
-      SOW = sum(!!dplyr::sym('Result') == 0.4),
-      OTL = sum(!!dplyr::sym('Result') == 0.75),
-      SOL = sum(!!dplyr::sym('Result') == 0.6),
-      L = sum(!!dplyr::sym('Result') == 1),
+      GP = dplyr::n(),
+      W = sum(!!dplyr::sym('AwayGoals') > !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == ''),
+      OTW = sum(!!dplyr::sym('AwayGoals') > !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == 'OT'),
+      SOW = sum(!!dplyr::sym('AwayGoals') > !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == 'SO'),
+      OTL = sum(!!dplyr::sym('AwayGoals') < !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == 'OT'),
+      SOL = sum(!!dplyr::sym('AwayGoals') < !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == 'SO'),
+      L = sum(!!dplyr::sym('AwayGoals') < !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == ''),
       P = as.numeric(!!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL'))
     ) %>%
     dplyr::ungroup()
@@ -49,29 +49,21 @@ buildStats<-function(scores){
     stringsAsFactors = FALSE
   )
 
-  #nhl_conferences <- HockeyModel::nhl_conferences
-  nhl_divisions <- HockeyModel::nhl_divisions
-
-  team_stats$Rank <- rank(-team_stats$Points, ties.method = 'random')
-
-  #team_stats$ConfRank <- 0
-  #team_stats$ConfRank[team_stats$Team %in% nhl_conferences$East] <- rank(-team_stats$Points[team_stats$Team %in% nhl_conferences$East], ties.method = 'random')
-  #team_stats$ConfRank[team_stats$Team %in% nhl_conferences$West] <- rank(-team_stats$Points[team_stats$Team %in% nhl_conferences$West], ties.method = 'random')
-
-  team_stats$DivRank <- 0
-  team_stats$DivRank[team_stats$Team %in% nhl_divisions$Atlantic] <- rank(-team_stats$Points[team_stats$Team %in% nhl_divisions$Atlantic], ties.method = 'random')
-  team_stats$DivRank[team_stats$Team %in% nhl_divisions$Central] <- rank(-team_stats$Points[team_stats$Team %in% nhl_divisions$Central], ties.method = 'random')
-  team_stats$DivRank[team_stats$Team %in% nhl_divisions$Metropolitan] <- rank(-team_stats$Points[team_stats$Team %in% nhl_divisions$Metropolitan], ties.method = 'random')
-  team_stats$DivRank[team_stats$Team %in% nhl_divisions$Pacific] <- rank(-team_stats$Points[team_stats$Team %in% nhl_divisions$Pacific], ties.method = 'random')
-
-  team_stats$Playoffs <- 0
-  #Top three from each division
-  team_stats$Playoffs[team_stats$DivRank <= 4] <- 1
-
-  #Two more teams from each conference, organized by conference rank, not currently in the playoffs
-  #team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$East, 'Playoffs'][order(team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$East, 'ConfRank'])][1:2] <- 1
-
-  #team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$West, 'Playoffs'][order(team_stats[team_stats$Playoffs == 0 & team_stats$Team %in% nhl_conferences$West, 'ConfRank'])][1:2] <- 1
+  team_stats<-team_stats %>%
+    dplyr::mutate(Rank = rank(dplyr::desc(!!dplyr::sym("Points")), ties.method = 'random'),
+                  Conf = getConference(!!dplyr::sym("Team")),
+                  Div = getDivision(!!dplyr::sym("Team"))) %>%
+    dplyr::group_by(!!dplyr::sym('Conf')) %>%
+    dplyr::mutate(ConfRank = rank(dplyr::desc(!!dplyr::sym("Points")), ties.method = 'random')) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(!!dplyr::sym('Div')) %>%
+    dplyr::mutate(DivRank = rank(dplyr::desc(!!dplyr::sym("Points")), ties.method = 'random')) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym("DivRank") <= 3, 1, 0)) %>%
+    dplyr::group_by(!!dplyr::sym('Conf'), !!dplyr::sym('Playoffs')) %>%
+    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('Rank') %in% tail(sort(!!dplyr::sym('Rank')), 2), 1, !!dplyr::sym('Playoffs'))) %>% ## Renaming top two playoff teams as 'in' doesn't matter, because they're in already
+    dplyr::ungroup() %>%
+    dplyr::select(-c(!!dplyr::sym('Conf'), !!dplyr::sym('Div')))
 
   return(tibble::as_tibble(team_stats))
 }
@@ -311,6 +303,7 @@ compile_predictions<-function(dir="./prediction_results"){
 #' @param rho rho factor to pass. default HockeyModel::rho
 #' @param m m model to pass. default HockeyModel::m
 #' @param odds_table odds from remainderSeasonDC(Odds = TRUE), or null
+#' @param season_sofar The results of the season to date
 #'
 #' @return a two member list, of all results and summary results
 #' @export
@@ -372,30 +365,24 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
       Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
       meanRank = mean(!!dplyr::sym('Rank'), na.rm = TRUE),
       bestRank = min(!!dplyr::sym('Rank'), na.rm = TRUE),
-      #meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      #bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
       meanDivRank = mean(!!dplyr::sym('DivRank'), na.rm = TRUE),
       bestDivRank = min(!!dplyr::sym('DivRank'), na.rm = TRUE),
       sdPoints = stats::sd(!!dplyr::sym('Points'), na.rm = TRUE),
       sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
       sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
-      #sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
+      sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
       sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      #p_rank1 = sum(!!dplyr::sym('ConfRank') == 1 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
-      #p_rank2 = sum(!!dplyr::sym('ConfRank') != 1 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
+      p_rank1 = sum(!!dplyr::sym('ConfRank') == 1 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
+      p_rank2 = sum(!!dplyr::sym('ConfRank') != 1 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
       # Solving 3 & 4 & 5 & 6 doesn't *really* matter, because 3/4 play the 5/6 within their own division.
       # In 2nd round, 1/8 or 2/7 play the 3/6 or 4/5 from their own division. No re-seeding occurs.
       # See: https://en.wikipedia.org/wiki/Stanley_Cup_playoffs#Current_format
-      #p_rank_34 = sum(!!dplyr::sym('DivRank') == 2)/dplyr::n(),
-      #p_rank_56 = sum(!!dplyr::sym('DivRank') == 3)/dplyr::n(),
-      #p_rank7 = sum(!!dplyr::sym('Wildcard') == 1)/dplyr::n(),
-      #p_rank8 = sum(!!dplyr::sym('Wildcard') == 2)/dplyr::n()
-
-      #for 2020-2021 season the playoff ranking is new
-      p_rank1 = sum(!!dplyr::sym('DivRank') == 1)/dplyr::n(),
-      p_rank2 = sum(!!dplyr::sym('DivRank') == 2)/dplyr::n(),
-      p_rank3 = sum(!!dplyr::sym('DivRank') == 3)/dplyr::n(),
-      p_rank4 = sum(!!dplyr::sym('DivRank') == 4)/dplyr::n()
+      p_rank_34 = sum(!!dplyr::sym('DivRank') == 2)/dplyr::n(),
+      p_rank_56 = sum(!!dplyr::sym('DivRank') == 3)/dplyr::n(),
+      p_rank7 = sum(!!dplyr::sym('Wildcard') == 1)/dplyr::n(),
+      p_rank8 = sum(!!dplyr::sym('Wildcard') == 2)/dplyr::n()
     )
 
   return(list(summary_results = summary_results, raw_results = all_results))
@@ -461,7 +448,7 @@ sim_engine<-function(all_season, nsims){
 
   all_results$Points<-all_results$W*2 + all_results$OTW*2 + all_results$SOW*2 + all_results$OTL + all_results$SOL
 
-  #all_results$Conference <- getConference(all_results$Team)
+  all_results$Conference <- getConference(all_results$Team)
   all_results$Division <- getDivision(all_results$Team)
   all_results$Wildcard <- NA
 
@@ -469,28 +456,25 @@ sim_engine<-function(all_season, nsims){
     dplyr::group_by(!!dplyr::sym('SimNo')) %>%
     dplyr::mutate(Rank = rank(-!!dplyr::sym('Points'), ties.method = 'random')) %>%
     dplyr::ungroup() %>%
-    #For 2020-2021 rank only by division
-    #dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
-    #dplyr::mutate(ConfRank = rank(!!dplyr::sym('Rank'))) %>%
-    #dplyr::ungroup() %>%
-    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Division')) %>%
-    #dplyr::mutate(DivRank = rank(!!dplyr::sym('ConfRank'))) %>%
-    dplyr::mutate(DivRank = rank(!!dplyr::sym('Rank'))) %>% ## 2020-2021
+    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
+    dplyr::mutate(ConfRank = rank(!!dplyr::sym('Rank'))) %>%
     dplyr::ungroup() %>%
-    #dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('DivRank') <=3, 1, 0)) %>%
-    #dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
-    #dplyr::arrange(!!dplyr::sym('Playoffs'), !!dplyr::sym('ConfRank')) %>%
-    #dplyr::mutate(Wildcard = ifelse(!!dplyr::sym('Playoffs') == 0, dplyr::row_number(), NA)) %>%
-    #dplyr::ungroup() %>%
+    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Division')) %>%
+    dplyr::mutate(DivRank = rank(!!dplyr::sym('ConfRank'))) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('DivRank') <=3, 1, 0)) %>%
+    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
+    dplyr::arrange(!!dplyr::sym('Playoffs'), !!dplyr::sym('ConfRank')) %>%
+    dplyr::mutate(Wildcard = ifelse(!!dplyr::sym('Playoffs') == 0, dplyr::row_number(), NA)) %>%
+    dplyr::ungroup() %>%
     dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('DivRank') <= 4, 1, 0)) %>%
     dplyr::arrange(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
-    #mutate_cond(!!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>% #TODO might not work at scale???
+    mutate_cond(!!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>% #TODO might not work at scale???
     dplyr::select(!!dplyr::sym('SimNo'), !!dplyr::sym('Team'), !!dplyr::sym('W'), !!dplyr::sym('OTW'),
                   !!dplyr::sym('SOW'), !!dplyr::sym('SOL'), !!dplyr::sym('OTL'), !!dplyr::sym('Points'),
-                  !!dplyr::sym('Wildcard'), !!dplyr::sym('Rank'), #!!dplyr::sym('ConfRank'),
+                  !!dplyr::sym('Wildcard'), !!dplyr::sym('Rank'), !!dplyr::sym('ConfRank'),
                   !!dplyr::sym('DivRank'), !!dplyr::sym('Playoffs'))
 
-  #Do this by hand as it doesn't seem to want to work in dplyr pipe - not for 2020-2021
   #all_results[!is.na(all_results$Wildcard) & all_results$Wildcard <= 2,]$Playoffs<-1
   #all_results$Wildcard[is.na(all_results$Wildcard)]<-0
 
@@ -506,6 +490,7 @@ sim_engine<-function(all_season, nsims){
 #' @param away_team Opponent Team
 #' @param home_wins Home Ice Advantage Team Wins in Series
 #' @param away_wins Opponent Team Wins in Series
+#' @param ... additional parameters to pass to playoffSeriesOdds
 #'
 #' @return Odds from 0-1
 #' @export
@@ -524,6 +509,8 @@ playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, ...){
 #' @param away_odds Team odds with home-ice advantage at away (on the road)
 #' @param home_win Number of home ice advantage team wins thus far in the series. Default to 0 (prediction before series start)
 #' @param away_win Number of away team wins thus far in the series
+#' @param ngames Number of games in the series, defaults to 7
+#' @param game_home vector of T/F for 'home team' home games. Defaults for NHL best of 7 series: \code{c(T,T,F,F,T,F,T)}
 #'
 #' @return numeric odds of home team win series (1-odds for away odds)
 #' @export
@@ -603,13 +590,11 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames
 #'
 #' @param all_results if available, the results from simulations. Else loaded. Summary results can be submitted here.
 #' @param pretty_format Whether to return a pretty table or raw data.
+#' @param p0 Odds of making the playoffs if a play-in is used.
 #'
 #' @return a tibble of playoff odds
 #' @export
 playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
-  if(lubridate::year(Sys.Date()) == 2021) {
-    return(playoffSolver2021(all_results = all_results, pretty_format = pretty_format, p0=p0))
-  }
 
   if(is.null(p0)){
     if(is.null(all_results)){
@@ -762,229 +747,6 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
   return(playoff_odds)
 }
 
-playoffSolver2021 <- function(all_results = NULL, pretty_format = TRUE, p0=NULL){
-  #This is for 2021 playoff format only!
-  if(is.null(p0)){
-    if(is.null(all_results)){
-      filelist<-list.files(path = "./prediction_results")
-      pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
-      pdates<-pdates[pdates != 'graphics']
-      lastp<-as.Date(max(pdates))
-      all_results<-readRDS(file.path("./prediction_results", paste0(lastp,"-predictions.RDS")))
-      summary_results<-all_results
-    } else {
-      lastp = Sys.Date()
-    }
-
-    if('summary_results' %in% names(all_results)){
-      summary_results <- all_results$summary_results
-    } else {
-      summary_results<-all_results
-    }
-
-
-    #Convention: p# is odds of making it out of the round #. p0 is making playoffs, p1 is making out of 1st round, etc. so p4 is win cup.
-
-    #make 1st round win odds matrix - There's only 4 teams per division that make it. First two rounds are in division. third and fourth are the top team from each division in a 1-4/2-3 ranking, sorted by points
-
-    #FOR TESTING ONLY
-    if(!('p_rank3' %in% names(summary_results))){
-      summary_results$p_rank3<-summary_results$p_rank_34*0.5
-      summary_results$p_rank4<-summary_results$p_rank_34*0.5
-    }
-    p0<-summary_results %>%
-      dplyr::select(!!dplyr::sym('Team'), !!dplyr::sym('p_rank1'), !!dplyr::sym('p_rank2'), !!dplyr::sym('p_rank3'), !!dplyr::sym('p_rank4'), !!dplyr::sym('meanRank'), !!dplyr::sym('meanPoints'))
-  } else {
-    lastp = Sys.Date()
-  }
-  p0<-p0[sum(p0$p_rank1, p0$p_rank2, p0$p_rank3, p0$p_rank4)>0,]
-  p0$Division<-getDivision(p0$Team)
-  #p0$Conference<-getConference(p0$Team)
-  p1<-p0
-  p1$p_rank1 <- p1$p_rank2 <- p1$p_rank3 <- p1$p_rank4 <- 0
-  p2<-p3<-p4<-p1
-
-  ranks1<-paste('p_rank', c(1:4), sep = '')
-
-  for (team in p1$Team){
-    #pass to a function solving a teams' odds of progressing (sorting opponent, etc.)
-    p1[p1$Team == team, ranks1]<-as.list(team_progression_odds2021(round = 1, team = team, odds = p0)) #TODO: team_progression_odds2021
-  }
-
-  p1$p_rank14<-p1$p_rank1 + p1$p_rank4
-  p1$p_rank23<-p1$p_rank2 + p1$p_rank3
-  p1[,ranks1]<-p2[,ranks1]<-p3[,ranks1]<-p4[,ranks1]<-NULL
-
-  #Fix normalization fixes
-  # ranks2<-c('p_rank14', 'p_rank23')
-  # p1[, ranks2]<-p1[, ranks2]*(4/sum(p1[,ranks2]))
-  # p1[p1$Conference == "East", ranks2]<-p1[p1$Conference == "East", ranks2]*(4/sum(p1[p1$Conference == "East", ranks2]))
-  # p1[p1$Conference == "West", ranks2]<-p1[p1$Conference == "West", ranks2]*(4/sum(p1[p1$Conference == "West", ranks2]))
-  #
-  #make 2nd round win odds matrix
-  p2$divodds<-0
-  for (team in p2$Team){
-    p2[p2$Team == team, ]$divodds<-team_progression_odds2021(round = 2, team = team, odds = p1)
-  }
-
-  # p2[p2$Conference == "East", ]$cfodds <- p2[p2$Conference == "East", ]$cfodds*(2/sum(p2[p2$Conference == "East", ]$cfodds))
-  # p2[p2$Conference == "West", ]$cfodds <- p2[p2$Conference == "West", ]$cfodds*(2/sum(p2[p2$Conference == "West", ]$cfodds))
-  # #p2$cfodds<-p2$cfodds*(4/sum(p2$cfodds))
-
-  #make 3rd round win odds matrix+
-  p3$sfodds<-0
-  for(team in p3$Team){
-    p3[p3$Team == team, ]$sfodds<-team_progression_odds(round = 3, team = team, odds = p2)
-  }
-
-  p3[p3$Conference == "East", ]$fodds <- p3[p3$Conference == "East", ]$fodds*(1/sum(p3[p3$Conference == "East", ]$fodds))
-  p3[p3$Conference == "West", ]$fodds <- p3[p3$Conference == "West", ]$fodds*(1/sum(p3[p3$Conference == "West", ]$fodds))
-  #p3$fodds<-p3$fodds*(2/sum(p3$fodds))
-
-  #make cup win odds matrix
-  p4$cupodds<-0
-  for(team in p4$Team){
-    p4[p4$Team == team, ]$cupodds<-team_progression_odds(round = 4, team = team, odds = p3)
-  }
-  p4$cupodds<-p4$cupodds * (1/sum(p4$cupodds))
-
-  #Summarize Data
-  #teamlist<-ifelse(exists("summary_results"), yes = summary_results$Team, no=p0$Team)
-  if(exists("summary_results")){
-    teamlist<-summary_results$Team
-  } else {
-    teamlist<-p0$Team
-  }
-
-  playoff_odds<-tibble::tibble(Team = teamlist,
-                               Make_Playoffs = 0,
-                               Win_First_Round = 0,
-                               Win_Division = 0,
-                               Win_SemiFinals = 0,
-                               Win_Cup = 0
-  )
-
-  playoff_odds <- merge(playoff_odds, p0, by="Team")
-  playoff_odds <- playoff_odds %>%
-    dplyr::mutate("Make_Playoffs" = p_rank1 + p_rank2 + p_rank3 + p_rank4 + p_rank5 + p_rank6 + p_rank7 + p_rank8) %>%
-    dplyr::select(c("Team", "Make_Playoffs"))
-
-  playoff_odds <- merge(playoff_odds, p1, by="Team")
-  playoff_odds <- playoff_odds %>%
-    dplyr::mutate("Win_First_Round" = p_rank18 + p_rank27 + p_rank36 + p_rank45) %>%
-    dplyr::select(c("Team", "Make_Playoffs", "Win_First_Round"))
-
-  playoff_odds <- merge(playoff_odds, p2[,c("Team", "cfodds")], by="Team")
-  playoff_odds <- merge(playoff_odds, p3[,c("Team", "fodds")], by="Team")
-  playoff_odds <- merge(playoff_odds, p4[,c("Team", "cupodds")], by="Team")
-
-  playoff_odds <- playoff_odds %>%
-    dplyr::rename("Win_Division" = "divodds",
-                  "Win_SemiFinals" = "sfodds",
-                  "Win_Cup" = "cupodds")
-
-  if(pretty_format){
-
-    format_playoff_odds<-function(playoff_odds, caption_text){
-      playoff_odds$Make_Playoffs = round(playoff_odds$Make_Playoffs*100, 2)
-      playoff_odds$Win_First_Round = round(playoff_odds$Win_First_Round*100, 2)
-      playoff_odds$Win_Second_Round = round(playoff_odds$Win_Second_Round*100, 2)
-      playoff_odds$Win_Conference = round(playoff_odds$Win_Conference*100, 2)
-      playoff_odds$Win_Cup = round(playoff_odds$Win_Cup*100, 2)
-      rownames(playoff_odds)<-NULL
-      playoff_odds<-formattable::formattable(playoff_odds,
-                                             col.names = c("Team", "Make Playoffs", "Win 1st Round", "Win 2nd Round", "Win Conference", "Win Cup"),
-                                             caption = paste0(caption_text, " Playoff Odds as of ", lastp, " | P. Bulsink (@BulsinkB)"),
-                                             align = c('l', rep("r", 5)),
-                                             list(
-                                               `Team` = formattable::formatter("span", style = ~formattable::style(font.weight = "bold")),
-                                               formattable::area(col = 2:6) ~ function(x) formattable::percent(x/100, digits = 2),
-                                               formattable::area(col = 2:6) ~ formattable::color_tile("#fefffe", "#3ccc3c")
-                                             ))
-    }
-
-    playoff_odds<-dplyr::arrange(playoff_odds, dplyr::desc(!!dplyr::sym("Win_Cup")))
-    east_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$East,], caption_text = "Eastern Conference")
-    west_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$West,], caption_text = "Western Conference")
-
-    playoff_odds<-list('east' = east_odds, 'west' = west_odds)
-  }
-  return(playoff_odds)
-}
-
-team_progression_odds2021<-function(round, team, odds){
-  d_opponents<-odds[odds$Division == getDivision(team),]$Team
-  d_opponents<-d_opponents[d_opponents != team]
-  c_opponents<-odds[odds$Division != getDivision(team),]$Team
-
-  sf_home_opponents <- odds[(odds$Division != getDivision(team) & odds$meanPoints < odds[odds$Team == team,]$meanPoints)]$Team
-  sf_away_opponents <- odds[(odds$Division != getDivision(team) & odds$meanPoints > odds[odds$Team == team,]$meanPoints)]$Team
-
-  if(round == 1){
-    ranks<-paste('p_rank', c(1:4), sep = '')
-
-    team_odds<-as.numeric(odds[odds$Team == team, names(odds) %in% ranks])
-    o1<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank4/sum(odds[odds$Team %in% c_opponents,]$p_rank4)) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[1]
-    o2<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank3/sum(odds[odds$Team %in% c_opponents,]$p_rank3)) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[2]
-    o3<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank2/sum(odds[odds$Team %in% c_opponents,]$p_rank2)) *
-                     (1-playoffDC(home = x, away = team))),
-            na.rm = TRUE)*team_odds[3]
-    o4<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank1/sum(odds[odds$Team %in% c_opponents,]$p_rank1)) *
-                     (1-playoffDC(home = x, away = team))),
-            na.rm = TRUE)*team_odds[4]
-
-    return(c(o1,o2,o3,o4))
-
-  } else if (round == 2) {
-    team_odds<-as.numeric(odds[odds$Team == team, c('p_rank14', 'p_rank23')])
-    o1<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank23/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank23))) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[1]
-
-    o2<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank14/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank14))) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[2]
-    return(o1+o2)
-
-  } else if (round == 3) {
-    if(length(sf_home_opponents)>0){
-      o1<-sum(sapply(sf_home_opponents, function(x) (odds[odds$Team == x, ]$sfodds/sum(odds[odds$Team %in% c_opponents,]$sfodds)) * playoffDC(home = team, away = x)),
-              na.rm = TRUE) * odds[odds$Team == team, ]$sfodds
-    } else {
-      o1<-0
-    }
-    if(length(sf_away_opponents)>0){
-      o2<-sum(sapply(sf_away_opponents, function(x) (odds[odds$Team == x, ]$sfodds/sum(odds[odds$Team %in% c_opponents,]$sfodds)) * playoffDC(home = x, away = team)),
-              na.rm = TRUE) * odds[odds$Team == team, ]$sfodds
-    } else {
-      o2 <- 0
-    }
-
-    return(o1+o2)
-  } else if (round == 4) {
-    if(length(sf_home_opponents) > 0) {
-      o1 <- sum(sapply(sf_home_opponents, function(x) (odds[odds$Team == x, ]$sfodds/sum(odds[odds$Team %in% c_opponents,]$sfodds)) * playoffDC(home = team, away = x)),
-                na.rm = TRUE) * odds[odds$Team == team, ]$sfodds
-    } else {
-      o1 <- 0
-    }
-    if(length(sf_away_opponents) > 0){
-      o2 <- sum(sapply(sf_away_opponents, function(x) (odds[odds$Team == x, ]$sfodds/sum(odds[odds$Team %in% c_opponents,]$sfodds)) * playoffDC(home = x, away = team)),
-                na.rm = TRUE) * odds[odds$Team == team, ]$sfodds
-    } else {
-      o2 <- 0
-    }
-
-    return(o1+o2)
-  } else {
-    stop("Round must be in [1..4]")
-  }
-}
-
 #' Team Progression Odds
 #'
 #' @param round Playoff round (1-4)
@@ -1106,163 +868,3 @@ team_progression_odds<-function(round, team, odds){
     stop("Round must be in [1..4]")
   }
 }
-
-#' Covid Play-in Solver
-#'
-#' @ description Due to the unique play-in required for 2019-2020 season during the COVID-19 pandemic, this mashes the required odds for play-in teams and round-robin teams of finishing ahead in their series
-#'
-#' @ param covidSeries Defaults to the built-in covid play-inand round-robin series
-#' @ param covidSchedule the schedule of games
-#' @ param covidScores the result of games, manually updated
-#'
-#' @ return a list of data frames
-#' @ export
-# covid_play_in_solver<-function(covidSeries = HockeyModel::covidSeries, covidSchedule=HockeyModel::covidSchedule, covidScores = HockeyModel::covidScores){
-#   play_in_odds<-covidSeries$play_in
-#   play_in_odds$HomeProgress=0
-#   play_in_odds$AwayProgress=0
-#
-#   for(i in 1:nrow(play_in_odds)){
-#     play_in_odds[i, "HomeProgress"]<-playoffWin(play_in_odds$HomeTeam[i], play_in_odds$AwayTeam[i], ngames=5, game_home=c(TRUE, TRUE, FALSE, FALSE, TRUE), home_wins = play_in_odds$HomeWins[i], away_wins = play_in_odds$AwayWins[i])
-#     play_in_odds[i, "AwayProgress"]<-1-play_in_odds[i, "HomeProgress"]
-#   }
-#
-#   east_play_in<-covidSchedule[covidSchedule$HomeTeam %in% covidSeries$east_rr$Teams,]
-#   west_play_in<-covidSchedule[covidSchedule$HomeTeam %in% covidSeries$west_rr$Teams,]
-#   east_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$east_rr$Teams,]
-#   east_scores<-east_scores[east_scores$Date < Sys.Date(),]
-#   if(nrow(east_scores) == 0){
-#     east_scores <- NA
-#   }
-#   west_scores<-covidScores[covidScores$HomeTeam %in% covidSeries$west_rr$Teams,]
-#   west_scores<-west_scores[west_scores$Date < Sys.Date(),]
-#   if(nrow(west_scores) == 0){
-#     west_scores <- NA
-#   }
-#
-#   east_raw<-loopless_sim(nsims = 1e5, schedule = east_play_in, season_sofar = east_scores)$raw_results
-#   west_raw<-loopless_sim(nsims = 1e5, schedule = west_play_in, season_sofar = west_scores)$raw_results
-#
-#   #nrow(eastresults$raw_results[eastresults$raw_results$Team == "Boston Bruins" & eastresults$raw_results$Rank == 1,])/nrow(eastresults$raw_results) * 4
-#
-#   east_results<-data.frame(Team = covidSeries$east_rr$Teams)#, p1=numeric(), p2=numeric(), p3=numeric(), p4=numeric())
-#   west_results<-data.frame(Team = covidSeries$west_rr$Teams)#, p1=numeric(), p2 = numeric(), p3=numeric(), p4=numeric())
-#
-#   east_results <- east_results%>%
-#     dplyr::rowwise() %>%
-#     dplyr::mutate(p1=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 1,])/nrow(east_raw)*4,
-#                   p2=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 2,])/nrow(east_raw)*4,
-#                   p3=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 3,])/nrow(east_raw)*4,
-#                   p4=nrow(east_raw[east_raw$Team == !!dplyr::sym('Team') & east_raw$Rank == 4,])/nrow(east_raw)*4
-#     )
-#
-#   west_results <- west_results %>%
-#     dplyr::rowwise() %>%
-#     dplyr::mutate(p1=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 1,,])/nrow(west_raw)*4,
-#                   p2=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 2,])/nrow(west_raw)*4,
-#                   p3=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 3,])/nrow(west_raw)*4,
-#                   p4=nrow(west_raw[west_raw$Team == !!dplyr::sym('Team') & west_raw$Rank == 4,])/nrow(west_raw)*4
-#     )
-#
-#   #return(list(east_results = east_results, west_results = west_results, play_in_odds = play_in_odds))
-#
-#   #progression_odds as p0 for playoff solver
-#   p0<-dplyr::bind_rows(east_results, west_results)
-#   colnames(p0)<-c('Team', 'p_rank1', 'p_rank2', 'p_rank3', 'p_rank4')
-#   p0$p_rank5<-p0$p_rank6<-p0$p_rank7<-p0$p_rank8<-0
-#   p0<-dplyr::bind_rows(p0, rank_odds_play_in(play_in_odds[1:4,]), rank_odds_play_in(play_in_odds[5:8,]))
-#
-#   p0[is.na(p0)]<-0
-#   p0<-p0 %>%
-#     dplyr::relocate(p_rank5, p_rank6, p_rank7, p_rank8, .after=p_rank4)
-#   p0$meanRank<-(p0$p_rank1+2*p0$p_rank2+3*p0$p_rank3+4*p0$p_rank4+5*p0$p_rank5+6*p0$p_rank6+7*p0$p_rank7+8*p0$p_rank8)/rowSums(p0[,2:ncol(p0)])
-#
-#   return(p0)
-# }
-#
-# rank_odds_play_in<-function(progress_odds){
-#   p0<-data.frame(Team = c(progress_odds$HomeTeam, rev(progress_odds$AwayTeam)))
-#   p0$p_rank5<-c(progress_odds[1,5],
-#                 progress_odds[2,5]*progress_odds[1,6],
-#                 progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,6],
-#                 progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,6],
-#                 progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,6],
-#                 0,0,0)
-#   p0$p_rank6<-c(0,
-#                 progress_odds[2,5]*progress_odds[1,5],
-#                 progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,6],
-#                 progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,6] + progress_odds[4,5]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,6],
-#                 progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,6] + progress_odds[4,6]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,6],
-#                 progress_odds[3,6]*progress_odds[1,6]*progress_odds[2,6],
-#                 0,0)
-#   p0$p_rank7<-c(0,0,
-#                 progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,5],
-#                 progress_odds[4,5]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,5]+progress_odds[4,5]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,5]+progress_odds[4,5]*progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,6],
-#                 progress_odds[4,6]*progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,5]+progress_odds[4,6]*progress_odds[3,5]*progress_odds[2,6]*progress_odds[1,5]+progress_odds[4,6]*progress_odds[3,5]*progress_odds[2,5]*progress_odds[1,6],
-#                 progress_odds[3,6]*progress_odds[2,6]*progress_odds[1,5] + progress_odds[3,6]*progress_odds[2,5]*progress_odds[1,6],
-#                 progress_odds[2,6]*progress_odds[1,6],
-#                 0)
-#   p0$p_rank8<-c(0,0,0,
-#                 progress_odds[4,5]*progress_odds[1,5]*progress_odds[2,5]*progress_odds[3,5],
-#                 progress_odds[4,6]*progress_odds[1,5]*progress_odds[2,5]*progress_odds[3,5],
-#                 progress_odds[3,6]*progress_odds[1,5]*progress_odds[2,5],
-#                 progress_odds[2,6]*progress_odds[1,5],
-#                 progress_odds[1,6])
-#   p0
-# }
-
-
-# rr_solver<-function(teams, ngames=1){
-#   #given a list of teams, and the number of games they play against each other each (balanced round robin) predict the odds of each finishing posision for each team
-#   teams<-as.vector(unlist(teams))
-#
-#   rrm<-matrix(data=0, nrow=length(teams), ncol=length(teams), dimnames=list(as.vector(teams), as.vector(teams)))
-#
-#   for(i in 1:length(teams)){
-#     for(j in 1:length(teams)){
-#       if(i==j){
-#         win<-NA
-#       } else {
-#         win<-DCPredict(teams[[i]], teams[[j]], draws=FALSE)[1]
-#       }
-#       rrm[i,j]<-win
-#     }
-#   }
-#   #rrm
-#
-#   games<-expand.grid(teams, teams, stringsAsFactors = FALSE)
-#   games<-games[games$Var1 != games$Var2,]
-#   g<-1
-#   while (g < nrow(games)){
-#     v1<-games[g, 1]
-#     v2<-games[g, 2]
-#     games<-games[!(games$Var1==v2 & games$Var2 == v1),]
-#     g<-g+1
-#   }
-#
-#   #Assume 1 game/odd # games: teams listed in ranked order, higher rank gets home privilege. I.E. use upper right of matrix
-#   #Assume 2 games/even #: teams get home & home
-#   if (ngames>1){
-#     g<-games
-#     games<-data.frame(Date = "", HomeTeam="", AwayTeam="", stringsAsFactors = F)
-#     for(i in 1:ngames){
-#       if(i%%2!=0){
-#         tempgames<-g
-#         colnames(tempgames)<-c("HomeTeam", "AwayTeam")
-#         #add games to game list
-#         rbind(games, tempgames)
-#       } else {
-#         #flip home & away
-#         tempgames<-g
-#         colnames(tempgames)<-c("AwayTeam", "HomeTeam")
-#         rbind(games, tempgames)
-#       }
-#     }
-#   } else {
-#     colnames(games) <- c("AwayTeam", "HomeTeam")
-#   }
-#
-#   games$Date<-sample(seq(as.Date("2020-08-01"), as.Date("2020-08-31"), by="days"), replace = TRUE, size = nrow(games))
-#
-#
-# }

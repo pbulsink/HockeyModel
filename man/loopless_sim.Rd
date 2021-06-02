@@ -29,6 +29,8 @@ loopless_sim(
 \item{m}{m model to pass. default HockeyModel::m}
 
 \item{odds_table}{odds from remainderSeasonDC(Odds = TRUE), or null}
+
+\item{season_sofar}{The results of the season to date}
 }
 \value{
 a two member list, of all results and summary results

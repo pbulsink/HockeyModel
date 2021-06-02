@@ -3,7 +3,6 @@
 export("%>%")
 export(DCPredict)
 export(accuracy)
-export(addSeriesWin)
 export(buildStats)
 export(colourDelta)
 export(compile_predictions)

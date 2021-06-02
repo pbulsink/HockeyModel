@@ -5,13 +5,13 @@
 \title{Tweet Playoff Odds}
 \usage{
 tweetPlayoffOdds(
-  playoffOdds = covid_play_in_solver(),
+  all_results = NULL,
   token = rtweet::get_token(),
   graphic_dir = "./prediction_results/graphics/"
 )
 }
 \arguments{
-\item{playoffOdds}{During COVID, pass covid_play_in_solver(), afterwards change to all_results = all_results}
+\item{all_results}{all results, if not most recent (will be loaded by functions)}
 
 \item{token}{rtweet token}
 

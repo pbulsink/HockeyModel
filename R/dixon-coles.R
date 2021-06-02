@@ -130,10 +130,6 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   schedule<-schedule[schedule$Date > max(scores$Date), ]
   dcscores<-scores[scores$Date > as.Date("2005-08-01"),]
   dcscores<-droplevels(dcscores)
-  dcscores$Winner <- NULL
-  dcscores$Loser <- NULL
-  dcscores$League <- NULL
-  dcscores$Tie <- NULL
 
   #Get a tie performance for each team.
   dcscores.ot<-dcscores[dcscores$OTStatus != '', ]

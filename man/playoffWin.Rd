@@ -14,6 +14,8 @@ playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, ...)
 \item{home_wins}{Home Ice Advantage Team Wins in Series}
 
 \item{away_wins}{Opponent Team Wins in Series}
+
+\item{...}{additional parameters to pass to playoffSeriesOdds}
 }
 \value{
 Odds from 0-1
