@@ -116,7 +116,8 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if(Sys.Date() < max(HockeyModel::schedule$Date)){
+  if(Sys.Date() <= as.Date('2021-05-15')){
+    #TODO Doesn't yet programattically know that reg. season is done. Fix this summer.
 
     rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                        media = file.path(graphic_dir, "point_predict.png"), token = token)
@@ -162,10 +163,16 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     stop('No future games planned')
   }
 
-  in_reg_season <- FALSE
-  if(Sys.Date() <= max(sc[sc$GameType == "R", ]$Date)){
-    in_reg_season <- TRUE;
+  modelparams<-updateModel(...)
+  in_reg_season<-FALSE
+  if(Sys.Date()<= as.Date("2021-05-15")){
+    in_reg_season<-TRUE
+    if(Sys.Date()<=as.Date("2021-08-15")){
+      updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
+    }
   }
+
+  #TODO: see if we're in regular season or not based on if there's shceduled 'R' games
 
   updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
 

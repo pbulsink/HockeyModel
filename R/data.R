@@ -108,7 +108,7 @@ updateSchedule <- function(data_dir = "./data-raw"){
   new_schedule<-new_schedule[,c('Date', 'Visitor', 'Home')]
   new_schedule<-data.frame("Date" = new_schedule$Date, "HomeTeam" = new_schedule$Home, "AwayTeam" = new_schedule$Visitor)
   new_schedule$Date <- as.Date(new_schedule$Date)
-  new_schedule<-new_schedule[!(new_schedule$Date > as.Date('2020-03-11') & new_schedule$Date < as.Date('2020-04-05')),]
+  #new_schedule<-new_schedule[!(new_schedule$Date > as.Date('2020-03-11') & new_schedule$Date < as.Date('2020-04-05')),]
   if(nrow(new_schedule) != nrow(schedule)){
     schedule <- new_schedule
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
@@ -137,4 +137,3 @@ updateScores <- function(data_dir = "./data-raw", last_playoffs = FALSE){
   }
   return(new_scores)
 }
-
