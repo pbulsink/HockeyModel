@@ -312,9 +312,9 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
   nsims <- floor(nsims/cores)
 
   if(is.null(odds_table)){
-    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, odds = TRUE, rho = rho, m = m, nsims = nsims)
+    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, rho = rho, m = m, nsims = nsims, mu_lambda = TRUE)
   }
-  odds_table$Result <- NA
+  #odds_table$Result <- NA
 
   if(is.null(season_sofar)){
     season_sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
@@ -329,10 +329,10 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
     last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
     odds_table<-odds_table[odds_table$Date > last_scores_date, ]
 
-    season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
-    season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
+    season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]    ## TODO RESULT
+    #season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
 
-    all_season<-rbind(season_sofar, odds_table)
+    all_season<-dplyr::bind_rows(season_sofar, odds_table)
   } else {
     all_season <- odds_table
   }
@@ -340,15 +340,18 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
   #this fixes CRAN checks
   `%dopar%` <- foreach::`%dopar%`
   #`%do%` <- foreach::`%do%`
+
   cl<-parallel::makeCluster(cores)
   doSNOW::registerDoSNOW(cl)
 
-  #Ram management issues. Send smaller chunks more often, hopefully this helps.
+  #for testing only
+  all_results<-sim_engine(all_season = all_season, nsims = nsims)
 
-  all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
-    all_results<-sim_engine(all_season = all_season, nsims = floor(nsims/5))
-    return(all_results)
-  }
+  #Ram management issues. Send smaller chunks more often, hopefully this helps.
+  # all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
+  #   all_results<-sim_engine(all_season = all_season, nsims = floor(nsims/5))
+  #   return(all_results)
+  # }
 
   parallel::stopCluster(cl)
   gc(verbose = FALSE)
@@ -398,36 +401,41 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
 sim_engine<-function(all_season, nsims){
 
   season_length<-nrow(all_season)
-  if(season_length != 1271){
-    warning('Season length not as expected: ', season_length)
-  }
+  # if(season_length != 1271){
+  #   warning('Season length not as expected: ', season_length)
+  # }
 
   multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
   multi_season$sim<-rep(1:nsims, each = season_length)
-  multi_season$r1<-stats::runif(n=nrow(multi_season))
-  multi_season$r2<-stats::runif(n=nrow(multi_season))
-  multi_season$r3<-stats::runif(n=nrow(multi_season))
 
   Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call calmed it.
 
-  multi_season<-multi_season %>%
-    mutate_cond(is.na(!!Result), Result = 1*(as.numeric(!!dplyr::sym('r1')<!!dplyr::sym('HomeWin'))) +
-                  0.75 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
-                                       !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
-                            (as.numeric(!!dplyr::sym('r2') > 0.5) * as.numeric(!!dplyr::sym('r3') < 0.75))) +
-                  0.6 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
-                                      !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
-                           (as.numeric(!!dplyr::sym('r2') > 0.5) * as.numeric (!!dplyr::sym('r3') > 0.75))) +
-                  0.4 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
-                                      !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
-                           (as.numeric(!!dplyr::sym('r2') < 0.5) * as.numeric (!!dplyr::sym('r3') > 0.75))) +
-                  0.25 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
-                                       !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
-                            (as.numeric(!!dplyr::sym('r2') < 0.5) * as.numeric (!!dplyr::sym('r3') < 0.75))) +
-                  0)
+  if('lambda' %in% names(multi_season)){
+    multi_season <- multi_season %>%
+      mutate_cond(is.na(Result), Result = dcResult(lambda = !!dplyr::sym("lambda"), mu = !!dplyr::sym("mu")))
 
-  multi_season$r1<-multi_season$r2<-multi_season$r3<-multi_season$HomeWin <- multi_season$AwayWin <- multi_season$Draw <- NULL
+  } else{
+    multi_season$r1<-stats::runif(n=nrow(multi_season))
+    multi_season$r2<-stats::runif(n=nrow(multi_season))
+    multi_season$r3<-stats::runif(n=nrow(multi_season))
 
+    multi_season<-multi_season %>%
+      mutate_cond(is.na(Result), Result = 1*(as.numeric(!!dplyr::sym('r1')<!!dplyr::sym('HomeWin'))) +
+                    0.75 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
+                                         !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
+                              (as.numeric(!!dplyr::sym('r2') > 0.5) * as.numeric(!!dplyr::sym('r3') < 0.75))) +
+                    0.6 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
+                                        !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
+                             (as.numeric(!!dplyr::sym('r2') > 0.5) * as.numeric (!!dplyr::sym('r3') > 0.75))) +
+                    0.4 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
+                                        !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
+                             (as.numeric(!!dplyr::sym('r2') < 0.5) * as.numeric (!!dplyr::sym('r3') > 0.75))) +
+                    0.25 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
+                                         !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
+                              (as.numeric(!!dplyr::sym('r2') < 0.5) * as.numeric (!!dplyr::sym('r3') < 0.75))) +
+                    0)
+
+  }
   long_season<-data.frame(Team = c(as.character(multi_season$HomeTeam), as.character(multi_season$AwayTeam)), stringsAsFactors = FALSE)
   long_season$Result<-c(multi_season$Result, 1-multi_season$Result)
   long_season$SimNo<-c(multi_season$sim, multi_season$sim)
@@ -445,6 +453,7 @@ sim_engine<-function(all_season, nsims){
     as.data.frame()
 
   rm(long_season)
+
 
   all_results$Points<-all_results$W*2 + all_results$OTW*2 + all_results$SOW*2 + all_results$OTL + all_results$SOL
 

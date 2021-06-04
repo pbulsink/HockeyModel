@@ -304,11 +304,12 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
 #' @param schedule uplayed future games
 #' @param odds whether to return odds table or simulate season
 #' @param regress whether to apply a regression to the mean for team strength on future predictions
+#' @param mu_lambda whether to return team mu/lambda values. Can't be set true if odds is true
 #' @param ... arguements to pass to dc predictor
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, regress = TRUE, ...){
+remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, regress = TRUE, mu_lambda = FALSE, ...){
 
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
@@ -318,7 +319,7 @@ remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule 
   schedule <- schedule[schedule$Date > last_game_date, ]
 
   if(regress){
-    season_end_date <- as.Date(max(schedule$Date))
+    season_end_date <- as.Date(max(schedule$Date)) #TODO FIX for reg season only
     season_start_date <- as.Date(min(c(scores[scores$Date > as.Date(getCurrentSeasonStartDate()), 'Date'], schedule[schedule$Date > as.Date(getCurrentSeasonStartDate()), 'Date'])))
     season_length <- as.integer(season_end_date) - as.integer(season_start_date)
     remaining_length <- as.integer(season_end_date) - as.integer(last_game_date)
@@ -345,6 +346,39 @@ remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule 
     return(odds_table)
   }
 
+  if(mu_lambda){
+    odds_table$mu <- NA
+    odds_table$lambda <- NA
+
+    for(g in 1:nrow(odds_table)){
+      d<-as.Date(odds_table[g,"Date"], origin="1970-01-01")
+      # Expected goals home
+      lambda <- try(stats::predict(m, data.frame(Home = 1, Team = odds_table$HomeTeam[g], Opponent = odds_table$AwayTeam[g]), type = "response"), TRUE)
+
+      # Expected goals away
+      mu<-try(stats::predict(m, data.frame(Home = 0, Team = odds_table$AwayTeam[g], Opponent = odds_table$HomeTeam[g]), type = "response"), TRUE)
+
+      if(!is.numeric(lambda)){
+        lambda<-DCPredictErrorRecover(team = odds_table$HomeTeam[g], opponent = odds_table$AwayTeam[g], homeiceadv = TRUE)
+      }
+      if(!is.numeric(mu)){
+        mu<-DCPredictErrorRecover(team = odds_table$AwayTeam[g], opponent = odds_table$HomeTeam[g], homeiceadv = FALSE)
+      }
+
+      if(regress){
+        #Adjust regress to mean
+        season_percent <- (remaining_length - as.integer(season_end_date - as.Date(d)))/season_length
+
+        lambda <- lambda * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
+        mu <- mu * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
+      }
+      odds_table[g, "lambda"]<-lambda
+      odds_table[g, "mu"]<-mu
+    }
+    odds_table$HomeWin<-odds_table$AwayWin<-odds_table$Draw <- NULL
+    return(odds_table)
+  }
+
   summary_results <- simulateSeasonParallel(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule)
 
   return(summary_results)
@@ -352,13 +386,13 @@ remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule 
 
 tau_singular <- function(xx, yy, lambda, mu, rho) {
   if (xx == 0 & yy == 0) {
-    return(1 - (lambda * mu * rho))
+    return(max(1e-1, 1 - (lambda * mu * rho)))
   } else if (xx == 0 & yy == 1) {
-    return(1 + (lambda * rho))
+    return(max(1e-1, 1 + (lambda * rho)))
   } else if (xx == 1 & yy == 0) {
-    return(1 + (mu * rho))
+    return(max(1e-1, 1 + (mu * rho)))
   } else if (xx == 1 & yy == 1) {
-    return(1 - rho)
+    return(max(1e-1, 1 - rho))
   } else {
     return(1)
   }
@@ -455,6 +489,39 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
 #' @return a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
 #' @export
 DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, draws=TRUE) {
+  probability_matrix <- dcProbMatrix(home = home, away = away, m = m, rho = rho, maxgoal = maxgoal)
+
+  HomeWinProbability <- sum(probability_matrix[lower.tri(probability_matrix)])
+  DrawProbability <- sum(diag(probability_matrix))
+  AwayWinProbability <- sum(probability_matrix[upper.tri(probability_matrix)])
+
+  #Simple Adjust for underpredicting odds
+  HomeWinProbability <- HomeWinProbability * (0.43469786 / 0.4558628)
+  AwayWinProbability <- AwayWinProbability * (0.33333333 / 0.3597192)
+  DrawProbability <- DrawProbability * (0.2319688 / 0.1755118)
+  odds <- normalizeOdds(c(HomeWinProbability, DrawProbability, AwayWinProbability))
+
+  if(!draws){
+    HomeWinProbability<-HomeWinProbability+normalizeOdds(c(HomeWinProbability, AwayWinProbability))[1]*DrawProbability
+    AwayWinProbability<-AwayWinProbability+normalizeOdds(c(HomeWinProbability, AwayWinProbability))[2]*DrawProbability
+    odds<-normalizeOdds(c(HomeWinProbability, AwayWinProbability))
+  }
+  return(odds)
+}
+
+#' Generate the Dixon-Coles Probability Matrix
+#'
+#' @param m result from getM
+#' @param rho rho from getRho
+#' @param home home team
+#' @param away away team
+#' @param maxgoal max number of goals per team
+#' @param scores optional, if not supplying m & rho, scores used to calculate them.
+#' @param expected_mean the mean lambda & mu, used only for regression
+#' @param season_percent the percent complete of the season, used for regression
+#'
+#' @return a squar matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
+dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
   if(is.null(m)){
     m <- getM(scores = scores)
   }
@@ -484,24 +551,96 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
 
   scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
   probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
-
-  HomeWinProbability <- sum(probability_matrix[lower.tri(probability_matrix)])
-  DrawProbability <- sum(diag(probability_matrix))
-  AwayWinProbability <- sum(probability_matrix[upper.tri(probability_matrix)])
-
-  #Simple Adjust for underpredicting odds
-  HomeWinProbability <- HomeWinProbability * (0.43469786 / 0.4558628)
-  AwayWinProbability <- AwayWinProbability * (0.33333333 / 0.3597192)
-  DrawProbability <- DrawProbability * (0.2319688 / 0.1755118)
-  odds <- normalizeOdds(c(HomeWinProbability, DrawProbability, AwayWinProbability))
-
-  if(!draws){
-    HomeWinProbability<-HomeWinProbability+normalizeOdds(c(HomeWinProbability, AwayWinProbability))[1]*DrawProbability
-    AwayWinProbability<-AwayWinProbability+normalizeOdds(c(HomeWinProbability, AwayWinProbability))[2]*DrawProbability
-    odds<-normalizeOdds(c(HomeWinProbability, AwayWinProbability))
-  }
-  return(odds)
+  return(probability_matrix)
 }
+
+
+#' DC Sample
+#'
+#' @description Get a random single game result using DC method. repeated running should give a new value each time
+#'
+#' @param m result from getM
+#' @param rho rho from getRho
+#' @param home home team
+#' @param away away team
+#' @param maxgoal max number of goals per team
+#' @param scores optional, if not supplying m & rho, scores used to calculate them.
+#' @param expected_mean the mean lambda & mu, used only for regression
+#' @param season_percent the percent complete of the season, used for regression
+#' @param as_result Whether to give a score or just flatten it to result type (see \link{scores} for score result)
+#'
+#' @return a random Home & away goals & OT/SO status if needed
+#' @export
+#'
+#' @examples dcSample("Toronto Maple Leafs", "Montreal Canadiens")
+dcSample<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
+  pm <- dcProbMatrix(home = home, away = away, m = m, rho = rho, maxgoal = maxgoal)
+
+  goals<-as.vector(arrayInd(sample(1:length(pm), size = 1, prob = pm), .dim = dim(pm)))-1
+
+  if (goals[1] == goals[2]){
+    otstatus = sample(c("OT", "SO"), size = 1, prob = c(0.6858606, 0.3141394))
+    otwinner = sample(c("Home", "Away"), size = 1, prob = c(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)])))
+    if(otwinner == "Home"){
+      goals[1] <- goals[1] + 1
+    } else {
+      goals[2] <- goals[2] + 1
+    }
+  } else {
+    otstatus = ""
+  }
+  if(as_result){
+    return(dplyr::case_when(
+      goals[1]>goals[2] & otstatus == "" ~ 1,
+      goals[1]<goals[2] & otstatus == "" ~ 0,
+      goals[1]>goals[2] & otstatus == "OT" ~ 0.75,
+      goals[1]>goals[2] & otstatus == "SO" ~ 0.6,
+      goals[1]<goals[2] & otstatus == "OT" ~ 0.25,
+      goals[1]<goals[2] & otstatus == "SO" ~ 0.4
+      ))
+  } else {
+    return(list("HomeGoals" = goals[1], "AwayGoals" = goals[2], "OTStatus" = otstatus))
+  }
+}
+
+
+#' DC Result Sample
+#'
+#' @param lambda home team lambda
+#' @param mu away team mu
+#' @param rho HockeyModel::rho
+#' @param maxgoal max goals predicable per game, default 10
+#'
+#' @return a result from 0 to 1 corresponding to \link{score} results
+dcResult<-function(lambda, mu, rho = HockeyModel::rho, maxgoal=10){
+  dcr<-function(lambda, mu, rho, maxgoal){
+    pm <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
+
+    scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
+    pm[1:2, 1:2] <- pm[1:2, 1:2] * scaling_matrix
+
+    goals<-as.vector(arrayInd(sample(1:length(pm), size = 1, prob = pm), .dim = dim(pm)))-1
+
+    if (goals[1] > goals[2]){
+      return(1)
+    } else if(goals[1]<goals[2]){
+      return(0)
+    } else{
+      otstatus = sample(c(0.25, 0.1), size = 1, prob = c(0.6858606, 0.3141394))
+      otwinner = sample(c(1, -1), size = 1, prob = c(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)])))
+      return(0.5+(otstatus*otwinner))  # this will yield 0.75 for home OT, 0.25 for away OT, 0.6 for home SO, 0.4 for away SO win.
+    }
+  }
+
+  v_dcr<-Vectorize(dcr, c('lambda', 'mu'))
+
+  if(length(lambda) == 1){
+    return(dcr(lambda, mu, rho, maxgoal))
+  } else {
+    return(as.vector(v_dcr(lambda, mu, rho, maxgoal)))
+  }
+}
+
 
 #' DC Weight
 #'

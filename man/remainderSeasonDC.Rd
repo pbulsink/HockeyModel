@@ -10,6 +10,7 @@ remainderSeasonDC(
   schedule = HockeyModel::schedule,
   odds = FALSE,
   regress = TRUE,
+  mu_lambda = FALSE,
   ...
 )
 }
@@ -23,6 +24,8 @@ remainderSeasonDC(
 \item{odds}{whether to return odds table or simulate season}
 
 \item{regress}{whether to apply a regression to the mean for team strength on future predictions}
+
+\item{mu_lambda}{whether to return team mu/lambda values. Can't be set true if odds is true}
 
 \item{...}{arguements to pass to dc predictor}
 }

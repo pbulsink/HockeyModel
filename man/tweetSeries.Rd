@@ -5,14 +5,11 @@
 \title{Tweet Series}
 \usage{
 tweetSeries(
-  series = HockeyModel::series,
   token = rtweet::get_token(),
   graphic_dir = "./prediction_results/graphics/"
 )
 }
 \arguments{
-\item{series}{series data}
-
 \item{token}{rtweet token}
 
 \item{graphic_dir}{directory to save the image}

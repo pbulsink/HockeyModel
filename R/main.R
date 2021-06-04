@@ -23,7 +23,7 @@ updateModel <- function(...){
 #' @export
 updatePredictions<- function(data_dir = "./prediction_results/", scores = HockeyModel::scores, schedule = HockeyModel::schedule, ...){
   if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
-    message('Scores may be out of date. This can affect predictions. Please update if midseason.')
+    updateScoresAPI(save_data = TRUE)
   }
   filelist<-list.files(path = data_dir)
   pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction

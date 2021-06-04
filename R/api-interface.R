@@ -131,7 +131,8 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule){
                     "HomeGoals" = sc[[1]]$teams$home$goals,
                     "AwayGoals" = sc[[1]]$teams$away$goals,
                     "OTStatus" = sc[[1]]$currentPeriodOrdinal,
-                    "GameType" = schedule[schedule$GameID == g, ]$GameType)
+                    "GameType" = schedule[schedule$GameID == g, ]$GameType,
+                    "GameStatus" = sc[[1]]$currentPeriodTimeRemaining)
         scores<-rbind(scores, dfs)
       }
     }
@@ -139,6 +140,17 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule){
   }
   scores<-clean_names(scores)
   scores[scores$OTStatus == "3rd", ]$OTStatus<-""
+  scores<-scores %>%
+    dplyr::mutate(Result = dplyr::case_when(
+                    (!!dplyr::sym("HomeGoals") > !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "" ~ 1,
+                    (!!dplyr::sym("HomeGoals") < !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "" ~ 0,
+                    (!!dplyr::sym("HomeGoals") == !!dplyr::sym("AwayGoals")) ~ 0.5,
+                    (!!dplyr::sym("HomeGoals") > !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "OT" ~ 0.75,
+                    (!!dplyr::sym("HomeGoals") > !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "SO" ~ 0.6,
+                    (!!dplyr::sym("HomeGoals") < !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "SO" ~ 0.4,
+                    (!!dplyr::sym("HomeGoals") < !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "OT" ~ 0.25,
+    ))
+
   return(scores)
 }
 
@@ -157,7 +169,7 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
     neededGames<-schedule[schedule$Date > getCurrentSeasonStartDate(), ]$GameID
   } else {
     neededGames<-schedule[schedule$Date < Sys.Date(), ]$GameID
-    neededGames<-neededGames[!neededGames %in% scores[scores$GameState != 'Final', ]$GameID]
+    neededGames<-neededGames[!neededGames %in% scores[scores$GameStatus == 'Final', ]$GameID]
   }
   if(length(neededGames)>0){
     updatedSc<-getNHLScores(neededGames)
@@ -193,6 +205,9 @@ clean_names<-function(sc){
   if('Date' %in% names(sc)){
     sc <- sc %>%
       dplyr::mutate("Date" = as.Date(!!dplyr::sym('Date')))
+  }
+  if('OTStatus' %in% names(sc)){
+    sc[sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"),]$OTStatus <- "OT"
   }
   return(sc)
 }

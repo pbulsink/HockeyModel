@@ -16,6 +16,8 @@
 #'   \item{OTStatus}{The OT status of the game (none, OT, SO, 2OT, 3OT, ...)}
 #'   \item{GameID}{Unique GameID for each game}
 #'   \item{GameType}{Game Type for each game}
+#'   \item{GameStatus}{Game Status - 'Final'}
+#'   \item{Result}{A numerically coded result for Hoome Team. Win=1, OTWin = 0.75, SOWin = 0.6, Tie = 0.5, SOLoss = 0.4, OTLoss = 0.25, Loss = 0}
 #' }
 #' @source \url{http://www.hockey-reference.com/}
 "scores"
@@ -92,48 +94,4 @@ buildTeamColours <- function(){
   teamlist<-unique(teamColours$Team)
   teamColours$Logo <- file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", teamlist)), ".gif"))
   usethis::use_data(teamColours, overwrite = TRUE)
-}
-
-#' Update Schedule
-#'
-#' @description DEPRECIATED: USE \code{\link{updateScheduleAPI}} Updates the stored schedule if any games are rescheduled due to any event. Adds playoff games as the schedules are released
-#'
-#' @param data_dir The data storage directory
-#' @return schedule
-#'
-#' @export
-updateSchedule <- function(data_dir = "./data-raw"){
-  message("Depreciated, use 'updateScheduleAPI'")
-  new_schedule<-HockeyScrapR::getSchedule(data_dir = data_dir, from_date=as.Date(getCurrentSeasonStartDate()))
-  new_schedule<-new_schedule[,c('Date', 'Visitor', 'Home')]
-  new_schedule<-data.frame("Date" = new_schedule$Date, "HomeTeam" = new_schedule$Home, "AwayTeam" = new_schedule$Visitor)
-  new_schedule$Date <- as.Date(new_schedule$Date)
-  #new_schedule<-new_schedule[!(new_schedule$Date > as.Date('2020-03-11') & new_schedule$Date < as.Date('2020-04-05')),]
-  if(nrow(new_schedule) != nrow(schedule)){
-    schedule <- new_schedule
-    suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
-  }
-  return(new_schedule)
-}
-
-#' Update Scores
-#'
-#' @description DEPRECIATED: USE \code{\link{updateScoresAPI}} Updates the scores of all finished games.
-#'
-#' @param data_dir The data storage directory
-#' @param last_playoffs Trigger to pass to \code{\link[HockeyScrapR]{updateScores}}
-#'
-#' @return score
-#'
-#' @export
-updateScores <- function(data_dir = "./data-raw", last_playoffs = FALSE){
-  message("Depreciated, use 'updateScoresAPI'")
-  new_scores<-HockeyScrapR::updateScores(score_data = HockeyModel::scores, data_dir = data_dir, sleep=0, playoffs = TRUE, last_playoffs = last_playoffs)
-  if(nrow(new_scores) != nrow(scores)){
-    #new_scores$AwayTeam<-factor(new_scores$AwayTeam, levels = levels(scores$AwayTeam))
-    #new_scores$HomeTeam<-factor(new_scores$HomeTeam, levels = levels(scores$HomeTeam))
-    scores<-new_scores
-    suppressMessages(usethis::use_data(scores, overwrite = TRUE))
-  }
-  return(new_scores)
 }
