@@ -16,7 +16,7 @@ dcResult(lambda, mu, rho = HockeyModel::rho, maxgoal = 10)
 \item{maxgoal}{max goals predicable per game, default 10}
 }
 \value{
-a result from 0 to 1 corresponding to \link{score} results
+a result from 0 to 1 corresponding to \link{scores} results
 }
 \description{
 DC Result Sample

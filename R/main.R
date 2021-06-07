@@ -97,7 +97,7 @@ ratings <- function(m = HockeyModel::m, ...) {
   return(plot_team_rating(m=m, ...))
 }
 
-tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*10, games_today = FALSE, ...){
+tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*10, games_today = games_today(), schedule=HockeyModel::schedule, ...){
 
   if(games_today){
     #don't try tweet todays' games if none exist
@@ -116,8 +116,8 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if(Sys.Date() <= as.Date('2021-05-15')){
-    #TODO Doesn't yet programattically know that reg. season is done. Fix this summer.
+  if(nrow(schedule[schedule$Date >= Sys.Date() & schedule$GameType == "R",]) > 0){
+    # Only runs if schedule has regular season games remaining
 
     rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                        media = file.path(graphic_dir, "point_predict.png"), token = token)
@@ -164,17 +164,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   }
 
   modelparams<-updateModel(...)
-  in_reg_season<-FALSE
-  if(Sys.Date()<= as.Date("2021-05-15")){
-    in_reg_season<-TRUE
-    if(Sys.Date()<=as.Date("2021-08-15")){
-      updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
-    }
-  }
-
-  #TODO: see if we're in regular season or not based on if there's shceduled 'R' games
-
-  updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
+  in_reg_season<-nrow(sc[sc$Date >= Sys.Date() & sc$GameType == "R",])>0
 
   if(!dir.exists(graphic_dir)){
     dir.create(graphic_dir, recursive = TRUE)
@@ -182,7 +172,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   message("Creating graphics...")
 
-    #generate plots
+  #generate plots
   if(Sys.Date() %in% sc$Date){
     today <- todayOdds(rho = modelparams$rho, m = modelparams$m, schedule = modelparams$schedule, scores = modelparams$scores, ...)
     #save to files.
@@ -194,6 +184,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     }
   }
   if(in_reg_season){
+    updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
     playoff <- playoffOdds()
     president <- presidentOdds()
     point <- pointPredict()
@@ -243,19 +234,11 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token, delay=delay)
 
   if(lubridate::month(Sys.Date()) %in% c(3,4) & in_reg_season){
-    playoff_odds<-playoffSolver()
-    #save to files.
-    export_formattable(playoff_odds$east, file.path(graphic_dir, 'east_playoff_odds.png'))
-    export_formattable(playoff_odds$west, file.path(graphic_dir, 'west_playoff_odds.png'))
+    tweetPlayoffOdds(token = token, graphic_dir = graphic_dir)
 
-    rtweet::post_tweet(status = "#NHL Eastern and Western Conference Playoff & #StanleyCup Odds #HockeyTwitter",
-                       media = c(file.path(graphic_dir, 'east_playoff_odds.png'),
-                                 file.path(graphic_dir, 'west_playoff_odds.png')),
-                       token = token)
     #until Rtweet has scheduler
     message("Delaying ", delay/2, " seconds to space tweets...")
     Sys.sleep(delay/2)
-
   }
 
   if(lubridate::day(Sys.Date()) == 1 & in_reg_season){
@@ -325,8 +308,7 @@ tweetPace<-function(delay = 60*5, graphic_dir = "./prediction_results/graphics/"
   }
   pacediff<-data.frame("Team" = current_preds$Team, "Initial" = preds$meanPoints, "Current" = current_preds$meanPoints, stringsAsFactors = FALSE)
   pacediff$Diff <- pacediff$Current - pacediff$Initial
-  maxdiff<-max(pacediff$Diff)
-  mindiff<-min(pacediff$Diff)
+
   maxteam<-pacediff[which.max(pacediff$Diff), 'Team']
   minteam<-pacediff[which.min(pacediff$Diff), 'Team']
 
@@ -465,7 +447,7 @@ tweetSeries<-function(token = rtweet::get_token(), graphic_dir = "./prediction_r
 
 #' Tweet Playoff Odds
 #'
-#' @description Tweet the formattable graphics with each team's odds of each round/cup win
+#' @description Tweet the \code{gt} graphics with each team's odds of each round/cup win
 #'
 #' @param all_results all results, if not most recent (will be loaded by functions)
 #'
@@ -477,10 +459,10 @@ tweetSeries<-function(token = rtweet::get_token(), graphic_dir = "./prediction_r
 tweetPlayoffOdds<-function(all_results=NULL, token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/"){
   plts <- playoffSolver(all_results = all_results)
 
-  export_formattable(f=plts$east, file = file.path(graphic_dir, "east_playoff_odds.png"))
-  export_formattable(f=plts$west, file = file.path(graphic_dir, "west_playoff_odds.png"))
+  gt::gtsave(plts$east, filename = file.path(graphic_dir, "east_playoff_odds.png"))
+  gt::gtsave(plts$west, filename = file.path(graphic_dir, "west_playoff_odds.png"))
 
-  status<- paste0("#NHL #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
+  status<- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
 
   #Posting Tweet
   rtweet::post_tweet(status = status,

@@ -25,19 +25,19 @@ Imports:
     lubridate,
     ggalt,
     ggridges,
-    formattable,
     htmltools,
-    webshot,
     nhlapi,
     stringi,
-    progress
-Remotes:
-  opisthokonta/goalmodel
+    progress,
+    gt,
+    scales,
+    stringr
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,
-    testthat
+    testthat, 
+    webshot
 VignetteBuilder: knitr

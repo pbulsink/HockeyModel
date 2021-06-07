@@ -7,7 +7,7 @@
 games_today(
   schedule = HockeyModel::schedule,
   date = Sys.Date(),
-  all_games = False
+  all_games = FALSE
 )
 }
 \arguments{

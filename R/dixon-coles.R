@@ -318,6 +318,13 @@ remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule 
   last_game_date<-as.Date(max(scores$Date))
   schedule <- schedule[schedule$Date > last_game_date, ]
 
+  #cant regress through playoffs, turn off if not regular season anymore
+  if(regress){
+    if(nrow(schedule[schedule$Date >= Sys.Date() & schedule$GameType == "R", ]) == 0){
+      regress <- FALSE
+    }
+  }
+
   if(regress){
     season_end_date <- as.Date(max(schedule$Date)) #TODO FIX for reg season only
     season_start_date <- as.Date(min(c(scores[scores$Date > as.Date(getCurrentSeasonStartDate()), 'Date'], schedule[schedule$Date > as.Date(getCurrentSeasonStartDate()), 'Date'])))
@@ -353,10 +360,10 @@ remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule 
     for(g in 1:nrow(odds_table)){
       d<-as.Date(odds_table[g,"Date"], origin="1970-01-01")
       # Expected goals home
-      lambda <- try(stats::predict(m, data.frame(Home = 1, Team = odds_table$HomeTeam[g], Opponent = odds_table$AwayTeam[g]), type = "response"), TRUE)
+      lambda <- try(stats::predict(HockeyModel::m, data.frame(Home = 1, Team = odds_table$HomeTeam[g], Opponent = odds_table$AwayTeam[g]), type = "response"), TRUE)
 
       # Expected goals away
-      mu<-try(stats::predict(m, data.frame(Home = 0, Team = odds_table$AwayTeam[g], Opponent = odds_table$HomeTeam[g]), type = "response"), TRUE)
+      mu<-try(stats::predict(HockeyModel::m, data.frame(Home = 0, Team = odds_table$AwayTeam[g], Opponent = odds_table$HomeTeam[g]), type = "response"), TRUE)
 
       if(!is.numeric(lambda)){
         lambda<-DCPredictErrorRecover(team = odds_table$HomeTeam[g], opponent = odds_table$AwayTeam[g], homeiceadv = TRUE)
@@ -573,7 +580,7 @@ dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, m
 #' @export
 #'
 #' @examples dcSample("Toronto Maple Leafs", "Montreal Canadiens")
-dcSample<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
+dcSample<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, as_result=TRUE){
   pm <- dcProbMatrix(home = home, away = away, m = m, rho = rho, maxgoal = maxgoal)
 
   goals<-as.vector(arrayInd(sample(1:length(pm), size = 1, prob = pm), .dim = dim(pm)))-1
@@ -611,7 +618,7 @@ dcSample<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgo
 #' @param rho HockeyModel::rho
 #' @param maxgoal max goals predicable per game, default 10
 #'
-#' @return a result from 0 to 1 corresponding to \link{score} results
+#' @return a result from 0 to 1 corresponding to \link{scores} results
 dcResult<-function(lambda, mu, rho = HockeyModel::rho, maxgoal=10){
   dcr<-function(lambda, mu, rho, maxgoal){
     pm <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))

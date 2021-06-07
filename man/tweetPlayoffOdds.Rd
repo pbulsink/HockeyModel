@@ -18,5 +18,5 @@ tweetPlayoffOdds(
 \item{graphic_dir}{directory to save images}
 }
 \description{
-Tweet the formattable graphics with each team's odds of each round/cup win
+Tweet the \code{gt} graphics with each team's odds of each round/cup win
 }

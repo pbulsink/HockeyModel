@@ -12,7 +12,8 @@ dcSample(
   maxgoal = 8,
   scores = HockeyModel::scores,
   expected_mean = NULL,
-  season_percent = NULL
+  season_percent = NULL,
+  as_result = TRUE
 )
 }
 \arguments{

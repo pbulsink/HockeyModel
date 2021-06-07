@@ -654,29 +654,3 @@ getTeamColours<-function(home, away, delta = 0.15, teamColours = HockeyModel::te
 
   return(list('home' = h, 'away' = a))
 }
-
-
-#' Export a Formattable as PNG, PDF, or JPEG
-#'
-#' @description From https://github.com/renkun-ken/formattable/issues/26.
-#'
-#' @param f A formattable.
-#' @param file Export path with extension .png, .pdf, or .jpeg.
-#' @param width Width specification of the html widget being exported.
-#' @param height Height specification of the html widget being exported.
-#' @param background Background color specification.
-#' @param delay Time to wait before taking webshot, in seconds.
-export_formattable <- function(f, file, width = "100%", height = NULL,
-                               background = "white", delay = 0.2)
-{
-  if(!webshot::is_phantomjs_installed()){
-    webshot::install_phantomjs()
-  }
-  w <- formattable::as.htmlwidget(f, width = width, height = height)
-  path <- htmltools::html_print(w, background = background, viewer = NULL)
-  url <- paste0("file:///", gsub("\\\\", "/", normalizePath(path)))
-  webshot::webshot(url,
-                   file = file,
-                   selector = ".formattable_widget",
-                   delay = delay)
-}

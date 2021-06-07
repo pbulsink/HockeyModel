@@ -35,7 +35,7 @@ getCurrentSeason8 <- function(){
 #' @return current season's nominal start date (Oct 01) as character, e.g. "2019-10-01"
 #' @export
 getCurrentSeasonStartDate <- function(){
-  return(paste0(strtrim(getSeason(Sys.Date()), 4), "-10-02"))
+  return(paste0(strtrim(getCurrentSeason8(), 4), "-10-01"))
 }
 
 
@@ -49,10 +49,10 @@ getSeason <- function(gamedate=Sys.Date()){
   gs<-function(gd){
     year<-as.integer(strftime(gd, '%Y'))
     month<-as.integer(strftime(gd, '%m'))
-    if(month < 10){
-      return(paste0(year-1,year))
-    } else {
+    if(month >= 9){
       return(paste0(year,year+1))
+    } else {
+      return(paste0(year-1,year))
     }
   }
   vgs<-Vectorize(gs)
@@ -179,16 +179,8 @@ historicalPoints<-function(sc){
     if(i == "20122013"){
       next
     }
-    if(as.numeric(i) >= 20172018){
-      ngames<-1271
-    } else {
-      ngames<-1230
-    }
 
-    s<-sc[sc$Season == i,]
-    if(ngames < nrow(s)){
-      s<-s[1:ngames, ]
-    }
+    s<-sc[sc$Season == i & sc$GameType == "R",]
     b<-buildStats(s)
     b$Season <- i
 

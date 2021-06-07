@@ -61,7 +61,7 @@ buildStats<-function(scores){
     dplyr::ungroup() %>%
     dplyr::mutate(Playoffs = ifelse(!!dplyr::sym("DivRank") <= 3, 1, 0)) %>%
     dplyr::group_by(!!dplyr::sym('Conf'), !!dplyr::sym('Playoffs')) %>%
-    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('Rank') %in% tail(sort(!!dplyr::sym('Rank')), 2), 1, !!dplyr::sym('Playoffs'))) %>% ## Renaming top two playoff teams as 'in' doesn't matter, because they're in already
+    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('Rank') %in% utils::tail(sort(!!dplyr::sym('Rank')), 2), 1, !!dplyr::sym('Playoffs'))) %>% ## Renaming top two playoff teams as 'in' doesn't matter, because they're in already
     dplyr::ungroup() %>%
     dplyr::select(-c(!!dplyr::sym('Conf'), !!dplyr::sym('Div')))
 
@@ -601,7 +601,7 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames
 #' @param pretty_format Whether to return a pretty table or raw data.
 #' @param p0 Odds of making the playoffs if a play-in is used.
 #'
-#' @return a tibble of playoff odds
+#' @return a tibble of playoff odds, or if pretty format requested, a \code{gt} table
 #' @export
 playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
 
@@ -729,25 +729,35 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
 
   if(pretty_format){
 
-    format_playoff_odds<-function(playoff_odds, caption_text){
-      playoff_odds$Make_Playoffs = round(playoff_odds$Make_Playoffs*100, 2)
-      playoff_odds$Win_First_Round = round(playoff_odds$Win_First_Round*100, 2)
-      playoff_odds$Win_Second_Round = round(playoff_odds$Win_Second_Round*100, 2)
-      playoff_odds$Win_Conference = round(playoff_odds$Win_Conference*100, 2)
-      playoff_odds$Win_Cup = round(playoff_odds$Win_Cup*100, 2)
-      rownames(playoff_odds)<-NULL
-      playoff_odds<-formattable::formattable(playoff_odds,
-                                             col.names = c("Team", "Make Playoffs", "Win 1st Round", "Win 2nd Round", "Win Conference", "Win Cup"),
-                                             caption = paste0(caption_text, " Playoff Odds as of ", lastp, " | P. Bulsink (@BulsinkB)"),
-                                             align = c('l', rep("r", 5)),
-                                             list(
-                                               `Team` = formattable::formatter("span", style = ~formattable::style(font.weight = "bold")),
-                                               formattable::area(col = 2:6) ~ function(x) formattable::percent(x/100, digits = 2),
-                                               formattable::area(col = 2:6) ~ formattable::color_tile("#fefffe", "#3ccc3c")
-                                               ))
+    format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyModel::teamColours){
+      ##TODO Use gt
+      playoff_odds<-playoff_odds %>%
+        dplyr::arrange(dplyr::desc(!!dplyr::sym("Win_Cup")))
+
+      playoff_odds_gt <- playoff_odds %>%
+        #dplyr::mutate("colour" = teamColours[teamColours$Team == !!dplyr::sym("Team"), "Hex"]) %>%
+        tibble::add_column("block" = "  ", .after = 1) %>%
+        gt::gt() %>%
+        gt::tab_header(title = paste0(caption_text, " Playoff Odds"), subtitle = paste0("As of ", lastp, " | P. Bulsink (@BulsinkB)")) %>%
+        #gt::cols_hide("colour") %>%
+        gt::cols_label("block" = " ",
+                       "Make_Playoffs" = "Make Playoffs",
+                       "Win_First_Round" = "Win First Round",
+                       "Win_Second_Round" = "Win Second Round",
+                       "Win_Conference" = "Win Conference",
+                       "Win_Cup" = "Win Cup") %>%
+        gt::data_color(columns = 3:7, color = scales::col_numeric(c("#fefffe","#3ccc3c"), domain=c(0,1)))%>%
+        gt::fmt_percent(columns = 3:7) %>%
+        gt::tab_options(heading.align = 'left')
+
+      for(i in 1:nrow(playoff_odds)) {
+        playoff_odds_gt <- playoff_odds_gt %>%
+          gt::tab_style(style = gt::cell_fill(color = teamColours[teamColours$Team == playoff_odds$Team[i], "Hex"]),
+                        locations = gt::cells_body(columns = "block", rows = i))
+      }
+      return(playoff_odds_gt)
     }
 
-    playoff_odds<-dplyr::arrange(playoff_odds, dplyr::desc(!!dplyr::sym("Win_Cup")))
     east_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$East,], caption_text = "Eastern Conference")
     west_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$West,], caption_text = "Western Conference")
 

@@ -14,7 +14,7 @@ playoffSolver(all_results = NULL, pretty_format = TRUE, p0 = NULL)
 \item{p0}{Odds of making the playoffs if a play-in is used.}
 }
 \value{
-a tibble of playoff odds
+a tibble of playoff odds, or if pretty format requested, a \code{gt} table
 }
 \description{
 Playoff solver: chances of making each round & winning cup

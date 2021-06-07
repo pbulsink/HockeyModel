@@ -16,7 +16,7 @@
 #'   \item{OTStatus}{The OT status of the game (none, OT, SO, 2OT, 3OT, ...)}
 #'   \item{GameID}{Unique GameID for each game}
 #'   \item{GameType}{Game Type for each game}
-#'   \item{GameStatus}{Game Status - 'Final'}
+#'   \item{GameState}{Game Status - 'Final'}
 #'   \item{Result}{A numerically coded result for Hoome Team. Win=1, OTWin = 0.75, SOWin = 0.6, Tie = 0.5, SOLoss = 0.4, OTLoss = 0.25, Loss = 0}
 #' }
 #' @source \url{http://www.hockey-reference.com/}
@@ -32,6 +32,7 @@
 #'   \item{AwayTeam}{Name of the visiting team}
 #'   \item{HomeTeam}{Name of the home team}
 #'   \item{GameID}{Unique GameID for each game}
+#'   \item{GameStatus}{Game Status}
 #'   \item{GameType}{Game Type for each game}
 #' }
 #' @source \url{http://www.hockey-reference.com/}

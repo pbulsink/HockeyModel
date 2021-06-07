@@ -64,7 +64,7 @@ processNHLSchedule<-function(sched){
 #'
 #' @return Scheduled games (in the format of the schedule) for the requested date, or NULL if none
 #' @export
-games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games = False){
+  games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games = FALSE){
   stopifnot(lubridate::is.Date(date))
   todaygames<-processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
   if(!all_games){
