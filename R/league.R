@@ -10,29 +10,29 @@ buildStats<-function(scores){
   scores<-droplevels(scores)
   teamlist <- sort(unique(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))))
   tmp1<-scores %>%
-    dplyr::group_by(!!dplyr::sym('HomeTeam')) %>%
+    dplyr::group_by(.data$HomeTeam) %>%
     dplyr::summarise(
       GP = dplyr::n(),
-      W = sum(!!dplyr::sym('HomeGoals') > !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == ''),
-      OTW = sum(!!dplyr::sym('HomeGoals') > !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == 'OT'),
-      SOW = sum(!!dplyr::sym('HomeGoals') > !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == 'SO'),
-      OTL = sum(!!dplyr::sym('HomeGoals') < !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == 'OT'),
-      SOL = sum(!!dplyr::sym('HomeGoals') < !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == 'SO'),
-      L = sum(!!dplyr::sym('HomeGoals') < !!dplyr::sym('AwayGoals') & !! dplyr::sym('OTStatus') == ''),
-      P = as.numeric(!!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL'))
+      W = sum(.data$HomeGoals > .data$AwayGoals & !! .data$OTStatus == ''),
+      OTW = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == 'OT'),
+      SOW = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == 'SO'),
+      OTL = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == 'OT'),
+      SOL = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == 'SO'),
+      L = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == ''),
+      P = as.numeric(.data$W*2 + .data$OTW*2 + .data$SOW*2 + .data$OTL + .data$SOL)
     ) %>%
     dplyr::ungroup()
   tmp2<-scores %>%
-    dplyr::group_by(!!dplyr::sym('AwayTeam')) %>%
+    dplyr::group_by(.data$AwayTeam) %>%
     dplyr::summarise(
       GP = dplyr::n(),
-      W = sum(!!dplyr::sym('AwayGoals') > !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == ''),
-      OTW = sum(!!dplyr::sym('AwayGoals') > !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == 'OT'),
-      SOW = sum(!!dplyr::sym('AwayGoals') > !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == 'SO'),
-      OTL = sum(!!dplyr::sym('AwayGoals') < !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == 'OT'),
-      SOL = sum(!!dplyr::sym('AwayGoals') < !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == 'SO'),
-      L = sum(!!dplyr::sym('AwayGoals') < !!dplyr::sym('HomeGoals') & !! dplyr::sym('OTStatus') == ''),
-      P = as.numeric(!!dplyr::sym('W')*2 + !!dplyr::sym('OTW')*2 + !!dplyr::sym('SOW')*2 + !!dplyr::sym('OTL') + !!dplyr::sym('SOL'))
+      W = sum(.data$AwayGoals > .data$HomeGoals & .data$OTStatus == ''),
+      OTW = sum(.data$AwayGoals > .data$HomeGoals & .data$OTStatus == 'OT'),
+      SOW = sum(.data$AwayGoals > .data$HomeGoals & .data$OTStatus == 'SO'),
+      OTL = sum(.data$AwayGoals < .data$HomeGoals & .data$OTStatus == 'OT'),
+      SOL = sum(.data$AwayGoals < .data$HomeGoals & .data$OTStatus == 'SO'),
+      L = sum(.data$AwayGoals < .data$HomeGoals & .data$OTStatus == ''),
+      P = as.numeric(.data$W*2 + .data$OTW*2 + .data$SOW*2 + .data$OTL + .data$SOL)
     ) %>%
     dplyr::ungroup()
 
@@ -50,20 +50,20 @@ buildStats<-function(scores){
   )
 
   team_stats<-team_stats %>%
-    dplyr::mutate(Rank = rank(dplyr::desc(!!dplyr::sym("Points")), ties.method = 'random'),
-                  Conf = getConference(!!dplyr::sym("Team")),
-                  Div = getDivision(!!dplyr::sym("Team"))) %>%
-    dplyr::group_by(!!dplyr::sym('Conf')) %>%
-    dplyr::mutate(ConfRank = rank(dplyr::desc(!!dplyr::sym("Points")), ties.method = 'random')) %>%
+    dplyr::mutate(Rank = rank(dplyr::desc(.data$Points), ties.method = 'random'), #TODO sort properly
+                  Conf = getConference(.data$Team), #convenience data, dropped later
+                  Div = getDivision(.data$Team)) %>%
+    dplyr::group_by(.data$Conf) %>%
+    dplyr::mutate(ConfRank = rank(dplyr::desc(.data$Points), ties.method = 'random')) %>%
     dplyr::ungroup() %>%
-    dplyr::group_by(!!dplyr::sym('Div')) %>%
-    dplyr::mutate(DivRank = rank(dplyr::desc(!!dplyr::sym("Points")), ties.method = 'random')) %>%
+    dplyr::group_by(.data$Div) %>%
+    dplyr::mutate(DivRank = rank(dplyr::desc(.data$Points), ties.method = 'random')) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym("DivRank") <= 3, 1, 0)) %>%
-    dplyr::group_by(!!dplyr::sym('Conf'), !!dplyr::sym('Playoffs')) %>%
-    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('Rank') %in% utils::tail(sort(!!dplyr::sym('Rank')), 2), 1, !!dplyr::sym('Playoffs'))) %>% ## Renaming top two playoff teams as 'in' doesn't matter, because they're in already
+    dplyr::mutate(Playoffs = ifelse(.data$DivRank <= 3, 1, 0)) %>%
+    dplyr::group_by(.data$Conf, .data$Playoffs) %>%
+    dplyr::mutate(Playoffs = ifelse(.data$Rank %in% utils::tail(sort(.data$Rank), 2), 1, .data$Playoffs)) %>% ## Renaming top two playoff teams as 'in' doesn't matter, because they're in already
     dplyr::ungroup() %>%
-    dplyr::select(-c(!!dplyr::sym('Conf'), !!dplyr::sym('Div')))
+    dplyr::select(-c(.data$Conf, .data$Div))
 
   return(tibble::as_tibble(team_stats))
 }
@@ -153,26 +153,26 @@ simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, 
   }
 
   summary_results<-all_results %>%
-    dplyr::group_by(!!dplyr::sym('Team')) %>%
+    dplyr::group_by(.data$Team) %>%
     dplyr::summarise(
-      Playoffs = mean(!!dplyr::sym('Playoffs')),
-      meanPoints = mean(!!dplyr::sym('Points'), na.rm = TRUE),
-      maxPoints = max(!!dplyr::sym('Points'), na.rm = TRUE),
-      minPoints = min(!!dplyr::sym('Points'), na.rm = TRUE),
-      meanWins = mean(!!dplyr::sym('W'), na.rm = TRUE),
-      maxWins = max(!!dplyr::sym('W'), na.rm = TRUE),
-      Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
-      meanRank = mean(!!dplyr::sym('Rank'), na.rm = TRUE),
-      bestRank = min(!!dplyr::sym('Rank'), na.rm = TRUE),
-      #meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      #bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      meanDivRank = mean(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      bestDivRank = min(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      sdPoints = stats::sd(!!dplyr::sym('Points'), na.rm = TRUE),
-      sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
-      sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
-      #sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
+      Playoffs =   mean(.data$Playoffs),
+      meanPoints = mean(.data$Points, na.rm = TRUE),
+      maxPoints = max(.data$Points, na.rm = TRUE),
+      minPoints = min(.data$Points, na.rm = TRUE),
+      meanWins = mean(.data$W, na.rm = TRUE),
+      maxWins = max(.data$W, na.rm = TRUE),
+      Presidents = sum(.data$Rank == 1)/dplyr::n(),
+      meanRank = mean(.data$Rank, na.rm = TRUE),
+      bestRank = min(.data$Rank, na.rm = TRUE),
+      #meanConfRank = mean(.data$ConfRank, na.rm = TRUE),
+      #bestConfRank = min(.data$ConfRank, na.rm = TRUE),
+      meanDivRank = mean(.data$DivRank, na.rm = TRUE),
+      bestDivRank = min(.data$DivRank, na.rm = TRUE),
+      sdPoints = stats::sd(.data$Points, na.rm = TRUE),
+      sdWins = stats::sd(.data$W, na.rm = TRUE),
+      sdRank = stats::sd(.data$Rank, na.rm = TRUE),
+      #sdConfRank = stats::sd(.data$ConfRank, na.rm = TRUE),
+      sdDivRank = stats::sd(.data$DivRank, na.rm = TRUE)
     )
 
 
@@ -249,26 +249,26 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
   gc(verbose = FALSE)
 
   summary_results<-all_results %>%
-    dplyr::group_by(!!dplyr::sym('Team')) %>%
+    dplyr::group_by(.data$Team) %>%
     dplyr::summarise(
-      Playoffs = mean(!!dplyr::sym('Playoffs')),
-      meanPoints = mean(!!dplyr::sym('Points'), na.rm = TRUE),
-      maxPoints = max(!!dplyr::sym('Points'), na.rm = TRUE),
-      minPoints = min(!!dplyr::sym('Points'), na.rm = TRUE),
-      meanWins = mean(!!dplyr::sym('W'), na.rm = TRUE),
-      maxWins = max(!!dplyr::sym('W'), na.rm = TRUE),
-      Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
-      meanRank = mean(!!dplyr::sym('Rank'), na.rm = TRUE),
-      bestRank = min(!!dplyr::sym('Rank'), na.rm = TRUE),
-      #meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      #bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      meanDivRank = mean(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      bestDivRank = min(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      sdPoints = stats::sd(!!dplyr::sym('Points'), na.rm = TRUE),
-      sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
-      sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
-      #sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
+      Playoffs = mean(.data$Playoffs),
+      meanPoints = mean(.data$Points, na.rm = TRUE),
+      maxPoints = max(.data$Points, na.rm = TRUE),
+      minPoints = min(.data$Points, na.rm = TRUE),
+      meanWins = mean(.data$W, na.rm = TRUE),
+      maxWins = max(.data$W, na.rm = TRUE),
+      Presidents = sum(.data$Rank == 1)/dplyr::n(),
+      meanRank = mean(.data$Rank, na.rm = TRUE),
+      bestRank = min(.data$Rank, na.rm = TRUE),
+      #meanConfRank = mean(.data$ConfRank, na.rm = TRUE),
+      #bestConfRank = min(.data$ConfRank, na.rm = TRUE),
+      meanDivRank = mean(.data$DivRank, na.rm = TRUE),
+      bestDivRank = min(.data$DivRank, na.rm = TRUE),
+      sdPoints = stats::sd(.data$Points, na.rm = TRUE),
+      sdWins = stats::sd(.data$W, na.rm = TRUE),
+      sdRank = stats::sd(.data$Rank, na.rm = TRUE),
+      #sdConfRank = stats::sd(.data$ConfRank, na.rm = TRUE),
+      sdDivRank = stats::sd(.data$DivRank, na.rm = TRUE)
     )
 
 
@@ -357,35 +357,35 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
   gc(verbose = FALSE)
 
   summary_results<-all_results %>%
-    dplyr::group_by(!!dplyr::sym('Team')) %>%
+    dplyr::group_by(.data$Team) %>%
     dplyr::summarise(
-      Playoffs = mean(!!dplyr::sym('Playoffs')),
-      meanPoints = mean(!!dplyr::sym('Points'), na.rm = TRUE),
-      maxPoints = max(!!dplyr::sym('Points'), na.rm = TRUE),
-      minPoints = min(!!dplyr::sym('Points'), na.rm = TRUE),
-      meanWins = mean(!!dplyr::sym('W'), na.rm = TRUE),
-      maxWins = max(!!dplyr::sym('W'), na.rm = TRUE),
-      Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
-      meanRank = mean(!!dplyr::sym('Rank'), na.rm = TRUE),
-      bestRank = min(!!dplyr::sym('Rank'), na.rm = TRUE),
-      meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      meanDivRank = mean(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      bestDivRank = min(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      sdPoints = stats::sd(!!dplyr::sym('Points'), na.rm = TRUE),
-      sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
-      sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
-      sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      p_rank1 = sum(!!dplyr::sym('ConfRank') == 1 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
-      p_rank2 = sum(!!dplyr::sym('ConfRank') != 1 & !!dplyr::sym('DivRank') == 1)/dplyr::n(),
+      Playoffs = mean(.data$Playoffs),
+      meanPoints = mean(.data$Points, na.rm = TRUE),
+      maxPoints = max(.data$Points, na.rm = TRUE),
+      minPoints = min(.data$Points, na.rm = TRUE),
+      meanWins = mean(.data$W, na.rm = TRUE),
+      maxWins = max(.data$W, na.rm = TRUE),
+      Presidents = sum(.data$Rank == 1)/dplyr::n(),
+      meanRank = mean(.data$Rank, na.rm = TRUE),
+      bestRank = min(.data$Rank, na.rm = TRUE),
+      meanConfRank = mean(.data$ConfRank, na.rm = TRUE),
+      bestConfRank = min(.data$ConfRank, na.rm = TRUE),
+      meanDivRank = mean(.data$DivRank, na.rm = TRUE),
+      bestDivRank = min(.data$DivRank, na.rm = TRUE),
+      sdPoints = stats::sd(.data$Points, na.rm = TRUE),
+      sdWins = stats::sd(.data$W, na.rm = TRUE),
+      sdRank = stats::sd(.data$Rank, na.rm = TRUE),
+      sdConfRank = stats::sd(.data$ConfRank, na.rm = TRUE),
+      sdDivRank = stats::sd(.data$DivRank, na.rm = TRUE),
+      p_rank1 = sum(.data$ConfRank == 1 & .data$DivRank == 1)/dplyr::n(),
+      p_rank2 = sum(.data$ConfRank != 1 & .data$DivRank == 1)/dplyr::n(),
       # Solving 3 & 4 & 5 & 6 doesn't *really* matter, because 3/4 play the 5/6 within their own division.
       # In 2nd round, 1/8 or 2/7 play the 3/6 or 4/5 from their own division. No re-seeding occurs.
       # See: https://en.wikipedia.org/wiki/Stanley_Cup_playoffs#Current_format
-      p_rank_34 = sum(!!dplyr::sym('DivRank') == 2)/dplyr::n(),
-      p_rank_56 = sum(!!dplyr::sym('DivRank') == 3)/dplyr::n(),
-      p_rank7 = sum(!!dplyr::sym('Wildcard') == 1)/dplyr::n(),
-      p_rank8 = sum(!!dplyr::sym('Wildcard') == 2)/dplyr::n()
+      p_rank_34 = sum(.data$DivRank == 2)/dplyr::n(),
+      p_rank_56 = sum(.data$DivRank == 3)/dplyr::n(),
+      p_rank7 = sum(.data$Wildcard == 1)/dplyr::n(),
+      p_rank8 = sum(.data$Wildcard == 2)/dplyr::n()
     )
 
   return(list(summary_results = summary_results, raw_results = all_results))
@@ -408,11 +408,11 @@ sim_engine<-function(all_season, nsims){
   multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
   multi_season$sim<-rep(1:nsims, each = season_length)
 
-  Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call calmed it.
+  #Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call calmed it.
 
   if('lambda' %in% names(multi_season)){
     multi_season <- multi_season %>%
-      mutate_cond(is.na(Result), Result = dcResult(lambda = !!dplyr::sym("lambda"), mu = !!dplyr::sym("mu")))
+      mutate_cond(is.na(.data$Result), Result = dcResult(lambda = .data$lambda, mu = .data$mu))
 
   } else{
     multi_season$r1<-stats::runif(n=nrow(multi_season))
@@ -420,19 +420,19 @@ sim_engine<-function(all_season, nsims){
     multi_season$r3<-stats::runif(n=nrow(multi_season))
 
     multi_season<-multi_season %>%
-      mutate_cond(is.na(Result), Result = 1*(as.numeric(!!dplyr::sym('r1')<!!dplyr::sym('HomeWin'))) +
-                    0.75 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
-                                         !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
-                              (as.numeric(!!dplyr::sym('r2') > 0.5) * as.numeric(!!dplyr::sym('r3') < 0.75))) +
-                    0.6 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
-                                        !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
-                             (as.numeric(!!dplyr::sym('r2') > 0.5) * as.numeric (!!dplyr::sym('r3') > 0.75))) +
-                    0.4 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
-                                        !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
-                             (as.numeric(!!dplyr::sym('r2') < 0.5) * as.numeric (!!dplyr::sym('r3') > 0.75))) +
-                    0.25 * (as.numeric(!!dplyr::sym('r1') > !!dplyr::sym('HomeWin') &
-                                         !!dplyr::sym('r1') < (!!dplyr::sym('HomeWin') + !!dplyr::sym('Draw'))) *
-                              (as.numeric(!!dplyr::sym('r2') < 0.5) * as.numeric (!!dplyr::sym('r3') < 0.75))) +
+      mutate_cond(is.na(.data$Result), Result = 1*(as.numeric(.data$r1<.data$HomeWin)) +
+                    0.75 * (as.numeric(.data$r1 > .data$HomeWin &
+                                         .data$r1 < (.data$HomeWin + .data$Draw)) *
+                              (as.numeric(.data$r2 > 0.5) * as.numeric(.data$r3 < 0.75))) +
+                    0.6 * (as.numeric(.data$r1 > .data$HomeWin &
+                                        .data$r1 < (.data$HomeWin + .data$Draw)) *
+                             (as.numeric(.data$r2 > 0.5) * as.numeric (.data$r3 > 0.75))) +
+                    0.4 * (as.numeric(.data$r1 > .data$HomeWin &
+                                        .data$r1 < (.data$HomeWin + .data$Draw)) *
+                             (as.numeric(.data$r2 < 0.5) * as.numeric (.data$r3 > 0.75))) +
+                    0.25 * (as.numeric(.data$r1 > .data$HomeWin &
+                                         .data$r1 < (.data$HomeWin + .data$Draw)) *
+                              (as.numeric(.data$r2 < 0.5) * as.numeric (.data$r3 < 0.75))) +
                     0)
 
   }
@@ -443,13 +443,13 @@ sim_engine<-function(all_season, nsims){
   rm(multi_season)
 
   all_results<-long_season %>%
-    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
-    dplyr::summarise(W = sum(!!dplyr::sym('Result') == 1),
-              OTW = sum(!!dplyr::sym('Result') == 0.75),
-              SOW = sum(!!dplyr::sym('Result') == 0.6),
-              SOL = sum(!!dplyr::sym('Result') == 0.4),
-              OTL = sum(!!dplyr::sym('Result') == 0.25),
-              L = sum(!!dplyr::sym('Result') == 0)) %>%
+    dplyr::group_by(.data$SimNo, .data$Team) %>%
+    dplyr::summarise(W = sum(.data$Result == 1),
+              OTW = sum(.data$Result == 0.75),
+              SOW = sum(.data$Result == 0.6),
+              SOL = sum(.data$Result == 0.4),
+              OTL = sum(.data$Result == 0.25),
+              L = sum(.data$Result == 0)) %>%
     as.data.frame()
 
   rm(long_season)
@@ -462,27 +462,27 @@ sim_engine<-function(all_season, nsims){
   all_results$Wildcard <- NA
 
   all_results <- all_results %>%
-    dplyr::group_by(!!dplyr::sym('SimNo')) %>%
-    dplyr::mutate(Rank = rank(-!!dplyr::sym('Points'), ties.method = 'random')) %>%
+    dplyr::group_by(.data$SimNo) %>%
+    dplyr::mutate(Rank = rank(-.data$Points, ties.method = 'random')) %>%
     dplyr::ungroup() %>%
-    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
-    dplyr::mutate(ConfRank = rank(!!dplyr::sym('Rank'))) %>%
+    dplyr::group_by(.data$SimNo, .data$Conference) %>%
+    dplyr::mutate(ConfRank = rank(.data$Rank)) %>%
     dplyr::ungroup() %>%
-    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Division')) %>%
-    dplyr::mutate(DivRank = rank(!!dplyr::sym('ConfRank'))) %>%
+    dplyr::group_by(.data$SimNo, .data$Division) %>%
+    dplyr::mutate(DivRank = rank(.data$ConfRank)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('DivRank') <=3, 1, 0)) %>%
-    dplyr::group_by(!!dplyr::sym('SimNo'), !!dplyr::sym('Conference')) %>%
-    dplyr::arrange(!!dplyr::sym('Playoffs'), !!dplyr::sym('ConfRank')) %>%
-    dplyr::mutate(Wildcard = ifelse(!!dplyr::sym('Playoffs') == 0, dplyr::row_number(), NA)) %>%
+    dplyr::mutate(Playoffs = ifelse(.data$DivRank <=3, 1, 0)) %>%
+    dplyr::group_by(.data$SimNo, .data$Conference) %>%
+    dplyr::arrange(.data$Playoffs, .data$ConfRank) %>%
+    dplyr::mutate(Wildcard = ifelse(.data$Playoffs == 0, dplyr::row_number(), NA)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(Playoffs = ifelse(!!dplyr::sym('DivRank') <= 4, 1, 0)) %>%
-    dplyr::arrange(!!dplyr::sym('SimNo'), !!dplyr::sym('Team')) %>%
-    mutate_cond(!!dplyr::sym('Wildcard') <= 2, Playoffs = 1) %>% #TODO might not work at scale???
-    dplyr::select(!!dplyr::sym('SimNo'), !!dplyr::sym('Team'), !!dplyr::sym('W'), !!dplyr::sym('OTW'),
-                  !!dplyr::sym('SOW'), !!dplyr::sym('SOL'), !!dplyr::sym('OTL'), !!dplyr::sym('Points'),
-                  !!dplyr::sym('Wildcard'), !!dplyr::sym('Rank'), !!dplyr::sym('ConfRank'),
-                  !!dplyr::sym('DivRank'), !!dplyr::sym('Playoffs'))
+    dplyr::mutate(Playoffs = ifelse(.data$DivRank <= 3, 1, 0)) %>% #Top 3 in each division
+    dplyr::arrange(.data$SimNo, .data$Team) %>%
+    mutate_cond(.data$Wildcard <= 2, Playoffs = 1) %>% # Wildcard 2 teams/conference #TODO might not work at scale???
+    dplyr::select(.data$SimNo, .data$Team, .data$W, .data$OTW,
+                  .data$SOW, .data$SOL, .data$OTL, .data$Points,
+                  .data$Wildcard, .data$Rank, .data$ConfRank,
+                  .data$DivRank, .data$Playoffs)
 
   #all_results[!is.na(all_results$Wildcard) & all_results$Wildcard <= 2,]$Playoffs<-1
   #all_results$Wildcard[is.na(all_results$Wildcard)]<-0
@@ -628,13 +628,13 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
 
     #make 1st round win odds matrix. p34 and p56 are combined odds for two positions, so /2 for individual position odds
     p0<-summary_results %>%
-      dplyr::mutate(p_rank3 = !!dplyr::sym('p_rank_34')/2,
-                    p_rank4 = !!dplyr::sym('p_rank_34')/2,
-                    p_rank5 = !!dplyr::sym('p_rank_56')/2,
-                    p_rank6 = !!dplyr::sym('p_rank_56')/2) %>%
-      dplyr::select(!!dplyr::sym('Team'), !!dplyr::sym('p_rank1'), !!dplyr::sym('p_rank2'), !!dplyr::sym('p_rank3'),
-                    !!dplyr::sym('p_rank4'), !!dplyr::sym('p_rank5'), !!dplyr::sym('p_rank6'), !!dplyr::sym('p_rank7'),
-                    !!dplyr::sym('p_rank8'), !!dplyr::sym('meanRank'))
+      dplyr::mutate(p_rank3 = .data$p_rank_34/2,
+                    p_rank4 = .data$p_rank_34/2,
+                    p_rank5 = .data$p_rank_56/2,
+                    p_rank6 = .data$p_rank_56/2) %>%
+      dplyr::select(.data$Team, .data$p_rank1, .data$p_rank2, .data$p_rank3,
+                    .data$p_rank4, .data$p_rank5, .data$p_rank6, .data$p_rank7,
+                    .data$p_rank8, .data$meanRank)
   } else {
     lastp = Sys.Date()
   }
@@ -732,14 +732,12 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
     format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyModel::teamColours){
       ##TODO Use gt
       playoff_odds<-playoff_odds %>%
-        dplyr::arrange(dplyr::desc(!!dplyr::sym("Win_Cup")))
+        dplyr::arrange(dplyr::desc(.data$Win_Cup))
 
       playoff_odds_gt <- playoff_odds %>%
-        #dplyr::mutate("colour" = teamColours[teamColours$Team == !!dplyr::sym("Team"), "Hex"]) %>%
         tibble::add_column("block" = "  ", .after = 1) %>%
         gt::gt() %>%
         gt::tab_header(title = paste0(caption_text, " Playoff Odds"), subtitle = paste0("As of ", lastp, " | P. Bulsink (@BulsinkB)")) %>%
-        #gt::cols_hide("colour") %>%
         gt::cols_label("block" = " ",
                        "Make_Playoffs" = "Make Playoffs",
                        "Win_First_Round" = "Win First Round",

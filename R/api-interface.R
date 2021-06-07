@@ -45,8 +45,8 @@ processNHLSchedule<-function(sched){
   }
   schedule <- clean_names(schedule)
   schedule <- schedule %>%
-    dplyr::filter(!!dplyr::sym('GameType') %in% c("P", "R")) %>%
-    dplyr::arrange(!!dplyr::sym('Date'), dplyr::desc(!!dplyr::sym('GameState')), !!dplyr::sym('GameID'))
+    dplyr::filter(.data$GameType %in% c("P", "R")) %>%
+    dplyr::arrange(.data$Date, dplyr::desc(.data$GameState), .data$GameID)
 
   schedule$GameState[is.na(schedule$GameState)] <- "Final"
 
@@ -90,9 +90,9 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE)
   stopifnot(!is.null(sched))
   gameIDs<-sched$GameID
   schedule<-schedule %>%
-    dplyr::filter(!(!!dplyr::sym('GameID') %in% gameIDs)) %>%
+    dplyr::filter(!(.data$GameID %in% gameIDs)) %>%
     dplyr::bind_rows(sched) %>%
-    dplyr::arrange(!!dplyr::sym('Date'), dplyr::desc(!!dplyr::sym('GameState')), !!dplyr::sym('GameID'))
+    dplyr::arrange(.data$Date, dplyr::desc(.data$GameState), .data$GameID)
   if(save_data){
     suppressMessages(usethis::use_data(schedule, overwrite=TRUE))
   }
@@ -142,13 +142,13 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule){
   scores[scores$OTStatus == "3rd", ]$OTStatus<-""
   scores<-scores %>%
     dplyr::mutate(Result = dplyr::case_when(
-                    (!!dplyr::sym("HomeGoals") > !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "" ~ 1,
-                    (!!dplyr::sym("HomeGoals") < !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "" ~ 0,
-                    (!!dplyr::sym("HomeGoals") == !!dplyr::sym("AwayGoals")) ~ 0.5,
-                    (!!dplyr::sym("HomeGoals") > !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "OT" ~ 0.75,
-                    (!!dplyr::sym("HomeGoals") > !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "SO" ~ 0.6,
-                    (!!dplyr::sym("HomeGoals") < !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "SO" ~ 0.4,
-                    (!!dplyr::sym("HomeGoals") < !!dplyr::sym("AwayGoals")) & !!dplyr::sym("OTStatus") == "OT" ~ 0.25,
+                    (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "" ~ 1,
+                    (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "" ~ 0,
+                    (.data$HomeGoals == .data$AwayGoals) ~ 0.5,
+                    (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.75,
+                    (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.6,
+                    (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.4,
+                    (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.25,
     ))
 
   return(scores)
@@ -174,9 +174,9 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
   if(length(neededGames)>0){
     updatedSc<-getNHLScores(neededGames)
     scores<-scores %>%
-      dplyr::filter(!(!!dplyr::sym('GameID') %in% neededGames)) %>%
+      dplyr::filter(!(.data$GameID %in% neededGames)) %>%
       dplyr::bind_rows(updatedSc) %>%
-      dplyr::arrange(!!dplyr::sym('GameID'))
+      dplyr::arrange(.data$GameID)
     if (save_data){
       suppressMessages(usethis::use_data(scores, overwrite=TRUE))
     }
@@ -189,22 +189,22 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
 
 clean_names<-function(sc){
   sc <- sc %>%
-    dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str=!!dplyr::sym('HomeTeam'), 'latin-ascii'),
-                  "AwayTeam" = stringi::stri_trans_general(str=!!dplyr::sym('AwayTeam'), 'latin-ascii')) %>%
-    dplyr::mutate("HomeTeam" = replace(!!dplyr::sym('HomeTeam'), !!dplyr::sym('HomeTeam') == "Phoenix Coyotes", "Arizona Coyotes"),
-                  "HomeTeam" = replace(!!dplyr::sym('HomeTeam'), !!dplyr::sym('HomeTeam') == "Atlanta Thrashers", "Winnipeg Jets"),
-                  "HomeTeam" = replace(!!dplyr::sym('HomeTeam'), !!dplyr::sym('HomeTeam') == "Minnesota North Stars", "Dallas Stars"),
-                  "HomeTeam" = replace(!!dplyr::sym('HomeTeam'), !!dplyr::sym('HomeTeam') == "Quebec Nordiques", "Colorado Avalanche"),
-                  "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Phoenix Coyotes", "Arizona Coyotes"),
-                  "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Atlanta Thrashers", "Winnipeg Jets"),
-                  "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Minnesota North Stars", "Dallas Stars"),
-                  "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Quebec Nordiques", "Colorado Avalanche"),
-                  "HomeTeam" = replace(!!dplyr::sym('HomeTeam'), !!dplyr::sym('HomeTeam') == "Chicago Blackhawks", "Chicago"),
-                  "AwayTeam" = replace(!!dplyr::sym('AwayTeam'), !!dplyr::sym('AwayTeam') == "Chicago Blackhawks", "Chicago")
+    dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str=.data$HomeTeam, 'latin-ascii'),
+                  "AwayTeam" = stringi::stri_trans_general(str=.data$AwayTeam, 'latin-ascii')) %>%
+    dplyr::mutate("HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+                  "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
+                  "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
+                  "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
+                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
+                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
+                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
+                  "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Chicago Blackhawks", "Chicago"),
+                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Chicago Blackhawks", "Chicago")
                   )
   if('Date' %in% names(sc)){
     sc <- sc %>%
-      dplyr::mutate("Date" = as.Date(!!dplyr::sym('Date')))
+      dplyr::mutate("Date" = as.Date(.data$Date))
   }
   if('OTStatus' %in% names(sc)){
     sc[sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"),]$OTStatus <- "OT"

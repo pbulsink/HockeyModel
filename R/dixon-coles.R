@@ -269,26 +269,26 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   gc(verbose = FALSE)
 
   summary_results<-all_results %>%
-    dplyr::group_by(!!dplyr::sym('Team')) %>%
+    dplyr::group_by(.data$Team) %>%
     dplyr::summarise(
-      Playoffs = mean(!!dplyr::sym('Playoffs')),
-      meanPoints = mean(!!dplyr::sym('Points'), na.rm = TRUE),
-      maxPoints = max(!!dplyr::sym('Points'), na.rm = TRUE),
-      minPoints = min(!!dplyr::sym('Points'), na.rm = TRUE),
-      meanWins = mean(!!dplyr::sym('W'), na.rm = TRUE),
-      maxWins = max(!!dplyr::sym('W'), na.rm = TRUE),
-      Presidents = sum(!!dplyr::sym('Rank') == 1)/dplyr::n(),
-      meanRank = mean(!!dplyr::sym('Rank'), na.rm = TRUE),
-      bestRank = min(!!dplyr::sym('Rank'), na.rm = TRUE),
-      meanConfRank = mean(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      bestConfRank = min(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      meanDivRank = mean(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      bestDivRank = min(!!dplyr::sym('DivRank'), na.rm = TRUE),
-      sdPoints = stats::sd(!!dplyr::sym('Points'), na.rm = TRUE),
-      sdWins = stats::sd(!!dplyr::sym('W'), na.rm = TRUE),
-      sdRank = stats::sd(!!dplyr::sym('Rank'), na.rm = TRUE),
-      sdConfRank = stats::sd(!!dplyr::sym('ConfRank'), na.rm = TRUE),
-      sdDivRank = stats::sd(!!dplyr::sym('DivRank'), na.rm = TRUE)
+      Playoffs = mean(.data$Playoffs),
+      meanPoints = mean(.data$Points, na.rm = TRUE),
+      maxPoints = max(.data$Points, na.rm = TRUE),
+      minPoints = min(.data$Points, na.rm = TRUE),
+      meanWins = mean(.data$W, na.rm = TRUE),
+      maxWins = max(.data$W, na.rm = TRUE),
+      Presidents = sum(.data$Rank == 1)/dplyr::n(),
+      meanRank = mean(.data$Rank, na.rm = TRUE),
+      bestRank = min(.data$Rank, na.rm = TRUE),
+      meanConfRank = mean(.data$ConfRank, na.rm = TRUE),
+      bestConfRank = min(.data$ConfRank, na.rm = TRUE),
+      meanDivRank = mean(.data$DivRank, na.rm = TRUE),
+      bestDivRank = min(.data$DivRank, na.rm = TRUE),
+      sdPoints = stats::sd(.data$Points, na.rm = TRUE),
+      sdWins = stats::sd(.data$W, na.rm = TRUE),
+      sdRank = stats::sd(.data$Rank, na.rm = TRUE),
+      sdConfRank = stats::sd(ConfRank, na.rm = TRUE),
+      sdDivRank = stats::sd(DivRank, na.rm = TRUE)
     )
 
 
