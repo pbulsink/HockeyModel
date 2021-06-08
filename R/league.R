@@ -13,7 +13,7 @@ buildStats<-function(scores){
     dplyr::group_by(.data$HomeTeam) %>%
     dplyr::summarise(
       GP = dplyr::n(),
-      W = sum(.data$HomeGoals > .data$AwayGoals & !! .data$OTStatus == ''),
+      W = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == ''),
       OTW = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == 'OT'),
       SOW = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == 'SO'),
       OTL = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == 'OT'),
@@ -63,7 +63,7 @@ buildStats<-function(scores){
     dplyr::group_by(.data$Conf, .data$Playoffs) %>%
     dplyr::mutate(Playoffs = ifelse(.data$Rank %in% utils::tail(sort(.data$Rank), 2), 1, .data$Playoffs)) %>% ## Renaming top two playoff teams as 'in' doesn't matter, because they're in already
     dplyr::ungroup() %>%
-    dplyr::select(-c(.data$Conf, .data$Div))
+    dplyr::select(-c("Conf", "Div"))
 
   return(tibble::as_tibble(team_stats))
 }
@@ -710,12 +710,13 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
 
   playoff_odds <- merge(playoff_odds, p0, by="Team")
   playoff_odds <- playoff_odds %>%
-    dplyr::mutate("Make_Playoffs" = p_rank1 + p_rank2 + p_rank3 + p_rank4 + p_rank5 + p_rank6 + p_rank7 + p_rank8) %>%
+    dplyr::mutate("Make_Playoffs" = .data$p_rank1 + .data$p_rank2 + .data$p_rank3 + .data$p_rank4 +
+                    .data$p_rank5 + .data$p_rank6 + .data$p_rank7 + .data$p_rank8) %>%
     dplyr::select(c("Team", "Make_Playoffs"))
 
   playoff_odds <- merge(playoff_odds, p1, by="Team")
   playoff_odds <- playoff_odds %>%
-    dplyr::mutate("Win_First_Round" = p_rank18 + p_rank27 + p_rank36 + p_rank45) %>%
+    dplyr::mutate("Win_First_Round" = .data$p_rank18 + .data$p_rank27 + .data$p_rank36 + .data$p_rank45) %>%
     dplyr::select(c("Team", "Make_Playoffs", "Win_First_Round"))
 
   playoff_odds <- merge(playoff_odds, p2[,c("Team", "cfodds")], by="Team")

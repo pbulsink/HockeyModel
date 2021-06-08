@@ -4,12 +4,14 @@
 \alias{getNHLScores}
 \title{Get NHL Scores}
 \usage{
-getNHLScores(gameIDs, schedule = HockeyModel::schedule)
+getNHLScores(gameIDs, schedule = HockeyModel::schedule, progress = TRUE)
 }
 \arguments{
 \item{gameIDs}{Game IDs (10 digit number). See [nhlapi::nhl_games()] for more information}
 
 \item{schedule}{optional, provide a schedule if not using the HockeyModel::schedule}
+
+\item{progress}{whether to show a progress bar. Requires the 'progress' package installed}
 }
 \value{
 a data frame with Date, HomeTeam, AwayTeam, GameID, HomeGoals, AwayGoals, OTStatus and GameType

@@ -327,6 +327,12 @@ formatPredsForHockeyVisContest<-function(predictions, candyType = 'Fuzzy Peaches
   return(output)
 }
 
+#' Validate GameID numbers
+#'
+#' @param gameIDs a single game ID or vector of game IDs
+#'
+#' @return TRUE if gameIDs is valid, or FALSE if gameIDs is not (or a vector of length of input of TRUE/FALSE
+#' @export
 gameIDValidator<-function(gameIDs){
-  return(stringr::str_detect(gameIDs, "(19|20)\\d{2}0[1-4][0-1]\\d{3}"))
+  return(grepl("(19|20)\\d{2}0[1-4][0-1]\\d{3}", gameIDs))
 }

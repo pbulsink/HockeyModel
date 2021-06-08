@@ -233,7 +233,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token, delay=delay)
 
-  if(lubridate::month(Sys.Date()) %in% c(3,4) & in_reg_season){
+  if(as.numeric(format(Sys.Date(), "%m")) %in% c(3,4) & in_reg_season){
     tweetPlayoffOdds(token = token, graphic_dir = graphic_dir)
 
     #until Rtweet has scheduler
@@ -241,16 +241,16 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     Sys.sleep(delay/2)
   }
 
-  if(lubridate::day(Sys.Date()) == 1 & in_reg_season){
+  if(as.numeric(format(Sys.Date(), "%d")) == 1 & in_reg_season){
     tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
   }
 
-  if(lubridate::wday(lubridate::now()) == 1 & in_reg_season) {
+  if(as.numeric(format(Sys.Date(), "%w")) == 0 & in_reg_season) {
     #On Sunday post metrics
     tweetMetrics(token = token)
   }
 
-  if(lubridate::wday(lubridate::now()) == 3 & in_reg_season) {
+  if(as.numeric(format(Sys.Date(), "%w")) == 2 & in_reg_season) {
     #On Tuesday post expected points (likelihood)
     tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
   }

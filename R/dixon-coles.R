@@ -54,7 +54,7 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
                   caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position="none")
-  return
+  return(p)
 }
 
 #' DC Predictions Today
@@ -287,8 +287,8 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
       sdPoints = stats::sd(.data$Points, na.rm = TRUE),
       sdWins = stats::sd(.data$W, na.rm = TRUE),
       sdRank = stats::sd(.data$Rank, na.rm = TRUE),
-      sdConfRank = stats::sd(ConfRank, na.rm = TRUE),
-      sdDivRank = stats::sd(DivRank, na.rm = TRUE)
+      sdConfRank = stats::sd(.data$ConfRank, na.rm = TRUE),
+      sdDivRank = stats::sd(.data$DivRank, na.rm = TRUE)
     )
 
 

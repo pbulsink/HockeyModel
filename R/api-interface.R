@@ -19,11 +19,16 @@ getNHLSchedule<-function(season=getSeason()){
   }
 }
 
-processNHLSchedule<-function(sched){
+processNHLSchedule<-function(sched, progress = TRUE){
   schedule<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameState" = character())
-  pb<-progress::progress_bar$new(
-    format = "  getting schedule [:bar] :percent eta: :eta",
-    total = length(sched), show_after = 5)
+  if(progress){
+    if(!requireNamespace('progress', quietly = TRUE)){ progress<-FALSE }
+  }
+  if(progress){
+    pb<-progress::progress_bar$new(
+      format = "  getting schedule [:bar] :percent eta: :eta",
+      total = length(sched), show_after = 5)
+  }
   for (y in 1:length(sched)){
     if(!(length(sched[[y]]$dates)>0)){
       next
@@ -41,7 +46,9 @@ processNHLSchedule<-function(sched){
       }
       schedule<-rbind(schedule, df)
     }
-    pb$tick()
+    if(progress){
+      pb$tick()
+    }
   }
   schedule <- clean_names(schedule)
   schedule <- schedule %>%
@@ -65,7 +72,7 @@ processNHLSchedule<-function(sched){
 #' @return Scheduled games (in the format of the schedule) for the requested date, or NULL if none
 #' @export
   games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games = FALSE){
-  stopifnot(lubridate::is.Date(date))
+  stopifnot(methods::is(date, "Date"))
   todaygames<-processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
   if(!all_games){
     todaygames<-todaygames["Scheduled" %in% todaygames$GameState, ]
@@ -106,17 +113,23 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE)
 #'
 #' @param gameIDs Game IDs (10 digit number). See [nhlapi::nhl_games()] for more information
 #' @param schedule optional, provide a schedule if not using the HockeyModel::schedule
+#' @param progress whether to show a progress bar. Requires the 'progress' package installed
 #'
 #' @return a data frame with Date, HomeTeam, AwayTeam, GameID, HomeGoals, AwayGoals, OTStatus and GameType
 #' @export
 #'
 #' @seealso See [nhlapi::nhl_games()] for more information on gameIDs
-getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule){
+getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRUE){
   scores<-NULL
   gameIDs <- gameIDs[gameIDs %in% schedule[schedule$Date <= Sys.Date(), "GameID"]]
-  pb<-progress::progress_bar$new(
-    format = "  getting scores [:bar] :percent eta: :eta",
-    total = length(gameIDs), show_after = 5)
+  if(progress){
+    if(!requireNamespace('progress', quietly = TRUE)){ progress<-FALSE }
+  }
+  if(progress){
+    pb<-progress::progress_bar$new(
+      format = "  getting scores [:bar] :percent eta: :eta",
+      total = length(gameIDs), show_after = 5)
+  }
   for(g in gameIDs){
     sc<-nhlapi::nhl_games_linescore(g)
     if('nhl_get_data_error' %in% class(sc[[1]])){
@@ -136,7 +149,9 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule){
         scores<-rbind(scores, dfs)
       }
     }
-    pb$tick()
+    if(progress){
+      pb$tick()
+    }
   }
   scores<-clean_names(scores)
   scores[scores$OTStatus == "3rd", ]$OTStatus<-""
