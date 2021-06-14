@@ -164,9 +164,9 @@ updateScores <- function(data_dir = "./data-raw", last_playoffs = FALSE){
 updateSeries<-function(series = NULL){
   if(is.null(series)){
     series<-data.frame('HomeTeam' = c("Vegas Golden Knights", "Tampa Bay Lightning"),
-                       'AwayTeam' = c("New York Islanders", "Montreal Canadiens"),
+                       'AwayTeam' = c("Montreal Canadiens", "New York Islanders"),
                        'HomeWins' = c(0,0),
-                       'AwayWins' = c(0,0),
+                       'AwayWins' = c(0,1series),
                        stringsAsFactors = FALSE)
   }
   usethis::use_data(series, overwrite = TRUE)
