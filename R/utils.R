@@ -71,6 +71,7 @@ getSeason <- function(gamedate=Sys.Date()){
 #' @param team a single team or vector of teams
 #'
 #' @return the division (or vector of divisions) for the team(s)
+#' @export
 getDivision<-function(team){
   gd <- function(t){
     nhl_divisions <- HockeyModel::nhl_divisions
@@ -97,6 +98,7 @@ getDivision<-function(team){
 #' @param team a single team or vector of teams
 #'
 #' @return the conference (or vector of conferences) for the team(s)
+#' @export
 getConference<-function(team){
   gconf <- function(t){
     nhl_conferences <- HockeyModel::nhl_conferences

@@ -259,5 +259,18 @@ getAPISeries <- function(season=getCurrentSeason8()){
 
   playoffSeries$Status <- ifelse(playoffSeries$HomeWins == playoffSeries$requiredWins | playoffSeries$AwayWins == playoffSeries$requiredWins, 'Complete', 'Ongoing')
   playoffSeries$requiredWins <- NULL
+  playoffSeries <- playoffSeries %>%
+    dplyr::mutate("Round" = as.integer(.data$Round),
+                  "Series" = as.integer(.data$Series),
+                  "HomeWins" = as.integer(.data$HomeWins),
+                  "AwayWins" = as.integer(.data$AwayWins),
+                  "HomeSeed" = as.integer(.data$HomeSeed),
+                  "AwaySeed" = as.integer(.data$AwaySeed)) %>%
+    dplyr::mutate("SeriesID" = dplyr::case_when(
+      .data$Round == 1 ~ .data$Series + 0, ## + 0 recasts to numeric, avoids issue, see https://github.com/tidyverse/dplyr/issues/5876
+      .data$Round == 2 ~ .data$Series + 8,
+      .data$Round == 3 ~ .data$Series + 12,
+      .data$Round == 4 ~ .data$Series + 14
+    ))
   return(playoffSeries)
 }

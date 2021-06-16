@@ -345,13 +345,13 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
   doSNOW::registerDoSNOW(cl)
 
   #for testing only
-  all_results<-sim_engine(all_season = all_season, nsims = nsims)
+  #all_results<-sim_engine(all_season = all_season, nsims = nsims)
 
   #Ram management issues. Send smaller chunks more often, hopefully this helps.
-  # all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
-  #   all_results<-sim_engine(all_season = all_season, nsims = floor(nsims/5))
-  #   return(all_results)
-  # }
+  all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
+    all_results<-sim_engine(all_season = all_season, nsims = floor(nsims/5))
+    return(all_results)
+  }
 
   parallel::stopCluster(cl)
   gc(verbose = FALSE)
@@ -501,13 +501,43 @@ sim_engine<-function(all_season, nsims){
 #' @param away_wins Opponent Team Wins in Series
 #' @param ... additional parameters to pass to playoffSeriesOdds
 #'
-#' @return Odds from 0-1
+#' @return Odds from 0-1 of home team winning. Away odds are 1 - return value
 #' @export
 playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, ...){
   home_odds<-DCPredict(home = home_team, away = away_team, draws=FALSE)
   away_odds<-1-DCPredict(home = away_team, away = home_team, draws=FALSE)
   return(playoffSeriesOdds(home_odds = home_odds, away_odds = away_odds, home_win = home_wins, away_win = away_wins, ...))
 }
+
+#' Random Series Winner
+#'
+#' @description generate a random series winner given a home and away team
+#'
+#' @param home_team Home Team name (required)
+#' @param away_team Away Team name (Required)
+#' @param home_wins Number of home wins (default 0)
+#' @param away_wins Number of away team wins (default 0)
+#' @param homeAwayOdds precalculated home & away team parings odds of a home win. Overrides playoffwin calculation
+#' @param ...
+#'
+#' @return TRUE if the home team wins, else FALSE
+#' @export
+randomSeriesWinner<-function(home_team, away_team, home_wins=0, away_wins=0, homeAwayOdds = NULL, ...){
+  if(is.null(homeAwayOdds)){
+    return(ifelse(runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, ... = ...),
+           home_team, away_team))
+  } else {
+    hao<-homeAwayOdds[homeAwayOdds$HomeTeam == home_team & homeAwayOdds$AwayTeam == away_team, ]
+    if(nrow(hao) == 1){
+      return(ifelse(runif(1)<hao$HomeOdds, home_team, away_team))
+    } else {
+      #Calculated odds aren't in there, get it manually
+      return(ifelse(runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, ... = ...),
+                    home_team, away_team))
+    }
+  }
+}
+
 
 #' Statistical Playoff Series Odds Solver
 #'
@@ -730,39 +760,38 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
 
   if(pretty_format){
 
-    format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyModel::teamColours){
-      ##TODO Use gt
-      playoff_odds<-playoff_odds %>%
-        dplyr::arrange(dplyr::desc(.data$Win_Cup))
-
-      playoff_odds_gt <- playoff_odds %>%
-        tibble::add_column("block" = "  ", .after = 1) %>%
-        gt::gt() %>%
-        gt::tab_header(title = paste0(caption_text, " Playoff Odds"), subtitle = paste0("As of ", lastp, " | P. Bulsink (@BulsinkB)")) %>%
-        gt::cols_label("block" = " ",
-                       "Make_Playoffs" = "Make Playoffs",
-                       "Win_First_Round" = "Win First Round",
-                       "Win_Second_Round" = "Win Second Round",
-                       "Win_Conference" = "Win Conference",
-                       "Win_Cup" = "Win Cup") %>%
-        gt::data_color(columns = 3:7, color = scales::col_numeric(c("#fefffe","#3ccc3c"), domain=c(0,1)))%>%
-        gt::fmt_percent(columns = 3:7) %>%
-        gt::tab_options(heading.align = 'left')
-
-      for(i in 1:nrow(playoff_odds)) {
-        playoff_odds_gt <- playoff_odds_gt %>%
-          gt::tab_style(style = gt::cell_fill(color = teamColours[teamColours$Team == playoff_odds$Team[i], "Hex"]),
-                        locations = gt::cells_body(columns = "block", rows = i))
-      }
-      return(playoff_odds_gt)
-    }
-
     east_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$East,], caption_text = "Eastern Conference")
     west_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$West,], caption_text = "Western Conference")
 
     playoff_odds<-list('east' = east_odds, 'west' = west_odds)
   }
   return(playoff_odds)
+}
+
+format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyModel::teamColours){
+  playoff_odds<-playoff_odds %>%
+    dplyr::arrange(dplyr::desc(.data$Win_Cup))
+
+  playoff_odds_gt <- playoff_odds %>%
+    tibble::add_column("block" = "  ", .after = 1) %>%
+    gt::gt() %>%
+    gt::tab_header(title = paste0(caption_text, " Playoff Odds"), subtitle = paste0("As of ", lastp, " | P. Bulsink (@BulsinkB)")) %>%
+    gt::cols_label("block" = " ",
+                   "Make_Playoffs" = "Make Playoffs",
+                   "Win_First_Round" = "Win First Round",
+                   "Win_Second_Round" = "Win Second Round",
+                   "Win_Conference" = "Win Conference",
+                   "Win_Cup" = "Win Cup") %>%
+    gt::data_color(columns = 3:7, color = scales::col_numeric(c("#fefffe","#3ccc3c"), domain=c(0,1)))%>%
+    gt::fmt_percent(columns = 3:7) %>%
+    gt::tab_options(heading.align = 'left')
+
+  for(i in 1:nrow(playoff_odds)) {
+    playoff_odds_gt <- playoff_odds_gt %>%
+      gt::tab_style(style = gt::cell_fill(color = teamColours[teamColours$Team == playoff_odds$Team[i], "Hex"]),
+                    locations = gt::cells_body(columns = "block", rows = i))
+  }
+  return(playoff_odds_gt)
 }
 
 #' Team Progression Odds
@@ -885,4 +914,457 @@ team_progression_odds<-function(round, team, odds){
   } else {
     stop("Round must be in [1..4]")
   }
+}
+
+#' Playoff Round Solver
+#'
+#' @param teamodds a data frame of each team that could play in a round, with their odds of being in the round as home or away team. Columns \code{Team}, \code{HomeOdds}, \code{AwayOdds}
+#'
+#' @return a data frame with Team and odds of winning round
+#' @export
+playoffRoundSolver<-function(teamodds){
+  if(nrow(teamodds) == 1){
+    return(data.frame(Team = teamodds$Team, odds = 1.0, stringsAsFactors = FALSE))
+  }
+  if(ceiling(sum(teamodds$HomeOdds)) != floor(sum(teamodds$HomeOdds)) | ceiling(sum(teamodds$AwayOdds)) != floor(sum(teamodds$AwayOdds))){
+    #We have decimal odds of making this round, this is bad
+    stop("Odds should sum to an integer")
+  }
+
+  oddstracker <- data.frame("HomeTeam" = character(), "AwayTeam" = character(),
+                            "HomeOdds" = numeric(), "AwayOdds" = numeric(),
+                            "HappeningOdds" = numeric())  # happeningOdds is odds of these two teams meeting, or teamodds[teamodds$Team == HomeTeam, "odds"] * teamodds[teamodds$Team == AwayTeam, "odds]
+
+  for (team in teamodds$Team){
+    for(opp in teamodds[teamodds$Team != team,]$Team){
+      if(nrow(oddstracker[oddstracker$HomeTeam == team & oddstracker$AwayTeam == opp, ]) == 0){
+        ha<-teamodds[teamodds$Team == opp, "HomeOdds"] * teamodds[teamodds$Team == team, "AwayOdds"]
+        if(ha == 0) {
+          next
+        }
+        o<-playoffWin(home_team = team, away_team = opp)
+        oddstracker<-dplyr::add_row(oddstracker,
+                                    "HomeTeam" = team,
+                                    "AwayTeam" = opp,
+                                    "HomeOdds" = o,
+                                    "AwayOdds" = 1-o,
+                                    "HappeningOdds" = ha)
+      }
+      if(nrow(oddstracker[oddstracker$HomeTeam == opp & oddstracker$AwayTeam == team, ]) == 0){
+        ha<-teamodds[teamodds$Team == opp, "HomeOdds"] * teamodds[teamodds$Team == team, "AwayOdds"]
+        if(ha == 0) {
+          next
+        }
+        o<-playoffWin(home_team = opp, away_team = team)
+        oddstracker<-dplyr::add_row(oddstracker,
+                                    "HomeTeam" = opp,
+                                    "AwayTeam" = team,
+                                    "HomeOdds" = o,
+                                    "AwayOdds" = 1-o,
+                                    "HappeningOdds" = ha)
+      }
+    }
+  }
+
+  odds <- data.frame("Team" = unique(c(oddstracker$HomeTeam, oddstracker$AwayTeam)), "odds" = 0)
+  for(team in odds$Team){
+    odds[odds$Team == team, "odds"] <- sum(oddstracker[oddstracker$HomeTeam == team, "HomeOdds"] * oddstracker[oddstracker$HomeTeam == team, "HappeningOdds"],
+                               oddstracker[oddstracker$AwayTeam == team, "AwayOdds"] * oddstracker[oddstracker$AwayTeam == team, "HappeningOdds"])
+  }
+
+  if(sum(odds$odds) != nseries){
+    #The odds of teams making it through shoudl sum to the number of series in the round - only n series teams can progress by winning n series.
+    stop("Something went wrong")
+  }
+  return(odds)
+}
+
+
+#' simulate Playoffs
+#'
+#' @description Solves playoff odds by MC simulation.
+#'
+#' @param summary_results summary results
+#' @param nsims Number of playoff sims to run. Too many takes a long time.
+#' @param cores Number of processor cores to use
+#'
+#' @return a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)
+#' @export
+solvePlayoffsMC<-function(summary_results, nsims=1e6, cores = parallel::detectCores() - 1){
+  summary_results<-summary_results %>%
+    dplyr::mutate("Conf" = getConference(.data$Team),
+                  "Div" = getDivision(.data$Team))
+  east_results<-summary_results %>% dplyr::filter(.data$Conf == "East")
+  west_results<-summary_results %>% dplyr::filter(.data$Conf == "West")
+
+  homeAwayOdds<-getAllHomeAwayOdds(summary_results$Team)
+
+  simresults<-data.frame("SimNo" = integer(),
+                         "series1" = character(),
+                         "series2" = character(),
+                         "series3" = character(),
+                         "series4" = character(),
+                         "series5" = character(),
+                         "series6" = character(),
+                         "series7" = character(),
+                         "series8" = character(),
+                         "series9" = character(),
+                         "series10" = character(),
+                         "series11" = character(),
+                         "series12" = character(),
+                         "series13" = character(),
+                         "series14" = character(),
+                         "series15" = character())
+
+  currentSeries<-getAPISeries()
+
+  if(nrow(currentSeries) == 0){
+    debug("too early to mix in real-life series")
+    completedSeries<-data.frame("Series" = character(), "Winner" = character(), "Loser" = character())
+  } else {
+    completedSeries<-getCompletedSeries(currentSeries)
+    for(s in currentSeries[currentSeries$Status == "Ongoing", ]$SeriesID){
+      homeAwayOdds[homeAwayOdds$HomeTeam == currentSeries[currentSeries$SeriesID == s, ]$HomeTeam &
+                     homeAwayOdds$AwayTeam == currentSeries[currentSeries$SeriesID == s, ]$AwayTeam, ]$HomeOdds <-
+        playoffWin(home_team = currentSeries[currentSeries$SeriesID == s, ]$HomeTeam,
+                   away_team = currentSeries[currentSeries$SeriesID == s, ]$AwayTeam,
+                   home_wins = currentSeries[currentSeries$SeriesID == s, ]$HomeWins,
+                   away_wins = currentSeries[currentSeries$SeriesID == s, ]$AwayWins)
+    }
+  }
+
+  if(cores > 1){
+    cl<-parallel::makeCluster(cores)
+    doSNOW::registerDoSNOW(cl)
+
+
+    `%dopar%` <- foreach::`%dopar%`
+
+    simresults <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
+      simresults<-playoffSolverEngine(nsims = ceiling(nsims/(cores*5)), completedSeries = completedSeries, east_results = east_results, west_results = west_results, currentSeries=currentSeries, summary_results = summary_results, homeAwayOdds=homeAwayOdds)
+      return(simresults)
+    }
+
+    parallel::stopCluster(cl)
+    gc(verbose = FALSE)
+
+  } else{
+    #Single cores is easier for testing
+    simresults<-playoffSolverEngine(nsims = nsims, completedSeries = completedSeries, east_results = east_results, west_results = west_results, currentSeries=currentSeries, summary_results = summary_results, homeAwayOdds=homeAwayOdds)
+
+  }
+
+  simodds<-data.frame("Team" = summary_results$Team)
+
+  simodds<-simodds %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate("Win_First_Round" = (nrow(simresults[simresults$series1 == .data$Team, ]) +
+                    nrow(simresults[simresults$series2 == .data$Team, ]) +
+                    nrow(simresults[simresults$series3 == .data$Team, ]) +
+                    nrow(simresults[simresults$series4 == .data$Team, ]) +
+                    nrow(simresults[simresults$series5 == .data$Team, ]) +
+                    nrow(simresults[simresults$series6 == .data$Team, ]) +
+                    nrow(simresults[simresults$series7 == .data$Team, ]) +
+                    nrow(simresults[simresults$series8 == .data$Team, ]))/nrow(simresults),
+                  "Win_Second_Round" = (nrow(simresults[simresults$series9 == .data$Team, ]) +
+                    nrow(simresults[simresults$series10 == .data$Team, ]) +
+                    nrow(simresults[simresults$series11 == .data$Team, ]) +
+                    nrow(simresults[simresults$series12 == .data$Team, ]))/nrow(simresults),
+                  "Win_Conference" = (nrow(simresults[simresults$series13 == .data$Team, ]) +
+                    nrow(simresults[simresults$series14 == .data$Team, ]))/nrow(simresults),
+                  "Win_Cup" = nrow(simresults[simresults$series15 == .data$Team, ])/nrow(simresults)) %>%
+    dplyr::arrange(dplyr::desc(.data$Win_Cup), dplyr::desc(.data$Win_Conference), dplyr::desc(.data$Win_Second_Round), dplyr::desc(.data$Win_First_Round), .data$Team) %>%
+    as.data.frame()
+
+  return(simodds)
+}
+
+reseedTwoTeams<-function(team1, team2, summary_results, p1=NULL){
+  t1p<-summary_results[summary_results$Team == team1, ]$meanPoints
+  t2p<-summary_results[summary_results$Team == team2, ]$meanPoints
+
+  if(!is.null(p1)){
+    if(team1 == p1){
+      return(c(team1, team2))
+    } else if (team2 == p1) {
+      return(c(team2, team1))
+    }
+  }
+  if(t1p > t2p){
+    return(c(team1, team2))
+  } else if (t2p > t1p){
+    return(c(team2, team1))
+  } else {
+    if(runif(1)<0.5){
+      return(c(team1, team2))
+    } else {
+      return(c(team2, team1))
+    }
+  }
+}
+
+#' Given current seriess and a series number and home and away teams, either return true series winner, random series winner (with home/away wins considered) or random series winner
+#'
+#' @param series_number Series number from 1:15
+#' @param currentSeries the full list of series returned from getAPISeries
+#' @param homeTeam Home Team extracted from summary_results
+#' @param awayTeam away Team extracted from summary_results
+#' @param homeAwayOdds if calculated, the odds of a home or away team win
+#'
+#' @return a series winner (team name)
+single_series_solver<-function(series_number, currentSeries, homeTeam, awayTeam, homeAwayOdds = NULL){
+  series<-currentSeries[currentSeries$SeriesID == series_number,]
+  if(nrow(series[series$Status == "Complete",]) == 1){
+    if(series$HomeTeam != homeTeam | series$AwayTeam != awayTeam){
+      warning("Team Mismatch series ", series_number, ". Home Team expected ", series$HomeTeam, " got ", homeTeam, ". Away Team expected ", series$AwayTeam, " got ", awayTeam,". Using API series information.")
+    }
+    return(ifelse(series$HomeWins > series$AwayWins, series$HomeTeam, series$AwayTeam))
+  } else if (nrow(currentSeries[currentSeries == series_number & currentSeries$Status == "Ongoing",]) == 1) {
+    if(series$HomeTeam != homeTeam | series$AwayTeam != awayTeam){
+      warning("Team Mismatch series ", series_number, ". Home Team expected ", series$HomeTeam, " got ", homeTeam, ". Away Team expected ", series$AwayTeam, " got ", awayTeam,". Using API series information.")
+    }
+    return(randomSeriesWinner(series$HomeTeam, series$AwayTeam, home_wins = series$HomeWins, away_wins = series$AwayWins, homeAwayOdds = homeAwayOdds))
+  } else {
+    return(randomSeriesWinner(homeTeam, awayTeam, homeAwayOdds = homeAwayOdds))
+  }
+}
+
+getCompletedSeries<-function(currentSeries){
+  completedSeries<-currentSeries %>%
+    dplyr::filter(.data$Status == 'Complete') %>%
+    dplyr::mutate("Winner" = dplyr::case_when(
+      .data$HomeWins > .data$AwayWins ~ .data$HomeTeam,
+      .data$HomeWins < .data$AwayWins ~ .data$AwayTeam),
+                  "Loser" = dplyr::case_when(
+      .data$HomeWins > .data$AwayWins ~ .data$AwayTeam,
+      .data$HomeWins < .data$AwayWins ~ .data$HomeTeam),
+                  "Series" = paste0('series', .data$SeriesID)) %>%
+    dplyr::select(c('Series', 'Winner', 'Loser'))
+  return(completedSeries)
+}
+
+#' Playoff Solver Engine
+#'
+#' @description Does the actual simulating. A function so it's parallelizable. Not to be called directly
+#' @param nsims number of sims (in each core)
+#' @param completedSeries completed series
+#' @param east_results east_results
+#' @param west_results west_results
+#' @param currentSeries currentSeries
+#' @param summary_results summary_results
+#'
+#' @export
+playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, currentSeries, summary_results, homeAwayOdds){
+  simresults<-data.frame("SimNo" = integer(),
+                         "series1" = character(),
+                         "series2" = character(),
+                         "series3" = character(),
+                         "series4" = character(),
+                         "series5" = character(),
+                         "series6" = character(),
+                         "series7" = character(),
+                         "series8" = character(),
+                         "series9" = character(),
+                         "series10" = character(),
+                         "series11" = character(),
+                         "series12" = character(),
+                         "series13" = character(),
+                         "series14" = character(),
+                         "series15" = character())
+  srvec<-c()
+
+  for (sim in 1:nsims){
+    if(all(paste0('series', 1:8) %in% completedSeries$Series)){
+      series1<-completedSeries[completedSeries$Series == 'series1', ]$Winner
+      series2<-completedSeries[completedSeries$Series == 'series2', ]$Winner
+      series3<-completedSeries[completedSeries$Series == 'series3', ]$Winner
+      series4<-completedSeries[completedSeries$Series == 'series4', ]$Winner
+      series5<-completedSeries[completedSeries$Series == 'series5', ]$Winner
+      series6<-completedSeries[completedSeries$Series == 'series6', ]$Winner
+      series7<-completedSeries[completedSeries$Series == 'series7', ]$Winner
+      series8<-completedSeries[completedSeries$Series == 'series8', ]$Winner
+    } else {
+      #solve east conference
+      er<-east_results
+      if('series1' %in% completedSeries$Series){
+        series1 <- completedSeries[completedSeries$Series == 'series1', ]$Winner
+        e1.1 <- currentSeries[currentSeries$SeriesID == 1, ]$HomeTeam
+        er<-er[er$Team != e1.1,]
+        ewc2 <- currentSeries[currentSeries$SeriesID == 1, ]$AwayTeam
+        er<-er[er$Team != ewc2,]
+      } else {
+        e1.1<-er[sample(1:nrow(er), size = 1, prob = er$p_rank1),]$Team
+        er<-er[er$Team != e1.1,]
+        ewc2<-er[sample(1:nrow(er), size = 1, prob = er$p_rank8),]$Team
+        er<-er[er$Team != ewc2,]
+        series1 <- single_series_solver(series_number = 1, currentSeries = currentSeries, homeTeam = e1.1, awayTeam = ewc2, homeAwayOdds = homeAwayOdds)
+      }
+      p1div<-getDivision(e1.1)
+
+      if('series2' %in% completedSeries$Series){
+        series2 <- completedSeries[completedSeries$Series == 'series2', ]$Winner
+        e1.2 <- currentSeries[currentSeries$SeriesID == 2, ]$HomeTeam
+        er<-er[er$Team != e1.1,]
+        e1.3 <- currentSeries[currentSeries$SeriesID == 2, ]$AwayTeam
+        er<-er[er$Team != e1.3,]
+      } else {
+        e1.2<-er[er$Div == p1div,]$Team[sample(1:nrow(er[er$Div == p1div, ]), size = 1, prob = sum(er[er$Div == p1div, c('p_rank3', 'p_rank4')]))]
+        er<-er[er$Team != e1.2,]
+        e1.3<-er[er$Div == p1div,]$Team[sample(1:nrow(er[er$Div == p1div, ]), size = 1, prob = sum(er[er$Div == p1div, c('p_rank5', 'p_rank6')]))]
+        er<-er[er$Team != e1.3,]
+        series2 <- single_series_solver(series_number = 2, currentSeries = currentSeries, homeTeam = e1.2, awayTeam = e1.3, homeAwayOdds = homeAwayOdds)
+      }
+
+      if('series3' %in% completedSeries$Series){
+        series3 <- completedSeries[completedSeries$Series == 'series3', ]$Winner
+        e2.1 <- currentSeries[currentSeries$SeriesID == 3, ]$HomeTeam
+        er<-er[er$Team != e1.1,]
+        ewc1 <- currentSeries[currentSeries$SeriesID == 3, ]$AwayTeam
+        er<-er[er$Team != ewc1,]
+      } else {
+        e2.1<-er[sample(1:nrow(er), size = 1, prob = er$p_rank2),]$Team
+        er<-er[er$Team != e1.1,]
+        ewc1<-er[sample(1:nrow(er), size = 1, prob = er$p_rank7),]$Team
+        er<-er[er$Team != ewc1,]
+        series3 <- single_series_solver(series_number = 3, currentSeries = currentSeries, homeTeam = e2.1, awayTeam = ewc1, homeAwayOdds = homeAwayOdds)
+      }
+
+      if('series4' %in% completedSeries$Series){
+        series4 <- completedSeries[completedSeries$Series == 'series4', ]$Winner
+        e2.2 <- currentSeries[currentSeries$SeriesID == 4, ]$HomeTeam
+        er<-er[er$Team != e2.2,]
+        e2.3 <- currentSeries[currentSeries$SeriesID == 4, ]$AwayTeam
+        er<-er[er$Team != e2.3,]
+      } else {
+        e2.2<-er[er$Div == p1div,]$Team[sample(1:nrow(er[er$Div != p1div, ]), size = 1, prob = sum(er[er$Div != p1div, c('p_rank3', 'p_rank4')]))]
+        er<-er[er$Team != e2.2,]
+        e2.3<-er[er$Div == p1div,]$Team[sample(1:nrow(er[er$Div != p1div, ]), size = 1, prob = sum(er[er$Div != p1div, c('p_rank5', 'p_rank6')]))]
+        er<-er[er$Team != e2.3,]
+        series4 <- single_series_solver(series_number = 4, currentSeries = currentSeries, homeTeam = e2.2, awayTeam = e2.3, homeAwayOdds = homeAwayOdds)
+      }
+
+      wr<-west_results
+
+      if('series5' %in% completedSeries$Series){
+        series5 <- completedSeries[completedSeries$Series == 'series5', ]$Winner
+        w1.1 <- currentSeries[currentSeries$SeriesID == 5, ]$HomeTeam
+        wr<-wr[wr$Team != w1.1,]
+        wwc2 <- currentSeries[currentSeries$SeriesID == 5, ]$AwayTeam
+        wr<-wr[wr$Team != wwc2,]
+      } else {
+        w1.1<-er[sample(1:nrow(er), size = 1, prob = wr$p_rank1),]$Team
+        wr<-wr[wr$Team != w1.1,]
+        wwc2<-er[sample(1:nrow(er), size = 1, prob = wr$p_rank8),]$Team
+        wr<-wr[wr$Team != wwc2,]
+        series5 <- single_series_solver(series_number = 5, currentSeries = currentSeries, homeTeam = w1.1, awayTeam = wwc2, homeAwayOdds = homeAwayOdds)
+      }
+      p1div<-getDivision(w1.1)
+
+      if('series6' %in% completedSeries$Series){
+        series6 <- completedSeries[completedSeries$Series == 'series6', ]$Winner
+        w1.2 <- currentSeries[currentSeries$SeriesID == 6, ]$HomeTeam
+        wr<-wr[wr$Team != w1.1,]
+        w1.3 <- currentSeries[currentSeries$SeriesID == 6, ]$AwayTeam
+        wr<-wr[wr$Team != w1.3,]
+      } else {
+        w1.2<-wr[wr$Div == p1div,]$Team[sample(1:nrow(wr[wr$Div == p1div, ]), size = 1, prob = sum(wr[wr$Div == p1div, c('p_rank3', 'p_rank4')]))]
+        wr<-wr[er$Team != w1.2,]
+        w1.3<-wr[wr$Div == p1div,]$Team[sample(1:nrow(wr[wr$Div == p1div, ]), size = 1, prob = sum(wr[wr$Div == p1div, c('p_rank5', 'p_rank6')]))]
+        wr<-wr[wr$Team != w1.3,]
+        series6 <- single_series_solver(series_number = 6, currentSeries = currentSeries, homeTeam = w1.2, awayTeam = w1.3, homeAwayOdds = homeAwayOdds)
+      }
+
+      if('series7' %in% completedSeries$Series){
+        series7 <- completedSeries[completedSeries$Series == 'series7', ]$Winner
+        w2.1 <- currentSeries[currentSeries$SeriesID == 7, ]$HomeTeam
+        wr<-wr[wr$Team != w1.1,]
+        wwc1 <- currentSeries[currentSeries$SeriesID == 7, ]$AwayTeam
+        wr<-wr[wr$Team != wwc1,]
+      } else {
+        w2.1<-wr[sample(1:nrow(wr), size = 1, prob = wr$p_rank2),]$Team
+        wr<-wr[wr$Team != w1.1,]
+        wwc1<-wr[sample(1:nrow(wr), size = 1, prob = wr$p_rank7),]$Team
+        wr<-wr[wr$Team != wwc1,]
+        series7 <- single_series_solver(series_number = 7, currentSeries = currentSeries, homeTeam = w2.1, awayTeam = wwc1, homeAwayOdds = homeAwayOdds)
+      }
+
+      if('series8' %in% completedSeries$Series){
+        series8 <- completedSeries[completedSeries$Series == 'series8', ]$Winner
+        w2.2 <- currentSeries[currentSeries$SeriesID == 8, ]$HomeTeam
+        wr<-wr[wr$Team != w2.2,]
+        w2.3 <- currentSeries[currentSeries$SeriesID == 8, ]$AwayTeam
+        wr<-wr[wr$Team != w2.3,]
+      } else {
+        w2.2<-wr[wr$Div == p1div,]$Team[sample(1:nrow(wr[wr$Div != p1div, ]), size = 1, prob = sum(wr[wr$Div != p1div, c('p_rank3', 'p_rank4')]))]
+        wr<-wr[wr$Team != w2.2,]
+        w2.3<-wr[wr$Div == p1div,]$Team[sample(1:nrow(wr[wr$Div != p1div, ]), size = 1, prob = sum(wr[wr$Div != p1div, c('p_rank5', 'p_rank6')]))]
+        wr<-wr[wr$Team != w2.3,]
+        series8 <- single_series_solver(series_number = 4, currentSeries = currentSeries, homeTeam = w2.2, awayTeam = w2.3, homeAwayOdds = homeAwayOdds)
+      }
+    }
+
+    #No reseeding for round 2 (but in reality yeah there is, wildCard doesn't have home advantage)
+    if('series9' %in% completedSeries$Series){
+      series9 <- completedSeries[completedSeries$Series == 'series9', ]$Winner
+    } else {
+      rs<-reseedTwoTeams(series1, series2, summary_results, currentSeries[currentSeries$SeriesID == 1,]$HomeTeam)
+      series9 <- single_series_solver(series_number = 9, currentSeries = currentSeries, homeTeam = rs[1], awayTeam = rs[2], homeAwayOdds = homeAwayOdds)
+    }
+
+    if('series10' %in% completedSeries$Series){
+      series10 <- completedSeries[completedSeries$Series == 'series10', ]$Winner
+    } else {
+      rs<-reseedTwoTeams(series3, series4, summary_results, currentSeries[currentSeries$SeriesID == 3, ]$HomeTeam)
+      series10 <- single_series_solver(series_number = 10, currentSeries = currentSeries, homeTeam = rs[1], awayTeam = rs[2], homeAwayOdds = homeAwayOdds)
+    }
+
+    if('series11' %in% completedSeries$Series){
+      series11 <- completedSeries[completedSeries$Series == 'series11', ]$Winner
+    } else {
+      rs<-reseedTwoTeams(series5, series6, summary_results, currentSeries[currentSeries$SeriesID == 5, ]$HomeTeam)
+      series11 <- single_series_solver(series_number = 11, currentSeries = currentSeries, homeTeam = rs[1], awayTeam = rs[2], homeAwayOdds = homeAwayOdds)
+    }
+
+    if('series12' %in% completedSeries$Series){
+      series12 <- completedSeries[completedSeries$Series == 'series12', ]$Winner
+    } else {
+      rs<-reseedTwoTeams(series7, series8, summary_results, currentSeries[currentSeries$SeriesID == 7,]$HomeTeam)
+      series12 <- single_series_solver(series_number = 12, currentSeries = currentSeries, homeTeam = rs[1], awayTeam = rs[2], homeAwayOdds = homeAwayOdds)
+    }
+
+    #Reseed for conference finals & stanley cup finals
+    if('series13' %in% completedSeries$Series){
+      series13 <- completedSeries[completedSeries$Series == 'series13', ]$Winner
+    } else {
+      rs<-reseedTwoTeams(series9, series10, summary_results)
+      series13 <- single_series_solver(series_number = 13, currentSeries = currentSeries, homeTeam = rs[1], awayTeam = rs[2], homeAwayOdds = homeAwayOdds)
+    }
+
+    if('series14' %in% completedSeries$Series){
+      series14 <- completedSeries[completedSeries$Series == 'series14', ]$Winner
+    } else {
+      rs<-reseedTwoTeams(series11, series12, summary_results)
+      series14 <- single_series_solver(series_number = 14, currentSeries = currentSeries, homeTeam = rs[1], awayTeam = rs[2], homeAwayOdds = homeAwayOdds)
+    }
+
+    #Stanley Cup Final
+    if('series15' %in% completedSeries$Series){
+      series15 <- completedSeries[completedSeries$Series == 'series15', ]$Winner
+    } else {
+      rs<-reseedTwoTeams(series13, series14, summary_results)
+      series15 <- single_series_solver(series_number = 15, currentSeries = currentSeries, homeTeam = rs[1], awayTeam = rs[2], homeAwayOdds = homeAwayOdds)
+    }
+    srvec<-c(srvec, sim, series1, series2, series3, series4, series5, series6, series7, series8, series9, series10, series11, series12, series13, series14, series15)
+  }
+  srdf<-as.data.frame(matrix(srvec, ncol=16, byrow=TRUE))
+  names(srdf)<-names(simresults)
+  simresults<-dplyr::as_tibble(srdf)
+  return(simresults)
+}
+
+getAllHomeAwayOdds<-function(teamlist){
+  homeAwayOdds<-expand.grid("HomeTeam" = teamlist, "AwayTeam" = teamlist, stringsAsFactors = FALSE)
+  homeAwayOdds<-homeAwayOdds[homeAwayOdds$HomeTeam != homeAwayOdds$AwayTeam,]
+  homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) playoffWin(x[1], x[2]))
+  return(homeAwayOdds)
 }

@@ -18,7 +18,7 @@ playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, ...)
 \item{...}{additional parameters to pass to playoffSeriesOdds}
 }
 \value{
-Odds from 0-1
+Odds from 0-1 of home team winning. Away odds are 1 - return value
 }
 \description{
 wraps PlayoffSeriesOdds with odds generator for a given home and away team
