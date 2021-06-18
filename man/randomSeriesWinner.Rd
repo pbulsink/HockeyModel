@@ -4,7 +4,14 @@
 \alias{randomSeriesWinner}
 \title{Random Series Winner}
 \usage{
-randomSeriesWinner(home_team, away_team, home_wins = 0, away_wins = 0, ...)
+randomSeriesWinner(
+  home_team,
+  away_team,
+  home_wins = 0,
+  away_wins = 0,
+  homeAwayOdds = NULL,
+  ...
+)
 }
 \arguments{
 \item{home_team}{Home Team name (required)}
@@ -15,7 +22,9 @@ randomSeriesWinner(home_team, away_team, home_wins = 0, away_wins = 0, ...)
 
 \item{away_wins}{Number of away team wins (default 0)}
 
-\item{...}{}
+\item{homeAwayOdds}{precalculated home & away team parings odds of a home win. Overrides playoffwin calculation}
+
+\item{...}{additional parameters to pass to playoffWin}
 }
 \value{
 TRUE if the home team wins, else FALSE

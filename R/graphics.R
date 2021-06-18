@@ -654,3 +654,42 @@ getTeamColours<-function(home, away, delta = 0.15, teamColours = HockeyModel::te
 
   return(list('home' = h, 'away' = a))
 }
+
+format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyModel::teamColours){
+  playoff_odds<-playoff_odds %>%
+    dplyr::arrange(dplyr::desc(.data$Win_Cup))
+
+  playoff_odds_gt <- playoff_odds %>%
+    tibble::add_column("block" = "  ", .before = 1) %>%
+    tibble::add_column("image" = "", .after = 2) %>%
+    dplyr::mutate("image" = .data$Team) %>%
+    gt::gt() %>%
+    gt::tab_header(title = paste0(caption_text, " Playoff Odds"), subtitle = paste0("Generated ", Sys.Date(), " | P. Bulsink (@BulsinkB)")) %>%
+    gt::cols_label("block" = " ",
+                   "image" = " ",
+                   "Make_Playoffs" = "Make Playoffs",
+                   "Win_First_Round" = "Win First Round",
+                   "Win_Second_Round" = "Win Second Round",
+                   "Win_Conference" = "Win Conference",
+                   "Win_Cup" = "Win Cup") %>%
+    gt::data_color(columns = 4:8, color = scales::col_numeric(c("#fefffe","#3ccc3c"), domain=c(0,1)))%>%
+    gt::fmt_percent(columns = 4:8) %>%
+    gt::tab_options(heading.align = 'left') %>%
+    gt::text_transform(
+      locations = gt::cells_body(columns = "image"),
+      fn = function(x) {
+        gt::local_image(
+          filename = file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+          height = "30px"
+        )
+      }
+    )
+
+  for(i in 1:nrow(playoff_odds)) {
+    playoff_odds_gt <- playoff_odds_gt %>%
+      gt::tab_style(style = gt::cell_fill(color = teamColours[teamColours$Team == playoff_odds$Team[i], "Hex"]),
+                    locations = gt::cells_body(columns = "block", rows = i))
+  }
+
+  return(playoff_odds_gt)
+}

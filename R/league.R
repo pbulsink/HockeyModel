@@ -518,21 +518,21 @@ playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, ...){
 #' @param home_wins Number of home wins (default 0)
 #' @param away_wins Number of away team wins (default 0)
 #' @param homeAwayOdds precalculated home & away team parings odds of a home win. Overrides playoffwin calculation
-#' @param ...
+#' @param ... additional parameters to pass to playoffWin
 #'
 #' @return TRUE if the home team wins, else FALSE
 #' @export
 randomSeriesWinner<-function(home_team, away_team, home_wins=0, away_wins=0, homeAwayOdds = NULL, ...){
   if(is.null(homeAwayOdds)){
-    return(ifelse(runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, ... = ...),
+    return(ifelse(stats::runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, ... = ...),
            home_team, away_team))
   } else {
     hao<-homeAwayOdds[homeAwayOdds$HomeTeam == home_team & homeAwayOdds$AwayTeam == away_team, ]
     if(nrow(hao) == 1){
-      return(ifelse(runif(1)<hao$HomeOdds, home_team, away_team))
+      return(ifelse(stats::runif(1)<hao$HomeOdds, home_team, away_team))
     } else {
       #Calculated odds aren't in there, get it manually
-      return(ifelse(runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, ... = ...),
+      return(ifelse(stats::runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, ... = ...),
                     home_team, away_team))
     }
   }
@@ -768,31 +768,6 @@ playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
   return(playoff_odds)
 }
 
-format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyModel::teamColours){
-  playoff_odds<-playoff_odds %>%
-    dplyr::arrange(dplyr::desc(.data$Win_Cup))
-
-  playoff_odds_gt <- playoff_odds %>%
-    tibble::add_column("block" = "  ", .after = 1) %>%
-    gt::gt() %>%
-    gt::tab_header(title = paste0(caption_text, " Playoff Odds"), subtitle = paste0("As of ", lastp, " | P. Bulsink (@BulsinkB)")) %>%
-    gt::cols_label("block" = " ",
-                   "Make_Playoffs" = "Make Playoffs",
-                   "Win_First_Round" = "Win First Round",
-                   "Win_Second_Round" = "Win Second Round",
-                   "Win_Conference" = "Win Conference",
-                   "Win_Cup" = "Win Cup") %>%
-    gt::data_color(columns = 3:7, color = scales::col_numeric(c("#fefffe","#3ccc3c"), domain=c(0,1)))%>%
-    gt::fmt_percent(columns = 3:7) %>%
-    gt::tab_options(heading.align = 'left')
-
-  for(i in 1:nrow(playoff_odds)) {
-    playoff_odds_gt <- playoff_odds_gt %>%
-      gt::tab_style(style = gt::cell_fill(color = teamColours[teamColours$Team == playoff_odds$Team[i], "Hex"]),
-                    locations = gt::cells_body(columns = "block", rows = i))
-  }
-  return(playoff_odds_gt)
-}
 
 #' Team Progression Odds
 #'
@@ -916,69 +891,6 @@ team_progression_odds<-function(round, team, odds){
   }
 }
 
-#' Playoff Round Solver
-#'
-#' @param teamodds a data frame of each team that could play in a round, with their odds of being in the round as home or away team. Columns \code{Team}, \code{HomeOdds}, \code{AwayOdds}
-#'
-#' @return a data frame with Team and odds of winning round
-#' @export
-playoffRoundSolver<-function(teamodds){
-  if(nrow(teamodds) == 1){
-    return(data.frame(Team = teamodds$Team, odds = 1.0, stringsAsFactors = FALSE))
-  }
-  if(ceiling(sum(teamodds$HomeOdds)) != floor(sum(teamodds$HomeOdds)) | ceiling(sum(teamodds$AwayOdds)) != floor(sum(teamodds$AwayOdds))){
-    #We have decimal odds of making this round, this is bad
-    stop("Odds should sum to an integer")
-  }
-
-  oddstracker <- data.frame("HomeTeam" = character(), "AwayTeam" = character(),
-                            "HomeOdds" = numeric(), "AwayOdds" = numeric(),
-                            "HappeningOdds" = numeric())  # happeningOdds is odds of these two teams meeting, or teamodds[teamodds$Team == HomeTeam, "odds"] * teamodds[teamodds$Team == AwayTeam, "odds]
-
-  for (team in teamodds$Team){
-    for(opp in teamodds[teamodds$Team != team,]$Team){
-      if(nrow(oddstracker[oddstracker$HomeTeam == team & oddstracker$AwayTeam == opp, ]) == 0){
-        ha<-teamodds[teamodds$Team == opp, "HomeOdds"] * teamodds[teamodds$Team == team, "AwayOdds"]
-        if(ha == 0) {
-          next
-        }
-        o<-playoffWin(home_team = team, away_team = opp)
-        oddstracker<-dplyr::add_row(oddstracker,
-                                    "HomeTeam" = team,
-                                    "AwayTeam" = opp,
-                                    "HomeOdds" = o,
-                                    "AwayOdds" = 1-o,
-                                    "HappeningOdds" = ha)
-      }
-      if(nrow(oddstracker[oddstracker$HomeTeam == opp & oddstracker$AwayTeam == team, ]) == 0){
-        ha<-teamodds[teamodds$Team == opp, "HomeOdds"] * teamodds[teamodds$Team == team, "AwayOdds"]
-        if(ha == 0) {
-          next
-        }
-        o<-playoffWin(home_team = opp, away_team = team)
-        oddstracker<-dplyr::add_row(oddstracker,
-                                    "HomeTeam" = opp,
-                                    "AwayTeam" = team,
-                                    "HomeOdds" = o,
-                                    "AwayOdds" = 1-o,
-                                    "HappeningOdds" = ha)
-      }
-    }
-  }
-
-  odds <- data.frame("Team" = unique(c(oddstracker$HomeTeam, oddstracker$AwayTeam)), "odds" = 0)
-  for(team in odds$Team){
-    odds[odds$Team == team, "odds"] <- sum(oddstracker[oddstracker$HomeTeam == team, "HomeOdds"] * oddstracker[oddstracker$HomeTeam == team, "HappeningOdds"],
-                               oddstracker[oddstracker$AwayTeam == team, "AwayOdds"] * oddstracker[oddstracker$AwayTeam == team, "HappeningOdds"])
-  }
-
-  if(sum(odds$odds) != nseries){
-    #The odds of teams making it through shoudl sum to the number of series in the round - only n series teams can progress by winning n series.
-    stop("Something went wrong")
-  }
-  return(odds)
-}
-
 
 #' simulate Playoffs
 #'
@@ -1095,7 +1007,7 @@ reseedTwoTeams<-function(team1, team2, summary_results, p1=NULL){
   } else if (t2p > t1p){
     return(c(team2, team1))
   } else {
-    if(runif(1)<0.5){
+    if(stats::runif(1)<0.5){
       return(c(team1, team2))
     } else {
       return(c(team2, team1))
@@ -1152,6 +1064,7 @@ getCompletedSeries<-function(currentSeries){
 #' @param west_results west_results
 #' @param currentSeries currentSeries
 #' @param summary_results summary_results
+#' @param homeAwayOdds precalculated home & away pairs of odds - if available.
 #'
 #' @export
 playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, currentSeries, summary_results, homeAwayOdds){

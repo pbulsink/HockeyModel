@@ -4,7 +4,13 @@
 \alias{single_series_solver}
 \title{Given current seriess and a series number and home and away teams, either return true series winner, random series winner (with home/away wins considered) or random series winner}
 \usage{
-single_series_solver(series_number, currentSeries, homeTeam, awayTeam)
+single_series_solver(
+  series_number,
+  currentSeries,
+  homeTeam,
+  awayTeam,
+  homeAwayOdds = NULL
+)
 }
 \arguments{
 \item{series_number}{Series number from 1:15}
@@ -14,6 +20,8 @@ single_series_solver(series_number, currentSeries, homeTeam, awayTeam)
 \item{homeTeam}{Home Team extracted from summary_results}
 
 \item{awayTeam}{away Team extracted from summary_results}
+
+\item{homeAwayOdds}{if calculated, the odds of a home or away team win}
 }
 \value{
 a series winner (team name)

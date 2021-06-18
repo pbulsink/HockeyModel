@@ -10,7 +10,8 @@ playoffSolverEngine(
   east_results,
   west_results,
   currentSeries,
-  summary_results
+  summary_results,
+  homeAwayOdds
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ playoffSolverEngine(
 \item{currentSeries}{currentSeries}
 
 \item{summary_results}{summary_results}
+
+\item{homeAwayOdds}{precalculated home & away pairs of odds - if available.}
 }
 \description{
 Does the actual simulating. A function so it's parallelizable. Not to be called directly
