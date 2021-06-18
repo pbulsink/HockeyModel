@@ -693,9 +693,10 @@ format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyMo
         locations = gt::cells_body(columns = "image", rows = i),
         fn = function(x) {
           gt::local_image(
-            filename = file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
-            height = "30px"
-          )
+            filename = ifelse(file.exists(file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
+                              file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+                              file.path("./data-raw", "logos", "nhl.gif")),
+            height = "30px")
         }
       )
   }
