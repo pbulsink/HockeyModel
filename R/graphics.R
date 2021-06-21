@@ -655,9 +655,22 @@ getTeamColours<-function(home, away, delta = 0.15, teamColours = HockeyModel::te
   return(list('home' = h, 'away' = a))
 }
 
-format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyModel::teamColours, trim=TRUE, trimcup = FALSE){
+#' Format Playoff Odds
+#'
+#' @description Takes a playoff odds table and returns a gt table
+#'
+#' @param playoff_odds a playoff odds data frame with columns Team, Make_Playoffs, Win_First_Round, Win_Second_Round, Win_Conference, Win_Cup
+#' @param caption_text Additional text to prepend to " Playoff Odds" in table title. E.g. 'Eastern Conference' if only eastteams sent in.
+#'
+#' @param trim Whether to drop teams that have 0 chance of making playoffs. Default true
+#' @param trimcup Whether to drorp teams that have 0 chance of winning cup. Default false
+#'
+#' @return a gt table
+#' @export
+format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcup = FALSE){
+  teamColours <- HockeyModel::teamColours
   playoff_odds<-playoff_odds %>%
-    dplyr::arrange(dplyr::desc(.data$Win_Cup))
+    dplyr::arrange(dplyr::desc(.data$Win_Cup), dplyr::desc(.data$Win_Conference), dplyr::desc(.data$Win_Second_Round), dplyr::desc(.data$Win_First_Round), dplyr::desc(.data$Make_Playoffs), .data$Team)
 
   if(trim){
     playoff_odds<-playoff_odds %>%
@@ -673,7 +686,7 @@ format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyMo
     tibble::add_column("image" = "", .after = 1) %>%
     dplyr::mutate("image" = .data$Team) %>%
     gt::gt() %>%
-    gt::tab_header(title = paste0(caption_text, " Playoff Odds"), subtitle = paste0("Generated ", Sys.Date(), " | P. Bulsink (@BulsinkB)")) %>%
+    gt::tab_header(title = paste(caption_text, "Playoff Odds"), subtitle = paste0("Generated ", Sys.Date(), " | P. Bulsink (@BulsinkB)")) %>%
     gt::cols_label("block" = " ",
                    "image" = " ",
                    "Make_Playoffs" = "Make Playoffs",
@@ -682,7 +695,7 @@ format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyMo
                    "Win_Conference" = "Win Conference",
                    "Win_Cup" = "Win Cup") %>%
     gt::data_color(columns = 4:8, color = scales::col_numeric(c("#fefffe","#3ccc3c"), domain=c(0,1)))%>%
-    gt::fmt_percent(columns = 4:8) %>%
+    gt::fmt_percent(columns = 4:8, drop_trailing_zeros = FALSE) %>%
     gt::tab_options(heading.align = 'left')
 
   for(i in 1:nrow(playoff_odds)) {
@@ -702,4 +715,101 @@ format_playoff_odds<-function(playoff_odds, caption_text, teamColours = HockeyMo
   }
 
   return(playoff_odds_gt)
+}
+
+#' Today Odds Table
+#'
+#' @description Returns a gt table of odds for today's games (or games for a supplied date)
+#'
+#' @param today A date for games to create a table. Defaults to today.
+#' @param rho Hockey Model rho
+#' @param m Hockey Model m
+#' @param schedule Schedule, or HockeyModel Schedule
+#'
+#' @return a gt table
+#' @export
+daily_odds_table <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule){
+  todayodds<-todayDC(today = as.Date(today))
+  todayodds$HomexG<-NA
+  todayodds$AwayxG<-NA
+
+  for(g in 1:nrow(todayodds)){
+    # Expected goals home
+    lambda <- try(stats::predict(m, data.frame(Home = 1, Team = todayodds$HomeTeam[g], Opponent = todayodds$AwayTeam[g]), type = "response"), TRUE)
+
+    # Expected goals away
+    mu<-try(stats::predict(m, data.frame(Home = 0, Team = todayodds$AwayTeam[g], Opponent = todayodds$HomeTeam[g]), type = "response"), TRUE)
+
+    #fix errors
+    if(!is.numeric(lambda)){
+      lambda<-DCPredictErrorRecover(team = todayodds$HomeTeam[g], opponent = todayodds$AwayTeam[g], homeiceadv = TRUE)
+    }
+    if(!is.numeric(mu)){
+      mu<-DCPredictErrorRecover(team = todayodds$AwayTeam[g], opponent = todayodds$HomeTeam[g], homeiceadv = FALSE)
+    }
+
+    todayodds$HomexG[g] <- lambda
+    todayodds$AwayxG[g] <- mu
+    todayodds[g, c('HomeWin', 'AwayWin')]<-normalizeOdds(todayodds[g, c('HomeWin', 'AwayWin')])
+  }
+
+  teamColours<-HockeyModel::teamColours
+
+  todayodds_gt<- todayodds %>%
+    dplyr::select(.data$HomeTeam, .data$HomexG, .data$HomeWin, .data$AwayWin, .data$AwayxG, .data$AwayTeam) %>%
+    tibble::add_column("homeimage" = "", .before = 1) %>%
+    tibble::add_column("homeblock" = "  ", .before = 1) %>%
+    tibble::add_column("awayimage" = "") %>%
+    tibble::add_column("awayblock" = "  ") %>%
+    dplyr::mutate("homeimage" = .data$HomeTeam,
+                  "awayimage" = .data$AwayTeam) %>%
+    gt::gt() %>%
+    gt::tab_header(title = paste0("Game Odds"), subtitle = paste0("For games ", today, " | P. Bulsink (@BulsinkB)")) %>%
+    gt::tab_spanner(label = "Home", columns = c('HomeTeam', 'HomexG', 'HomeWin')) %>%
+    gt::tab_spanner(label = "Away", columns = c('AwayWin', 'AwayxG', 'AwayTeam')) %>%
+    gt::cols_label("homeblock" = " ",
+                   "homeimage" = " ",
+                   "awayblock" = " ",
+                   "awayimage" = " ",
+                   "HomexG" = "xG",
+                   "HomeWin" = "Win",
+                   "HomeTeam" = "Team",
+                   #"Draw" = "OT/SO?",
+                   "AwayxG" = "xG",
+                   "AwayWin" = "Win",
+                   "AwayTeam" = "Team") %>%
+    gt::data_color(columns = c(5,6), color = scales::col_numeric(palette = c("#cc3c3c", "#ffffff", "#3ccc3c"), domain=c(0,1)))%>%
+    #gt::data_color(columns = 6, color = scales::col_numeric(palette = c("#fefeff", "#3c3ccc"), domain=c(0,1)))%>%
+    #gt::data_color(columns = c(5,7), color = scales::col_bin(palette = c("#fefffe", "#ffffff", "#3ccc3c"), bins = c(0,0.5, 1)))%>%
+    gt::fmt_percent(columns = 5:6, decimals = 1) %>%
+    gt::fmt_number(columns = c(4, 7), drop_trailing_zeros = FALSE, decimals = 2) %>%
+    gt::tab_options(heading.align = 'left')
+
+  for(i in 1:nrow(todayodds)) {
+    todayodds_gt <- todayodds_gt %>%
+      gt::tab_style(style = gt::cell_fill(color = teamColours[teamColours$Team == todayodds$HomeTeam[i], "Hex"]),
+                    locations = gt::cells_body(columns = "homeblock", rows = i)) %>%
+      gt::tab_style(style = gt::cell_fill(color = teamColours[teamColours$Team == todayodds$AwayTeam[i], "Hex"]),
+                    locations = gt::cells_body(columns = "awayblock", rows = i)) %>%
+      gt::text_transform(
+        locations = gt::cells_body(columns = "homeimage", rows = i),
+        fn = function(x) {
+          gt::local_image(
+            filename = ifelse(file.exists(file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
+                              file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+                              file.path("./data-raw", "logos", "nhl.gif")),
+            height = "30px")
+        }
+      ) %>%
+    gt::text_transform(
+      locations = gt::cells_body(columns = "awayimage", rows = i),
+      fn = function(x) {
+        gt::local_image(
+          filename = ifelse(file.exists(file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
+                            file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+                            file.path("./data-raw", "logos", "nhl.gif")),
+          height = "30px")
+      }
+    )
+  }
 }

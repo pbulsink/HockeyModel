@@ -99,7 +99,7 @@ ratings <- function(m = HockeyModel::m, ...) {
 
 tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*10, games_today = games_today(), schedule=HockeyModel::schedule, ...){
 
-  if(games_today){
+  if(!is.null(games_today)){
     #don't try tweet todays' games if none exist
     rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
                       media = file.path(graphic_dir, "today_odds.png"), token = token)

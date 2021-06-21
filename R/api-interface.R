@@ -164,7 +164,8 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
                     (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.6,
                     (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.4,
                     (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.25,
-    ))
+    )) %>%
+    dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
 
   return(scores)
 }
@@ -191,7 +192,7 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
     scores<-scores %>%
       dplyr::filter(!(.data$GameID %in% neededGames)) %>%
       dplyr::bind_rows(updatedSc) %>%
-      dplyr::arrange(.data$GameID)
+      dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
     if (save_data){
       suppressMessages(usethis::use_data(scores, overwrite=TRUE))
     }
@@ -222,7 +223,9 @@ clean_names<-function(sc){
       dplyr::mutate("Date" = as.Date(.data$Date))
   }
   if('OTStatus' %in% names(sc)){
-    sc[sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"),]$OTStatus <- "OT"
+    if(any(sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"))){
+      sc[sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"),]$OTStatus <- "OT"
+    }
   }
   return(sc)
 }
