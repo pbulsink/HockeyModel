@@ -165,7 +165,7 @@ updateSeries<-function(series = NULL){
   if(is.null(series)){
     series<-data.frame('HomeTeam' = c("Tampa Bay Lightning"),
                        'AwayTeam' = c("Montreal Canadiens"),
-                       'HomeWins' = c(0),
+                       'HomeWins' = c(1),
                        'AwayWins' = c(0),
                        stringsAsFactors = FALSE)
   }
