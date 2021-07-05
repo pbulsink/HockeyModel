@@ -5,9 +5,11 @@
 \title{simulate Playoffs}
 \usage{
 simulatePlayoffs(
-  summary_results,
-  nsims = 1e+06,
-  cores = parallel::detectCores() - 1
+  summary_results = NULL,
+  nsims = 1e+05,
+  cores = parallel::detectCores() - 1,
+  m = HockeyModel::m,
+  rho = HockeyModel::rho
 )
 }
 \arguments{
@@ -16,6 +18,10 @@ simulatePlayoffs(
 \item{nsims}{Number of playoff sims to run. Too many takes a long time.}
 
 \item{cores}{Number of processor cores to use}
+
+\item{m}{HockeyModel::m}
+
+\item{rho}{HockeyModel::rho}
 }
 \value{
 a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)

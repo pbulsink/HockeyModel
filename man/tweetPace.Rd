@@ -10,8 +10,7 @@ tweetPace(
   subdir = "pace",
   prediction_dir = "./prediction_results/",
   token = rtweet::get_token(),
-  scores = HockeyModel::scores,
-  teamColours = HockeyModel::teamColours
+  scores = HockeyModel::scores
 )
 }
 \arguments{
@@ -26,8 +25,6 @@ tweetPace(
 \item{token}{rtweet token}
 
 \item{scores}{HockeyModel::scores or a custom value}
-
-\item{teamColours}{HockeyModel::teamColours or a custom value}
 }
 \description{
 Tweet Pace Plots

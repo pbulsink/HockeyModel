@@ -135,7 +135,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
   #Get division
   all_predictions$Division<-getDivision(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("North", "West", "Central", "East"))
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = names(HockeyModel::nhl_divisions))
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
                                   as.character(paste0(getShortTeam(all_predictions$Team), '\n', signif(all_predictions$Presidents*100, digits = 2), '%')),
@@ -166,22 +166,122 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
 }
 
 
+#' Plot Pace By Division
+#'
+#' @param graphic_dir Graphics Directory
+#' @param subdir Subdirectory for pace graphics
+#' @param prediction_dir Directory for predictions
+#' @param scores HockeyModel::scores
+#'
+#' @return ggplot graphic of team pace vs. predicted
+#' @export
+plot_pace_by_division<-function(graphic_dir = './prediction_results/graphics', subdir = 'pace', prediction_dir = "./prediction_results", scores=HockeyModel::scores){
+  sc<-scores[scores$Date >= as.Date(getSeasonStartDate()),]
+  sc<-sc[sc$GameType == "R",]
+
+  #Get old predictions
+  p<-readRDS(file.path(prediction_dir, paste0(getSeasonStartDate(), "-predictions.RDS")))
+  p[p$Team == "Chicago Blackhawks", "Team"]<-"Chicago"
+
+  if(!dir.exists(file.path(graphic_dir, subdir))){
+    dir.create(file.path(graphic_dir, subdir), recursive = TRUE)
+  }
+
+  s<-nhlapi::nhl_seasons()
+  ngames<-s$numberOfGames[nrow(s)]
+  teamlist<-unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
+
+  teampoints<-as.list(rep(NA, length(teamlist)))
+  names(teampoints)<-teamlist
+
+
+  teamPerformance<-data.frame("GameNum" = 0:ngames)
+
+  for (team in teamlist){
+    teamscores<-sc[sc$HomeTeam == team | sc$AwayTeam == team, c('AwayTeam','HomeTeam','Result', 'GameID')]
+    teamscores[teamscores$AwayTeam == team, 'Result'] <- 1-teamscores[teamscores$AwayTeam == team, 'Result']
+    teamscores$Venue<-'Home'
+    teamscores[teamscores$AwayTeam == team, 'Venue'] <- 'Away'
+    teamscores$Points<-ceiling(2*teamscores$Result)
+    teamscores$cPoints<-cumsum(teamscores$Points)
+    teamscores$GameNum<-1:nrow(teamscores)
+    teamscores$xPoints<-teamscores$GameNum*(p[p$Team == team, ]$meanPoints/ngames)
+    teamscores$xDiff<-teamscores$cPoints-teamscores$xPoints
+    teampoints[[team]]<-max(teamscores$cPoints)
+    teamscores<-teamscores[,c("GameNum", "xDiff")]
+    teamscores<-tibble::add_row(teamscores, "GameNum" = 0, "xDiff" = 0)
+    names(teamscores) <- c("GameNum", team)
+    teamPerformance<-dplyr::left_join(teamPerformance, teamscores, by="GameNum")
+  }
+
+
+  teamPerformance<-tidyr::pivot_longer(teamPerformance,
+                                       !.data$GameNum,
+                                       names_to = "Team",
+                                       values_to = "PointDiff"
+                                       )
+
+  teamColours<-HockeyModel::teamColours
+  #Build and trim team colours for plot
+  teamColoursList<-as.vector(teamColours$Hex)
+  names(teamColoursList)<-teamColours$Team
+  teamColoursList<-teamColoursList[names(teamColoursList) %in% teamlist]
+
+  teamPerformance$label <- NA_character_
+
+
+  for(team in teamlist){
+    lab<-paste(getShortTeam(team), "-", teampoints[team], "pts.")
+    teamPerformance[teamPerformance$Team == team & teamPerformance$GameNum == max(teamPerformance[teamPerformance$Team == team & !is.na(teamPerformance$PointDiff), "GameNum"]), "label"]<-lab
+  }
+
+  for(div in 1:length(HockeyModel::nhl_divisions)){
+    division<-names(HockeyModel::nhl_divisions)[div]
+    tl<-teamlist[teamlist %in% unlist(HockeyModel::nhl_divisions[division])]
+    tp<-teamPerformance[teamPerformance$Team %in% unlist(tl),]
+
+    plt<-ggplot2::ggplot(tp, ggplot2::aes_string(x = "GameNum", y = "PointDiff", colour = "Team"))+
+      #ggplot2::geom_line(na.rm = TRUE) +
+      ggplot2::geom_smooth(span = 0.1, n=ngames*100, na.rm=TRUE, se = FALSE) +
+      ggplot2::geom_hline(yintercept = 0) +
+      ggplot2::coord_cartesian(xlim=c(0,ngames), clip="off")+
+      ggplot2::labs(title = "Points vs. Predicted at Season Start by Game",
+                    subtitle = paste(division, "Division Teams"),
+                    x = "Game Number",
+                    y = "Points Above/Below Predicted",
+                    caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date())) +
+      ggplot2::scale_colour_manual(values = teamColoursList) +
+      ggplot2::scale_x_continuous(breaks = seq(from=0, to=ngames, by = 10))+#, expand = ggplot2::expansion(mult = c(0, .1)))+
+      ggrepel::geom_label_repel(ggplot2::aes_string(label = "label"), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(ngames, ngames+ngames*.2))+
+      ggplot2::theme_minimal() +
+      ggplot2::theme(legend.position = "none",
+                     plot.margin = ggplot2::unit(c(1,5,1,1), "lines"))
+
+    grDevices::png(filename = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", division)), '_pace.png')), width = 11, height = 8.5, units = 'in', res = 300)
+    print(plt)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
+  }
+  return(plt)
+}
+
+
 #' Plot Pace by team
 #'
 #' @param graphic_dir The graphics directory
 #' @param subdir The pace subdirectory in graphics
 #' @param prediction_dir The predictions directory
-#' @param teamColours HockeyModel::teamColours or a custom value
 #' @param scores The HockeyModel::scores object, or custom scores in the same format.
 #'
 #' @export
-plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdir = 'pace', prediction_dir = "./prediction_results", scores=HockeyModel::scores, teamColours = HockeyModel::teamColours){
-  sc<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
+plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdir = 'pace', prediction_dir = "./prediction_results", scores=HockeyModel::scores){
+  sc<-scores[scores$Date > as.Date(getSeasonStartDate()),]
 
   teamlist<-unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
 
   #Get old and most recent predictions
-  p<-readRDS(file.path(prediction_dir, paste0(getCurrentSeasonStartDate(), "-predictions.RDS")))
+  p<-readRDS(file.path(prediction_dir, paste0(getSeasonStartDate(), "-predictions.RDS")))
 
   filelist<-list.files(path = prediction_dir)
   pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
@@ -192,6 +292,8 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
   if(!dir.exists(file.path(graphic_dir, subdir))){
     dir.create(file.path(graphic_dir, subdir), recursive = TRUE)
   }
+
+  teamColours <- HockeyModel::teamColours
 
   for (team in teamlist){
     colour = teamColours[teamColours$Team == team, 'Hex']
@@ -655,6 +757,7 @@ getTeamColours<-function(home, away, delta = 0.15, teamColours = HockeyModel::te
   return(list('home' = h, 'away' = a))
 }
 
+
 #' Format Playoff Odds
 #'
 #' @description Takes a playoff odds table and returns a gt table
@@ -717,6 +820,7 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
   return(playoff_odds_gt)
 }
 
+
 #' Today Odds Table
 #'
 #' @description Returns a gt table of odds for today's games (or games for a supplied date)
@@ -778,7 +882,7 @@ daily_odds_table <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hocke
                    "AwayxG" = "xG",
                    "AwayWin" = "Win",
                    "AwayTeam" = "Team") %>%
-    gt::data_color(columns = c(5,6), color = scales::col_numeric(palette = c("#cc3c3c", "#ffffff", "#3ccc3c"), domain=c(0,1)))%>%
+    gt::data_color(columns = c(5,6), color = scales::col_numeric(palette = c("#cc3c3c", "#ffffff", "#3c3ccc"), domain=c(0,1)))%>%
     #gt::data_color(columns = 6, color = scales::col_numeric(palette = c("#fefeff", "#3c3ccc"), domain=c(0,1)))%>%
     #gt::data_color(columns = c(5,7), color = scales::col_bin(palette = c("#fefffe", "#ffffff", "#3ccc3c"), bins = c(0,0.5, 1)))%>%
     gt::fmt_percent(columns = 5:6, decimals = 1) %>%
@@ -812,4 +916,9 @@ daily_odds_table <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hocke
       }
     )
   }
+}
+
+
+series_odds_table <- function(){
+  NULL  # TODO: DO IT
 }

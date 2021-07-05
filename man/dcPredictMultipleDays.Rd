@@ -5,7 +5,7 @@
 \title{DC Predict Multiple Days}
 \usage{
 dcPredictMultipleDays(
-  start = as.Date(getCurrentSeasonStartDate()),
+  start = as.Date(getSeasonStartDate()),
   end = Sys.Date(),
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,

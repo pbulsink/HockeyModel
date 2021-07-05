@@ -182,7 +182,7 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
 #' @export
 updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::schedule, full_season = FALSE, save_data=FALSE){
   if(full_season){
-    neededGames<-schedule[schedule$Date > getCurrentSeasonStartDate(), ]$GameID
+    neededGames<-schedule[schedule$Date > getSeasonStartDate(), ]$GameID
   } else {
     neededGames<-schedule[schedule$Date < Sys.Date(), ]$GameID
     neededGames<-neededGames[!neededGames %in% scores[scores$GameStatus == 'Final', ]$GameID]
@@ -276,4 +276,85 @@ getAPISeries <- function(season=getCurrentSeason8()){
       .data$Round == 4 ~ .data$Series + 14
     ))
   return(playoffSeries)
+}
+
+
+#' getSeasonStartDate
+#'
+#' @param season Season (8 character code) or NULL for current/most recent season
+#'
+#' @return Season start date as date
+#' @export
+getSeasonStartDate<-function(season=NULL){
+  seasons<-nhlapi::nhl_seasons()
+  if(!is.null(season)){
+    return(seasons[seasons$seasonID == season]$regularSeasonStartDate)
+  } else {
+    return(as.Date(seasons$regularSeasonStartDate[nrow(seasons)]))
+  }
+}
+
+
+#' Get Current Season
+#'
+#' @return current season (as 20172018 format) based on today's date
+#' @export
+getCurrentSeason8 <- function(){
+  seasons<-nhlapi::nhl_seasons()
+  return(seasons$seasonID[nrow(seasons)])
+}
+
+
+#' GetCurrentSeasonEndDate
+#'
+#' @param season Season (8 character code) or NULL for current/most recent season
+#'
+#' @return Season end date (as date)
+#' @export
+getSeasonEndDate<-function(season=NULL){
+  seasons<-nhlapi::nhl_seasons()
+  if(!is.null(season)){
+    return(seasons[seasons$seasonID == season]$seasonEndDate)
+  } else {
+    return(seasons$seasonEndDate[nrow(seasons)])
+  }
+}
+
+#' inRegularSeason
+#'
+#' @description Determine if we're currently in Regular Season
+#'
+#' @param date Date to check if it's in the most recent season. Default today
+#'
+#' @return TRUE if currently in regular season, else FALSE
+#' @export
+inRegularSeason <- function(date=Sys.Date()){
+  seasons<-nhlapi::nhl_seasons()
+  start<-seasons$regularSeasonStartDate[nrow(seasons)]
+  end<-seasons$regularSeasonEndDate[nrow(seasons)]
+  if(date >= start & date <= end){
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+
+#' In Off Season
+#'
+#' @description Determine if we're currently in the off-season
+#'
+#' @param date Date to check if it's in the (current) off season. Default today
+#'
+#' @return TRUE if we're in off-season, else FALSE
+#' @export
+inOffSeason <- function(date=Sys.Date()){
+  seasons<-nhlapi::nhl_seasons()
+  start<-seasons$regualrSeasonStartDate[nrow(seasons)]
+  end<-seasons$seasonEndDate[nrow(seasons)]
+
+  if(date > end | date < start){
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
 }

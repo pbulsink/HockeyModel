@@ -81,7 +81,7 @@ buildStats<-function(scores){
 simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, progress = FALSE){
   teamlist<-c()
   if(!is.null(scores)){
-    season_sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
+    season_sofar<-scores[scores$Date > as.Date(getSeasonStartDate()),]
 
     season_sofar <- season_sofar[,c('Date','HomeTeam','AwayTeam','Result')]
 
@@ -194,7 +194,7 @@ simulateSeason <- function(odds_table, scores=HockeyModel::scores, nsims=10000, 
 simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, cores = parallel::detectCores() - 1, progress = FALSE){
   teamlist<-c()
   if(!is.null(scores)){
-    season_sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
+    season_sofar<-scores[scores$Date > as.Date(getSeasonStartDate()),]
     season_sofar <- season_sofar[,c('Date','HomeTeam','AwayTeam','Result')]
   } else {
     season_sofar<-NULL
@@ -317,7 +317,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
   #odds_table$Result <- NA
 
   if(is.null(season_sofar)){
-    season_sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()),]
+    season_sofar<-scores[scores$Date > as.Date(getSeasonStartDate()),]
   }
 
   #if(is.na(season_sofar)) {
@@ -329,7 +329,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
     last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
     odds_table<-odds_table[odds_table$Date > last_scores_date, ]
 
-    season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]    ## TODO RESULT
+    season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
     #season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
 
     all_season<-dplyr::bind_rows(season_sofar, odds_table)
@@ -478,7 +478,7 @@ sim_engine<-function(all_season, nsims){
     dplyr::ungroup() %>%
     dplyr::mutate(Playoffs = ifelse(.data$DivRank <= 3, 1, 0)) %>% #Top 3 in each division
     dplyr::arrange(.data$SimNo, .data$Team) %>%
-    mutate_cond(.data$Wildcard <= 2, Playoffs = 1) %>% # Wildcard 2 teams/conference #TODO might not work at scale???
+    mutate_cond(.data$Wildcard <= 2, Playoffs = 1) %>% # Wildcard 2 teams/conference
     dplyr::select(.data$SimNo, .data$Team, .data$W, .data$OTW,
                   .data$SOW, .data$SOL, .data$OTL, .data$Points,
                   .data$Wildcard, .data$Rank, .data$ConfRank,
@@ -499,13 +499,15 @@ sim_engine<-function(all_season, nsims){
 #' @param away_team Opponent Team
 #' @param home_wins Home Ice Advantage Team Wins in Series
 #' @param away_wins Opponent Team Wins in Series
+#' @param m HockeyModel::m
+#' @param rho HockeyModel::rho
 #' @param ... additional parameters to pass to playoffSeriesOdds
 #'
 #' @return Odds from 0-1 of home team winning. Away odds are 1 - return value
 #' @export
-playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, ...){
-  home_odds<-DCPredict(home = home_team, away = away_team, draws=FALSE)
-  away_odds<-1-DCPredict(home = away_team, away = home_team, draws=FALSE)
+playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, m = HockeyModel::m, rho = HockeyModel::rho, ...){
+  home_odds<-DCPredict(home = home_team, away = away_team, draws=FALSE, m = m, rho = rho)
+  away_odds<-1-DCPredict(home = away_team, away = home_team, draws=FALSE,  m = m, rho = rho)
   return(playoffSeriesOdds(home_odds = home_odds, away_odds = away_odds, home_win = home_wins, away_win = away_wins, ...))
 }
 
@@ -550,10 +552,11 @@ randomSeriesWinner<-function(home_team, away_team, home_wins=0, away_wins=0, hom
 #' @param away_win Number of away team wins thus far in the series
 #' @param ngames Number of games in the series, defaults to 7
 #' @param game_home vector of T/F for 'home team' home games. Defaults for NHL best of 7 series: \code{c(T,T,F,F,T,F,T)}
+#' @param predict_games_to_win (Defualt False) If TRUE, returns the table of ways the series could finish.
 #'
 #' @return numeric odds of home team win series (1-odds for away odds)
 #' @export
-playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames=NULL, game_home=NULL){
+playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames=NULL, game_home=NULL, predict_games_to_win = FALSE){
   if(is.null(ngames)){
     ngames <- 7
   }
@@ -620,274 +623,12 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames
     x.p <- y.p[unfinished_series]
   }
 
-  p1total <- sum(finished_series[finished_series[,2] == game_to, 4])
+  if(predict_games_to_win == FALSE){
+    p1total <- sum(finished_series[finished_series[,2] == game_to, 4])
 
-  return(p1total)
-}
-
-#' Playoff solver: chances of making each round & winning cup
-#'
-#' @param all_results if available, the results from simulations. Else loaded. Summary results can be submitted here.
-#' @param pretty_format Whether to return a pretty table or raw data.
-#' @param p0 Odds of making the playoffs if a play-in is used.
-#'
-#' @return a tibble of playoff odds, or if pretty format requested, a \code{gt} table
-#' @export
-playoffSolver<-function(all_results = NULL, pretty_format = TRUE, p0=NULL){
-
-  if(is.null(p0)){
-    if(is.null(all_results)){
-      filelist<-list.files(path = "./prediction_results")
-      pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
-      pdates<-pdates[pdates != 'graphics']
-      lastp<-as.Date(max(pdates))
-      all_results<-readRDS(file.path("./prediction_results", paste0(lastp,"-predictions.RDS")))
-      summary_results<-all_results
-    } else {
-      lastp = Sys.Date()
-    }
-
-    if('summary_results' %in% names(all_results)){
-      summary_results <- all_results$summary_results
-    } else {
-      summary_results<-all_results
-    }
-
-
-    #Convention: p# is odds of making it out of the round #. p0 is making playoffs, p1 is making out of 1st round, etc. so p4 is win cup.
-
-    #make 1st round win odds matrix. p34 and p56 are combined odds for two positions, so /2 for individual position odds
-    p0<-summary_results %>%
-      dplyr::mutate(p_rank3 = .data$p_rank_34/2,
-                    p_rank4 = .data$p_rank_34/2,
-                    p_rank5 = .data$p_rank_56/2,
-                    p_rank6 = .data$p_rank_56/2) %>%
-      dplyr::select(.data$Team, .data$p_rank1, .data$p_rank2, .data$p_rank3,
-                    .data$p_rank4, .data$p_rank5, .data$p_rank6, .data$p_rank7,
-                    .data$p_rank8, .data$meanRank)
+    return(p1total)
   } else {
-    lastp = Sys.Date()
-  }
-  p0<-p0[sum(p0$p_rank1, p0$p_rank2, p0$p_rank3, p0$p_rank5, p0$p_rank7, p0$p_rank8)>0,]
-  p0$Division<-getDivision(p0$Team)
-  p0$Conference<-getConference(p0$Team)
-  p1<-p0
-  p1$p_rank1 <- p1$p_rank2 <- p1$p_rank3 <- p1$p_rank4 <- p1$p_rank5 <- p1$p_rank6 <- p1$p_rank7 <- p1$p_rank8 <- 0
-  p2<-p3<-p4<-p1
-
-
-  ranks1<-paste('p_rank', c(1:8), sep = '')
-
-  for (team in p1$Team){
-    #pass to a function solving a teams' odds of progressing (sorting opponent, etc.)
-    p1[p1$Team == team, ranks1]<-as.list(team_progression_odds(round = 1, team = team, odds = p0))
-  }
-
-  p1$p_rank18<-p1$p_rank1 + p1$p_rank8
-  p1$p_rank27<-p1$p_rank2 + p1$p_rank7
-  p1$p_rank36<-p1$p_rank3 + p1$p_rank6
-  p1$p_rank45<-p1$p_rank4 + p1$p_rank5
-  p1[,ranks1]<-p2[,ranks1]<-p3[,ranks1]<-p4[,ranks1]<-NULL
-
-  #Fix normalization fixes
-  ranks2<-c('p_rank18', 'p_rank27', 'p_rank36', 'p_rank45')
-  p1[, ranks2]<-p1[, ranks2]*(8/sum(p1[,ranks2]))
-  p1[p1$Conference == "East", ranks2]<-p1[p1$Conference == "East", ranks2]*(4/sum(p1[p1$Conference == "East", ranks2]))
-  p1[p1$Conference == "West", ranks2]<-p1[p1$Conference == "West", ranks2]*(4/sum(p1[p1$Conference == "West", ranks2]))
-
-  #make 2nd round win odds matrix
-  p2$cfodds<-0
-  for (team in p2$Team){
-    p2[p2$Team == team, ]$cfodds<-team_progression_odds(round = 2, team = team, odds = p1)
-  }
-
-  p2[p2$Conference == "East", ]$cfodds <- p2[p2$Conference == "East", ]$cfodds*(2/sum(p2[p2$Conference == "East", ]$cfodds))
-  p2[p2$Conference == "West", ]$cfodds <- p2[p2$Conference == "West", ]$cfodds*(2/sum(p2[p2$Conference == "West", ]$cfodds))
-  #p2$cfodds<-p2$cfodds*(4/sum(p2$cfodds))
-
-  #make 3rd round win odds matrix+
-  p3$fodds<-0
-  for(team in p3$Team){
-    p3[p3$Team == team, ]$fodds<-team_progression_odds(round = 3, team = team, odds = p2)
-  }
-
-  p3[p3$Conference == "East", ]$fodds <- p3[p3$Conference == "East", ]$fodds*(1/sum(p3[p3$Conference == "East", ]$fodds))
-  p3[p3$Conference == "West", ]$fodds <- p3[p3$Conference == "West", ]$fodds*(1/sum(p3[p3$Conference == "West", ]$fodds))
-  #p3$fodds<-p3$fodds*(2/sum(p3$fodds))
-
-  #make cup win odds matrix
-  p4$cupodds<-0
-  for(team in p4$Team){
-    p4[p4$Team == team, ]$cupodds<-team_progression_odds(round = 4, team = team, odds = p3)
-  }
-  p4$cupodds<-p4$cupodds * (1/sum(p4$cupodds))
-
-  #Summarize Data
-  #teamlist<-ifelse(exists("summary_results"), yes = summary_results$Team, no=p0$Team)
-  if(exists("summary_results")){
-    teamlist<-summary_results$Team
-  } else {
-    teamlist<-p0$Team
-  }
-
-  playoff_odds<-tibble::tibble(Team = teamlist,
-                       Make_Playoffs = 0,
-                       Win_First_Round = 0,
-                       Win_Second_Round = 0,
-                       Win_Conference = 0,
-                       Win_Cup = 0
-                       )
-
-  playoff_odds <- merge(playoff_odds, p0, by="Team")
-  playoff_odds <- playoff_odds %>%
-    dplyr::mutate("Make_Playoffs" = .data$p_rank1 + .data$p_rank2 + .data$p_rank3 + .data$p_rank4 +
-                    .data$p_rank5 + .data$p_rank6 + .data$p_rank7 + .data$p_rank8) %>%
-    dplyr::select(c("Team", "Make_Playoffs"))
-
-  playoff_odds <- merge(playoff_odds, p1, by="Team")
-  playoff_odds <- playoff_odds %>%
-    dplyr::mutate("Win_First_Round" = .data$p_rank18 + .data$p_rank27 + .data$p_rank36 + .data$p_rank45) %>%
-    dplyr::select(c("Team", "Make_Playoffs", "Win_First_Round"))
-
-  playoff_odds <- merge(playoff_odds, p2[,c("Team", "cfodds")], by="Team")
-  playoff_odds <- merge(playoff_odds, p3[,c("Team", "fodds")], by="Team")
-  playoff_odds <- merge(playoff_odds, p4[,c("Team", "cupodds")], by="Team")
-
-  playoff_odds <- playoff_odds %>%
-    dplyr::rename("Win_Second_Round" = "cfodds",
-                  "Win_Conference" = "fodds",
-                  "Win_Cup" = "cupodds")
-
-  if(pretty_format){
-
-    east_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$East,], caption_text = "Eastern Conference")
-    west_odds<-format_playoff_odds(playoff_odds[playoff_odds$Team %in% HockeyModel::nhl_conferences$West,], caption_text = "Western Conference")
-
-    playoff_odds<-list('east' = east_odds, 'west' = west_odds)
-  }
-  return(playoff_odds)
-}
-
-
-#' Team Progression Odds
-#'
-#' @param round Playoff round (1-4)
-#' @param team Team to calculate odds for
-#' @param odds input odds of each opponent team making each position of the round
-#'
-#' @return a vector of odds of progressing in each position
-#' @export
-team_progression_odds<-function(round, team, odds){
-  #Very many errors, in all likelihood. Also slow.
-
-  c_opponents<-odds[odds$Conference == getConference(team),]$Team
-  c_opponents<-c_opponents[c_opponents != team]
-  d_opponents<-odds[odds$Division == getDivision(team),]$Team
-  d_opponents<-d_opponents[d_opponents != team]
-  #home_opponents are cup opponents against whom 'team' would be the home team, away_opponents are against better teams, who 'team' would be the away team.
-  cf_home_opponents<-odds[(odds$Conference == getConference(team) & odds$meanRank > odds[odds$Team == team,]$meanRank),]$Team
-  cf_away_opponents<-odds[(odds$Conference == getConference(team) & odds$meanRank < odds[odds$Team == team,]$meanRank),]$Team
-  f_home_opponents<-odds[(odds$Conference != getConference(team) & odds$meanRank > odds[odds$Team == team,]$meanRank),]$Team
-  f_away_opponents<-odds[(odds$Conference != getConference(team) & odds$meanRank < odds[odds$Team == team,]$meanRank),]$Team
-
-  if(round == 1){
-    ranks<-paste('p_rank', c(1:8), sep = '')
-
-    team_odds<-as.numeric(odds[odds$Team == team, names(odds) %in% ranks])
-    o1<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank8/sum(odds[odds$Team %in% c_opponents,]$p_rank8)) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[1]
-    o2<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank7/sum(odds[odds$Team %in% c_opponents,]$p_rank7)) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[2]
-    o3<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank6/sum(odds[odds$Team %in% d_opponents,]$p_rank6)) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[3]
-    o4<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank5/sum(odds[odds$Team %in% d_opponents,]$p_rank5)) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[4]
-    o5<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank4/sum(odds[odds$Team %in% d_opponents,]$p_rank4)) *
-                     (1-playoffDC(home = x, away = team))),
-            na.rm = TRUE)*team_odds[5]
-    o6<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank3/sum(odds[odds$Team %in% d_opponents,]$p_rank3)) *
-                     (1-playoffDC(home = x, away = team))),
-            na.rm = TRUE)*team_odds[6]
-    o7<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank2/sum(odds[odds$Team %in% c_opponents,]$p_rank2)) *
-                     (1-playoffDC(home = x, away = team))),
-            na.rm = TRUE)*team_odds[7]
-    o8<-sum(sapply(c_opponents, function(x) (odds[odds$Team == x, ]$p_rank1/sum(odds[odds$Team %in% c_opponents,]$p_rank1)) *
-                     (1-playoffDC(home = x, away = team))),
-            na.rm = TRUE)*team_odds[8]
-
-    return(c(o1,o2,o3,o4,o5,o6,o7,o8))
-
-  } else if (round == 2){
-
-    team_odds<-as.numeric(odds[odds$Team == team, c('p_rank18', 'p_rank27', 'p_rank36', 'p_rank45')])
-    #1/8 winner plays 3/4 or 5/6 winner from division. noramlization are *2 because we're summing together 2 avenues using the same team_odds.
-    o1<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank36/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank36))) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[1] +
-      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank45/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank45))) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[1]
-
-    o2<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank36/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank36))) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[2] +
-      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank45/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank45))) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[2]
-
-    o3<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank27/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank27))) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[3] +
-      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank27/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank27))) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[3]
-
-    o4<-sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank18/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank18))) *
-                     playoffDC(home = team, away = x)),
-            na.rm = TRUE)*team_odds[4] +
-      sum(sapply(d_opponents, function(x) (odds[odds$Team == x, ]$p_rank18/(2*sum(odds[odds$Team %in% d_opponents,]$p_rank18))) *
-                   playoffDC(home = team, away = x)),
-          na.rm = TRUE)*team_odds[4]
-
-    return(o1+o2+o3+o4)
-
-  } else if (round == 3){
-    if(length(cf_home_opponents)>0){
-      o1<-sum(sapply(cf_home_opponents, function(x) (odds[odds$Team == x, ]$cfodds/sum(odds[odds$Team %in% c_opponents,]$cfodds)) * playoffDC(home = team, away = x)),
-              na.rm = TRUE) * odds[odds$Team == team, ]$cfodds
-    } else {
-      o1<-0
-    }
-    if(length(cf_away_opponents)>0){
-      o2<-sum(sapply(cf_away_opponents, function(x) (odds[odds$Team == x, ]$cfodds/sum(odds[odds$Team %in% c_opponents,]$cfodds)) * playoffDC(home = x, away = team)),
-              na.rm = TRUE) * odds[odds$Team == team, ]$cfodds
-    } else {
-      o2 <- 0
-    }
-
-    return(o1+o2)
-
-  } else if (round == 4){
-    if(length(f_home_opponents) > 0) {
-      o1 <- sum(sapply(f_home_opponents, function(x) (odds[odds$Team == x, ]$fodds/sum(odds[odds$Conference != odds[odds$Team == team,]$Conference,]$fodds)) * playoffDC(home = team, away = x)),
-                na.rm = TRUE) * odds[odds$Team == team, ]$fodds
-    } else {
-      o1 <- 0
-    }
-    if(length(f_away_opponents) > 0){
-      o2 <- sum(sapply(f_away_opponents, function(x) (odds[odds$Team == x, ]$fodds/sum(odds[odds$Conference != odds[odds$Team == team,]$Conference,]$fodds)) * playoffDC(home = x, away = team)),
-                na.rm = TRUE) * odds[odds$Team == team, ]$fodds
-    } else {
-      o2 <- 0
-    }
-
-    return(o1+o2)
-  } else {
-    stop("Round must be in [1..4]")
+    return(unfinished_series)
   }
 }
 
@@ -899,17 +640,27 @@ team_progression_odds<-function(round, team, odds){
 #' @param summary_results summary results
 #' @param nsims Number of playoff sims to run. Too many takes a long time.
 #' @param cores Number of processor cores to use
+#' @param m HockeyModel::m
+#' @param rho HockeyModel::rho
 #'
 #' @return a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)
 #' @export
-simulatePlayoffs<-function(summary_results, nsims=1e6, cores = parallel::detectCores() - 1){
+simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::detectCores() - 1, m = HockeyModel::m, rho=HockeyModel::rho){
+  if(is.null(summary_results)){
+    filelist<-list.files(path = "./prediction_results")
+    pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
+    pdates<-pdates[pdates != 'graphics']
+    lastp<-as.Date(max(pdates))
+    summary_results<-readRDS(file.path("./prediction_results", paste0(lastp,"-predictions.RDS")))
+  }
+
   summary_results<-summary_results %>%
     dplyr::mutate("Conf" = getConference(.data$Team),
                   "Div" = getDivision(.data$Team))
   east_results<-summary_results %>% dplyr::filter(.data$Conf == "East")
   west_results<-summary_results %>% dplyr::filter(.data$Conf == "West")
 
-  homeAwayOdds<-getAllHomeAwayOdds(summary_results$Team)
+  homeAwayOdds<-getAllHomeAwayOdds(summary_results$Team, m = m, rho = rho)
 
   simresults<-data.frame("SimNo" = integer(),
                          "l1" = character(),
@@ -949,7 +700,8 @@ simulatePlayoffs<-function(summary_results, nsims=1e6, cores = parallel::detectC
         playoffWin(home_team = currentSeries[currentSeries$SeriesID == s, ]$HomeTeam,
                    away_team = currentSeries[currentSeries$SeriesID == s, ]$AwayTeam,
                    home_wins = currentSeries[currentSeries$SeriesID == s, ]$HomeWins,
-                   away_wins = currentSeries[currentSeries$SeriesID == s, ]$AwayWins)
+                   away_wins = currentSeries[currentSeries$SeriesID == s, ]$AwayWins,
+                   m = m, rho = rho)
     }
   }
 
@@ -1331,9 +1083,9 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
   return(simresults)
 }
 
-getAllHomeAwayOdds<-function(teamlist){
+getAllHomeAwayOdds<-function(teamlist, m = HockeyModel::m, rho = HockeyModel::rho){
   homeAwayOdds<-expand.grid("HomeTeam" = teamlist, "AwayTeam" = teamlist, stringsAsFactors = FALSE)
   homeAwayOdds<-homeAwayOdds[homeAwayOdds$HomeTeam != homeAwayOdds$AwayTeam,]
-  homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) playoffWin(x[1], x[2]))
+  homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) playoffWin(x[1], x[2], m = m, rho = rho))
   return(homeAwayOdds)
 }

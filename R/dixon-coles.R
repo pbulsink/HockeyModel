@@ -148,7 +148,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   if(regress){
     last_game_date<-as.Date(max(scores$Date))
     season_end_date <- as.Date(max(schedule$Date))
-    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date(getCurrentSeasonStartDate()), 'Date'], schedule[schedule$Date > as.Date(getCurrentSeasonStartDate()), 'Date'])))
+    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date(getSeasonStartDate()), 'Date'], schedule[schedule$Date > as.Date(getSeasonStartDate()), 'Date'])))
     season_length <- as.integer(season_end_date) - as.integer(season_start_date)
     remaining_length <- as.integer(season_end_date) - as.integer(last_game_date)
     expected_mean<-2.835184
@@ -175,7 +175,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
     results$HomeGoals<-NA
     results$AwayGoals<-NA
     results$Result<-NA
-    results<-dplyr::bind_rows(dcscores[dcscores$Date > as.Date(getCurrentSeasonStartDate()),], results)
+    results<-dplyr::bind_rows(dcscores[dcscores$Date > as.Date(getSeasonStartDate()),], results)
 
     lastdate<-as.Date(schedule$Date[[1]])
 
@@ -326,8 +326,8 @@ remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule 
   }
 
   if(regress){
-    season_end_date <- as.Date(max(schedule$Date)) #TODO FIX for reg season only
-    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date(getCurrentSeasonStartDate()), 'Date'], schedule[schedule$Date > as.Date(getCurrentSeasonStartDate()), 'Date'])))
+    season_end_date <- as.Date(max(schedule[schedule$GameType == 'R', ]$Date))
+    season_start_date <- as.Date(min(c(scores[scores$Date > as.Date(getSeasonStartDate()), 'Date'], schedule[schedule$Date > as.Date(getSeasonStartDate()), 'Date'])))
     season_length <- as.integer(season_end_date) - as.integer(season_start_date)
     remaining_length <- as.integer(season_end_date) - as.integer(last_game_date)
     expected_mean<-2.835184
@@ -741,7 +741,7 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date(getCurrentSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = "./prediction_results", ...){
+dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = "./prediction_results", ...){
 
   if(!dir.exists(filedir)){
     dir.create(filedir, recursive = TRUE)
@@ -811,27 +811,13 @@ dcPredictMultipleDays<-function(start=as.Date(getCurrentSeasonStartDate()), end=
 getSeasonMetricsDC<-function(schedule = HockeyModel::schedule, scores = HockeyModel::scores){
   sched<-schedule
   sched$Home.WLD<-sched$Away.WLD<-sched$Draw.WLD<-sched$Home.WL<-sched$Away.WL<-sched$Result<-NA
-  season.sofar<-scores[scores$Date > as.Date(getCurrentSeasonStartDate()), ]
+  season_sofar<-scores[scores$Date > as.Date(getSeasonStartDate()), c("GameID", "Result")]
 
-  for (day in as.Date(unique(season.sofar$Date))) {
-    d<-as.Date(day, origin="1970-01-01")
-    message('Results as of: ', d)
-    score<-scores[scores$Date < day,]
-    score<-score[score$Date > as.Date("2008-08-01"),]
-    m.day<-getM(scores = score, currentDate = d)
-    rho.day<-getRho(m = m.day, scores = score)
+  sched<-predictMultipleDaysResultsDC(startDate = getSeasonStartDate(), endDate = Sys.Date)
+  sched<-dplyr::left_join(sched, season_sofar, by="GameID", )
 
-    p<-todayDC(today = d, rho = rho.day, m = m.day)
-
-
-    sched[sched$Date == d, "Home.WLD"]<-p$HomeWin
-    sched[sched$Date == d, "Away.WLD"]<-p$AwayWin
-    sched[sched$Date == d, "Draw.WLD"]<-p$Draw
-    sched[sched$Date == d, "Result"]<-season.sofar[season.sofar$Date == d, "Result"]
-  }
-
-  sched$Home.WL<-(sched$Home.WLD/(sched$Home.WLD + sched$Away.WLD))*sched$Draw.WLD + sched$Home.WLD
-  sched$Away.WL<-(sched$Away.WLD/(sched$Home.WLD + sched$Away.WLD))*sched$Draw.WLD + sched$Away.WLD
+  sched$Home.WL<-(sched$HomeWin/(sched$HomeWin + sched$AwayWin))*sched$Draw + sched$HomeWin
+  sched$Away.WL<-(sched$AwayWin/(sched$HomeWin + sched$AwayWin))*sched$Draw + sched$AwayWin
 
   sched<-sched[stats::complete.cases(sched), ]
 
@@ -839,4 +825,36 @@ getSeasonMetricsDC<-function(schedule = HockeyModel::schedule, scores = HockeyMo
   accuracy <- accuracy(predicted = sched$Home.WL>0.5, actual = sched$Result > 0.5)
 
   return(list("LogLoss" = logloss, "Accuracy" = accuracy))
+}
+
+#' Predict Multiple Days's W/L/D results
+#'
+#' @description Calculate what each days' game predictions were by recalculating rho and m using games only up to the previous day. This is kinda slow, so a full season might take an hour or more depending on your hardware. Split out of the SeasonMetrics code to help with requests by @JB4991 on twitter.
+#'
+#' @param startDate First day of predicted results
+#' @param endDate Last day of predicted results
+#' @param schedule HockeyModel::schedule
+#' @param scores HockeyModel::scores
+#'
+#' @return a data frame like HockeyModel::schedule with HomeWin, AwayWin and Draw odds
+#' @export
+predictMultipleDaysResultsDC <- function(startDate, endDate, schedule = HockeyModel::schedule, scores = HockeyModel::scores){
+  sched<-schedule[schedule$Date >= as.Date(startDate) & schedule$Date <= as.Date(endDate), ]
+
+  for (day in unique(sched$Date)) {
+    d<-as.Date(day, origin="1970-01-01")
+    message('Results as of: ', d)
+    score<-scores[scores$Date < day,]
+    score<-score[score$Date > (as.Date(startDate) - 4000),]  # only feed in ~ 11 years data to calculate m & rho
+    m.day<-getM(scores = score, currentDate = d)
+    rho.day<-getRho(m = m.day, scores = score)
+
+    p<-todayDC(today = d, rho = rho.day, m = m.day)
+
+    sched[sched$Date == d, "HomeWin"]<-p$HomeWin
+    sched[sched$Date == d, "AwayWin"]<-p$AwayWin
+    sched[sched$Date == d, "Draw"]<-p$Draw
+  }
+
+  return(sched)
 }

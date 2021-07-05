@@ -29,7 +29,8 @@ Imports:
     gt,
     scales,
     rlang,
-    methods
+    methods,
+    tidyr
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
 RoxygenNote: 7.1.1

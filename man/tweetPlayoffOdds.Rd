@@ -5,18 +5,21 @@
 \title{Tweet Playoff Odds}
 \usage{
 tweetPlayoffOdds(
-  all_results = NULL,
+  summary_results = NULL,
   token = rtweet::get_token(),
-  graphic_dir = "./prediction_results/graphics/"
+  graphic_dir = "./prediction_results/graphics/",
+  trimcup = FALSE
 )
 }
 \arguments{
-\item{all_results}{all results, if not most recent (will be loaded by functions)}
+\item{summary_results}{the summary results file, otherwise the msot recent will be loaded}
 
-\item{token}{rtweet token}
+\item{token}{token for twitter}
 
-\item{graphic_dir}{directory to save images}
+\item{graphic_dir}{graphic dir}
+
+\item{trimcup}{trim to just cup winners}
 }
 \description{
-Tweet the \code{gt} graphics with each team's odds of each round/cup win
+Tweet a graphic of the playoff odds
 }

@@ -10,7 +10,8 @@ playoffSeriesOdds(
   home_win = 0,
   away_win = 0,
   ngames = NULL,
-  game_home = NULL
+  game_home = NULL,
+  predict_games_to_win = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ playoffSeriesOdds(
 \item{ngames}{Number of games in the series, defaults to 7}
 
 \item{game_home}{vector of T/F for 'home team' home games. Defaults for NHL best of 7 series: \code{c(T,T,F,F,T,F,T)}}
+
+\item{predict_games_to_win}{(Defualt False) If TRUE, returns the table of ways the series could finish.}
 }
 \value{
 numeric odds of home team win series (1-odds for away odds)

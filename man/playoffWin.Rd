@@ -4,7 +4,15 @@
 \alias{playoffWin}
 \title{Playoff Win Calculator}
 \usage{
-playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, ...)
+playoffWin(
+  home_team,
+  away_team,
+  home_wins = 0,
+  away_wins = 0,
+  m = HockeyModel::m,
+  rho = HockeyModel::rho,
+  ...
+)
 }
 \arguments{
 \item{home_team}{Home Ice Advantage Team}
@@ -14,6 +22,10 @@ playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, ...)
 \item{home_wins}{Home Ice Advantage Team Wins in Series}
 
 \item{away_wins}{Opponent Team Wins in Series}
+
+\item{m}{HockeyModel::m}
+
+\item{rho}{HockeyModel::rho}
 
 \item{...}{additional parameters to pass to playoffSeriesOdds}
 }

@@ -21,24 +21,6 @@ cleanModel <- function(cm) {
 }
 
 
-#' Get Current Season
-#'
-#' @return current season (as 20172018 format) based on today's date
-#' @export
-getCurrentSeason8 <- function(){
-  getSeason(Sys.Date())
-}
-
-
-#' Get Current Season Start Date
-#'
-#' @return current season's nominal start date (Oct 01) as character, e.g. "2019-10-01"
-#' @export
-getCurrentSeasonStartDate <- function(){
-  return(paste0(strtrim(getCurrentSeason8(), 4), "-10-01"))
-}
-
-
 #' Get Season from Game Date
 #'
 #' @param gamedate The date of the game to check for season
@@ -126,20 +108,10 @@ getConference<-function(team){
 #'
 #' @return the team's (or teams') short code(s)
 getShortTeam<-function(team){
-  team_short<-list(
-    "Anaheim Ducks" = "ANA", "Arizona Coyotes" = "ARI", "Boston Bruins" = "BOS", "Buffalo Sabres" ="BUF",
-    "Calgary Flames" = "CGY", "Carolina Hurricanes" = "CAR", "Chicago Blackhawks" = "CHI",
-    "Colorado Avalanche" = "COL", "Columbus Blue Jackets" = "CBJ", "Dallas Stars" = "DAL",
-    "Detroit Red Wings" = "DET", "Edmonton Oilers" = "EDM", "Florida Panthers" = "FLA",
-    "Los Angeles Kings" = "LAK","Minnesota Wild" = "MIN", "Montreal Canadiens" = "MTL",
-    "Nashville Predators" = "NSH", "New Jersey Devils" = "NJD", "New York Islanders" = "NYI",
-    "New York Rangers" = "NYR", "Ottawa Senators" = "OTT", "Philadelphia Flyers" = "PHI",
-    "Pittsburgh Penguins" = "PIT", "San Jose Sharks" = "SJS", "St. Louis Blues" = "STL",
-    "Tampa Bay Lightning" = "TBL", "Toronto Maple Leafs" = "TOR", "Vancouver Canucks" = "VAN",
-    "Vegas Golden Knights" = "VGK","Washington Capitals" = "WSH", "Winnipeg Jets" = "WPG"
-  )
+
   ts<-function(t){
-    return(team_short[[t]])
+    teamColours <- HockeyModel::teamColours
+    return(teamColours[teamColours$Team == team,]$ShortCode)
   }
 
   vts<-Vectorize(ts)
