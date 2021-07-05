@@ -172,7 +172,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   #message("Reminder, run updateModel() first.")
   #Sys.sleep(5)
 
-  if(lubridate::month(Sys.Date()) %in% c(7:9)){
+  if(lubridate::month(Sys.Date()) %in% c(8:9)){
     stop('No off-season predictions')
   }
 
