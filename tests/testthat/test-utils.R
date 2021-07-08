@@ -44,3 +44,10 @@ test_that("Colours are correctly compared", {
 
   expect_equal(colourDelta("#0000FF", "#000000"), 1/3)
 })
+
+test_that("Date Checks are OK", {
+  expect_true(is.Date("2020-12-13"))
+  expect_false(is.Date("bob"))
+  expect_false(is.Date(8))
+  expect_false(is.Date("2020-02-30"))
+})

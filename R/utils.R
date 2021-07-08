@@ -21,33 +21,6 @@ cleanModel <- function(cm) {
 }
 
 
-#' Get Season from Game Date
-#'
-#' @param gamedate The date of the game to check for season
-#'
-#' @return a character season id (e.g. 20172018)
-#' @export
-getSeason <- function(gamedate=Sys.Date()){
-  gs<-function(gd){
-    year<-as.integer(strftime(gd, '%Y'))
-    month<-as.integer(strftime(gd, '%m'))
-    if(month >= 9){
-      return(paste0(year,year+1))
-    } else {
-      return(paste0(year-1,year))
-    }
-  }
-  vgs<-Vectorize(gs)
-
-
-  if(length(gamedate) == 1){
-    return(gs(gamedate))
-  } else if (length(gamedate) > 1) {
-    return(unname(vgs(gamedate)))
-  }
-}
-
-
 #' Get the division of a team or vector of teams
 #'
 #' @param team a single team or vector of teams
@@ -309,4 +282,18 @@ formatPredsForHockeyVisContest<-function(predictions, candyType = 'Fuzzy Peaches
 #' @export
 gameIDValidator<-function(gameIDs){
   return(grepl("(19|20)\\d{2}0[1-4][0-1]\\d{3}", gameIDs))
+}
+
+#' Is this a Date?
+#'
+#' @description Is this a date?
+#'
+#' @param date is this a date?
+#'
+#' @return is it a date?
+#' @export
+#'
+#' @examples is.Date("2020-12-13"); is.Date("bob")
+is.Date<-function(date){
+  tryCatch(!is.na(as.Date(date)),error=function(err){FALSE})
 }

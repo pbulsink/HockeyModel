@@ -7,7 +7,7 @@
 getCurrentSeason8()
 }
 \value{
-current season (as 20172018 format) based on today's date
+current season (as 20172018 format) based on today's date.
 }
 \description{
 Get Current Season

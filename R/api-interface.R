@@ -71,7 +71,7 @@ processNHLSchedule<-function(sched, progress = TRUE){
 #'
 #' @return Scheduled games (in the format of the schedule) for the requested date, or NULL if none
 #' @export
-  games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games = FALSE){
+games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games = FALSE){
   stopifnot(methods::is(date, "Date"))
   todaygames<-processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
   if(!all_games){
@@ -288,20 +288,24 @@ getAPISeries <- function(season=getCurrentSeason8()){
 getSeasonStartDate<-function(season=NULL){
   seasons<-nhlapi::nhl_seasons()
   if(!is.null(season)){
-    return(seasons[seasons$seasonID == season]$regularSeasonStartDate)
+    if(season %in% seasons$seasonId){
+      return(as.Date(seasons[seasons$seasonId == season]$regularSeasonStartDate))
+    } else {
+      stop("Season not found: ", season)
+    }
   } else {
-    return(as.Date(seasons$regularSeasonStartDate[nrow(seasons)]))
+    return(as.Date(tail(seasons$regularSeasonStartDate, 1)))
   }
 }
 
 
 #' Get Current Season
 #'
-#' @return current season (as 20172018 format) based on today's date
+#' @return current season (as 20172018 format) based on today's date.
 #' @export
 getCurrentSeason8 <- function(){
   seasons<-nhlapi::nhl_seasons()
-  return(seasons$seasonID[nrow(seasons)])
+  return(tail(seasons$seasonId, 1))
 }
 
 
@@ -314,47 +318,104 @@ getCurrentSeason8 <- function(){
 getSeasonEndDate<-function(season=NULL){
   seasons<-nhlapi::nhl_seasons()
   if(!is.null(season)){
-    return(seasons[seasons$seasonID == season]$seasonEndDate)
+    if(season %in% seasons$seasonId){
+      return(as.Date(seasons[seasons$seasonId == season]$seasonEndDate))
+    } else {
+      stop("Season not found: ", season)
+    }
   } else {
-    return(seasons$seasonEndDate[nrow(seasons)])
+    return(as.Date(tail(seasons$seasonEndDate, 1)))
   }
 }
 
-#' inRegularSeason
+#' In Regular Season
 #'
-#' @description Determine if we're currently in Regular Season
+#' @param date Date to check if it's in a season
+#' @param boolean Whether to return a result as TRUE/FALSE (True) or to return the seasonID if the date is in a season
 #'
-#' @param date Date to check if it's in the most recent season. Default today
-#'
-#' @return TRUE if currently in regular season, else FALSE
+#' @return Either TRUE/FALSE or a seasonID/FALSE
 #' @export
-inRegularSeason <- function(date=Sys.Date()){
+inRegularSeason <- function(date = Sys.Date(), boolean = TRUE){
+  stopifnot(is.Date(date))
+  date<-as.Date(date)
   seasons<-nhlapi::nhl_seasons()
-  start<-seasons$regularSeasonStartDate[nrow(seasons)]
-  end<-seasons$regularSeasonEndDate[nrow(seasons)]
-  if(date >= start & date <= end){
-    return(TRUE)
+  seasons_list<-seasons[seasons$regularSeasonStartDate <= date & seasons$regularSeasonEndDate >= date, ]
+  if(boolean){
+    return(ifelse(nrow(seasons_list)>0, TRUE, FALSE))
   } else {
-    return(FALSE)
+    if(nrow(seasons_list)>0){
+      return(seasons_list$seasonId)
+    } else {
+      return(FALSE)
+    }
   }
 }
 
 #' In Off Season
 #'
-#' @description Determine if we're currently in the off-season
+#' @description Determine if a provided date is in the off-season i.e. not in regular season or playoffs
 #'
-#' @param date Date to check if it's in the (current) off season. Default today
+#' @param date Date to check if it's in any off season. Default today
 #'
 #' @return TRUE if we're in off-season, else FALSE
 #' @export
 inOffSeason <- function(date=Sys.Date()){
+  stopifnot(is.Date(date))
+  date<-as.Date(date)
   seasons<-nhlapi::nhl_seasons()
-  start<-seasons$regualrSeasonStartDate[nrow(seasons)]
-  end<-seasons$seasonEndDate[nrow(seasons)]
+  seasons_list<-seasons[seasons$seasonEndDate > date & seasons$regularSeasonStartDate < date, ]
+  return(ifelse(nrow(seasons_list)>0, FALSE, TRUE))
+}
 
-  if(date > end | date < start){
-    return(TRUE)
+#' In Playoffs
+#'
+#' @description check if the date is in a playoff period. Note: playoffs are considered from the day after the regular season ends.
+#'
+#' @param date Date to check if it's in a playoffs period
+#' @param boolean Whether to return a result as TRUE/FALSE (True) or to return the seasonID if the date is in a playoffs
+#'
+#' @return Either TRUE/FALSE or a seasonID/FALSE
+#' @export
+inPlayoffs <- function(date = Sys.Date(), boolean = TRUE){
+  stopifnot(is.Date(date))
+  date<-as.Date(date)
+  seasons<-nhlapi::nhl_seasons()
+  seasons_list<-seasons[as.Date(seasons$regularSeasonEndDate) <= date & as.Date(seasons$seasonEndDate) >= date, ]
+  if(boolean){
+    return(ifelse(nrow(seasons_list)>0, TRUE, FALSE))
   } else {
-    return(FALSE)
+    if(nrow(seasons_list)>0){
+      return(seasons_list$seasonId)
+    } else {
+      return(FALSE)
+    }
+  }
+}
+
+#' Get Season from Game Date
+#'
+#' @param gamedate The date of the game to check for season
+#'
+#' @return a character season id (e.g. 20172018)
+#' @export
+getSeason <- function(gamedate=Sys.Date()){
+  stopifnot(is.Date(gamedate))
+  seasons<-nhlapi::nhl_seasons()
+  gs<-function(gd, seasons){
+    gd<-as.Date(gd)
+    season_list<-seasons[seasons$regularSeasonStartDate<=gd & seasons$seasonEndDate >= gd, ]
+    if(nrow(season_list) == 1){
+      return(season_list$seasonId)
+    } else {
+      return(NULL)
+    }
+  }
+  vgs<-Vectorize(FUN = gs, vectorize.args = c('gd'))
+
+
+  if(length(gamedate) == 1){
+    return(gs(gd = gamedate, seasons = seasons))
+  } else if (length(gamedate) > 1) {
+    return(unname(vgs(gd = gamedate, seasons = seasons)))
   }
 }

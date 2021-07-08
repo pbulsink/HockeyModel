@@ -160,15 +160,17 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 #' @export
 dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay = 60*10, ...){
 
+  if(inOffSeason()){
+    if(getSeasonStartDate()-Sys.Date() > 7 | getSeasonStartDate() - Sys.Date() < 0){
+      stop("Offseason")
+    }
+  }
   modelparams<-updateModel(...)
   sc<-modelparams$schedule
 
   if(Sys.Date() > max(sc$Date)){
     stop('No future games planned')
   }
-
-  modelparams<-updateModel(...)
-  in_reg_season<-nrow(sc[sc$Date >= Sys.Date() & sc$GameType == "R",])>0
 
   if(!dir.exists(graphic_dir)){
     dir.create(graphic_dir, recursive = TRUE)
@@ -190,7 +192,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     today_table <- daily_odds_table(rho=modelparams$rho, m = modelparams$m, schedule = modelparams$schedule)
     gt::gtsave(today_table, filename = file.path(graphic_dir, 'today_odds_table.png'))
   }
-  if(in_reg_season){
+  if(inRegularSeason()){
     updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule)
     playoff <- playoffOdds()
     president <- presidentOdds()
@@ -240,31 +242,33 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], m = modelparams$m, rho = modelparams$rho, graphic_dir = graphic_dir, token = token, delay=delay)
 
-  if(as.numeric(format(Sys.Date(), "%m")) %in% c(3,4) & in_reg_season){
+  if(as.numeric(format(Sys.Date(), "%m")) %in% c(3,4) & inRegularSeason()){
     tweetPlayoffOdds(token = token, graphic_dir = graphic_dir)
 
     #until Rtweet has scheduler
     message("Delaying ", delay/2, " seconds to space tweets...")
     Sys.sleep(delay/2)
-  } else if (!in_reg_season){
+  } else if (inPlayoffs()){
     tweetPlayoffOdds(token=token, graphic_dir = graphic_dir, trimcup = TRUE)
   }
 
-  if(as.numeric(format(Sys.Date(), "%d")) == 1 & in_reg_season){
+  if(as.numeric(format(Sys.Date(), "%w")) == 1 & inRegularSeason()){
+    #On monday post pace plots
     tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
   }
 
-  if(as.numeric(format(Sys.Date(), "%w")) == 0 & in_reg_season) {
+  if(as.numeric(format(Sys.Date(), "%w")) == 0 & inRegularSeason()) {
     #On Sunday post metrics
     tweetMetrics(token = token)
   }
 
-  if(as.numeric(format(Sys.Date(), "%w")) == 2 & in_reg_season) {
+  if(as.numeric(format(Sys.Date(), "%w")) == 2 & inRegularSeason()) {
     #On Tuesday post expected points (likelihood)
     tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
   }
 
-  if(!in_reg_season){
+  series<-getAPISeries()
+  if(nrow(series[series$Status == "Ongoing", ]) > 0){  # TODO: Watch next spring to see if this goes ok
     tweetSeries(graphic_dir = graphic_dir, token=token)
     Sys.sleep(delay)
   }

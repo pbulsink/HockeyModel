@@ -2,16 +2,18 @@
 % Please edit documentation in R/api-interface.R
 \name{inRegularSeason}
 \alias{inRegularSeason}
-\title{inRegularSeason}
+\title{In Regular Season}
 \usage{
-inRegularSeason(date = Sys.Date())
+inRegularSeason(date = Sys.Date(), boolean = TRUE)
 }
 \arguments{
-\item{date}{Date to check if it's in the most recent season. Default today}
+\item{date}{Date to check if it's in a season}
+
+\item{boolean}{Whether to return a result as TRUE/FALSE (True) or to return the seasonID if the date is in a season}
 }
 \value{
-TRUE if currently in regular season, else FALSE
+Either TRUE/FALSE or a seasonID/FALSE
 }
 \description{
-Determine if we're currently in Regular Season
+In Regular Season
 }

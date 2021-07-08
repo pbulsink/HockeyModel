@@ -7,11 +7,11 @@
 inOffSeason(date = Sys.Date())
 }
 \arguments{
-\item{date}{Date to check if it's in the (current) off season. Default today}
+\item{date}{Date to check if it's in any off season. Default today}
 }
 \value{
 TRUE if we're in off-season, else FALSE
 }
 \description{
-Determine if we're currently in the off-season
+Determine if a provided date is in the off-season i.e. not in regular season or playoffs
 }
