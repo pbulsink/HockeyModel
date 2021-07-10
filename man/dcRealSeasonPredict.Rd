@@ -17,7 +17,7 @@ dcRealSeasonPredict(
 \arguments{
 \item{nsims}{number of simulations}
 
-\item{scores}{hisotircal scores}
+\item{scores}{historical scores}
 
 \item{schedule}{schedule this season}
 

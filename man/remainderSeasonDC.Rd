@@ -19,7 +19,7 @@ remainderSeasonDC(
 
 \item{scores}{the historical scores}
 
-\item{schedule}{uplayed future games}
+\item{schedule}{un-played future games}
 
 \item{odds}{whether to return odds table or simulate season}
 
@@ -27,7 +27,7 @@ remainderSeasonDC(
 
 \item{mu_lambda}{whether to return team mu/lambda values. Can't be set true if odds is true}
 
-\item{...}{arguements to pass to dc predictor}
+\item{...}{arguments to pass to dc predictor}
 }
 \value{
 data frame of Team, playoff odds.

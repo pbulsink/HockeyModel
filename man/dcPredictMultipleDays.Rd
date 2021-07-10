@@ -20,7 +20,7 @@ dcPredictMultipleDays(
 
 \item{scores}{HockeyModel::scores}
 
-\item{schedule}{hockeyModel::schedule}
+\item{schedule}{HockeyModel::schedule}
 
 \item{filedir}{Where to save prediction files.}
 

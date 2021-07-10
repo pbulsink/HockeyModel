@@ -11,12 +11,12 @@ tau(xx, yy, lambda, mu, rho)
 
 \item{yy}{Home Goal value for adjustment factor calculation}
 
-\item{lambda}{Home goal expected for adjustment factor calcuation}
+\item{lambda}{Home goal expected for adjustment factor calculation}
 
 \item{mu}{Away Goal expected for adjustment factor calculation}
 
 \item{rho}{the factor for adjustment calculations}
 }
 \description{
-Used in dixon coles to adjust low scores
+Used in Dixon-Coles's to adjust low scores
 }

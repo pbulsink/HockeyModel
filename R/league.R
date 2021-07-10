@@ -1089,3 +1089,72 @@ getAllHomeAwayOdds<-function(teamlist, m = HockeyModel::m, rho = HockeyModel::rh
   homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) playoffWin(x[1], x[2], m = m, rho = rho))
   return(homeAwayOdds)
 }
+
+
+#' Record Today's Predictions
+#'
+#' @description Record today's predictions to file (for easy later retrieval). Run \code{cleanupPredictionsFile} periodically to tidy
+#'
+#' @param today Day's predictions to record. Defaults to today, but can set any other day
+#' @param file csv file location to store predictions. Will append to file.
+#' @param schedule HockeyModel::schedule or supplied. \code{today} date must be in schedule
+#' @param rho HockeyModel::rho or supplied
+#' @param m HockeyModel::m or supplied
+#'
+#' @return NULL
+#' @export
+recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.csv", schedule=HockeyModel::schedule, rho=HockeyModel::rho, m=HockeyModel::m){
+  stopifnot(is.Date(today))
+  today<-as.Date(today)
+  today_sched<-schedule[schedule$Date == today,]
+  if(nrow(today_sched) == 0){
+    stop("No games on date:", today)
+  }
+  today_preds<-todayDC(today = today, rho = rho, m = m, schedule = schedule)
+  preds<-dplyr::full_join(today_sched, today_preds, suffix=c("",""), by = c("HomeTeam", "AwayTeam"))
+  preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw")]
+
+  write.table(preds, file="./data-raw/dailyodds.csv", append = TRUE, col.names = FALSE, row.names = FALSE, sep=",", dec=".")
+}
+
+#' Cleanup Predictions File
+#'
+#' @description Sometimes the predictions file may end up with game duplicates (last minute postponements, etc,) This deduplicates, taking only the latest instance of a prediction (Games are unique by GameID)
+#'
+#' @param file file path to cleanup
+#'
+#' @return NULL
+#' @export
+cleanupPredictionsFile<-function(file="./data-raw/dailyodds.csv"){
+  dailyodds<-read.csv(file)
+  dailyodds<-dailyodds %>%
+    dplyr::arrange(desc(.data$Date)) %>%
+    dplyr::distinct(.data$GameID, keep_all=TRUE) %>%
+    dplyr::arrange(.data$Date, .data$GameID)
+  write.table(dailyodds, file=file, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
+}
+
+build_past_predictions<-function(startDate, endDate, file="./data-raw/dailyodds.csv"){
+  stopifnot(is.Date(startDate))
+  stopifnot(is.Date(endDate))
+  startDate<-as.Date(startDate)
+  endDate<-as.Date(endDate)
+  scores<-HockeyModel::scores
+  schedule<-HockeyModel::schedule
+
+  for(day in seq.Date(startDate, endDate, by=1)){
+    d<-as.Date(day, origin="1970-01-01")
+    if(nrow(schedule[schedule$Date == d,]) == 0){
+      next  # no games that day, just skip it.
+    }
+    message('Results as of: ', d)
+    score<-scores[scores$Date < day,]
+    score<-score[score$Date > (as.Date(startDate) - 4000),]  # only feed in ~ 11 years data to calculate m & rho
+    sched<-schedule[schedule$Date == d,]
+    m.day<-getM(scores = score, currentDate = d)
+    rho.day<-getRho(m = m.day, scores = score)
+
+    recordTodaysPredictions(today=d, file=file, schedule = sched, rho = rho.day, m=m.day)
+  }
+  return(TRUE)
+}

@@ -7,8 +7,8 @@
 #'
 #' @export
 updateModel <- function(...){
-  scores<-updateScoresAPI(save_data = TRUE)
   schedule<-updateScheduleAPI(save_data = TRUE)
+  scores<-updateScoresAPI(save_data = TRUE, schedule = schedule)
   dcparams<-updateDC(scores = scores)
   return(list(scores = scores, schedule = schedule, m = dcparams$m, rho = dcparams$rho))
 }

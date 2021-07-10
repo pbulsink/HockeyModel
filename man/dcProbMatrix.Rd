@@ -2,7 +2,7 @@
 % Please edit documentation in R/dixon-coles.R
 \name{dcProbMatrix}
 \alias{dcProbMatrix}
-\title{Generate the Dixon-Coles Probability Matrix}
+\title{Generate the Dixon-Coles' Probability Matrix}
 \usage{
 dcProbMatrix(
   home,
@@ -33,8 +33,8 @@ dcProbMatrix(
 \item{season_percent}{the percent complete of the season, used for regression}
 }
 \value{
-a squar matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
+a square matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
 }
 \description{
-Generate the Dixon-Coles Probability Matrix
+Generate the Dixon-Coles' Probability Matrix
 }

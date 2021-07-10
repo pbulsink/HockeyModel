@@ -39,5 +39,5 @@ DCPredict(
 a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
 }
 \description{
-Using Dixon Coles technique, predict odds each of home win, draw, and away win.
+Using Dixon-Coles' technique, predict odds each of home win, draw, and away win.
 }

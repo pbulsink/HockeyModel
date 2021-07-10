@@ -6,18 +6,20 @@
 #'
 #' @param scores scores, if not then data(scores)
 #'
+#' @return NULL
+#'
 #' @export
 updateDC <- function(scores = HockeyModel::scores){
-  scoresdc<-scores[scores$Date > as.Date("2008-08-01"),]
+  #scoresdc<-scores[scores$Date > as.Date("2008-08-01"),]
   message('Calculating new model parameters...')
   m <- getM(scores=scoresdc)
   message('Solving for low scoring games...')
-  rho <- getRho(m = m, scores = scoresdc)
+  rho <- getRho(m = m, scores = scores)
   suppressMessages(usethis::use_data(m, rho, overwrite = TRUE))
   return(list(m = m, rho=rho))
 }
 
-#' Produce a plot of each team's offence and defence scores
+#' Produce a plot of each team's offence and defense scores
 #'
 #' @param m m from data(m)
 #' @param teamlist Teams to plot.
@@ -115,7 +117,7 @@ playoffDC <- function(home, away, rho=HockeyModel::rho, m = HockeyModel::m, home
 #' DC Simulate season with reevaluation every n days
 #'
 #' @param nsims number of simulations
-#' @param scores hisotircal scores
+#' @param scores historical scores
 #' @param schedule schedule this season
 #' @param cores number of cores to process
 #' @param ndays number of days of games to play before reevaluating m
@@ -301,11 +303,11 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
 #'
 #' @param nsims Number of simulations
 #' @param scores the historical scores
-#' @param schedule uplayed future games
+#' @param schedule un-played future games
 #' @param odds whether to return odds table or simulate season
 #' @param regress whether to apply a regression to the mean for team strength on future predictions
 #' @param mu_lambda whether to return team mu/lambda values. Can't be set true if odds is true
-#' @param ... arguements to pass to dc predictor
+#' @param ... arguments to pass to dc predictor
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
@@ -393,24 +395,24 @@ remainderSeasonDC <- function(nsims=1e4, scores = HockeyModel::scores, schedule 
 
 tau_singular <- function(xx, yy, lambda, mu, rho) {
   if (xx == 0 & yy == 0) {
-    return(max(1e-1, 1 - (lambda * mu * rho)))
+    return(1 - (lambda * mu * rho))
   } else if (xx == 0 & yy == 1) {
-    return(max(1e-1, 1 + (lambda * rho)))
+    return(1 + (lambda * rho))
   } else if (xx == 1 & yy == 0) {
-    return(max(1e-1, 1 + (mu * rho)))
+    return(1 + (mu * rho))
   } else if (xx == 1 & yy == 1) {
-    return(max(1e-1, 1 - rho))
+    return(1 - rho)
   } else {
     return(1)
   }
 }
 
 #' Tau function
-#' @description Used in dixon coles to adjust low scores
+#' @description Used in Dixon-Coles's to adjust low scores
 #'
 #' @param xx Away Goal value for adjustment factor calculation
 #' @param yy Home Goal value for adjustment factor calculation
-#' @param lambda Home goal expected for adjustment factor calcuation
+#' @param lambda Home goal expected for adjustment factor calculation
 #' @param mu Away Goal expected for adjustment factor calculation
 #' @param rho the factor for adjustment calculations
 #'
@@ -423,13 +425,18 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 #'
 #' @param scores the historical scores to evaluate
 #' @param currentDate (for date weight adjustment)
-#' @param xi agressiveness of date weighting
+#' @param xi aggressiveness of date weighting
 #'
 #' @export
-#' @return a model 'm' of dixon coles type parameters.
+#' @return a model 'm' of Dixon-Coles' type parameters.
 getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.00426) {
+  stopifnot(is.Date(currentDate))
+  currentDate<-as.Date(currentDate)
+
+  scores<-scores[scores$Date>=(currentDate-4000),] #auto-trim to 11 years of data
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
+    GameID = c(scores$GameID, scores$GameID),
     Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi)),
     Team = as.factor(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))),
     Opponent = as.factor(c(as.character(scores$AwayTeam), as.character(scores$HomeTeam))),
@@ -458,8 +465,9 @@ getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.0042
 #' @export
 getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
   if (is.null(m)){
-    getM(scores)
+    m<-getM(scores)
   }
+  scores<-scores[scores$GameID %in% unique(m$data$GameID),]
   expected <- stats::fitted(m)
   home.expected <- as.vector(expected[1:nrow(scores)])
   away.expected <- as.vector(expected[(nrow(scores) + 1):(nrow(scores) * 2)])
@@ -481,7 +489,7 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
 
 #' DC Predict home/draw/away win
 #'
-#' @description Using Dixon Coles technique, predict odds each of home win, draw, and away win.
+#' @description Using Dixon-Coles' technique, predict odds each of home win, draw, and away win.
 #'
 #' @param m result from getM
 #' @param rho rho from getRho
@@ -502,7 +510,7 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
   DrawProbability <- sum(diag(probability_matrix))
   AwayWinProbability <- sum(probability_matrix[upper.tri(probability_matrix)])
 
-  #Simple Adjust for underpredicting odds
+  #Simple Adjust for under-predicting odds
   HomeWinProbability <- HomeWinProbability * (0.43469786 / 0.4558628)
   AwayWinProbability <- AwayWinProbability * (0.33333333 / 0.3597192)
   DrawProbability <- DrawProbability * (0.2319688 / 0.1755118)
@@ -516,7 +524,7 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
   return(odds)
 }
 
-#' Generate the Dixon-Coles Probability Matrix
+#' Generate the Dixon-Coles' Probability Matrix
 #'
 #' @param m result from getM
 #' @param rho rho from getRho
@@ -527,7 +535,7 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
 #'
-#' @return a squar matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
+#' @return a square matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
 dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
   if(is.null(m)){
     m <- getM(scores = scores)
@@ -688,7 +696,7 @@ cleanModel <- function(cm) {
   cm$weights <- c()
   cm$prior.weights <- c()
 
-  cm
+  return(cm)
 }
 
 DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyModel::m){
@@ -735,7 +743,7 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #' @param start First day to predict. Default start of season
 #' @param end Last day to predict. Default today
 #' @param scores HockeyModel::scores
-#' @param schedule hockeyModel::schedule
+#' @param schedule HockeyModel::schedule
 #' @param filedir Where to save prediction files.
 #' @param ... Additional parameters to pass to dcRealSeasonPredict
 #'
@@ -839,6 +847,9 @@ getSeasonMetricsDC<-function(schedule = HockeyModel::schedule, scores = HockeyMo
 #' @return a data frame like HockeyModel::schedule with HomeWin, AwayWin and Draw odds
 #' @export
 predictMultipleDaysResultsDC <- function(startDate, endDate, schedule = HockeyModel::schedule, scores = HockeyModel::scores){
+  stopifnot(is.Date(startDate))
+  stopifnot(is.Date(endDate))
+
   sched<-schedule[schedule$Date >= as.Date(startDate) & schedule$Date <= as.Date(endDate), ]
 
   for (day in unique(sched$Date)) {
