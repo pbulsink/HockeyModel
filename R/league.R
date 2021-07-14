@@ -1128,8 +1128,9 @@ recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.c
 cleanupPredictionsFile<-function(file="./data-raw/dailyodds.csv"){
   dailyodds<-read.csv(file)
   dailyodds<-dailyodds %>%
-    dplyr::arrange(desc(.data$Date)) %>%
-    dplyr::distinct(.data$GameID, keep_all=TRUE) %>%
+    dplyr::mutate("Date" = as.Date(.data$Date)) %>%
+    dplyr::arrange(dplyr::desc(.data$Date)) %>%
+    dplyr::distinct(.data$GameID, .keep_all=TRUE) %>%
     dplyr::arrange(.data$Date, .data$GameID)
   write.table(dailyodds, file=file, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
 }
