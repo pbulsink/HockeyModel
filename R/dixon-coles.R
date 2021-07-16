@@ -562,6 +562,23 @@ dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, m
     mu <- mu * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
   }
 
+  probability_matrix<-prob_matrix(lambda=lambda, mu=mu, rho=rho, theta=theta, maxgoal=maxgoal)
+
+  return(probability_matrix)
+}
+
+#' Probability Matrix
+#'
+#' @description Given a mu, lambda, rho, and theta, generate a probability matrix. Differs from dcProbMatrix in that no regresson or solving for supplied teams happens
+#'
+#' @param lambda home lambda
+#' @param mu away mu
+#' @param rho low score adjustment
+#' @param theta tie game adjustment
+#' @param maxgoal max goals per game
+#'
+#' @return a square matrix of maxgoal:maxgoal
+prob_matrix<-function(lambda, mu, rho, theta, maxgoal){
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
 
   scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
@@ -629,10 +646,7 @@ dcSample<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgo
 #' @return a result from 0 to 1 corresponding to \link{scores} results
 dcResult<-function(lambda, mu, rho = HockeyModel::rho, maxgoal=10){
   dcr<-function(lambda, mu, rho, maxgoal){
-    pm <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
-
-    scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
-    pm[1:2, 1:2] <- pm[1:2, 1:2] * scaling_matrix
+    pm <- prob_matrix(lambda=lambda, mu=mu, rho=rho, theta=theta, maxgoal=maxgoal)
 
     goals<-as.vector(arrayInd(sample(1:length(pm), size = 1, prob = pm), .dim = dim(pm)))-1
 
