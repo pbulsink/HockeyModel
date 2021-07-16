@@ -84,6 +84,13 @@
 #' @format a single numerical value
 "rho"
 
+#' Theta
+#'
+#' Theta for adjustment of tie games in the model
+#'
+#' @format a single numerical value
+"theta"
+
 #' Team Colours
 #' Hex and RGB team colours (primary & secondary where applicable), and path to team logos
 #'

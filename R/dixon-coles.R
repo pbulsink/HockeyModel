@@ -214,12 +214,7 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
         mu <- mu * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
       }
 
-      #Another new goal prediction method by poisson & d/c handling of low scores:
-      probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
-
-
-      scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
-      probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
+      probability_matrix <- prob_matrix(lambda = lambda, mu = mu, rho = rho, theta = theta, maxgoal=maxgoal)
 
       goals<-data.frame(Goals = c(0:maxgoal), Home = 0, Away = 0)
 
@@ -487,6 +482,13 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
   #of course, res$par is rho. Ranges from -0.2779 for last decade, -0.175 for 20152016 or 0.09 fo the whole league's history
 }
 
+
+getTheta <- function(){
+  theta<-NULL
+  return(theta)
+}
+
+
 #' DC Predict home/draw/away win
 #'
 #' @description Using Dixon-Coles' technique, predict odds each of home win, draw, and away win.
@@ -511,6 +513,7 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
   AwayWinProbability <- sum(probability_matrix[upper.tri(probability_matrix)])
 
   #Simple Adjust for under-predicting odds
+  #TODO Fix it: add draw parameter to model
   HomeWinProbability <- HomeWinProbability * (0.43469786 / 0.4558628)
   AwayWinProbability <- AwayWinProbability * (0.33333333 / 0.3597192)
   DrawProbability <- DrawProbability * (0.2319688 / 0.1755118)
@@ -536,12 +539,15 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
 #' @param season_percent the percent complete of the season, used for regression
 #'
 #' @return a square matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
-dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
+dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, thata = HockeyModel::theta, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
   if(is.null(m)){
     m <- getM(scores = scores)
   }
   if(is.null(rho)){
     rho <- getRho(m=m, scores=scores)
+  }
+  if(is.null(theta)){
+    theta <- getTheta(m=m, scores=scores)
   }
 
   # Expected goals home
@@ -583,6 +589,10 @@ prob_matrix<-function(lambda, mu, rho, theta, maxgoal){
 
   scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
   probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
+
+  probability_matrix[3,3]<-probability_matrix[3,3]*theta
+  probability_matrix[4,4]<-probability_matrix[4,4]*theta
+
   return(probability_matrix)
 }
 
@@ -644,8 +654,8 @@ dcSample<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgo
 #' @param maxgoal max goals predicable per game, default 10
 #'
 #' @return a result from 0 to 1 corresponding to \link{scores} results
-dcResult<-function(lambda, mu, rho = HockeyModel::rho, maxgoal=10){
-  dcr<-function(lambda, mu, rho, maxgoal){
+dcResult<-function(lambda, mu, rho = HockeyModel::rho, theta = HockeyModel::theta, maxgoal=10){
+  dcr<-function(lambda, mu, rho, theta, maxgoal){
     pm <- prob_matrix(lambda=lambda, mu=mu, rho=rho, theta=theta, maxgoal=maxgoal)
 
     goals<-as.vector(arrayInd(sample(1:length(pm), size = 1, prob = pm), .dim = dim(pm)))-1
@@ -664,9 +674,9 @@ dcResult<-function(lambda, mu, rho = HockeyModel::rho, maxgoal=10){
   v_dcr<-Vectorize(dcr, c('lambda', 'mu'))
 
   if(length(lambda) == 1){
-    return(dcr(lambda, mu, rho, maxgoal))
+    return(dcr(lambda, mu, rho, theta, maxgoal))
   } else {
-    return(as.vector(v_dcr(lambda, mu, rho, maxgoal)))
+    return(as.vector(v_dcr(lambda, mu, rho, theta, maxgoal)))
   }
 }
 
