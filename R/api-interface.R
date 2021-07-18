@@ -9,6 +9,9 @@
 #'
 #' @seealso See [nhlapi::nhl_schedule_seasons()] for alternative schedule requests, and [nhlapi::nhl_games()] for more information on GameID
 getNHLSchedule<-function(season=getSeason()){
+  if(is.null(season)){
+    season<-tail(nhlapi::nhl_seasons()$seasonId, 1)
+  }
   sched<-nhlapi::nhl_schedule_seasons(season)
   if(length(sched) == 0){
     # there was an error
@@ -93,13 +96,20 @@ games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games
 #' @return data frame of schedule, after optionally writing to package data
 #' @export
 updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE){
-  sched<-getNHLSchedule(getSeason())
+  currentSeason<-getSeason()
+  if(is.null(currentSeason)){
+    currentSeason<-tail(nhlapi::nhl_seasons()$seasonId, 1)
+  }
+  sched<-getNHLSchedule(currentSeason)
   stopifnot(!is.null(sched))
   gameIDs<-sched$GameID
   schedule<-schedule %>%
     dplyr::filter(!(.data$GameID %in% gameIDs)) %>%
     dplyr::bind_rows(sched) %>%
     dplyr::arrange(.data$Date, dplyr::desc(.data$GameState), .data$GameID)
+
+  schedule<-removeUnscheduledGames(schedule = schedule)
+
   if(save_data){
     suppressMessages(usethis::use_data(schedule, overwrite=TRUE))
   }
@@ -147,6 +157,20 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
                     "GameType" = schedule[schedule$GameID == g, ]$GameType,
                     "GameStatus" = sc[[1]]$currentPeriodTimeRemaining)
         scores<-rbind(scores, dfs)
+      } else if (sc[[1]]$currentPeriodTimeRemaining == "20:00" & sc[[1]]$currentPeriod == 1){
+        #MAYBE the game is cancelled?
+        #get the schedule's date for this game:
+        d<-schedule[schedule$GameID == g, ]$Date
+        #Check the NHL API for this game on that date
+        newsched<-processNHLSchedule(nhlapi::nhl_schedule_date_range(startDate = d, endDate = d), progress = FALSE)
+        if(!(g %in% newsched$GameID)){
+          #This game isn't in the schedule anymore. Schedule is out of date.
+          warning("Game ", g, " no longer scheduled.")
+          next
+        }
+      } else {
+        warning("Game ", g, " not in final state, instead showing ", sc[[1]]$currentPeriodTimeRemaining)
+        next
       }
     }
     if(progress){
@@ -170,6 +194,38 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
   return(scores)
 }
 
+
+#' Remove Unscheduled Games
+#'
+#' @description Sometimes games are scheduled then not played (e.g. unneeded games in playoff series, etc.)
+#'
+#' @param schedule the schedule to check for unscheduled games
+#'
+#' @return a schedule with unscheduled games removed
+#' @export
+removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE){
+  unsched<-schedule[schedule$GameState != "Final" & schedule$Date < Sys.Date(),]
+  removedGames<-c()
+  for(g in unsched$GameID){
+    d<-unsched[unsched$GameID == g, ]$Date
+
+    sched<-nhlapi::nhl_schedule_date_range(startDate = d, endDate = d)
+
+    checksched<-processNHLSchedule(sched)
+    if(!(g %in% checksched$GameID)){
+      #Game is removed
+      removedGames <- c(removedGames, g)
+    }
+  }
+
+  schedule<-schedule[!(schedule$GameID %in% removedGames), ]
+
+  if(save_data){
+    usethis::use_data(schedule, overwrite = TRUE)
+  }
+
+  return(schedule)
+}
 
 #' Update past scores using the NHL API
 #'
