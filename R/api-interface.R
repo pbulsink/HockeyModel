@@ -10,7 +10,7 @@
 #' @seealso See [nhlapi::nhl_schedule_seasons()] for alternative schedule requests, and [nhlapi::nhl_games()] for more information on GameID
 getNHLSchedule<-function(season=getSeason()){
   if(is.null(season)){
-    season<-tail(nhlapi::nhl_seasons()$seasonId, 1)
+    season<-utils::tail(nhlapi::nhl_seasons()$seasonId, 1)
   }
   sched<-nhlapi::nhl_schedule_seasons(season)
   if(length(sched) == 0){
@@ -98,7 +98,7 @@ games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games
 updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE){
   currentSeason<-getSeason()
   if(is.null(currentSeason)){
-    currentSeason<-tail(nhlapi::nhl_seasons()$seasonId, 1)
+    currentSeason<-utils::tail(nhlapi::nhl_seasons()$seasonId, 1)
   }
   sched<-getNHLSchedule(currentSeason)
   stopifnot(!is.null(sched))
@@ -200,6 +200,7 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
 #' @description Sometimes games are scheduled then not played (e.g. unneeded games in playoff series, etc.)
 #'
 #' @param schedule the schedule to check for unscheduled games
+#' @param save_data whether to save the cleaned schedule to package or not. Default False
 #'
 #' @return a schedule with unscheduled games removed
 #' @export
@@ -350,7 +351,7 @@ getSeasonStartDate<-function(season=NULL){
       stop("Season not found: ", season)
     }
   } else {
-    return(as.Date(tail(seasons$regularSeasonStartDate, 1)))
+    return(as.Date(utils::tail(seasons$regularSeasonStartDate, 1)))
   }
 }
 
@@ -361,7 +362,7 @@ getSeasonStartDate<-function(season=NULL){
 #' @export
 getCurrentSeason8 <- function(){
   seasons<-nhlapi::nhl_seasons()
-  return(tail(seasons$seasonId, 1))
+  return(utils::tail(seasons$seasonId, 1))
 }
 
 
@@ -380,7 +381,7 @@ getSeasonEndDate<-function(season=NULL){
       stop("Season not found: ", season)
     }
   } else {
-    return(as.Date(tail(seasons$seasonEndDate, 1)))
+    return(as.Date(utils::tail(seasons$seasonEndDate, 1)))
   }
 }
 

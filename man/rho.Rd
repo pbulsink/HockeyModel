@@ -11,6 +11,6 @@ a single numerical value
 rho
 }
 \description{
-Rho for low score correction to Dixon Coles
+Rho for low score correction to Dixon Coles. Should be around -0.25
 }
 \keyword{datasets}

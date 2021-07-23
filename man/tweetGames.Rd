@@ -5,13 +5,14 @@
 \title{Tweet Game Plots}
 \usage{
 tweetGames(
-  games = HockeyModel::schedule[HockeyModel::schedule$Date == Sys.Date(), ],
-  delay = 60 * 10,
+  games = games_today(),
+  delay = stats::runif(1, min = 4, max = 8) * 60,
   graphic_dir = "./prediction_results/graphics/",
   m = HockeyModel::m,
   rho = HockeyModel::rho,
-  token = rtweet::get_token(),
-  teamColours = HockeyModel::teamColours
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma,
+  token = rtweet::get_token()
 )
 }
 \arguments{
@@ -25,9 +26,11 @@ tweetGames(
 
 \item{rho}{HockeyModel::rho or a custom value}
 
-\item{token}{the token for rtweet}
+\item{theta}{HockeyModel::theta or a custom value}
 
-\item{teamColours}{HockeyModel::teamColours or a custom value}
+\item{gamma}{HockeyModel::gamma or a custom value}
+
+\item{token}{the token for rtweet}
 }
 \description{
 Tweet Game Plots

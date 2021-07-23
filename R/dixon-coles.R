@@ -12,11 +12,15 @@
 updateDC <- function(scores = HockeyModel::scores){
   #scoresdc<-scores[scores$Date > as.Date("2008-08-01"),]
   message('Calculating new model parameters...')
-  m <- getM(scores=scoresdc)
+  m <- getM(scores=scores)
   message('Solving for low scoring games...')
   rho <- getRho(m = m, scores = scores)
-  suppressMessages(usethis::use_data(m, rho, overwrite = TRUE))
-  return(list(m = m, rho=rho))
+  message('Enhancing Tie Games')
+  t<- getTheta(m = m, rho = rho, scores = scores)
+  theta<-t$theta
+  gamma<-t$gamma
+  suppressMessages(usethis::use_data(m, rho, theta, gamma, overwrite = TRUE))
+  return(list("m" = m, "rho"=rho, "theta" = theta, "gamma" = gamma))
 }
 
 #' Produce a plot of each team's offence and defense scores
@@ -64,13 +68,15 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
 #' @param today Generate predictions for this date. Defaults to today
 #' @param rho DC Rho
 #' @param m DC m
-#' @param schedule shcedule to use, if not the builtin
+#' @param theta DC theta
+#' @param gamma DC gamma
+#' @param schedule schedule to use, if not the built-in
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
 #' @export
-todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL){
+todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma, schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL){
   games<-schedule[schedule$Date == today, ]
   if(nrow(games) == 0){
     return(NULL)
@@ -80,7 +86,7 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
                     HomeWin=0, AwayWin = 0, Draw = 0,
                     stringsAsFactors = FALSE)
   for(i in 1:nrow(preds)){
-    p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], m=m, rho=rho, expected_mean=expected_mean, season_percent=season_percent)
+    p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], m=m, rho=rho, theta = theta, gamma = gamma, expected_mean=expected_mean, season_percent=season_percent)
     preds$HomeWin[[i]]<-p[[1]]
     preds$AwayWin[[i]]<-p[[3]]
     preds$Draw[[i]]<-p[[2]]
@@ -96,17 +102,19 @@ todayDC <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m
 #' @param away Away (Opponent) Team Name
 #' @param rho HockeyModel::rho
 #' @param m HockeyModel::m
+#' @param theta HockeyModel::theta
+#' @param gamma HockeyModel::gamma
 #' @param home_wins Number of wins for home ice advantage team thus far in series
 #' @param away_wins Number of wins for away team thus far in series
 #'
 #' @return home ice advantage team odds to win series
 #' @export
-playoffDC <- function(home, away, rho=HockeyModel::rho, m = HockeyModel::m, home_wins = 0, away_wins = 0){
+playoffDC <- function(home, away, rho=HockeyModel::rho, m = HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma, home_wins = 0, away_wins = 0){
   #Odds of home ice advantage team win at home
-  homeodds<-DCPredict(home=home, away=away, m=m, rho=rho)
+  homeodds<-DCPredict(home=home, away=away, m=m, rho=rho, theta = theta, gamma = gamma)
   homeodds<-normalizeOdds(c(homeodds[1], homeodds[3]))[1]
   #Odds of home ice advantage team win away
-  awayodds<-DCPredict(home=away, away=home, m=m, rho=rho)
+  awayodds<-DCPredict(home=away, away=home, m=m, rho=rho, theta = theta, gamma = gamma)
   awayodds<-normalizeOdds(c(awayodds[3], awayodds[1]))[1]
 
   homewin<-playoffSeriesOdds(homeodds, awayodds, home_wins, away_wins)
@@ -146,6 +154,8 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
   dc.m.ot <- getM(scores=dcscores.ot, currentDate = schedule$Date[[1]])
   dc.m.original <- getM(scores = dcscores, currentDate = schedule$Date[[1]])
   rho <- HockeyModel::rho
+  theta <- HockeyModel::theta
+  gamma <- HockeyModel::gamma
 
   if(regress){
     last_game_date<-as.Date(max(scores$Date))
@@ -214,7 +224,8 @@ dcRealSeasonPredict<-function(nsims=1e5, scores = HockeyModel::scores, schedule 
         mu <- mu * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
       }
 
-      probability_matrix <- prob_matrix(lambda = lambda, mu = mu, rho = rho, theta = theta, maxgoal=maxgoal)
+      #TODO Just call random result from the two teams...
+      probability_matrix <- prob_matrix(lambda = lambda, mu = mu, rho = rho, theta = theta, gamma = gamma, maxgoal=maxgoal)
 
       goals<-data.frame(Goals = c(0:maxgoal), Home = 0, Away = 0)
 
@@ -405,14 +416,15 @@ tau_singular <- function(xx, yy, lambda, mu, rho) {
 #' Tau function
 #' @description Used in Dixon-Coles's to adjust low scores
 #'
-#' @param xx Away Goal value for adjustment factor calculation
-#' @param yy Home Goal value for adjustment factor calculation
+#' @param xx Homeoal value for adjustment factor calculation
+#' @param yy Away Goal value for adjustment factor calculation
 #' @param lambda Home goal expected for adjustment factor calculation
 #' @param mu Away Goal expected for adjustment factor calculation
 #' @param rho the factor for adjustment calculations
 #'
 #' @export
 tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
+
 
 #' Fast Dixon-Coles model fitting 'm'.
 #'
@@ -470,7 +482,7 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
 
   DCoptimRhoFn.fast <- function(par) {
     rho <- par[1]
-    DClogLik(y1 = scores$HomeGoals, y2 = scores$AwayGoals, mu = home.expected, lambda = away.expected, rho = rho, weights = weights)
+    DCRhoLogLik(y1 = scores$HomeGoals, y2 = scores$AwayGoals, mu = home.expected, lambda = away.expected, rho = rho, weights = weights)
   }
 
   res <- stats::optim(par = c(-0.1),
@@ -483,9 +495,49 @@ getRho <- function(m = HockeyModel::m, scores=HockeyModel::scores) {
 }
 
 
-getTheta <- function(){
-  theta<-NULL
-  return(theta)
+#' Get Theta
+#'
+#' @description Theta is the diagonal enhancement for goals, helping to more accurately predict tie games, gamma is the multiplication factor
+#'
+#' @param m HockeyModel::m
+#' @param rho HockeyMoel::rho
+#' @param scores HockeyModel::scores
+#'
+#' @return a theta and gamma value as a list
+#' @export
+getTheta <- function(m=HockeyModel::m, rho=HockeyModel::rho, scores=HockeyModel::scores){
+  if(is.null(m)){
+    m<-getM(scores)
+  }
+  if(is.null(rho)){
+    rho<-getRho(m = m, scores=scores)
+  }
+  scores<-scores %>%
+    dplyr::filter(.data$GameID %in% unique(m$data$GameID)) %>%
+    dplyr::mutate('weight' = m$data$Weight[1:dplyr::n()],
+                  'mu' = stats::fitted(m)[1:dplyr::n()],
+                  'lambda' = stats::fitted(m)[(dplyr::n()+1):(dplyr::n()*2)])%>%
+    dplyr::mutate('Goals' = dplyr::case_when(.data$Result == 0.25 ~ .data$HomeGoals,
+                                             .data$Result == 0.4  ~ .data$HomeGoals,
+                                             .data$Result == 0.5  ~ .data$HomeGoals,
+                                             .data$Result == 0.6  ~ .data$AwayGoals,
+                                             .data$Result == 0.75 ~ .data$AwayGoals,
+                                             TRUE ~ NA_integer_))
+  DCoptimTheta.fast <- function(par) {
+    theta<-par[1]
+    gamma<-par[2]
+    #This gets multiplied by two because each tie game has 2 teams getting x goals, whereas non-tie games where either team get x goals get pulled in.
+    goalratios<-sapply(0:max(scores$Goals, na.rm = TRUE), FUN = function(x) (nrow(scores[scores$Goals == x & !is.na(scores$Goals),])/nrow(scores[!is.na(scores$Goals),]))/(nrow(scores[(scores$HomeGoals == x | scores$AwayGoals == x) & is.na(scores$Goals),])/nrow(scores[is.na(scores$Goals),])) ) * 2
+    poissondist<-stats::dpois(0:max(scores$Goals, na.rm = TRUE), theta)*gamma
+    return(sum((goalratios-poissondist)^2))
+  }
+
+  res<-stats::optim(par = c(2, 5),
+                    fn = DCoptimTheta.fast,
+                    #control = list(fnscale=-1),
+                    method="BFGS")
+
+  return(list('theta' = res$par[1], 'gamma'=res$par[2]))
 }
 
 
@@ -493,10 +545,12 @@ getTheta <- function(){
 #'
 #' @description Using Dixon-Coles' technique, predict odds each of home win, draw, and away win.
 #'
-#' @param m result from getM
-#' @param rho rho from getRho
 #' @param home home team
 #' @param away away team
+#' @param m result from getM
+#' @param rho rho from getRho
+#' @param theta theta from getTheta
+#' @param gamma gamma from getTheta
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
@@ -505,8 +559,8 @@ getTheta <- function(){
 #'
 #' @return a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
 #' @export
-DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, draws=TRUE) {
-  probability_matrix <- dcProbMatrix(home = home, away = away, m = m, rho = rho, maxgoal = maxgoal)
+DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, draws=TRUE) {
+  probability_matrix <- dcProbMatrix(home = home, away = away, m = m, rho = rho, theta = theta, gamma = gamma, maxgoal = maxgoal)
 
   HomeWinProbability <- sum(probability_matrix[lower.tri(probability_matrix)])
   DrawProbability <- sum(diag(probability_matrix))
@@ -514,9 +568,9 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
 
   #Simple Adjust for under-predicting odds
   #TODO Fix it: add draw parameter to model
-  HomeWinProbability <- HomeWinProbability * (0.43469786 / 0.4558628)
-  AwayWinProbability <- AwayWinProbability * (0.33333333 / 0.3597192)
-  DrawProbability <- DrawProbability * (0.2319688 / 0.1755118)
+  #HomeWinProbability <- HomeWinProbability * (0.43469786 / 0.4558628)
+  #AwayWinProbability <- AwayWinProbability * (0.33333333 / 0.3597192)
+  #DrawProbability <- DrawProbability * (0.2319688 / 0.1755118)
   odds <- normalizeOdds(c(HomeWinProbability, DrawProbability, AwayWinProbability))
 
   if(!draws){
@@ -529,25 +583,29 @@ DCPredict <- function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, ma
 
 #' Generate the Dixon-Coles' Probability Matrix
 #'
-#' @param m result from getM
-#' @param rho rho from getRho
 #' @param home home team
 #' @param away away team
+#' @param m result from getM
+#' @param rho rho from getRho
+#' @param theta theta from getTheta
+#' @param gamma from getTheta
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
 #'
 #' @return a square matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
-dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, thata = HockeyModel::theta, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
+dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
   if(is.null(m)){
     m <- getM(scores = scores)
   }
   if(is.null(rho)){
     rho <- getRho(m=m, scores=scores)
   }
-  if(is.null(theta)){
-    theta <- getTheta(m=m, scores=scores)
+  if(is.null(theta) | is.null(gamma)){
+    t <- getTheta(m=m, rho=rho, scores=scores)
+    gamma<-t$gamma
+    theta<-t$theta
   }
 
   # Expected goals home
@@ -568,7 +626,7 @@ dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, t
     mu <- mu * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
   }
 
-  probability_matrix<-prob_matrix(lambda=lambda, mu=mu, rho=rho, theta=theta, maxgoal=maxgoal)
+  probability_matrix<-prob_matrix(lambda=lambda, mu=mu, rho=rho, theta=theta, gamma=gamma, maxgoal=maxgoal)
 
   return(probability_matrix)
 }
@@ -581,17 +639,21 @@ dcProbMatrix<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, t
 #' @param mu away mu
 #' @param rho low score adjustment
 #' @param theta tie game adjustment
+#' @param gamma tie game multiplier
 #' @param maxgoal max goals per game
 #'
 #' @return a square matrix of maxgoal:maxgoal
-prob_matrix<-function(lambda, mu, rho, theta, maxgoal){
+prob_matrix<-function(lambda, mu, rho, theta, gamma, maxgoal){
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
 
   scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
   probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
 
-  probability_matrix[3,3]<-probability_matrix[3,3]*theta
-  probability_matrix[4,4]<-probability_matrix[4,4]*theta
+  for(d in 1:(maxgoal+1)){
+    probability_matrix[d,d]<-probability_matrix[d,d] * (stats::dpois(d, theta) * gamma)
+  }
+
+  probability_matrix <- probability_matrix/sum(probability_matrix)  # turn into a sum=1 matrix
 
   return(probability_matrix)
 }
@@ -601,10 +663,12 @@ prob_matrix<-function(lambda, mu, rho, theta, maxgoal){
 #'
 #' @description Get a random single game result using DC method. repeated running should give a new value each time
 #'
-#' @param m result from getM
-#' @param rho rho from getRho
 #' @param home home team
 #' @param away away team
+#' @param m result from getM
+#' @param rho rho from getRho
+#' @param theta theta from getTheta
+#' @param gamma gamma from getTheta
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
@@ -615,12 +679,13 @@ prob_matrix<-function(lambda, mu, rho, theta, maxgoal){
 #' @export
 #'
 #' @examples dcSample("Toronto Maple Leafs", "Montreal Canadiens")
-dcSample<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, as_result=TRUE){
-  pm <- dcProbMatrix(home = home, away = away, m = m, rho = rho, maxgoal = maxgoal)
+dcSample<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, theta=HockeyModel::theta, gamma=HockeyModel::gamma, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, as_result=TRUE){
+  pm <- dcProbMatrix(home = home, away = away, m = m, rho = rho, theta = theta, gamma = gamma, maxgoal = maxgoal)
 
   goals<-as.vector(arrayInd(sample(1:length(pm), size = 1, prob = pm), .dim = dim(pm)))-1
 
   if (goals[1] == goals[2]){
+    #TODO Verify OT/SO ratio and also verify if wniner is coin flip or stronger team has better chance?
     otstatus = sample(c("OT", "SO"), size = 1, prob = c(0.6858606, 0.3141394))
     otwinner = sample(c("Home", "Away"), size = 1, prob = c(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)])))
     if(otwinner == "Home"){
@@ -651,12 +716,14 @@ dcSample<-function(home, away, m = HockeyModel::m, rho = HockeyModel::rho, maxgo
 #' @param lambda home team lambda
 #' @param mu away team mu
 #' @param rho HockeyModel::rho
+#' @param theta HockeyModel::theta
+#' @param gamma HockeyModel::gamma
 #' @param maxgoal max goals predicable per game, default 10
 #'
 #' @return a result from 0 to 1 corresponding to \link{scores} results
-dcResult<-function(lambda, mu, rho = HockeyModel::rho, theta = HockeyModel::theta, maxgoal=10){
+dcResult<-function(lambda, mu, rho = HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma, maxgoal=10){
   dcr<-function(lambda, mu, rho, theta, maxgoal){
-    pm <- prob_matrix(lambda=lambda, mu=mu, rho=rho, theta=theta, maxgoal=maxgoal)
+    pm <- prob_matrix(lambda=lambda, mu=mu, rho=rho, theta=theta, gamma=gamma, maxgoal=maxgoal)
 
     goals<-as.vector(arrayInd(sample(1:length(pm), size = 1, prob = pm), .dim = dim(pm)))-1
 
@@ -665,6 +732,7 @@ dcResult<-function(lambda, mu, rho = HockeyModel::rho, theta = HockeyModel::thet
     } else if(goals[1]<goals[2]){
       return(0)
     } else{
+      #TODO Verify OT/SO ratio and also verify if wniner is coin flip or stronger team has better chance?
       otstatus = sample(c(0.25, 0.1), size = 1, prob = c(0.6858606, 0.3141394))
       otwinner = sample(c(1, -1), size = 1, prob = c(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)])))
       return(0.5+(otstatus*otwinner))  # this will yield 0.75 for home OT, 0.25 for away OT, 0.6 for home SO, 0.4 for away SO win.
@@ -697,7 +765,7 @@ DCweights <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
   return(w)
 }
 
-DClogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
+DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
   # rho=0, independence y1 home goals y2 away goals mu:expected Home, lambda: expected Away
   t <- tau(y1, y2, lambda, mu, rho)
   loglik <- log(t) + log(stats::dpois(y1, lambda)) + log(stats::dpois(y2, mu))
@@ -707,6 +775,7 @@ DClogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
     return(sum(loglik * weights, na.rm = TRUE))
   }
 }
+
 
 cleanModel <- function(cm) {
   #from http://www.win-vector.com/blog/2014/05/trimming-the-fat-from-glm-models-in-r/
@@ -792,11 +861,14 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
     sched<-schedule[schedule$Date >= day,]
     m.day<-getM(scores = score, currentDate = d)
     rho.day<-getRho(m = m.day, scores = score)
+    t.day <- getTheta(m = m.day, rho=rho.day, scores = score)
+    theta.day<-t$theta
+    gamma.day<-t$gamma
     preds<-NULL
     preds<-tryCatch(expr = {
       message("Predicting with Loopless Sim")
       #remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE)
-      loopless_sim(nsims = 1e5, scores = score, schedule = sched, rho = rho.day, m= m.day)
+      loopless_sim(nsims = 1e5, scores = score, schedule = sched, rho = rho.day, m= m.day, theta = theta.day, gamma = gamma.day)
     },
     error = function(error) {
       message('An error occurred:')
@@ -883,8 +955,11 @@ predictMultipleDaysResultsDC <- function(startDate, endDate, schedule = HockeyMo
     score<-score[score$Date > (as.Date(startDate) - 4000),]  # only feed in ~ 11 years data to calculate m & rho
     m.day<-getM(scores = score, currentDate = d)
     rho.day<-getRho(m = m.day, scores = score)
+    t.day <- getTheta(m = m.day, rho=rho.day, scores = score)
+    theta.day<-t$theta
+    gamma.day<-t$gamma
 
-    p<-todayDC(today = d, rho = rho.day, m = m.day)
+    p<-todayDC(today = d, rho = rho.day, m = m.day, theta = theta.day, gamma=gamma.day)
 
     sched[sched$Date == d, "HomeWin"]<-p$HomeWin
     sched[sched$Date == d, "AwayWin"]<-p$AwayWin

@@ -347,6 +347,8 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
 #' @param today The day's odds to plot. Default today.
 #' @param rho HockeyModel::rho or a custom value
 #' @param m HockeyModel::m or a custom value
+#' @param theta HocekyModel::theta or a custom value
+#' @param gamma HockeyModel::gamma or a custom value
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param teamColours HockeyModel::teamColours or a custom value
 #' @param ... additional parameters to pass
@@ -354,8 +356,8 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
 #' @return a ggplot image of odds
 #'
 #' @export
-plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
-  todayodds<-todayDC(today = today, rho = rho, m = m, schedule = schedule)
+plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
+  todayodds<-todayDC(today = today, rho = rho, m = m, theta=theta, gamma=gamma, schedule = schedule)
 
   #add odds for each team in OT/SO
   todayodds$HomeWinOT<-(todayodds$HomeWin / (todayodds$HomeWin + todayodds$AwayWin)) * todayodds$Draw
@@ -419,6 +421,8 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
 #' @param series A data frame of home team, away team, home wins, away wins
 #' @param rho HockeyModel::rho or a custom value
 #' @param m HockeyModel::m or a custom value
+#' @param theta HockekyModel::theta or a custom value
+#' @param gamma HockeyModel::gamma or a custom value
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param teamColours HockeyModel::teamColours or a custom value
 #' @param ... additional parameters to pass
@@ -426,9 +430,9 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
 #' @return a ggplot image of odds
 #'
 #' @export
-plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
+plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyModel::rho, m = HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
 
-  series$HomeOdds<-apply(series, MARGIN = 1, FUN = function(x) playoffWin(x[1], x[2], x[3], x[4]))
+  series$HomeOdds<-apply(series, MARGIN = 1, FUN = function(x) playoffWin(x[1], x[2], x[3], x[4], m=m, rho=rho, theta=theta, gamma=gamma))
   series$AwayOdds<-1-series$HomeOdds
   series2<-series
   #For now, drop won games:
@@ -484,15 +488,17 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
 #' Plot single game expected goals
 #'
 #' @param home The Home Team
-#' @param away The AWay Team
+#' @param away The Away Team
 #' @param m the DC m model
 #' @param rho the DC rho value
+#' @param theta the DC theta value
+#' @param gamma the DC gamma value
 #' @param maxgoal the max number of goals to predict. Plot a few less.
-#' @param teamColours HockeyModel::teamColours or a custom value
 #'
 #' @return a ggplot object
 #' @export
-plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoal = 10, teamColours = HockeyModel::teamColours){
+plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, theta=HockeyModel::theta, gamma=HockeyModel::gamma, maxgoal = 10){
+
   # Expected goals home
   lambda <- try(stats::predict(m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
 
@@ -507,11 +513,8 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
     mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE)
   }
 
-  #goal prediction method by poisson & d/c handling of low scores:
-  probability_matrix <- stats::dpois(0:maxgoal, lambda) %*% t(stats::dpois(0:maxgoal, mu))
+  probability_matrix<-dcProbMatrix(home=home, away=away,m=m,rho=rho,theta=theta,gamma=gamma,maxgoal=maxgoal)
 
-  scaling_matrix <- matrix(tau(c(0, 1, 0, 1), c(0, 0, 1, 1), lambda, mu, rho), nrow = 2)
-  probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
 
   goals<-data.frame(Goals = c(0:maxgoal), Home = 0, Away = 0)
 
@@ -562,18 +565,13 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, maxgoa
 
 #' Team Point Predict Plot
 #'
-#' @param preds Raw predictions to generate ggridges point likelyhood plot. Otherwise will generate with current m, rho, scores and schedule in HockeyModel.
+#' @param preds Raw predictions to generate ggridges point likelyhood plot.
 #' @param graphic_dir Directory to save plot images
 #' @param subdir Subdirectory to save plot images
-#' @param ... Additional parameters to pass to loopless sim
 #'
 #' @return two plots in list, as $eastplot and $westplot
 #' @export
-plot_point_likelihood <- function(preds=NULL, graphic_dir = './prediction_results/graphics', subdir = 'pace', ...) {
-
-  if(is.null(preds)){
-    preds<-loopless_sim(...)
-  }
+plot_point_likelihood <- function(preds, graphic_dir = './prediction_results/graphics', subdir = 'pace') {
 
   east_preds<-preds$raw_results
   east_preds<-east_preds[east_preds$Team %in% HockeyModel::nhl_conferences$East,]
@@ -687,14 +685,14 @@ plot_team_rating<-function(m = HockeyModel::m, teamlist = NULL){
 #' @param home Home Team colours to get
 #' @param away Away Team's colours to get
 #' @param delta Colour delta required. Default 0.15. See [colourDelta]. Must be between 0 and 1
-#' @param teamColours HockeyModel::TeamColours, or other provided (optional)
 #'
 #' @return a list with two items: home & away, each containing the appropriate hex colour value
 #' @export
 #'
 #' @examples
 #' getTeamColours("Buffalo Sabres", "Tampa Bay Lightning")
-getTeamColours<-function(home, away, delta = 0.15, teamColours = HockeyModel::teamColours){
+getTeamColours<-function(home, away, delta = 0.15){
+  teamColours <- HockeyModel::teamColours
   stopifnot(home %in% teamColours$Team)
   stopifnot(away %in% teamColours$Team)
   stopifnot(is.numeric(delta))
@@ -828,12 +826,14 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
 #' @param today A date for games to create a table. Defaults to today.
 #' @param rho Hockey Model rho
 #' @param m Hockey Model m
+#' @param theta HockeyModel::theta
+#' @param gamma HockeyModel::gamma
 #' @param schedule Schedule, or HockeyModel Schedule
 #'
 #' @return a gt table
 #' @export
-daily_odds_table <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, schedule = HockeyModel::schedule){
-  todayodds<-todayDC(today = as.Date(today))
+daily_odds_table <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, theta=HockeyModel::theta, gamma=HockeyModel::gamma, schedule = HockeyModel::schedule){
+  todayodds<-todayDC(today = as.Date(today), m=m, rho=rho, theta=theta, gamma=gamma)
   todayodds$HomexG<-NA
   todayodds$AwayxG<-NA
 

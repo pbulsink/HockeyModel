@@ -8,9 +8,10 @@ todayOddsPlot(
   date = Sys.Date(),
   rho = HockeyModel::rho,
   m = HockeyModel::m,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma,
   schedule = HockeyModel::schedule,
-  scores = HockeyModel::scores,
-  ...
+  scores = HockeyModel::scores
 )
 }
 \arguments{
@@ -20,11 +21,13 @@ todayOddsPlot(
 
 \item{m}{HockeyModel::m or a custom value}
 
+\item{theta}{HockeyModel::theta or a custom value}
+
+\item{gamma}{HockeyModel::gamma or a custom value}
+
 \item{schedule}{HockeyModel::schedule or a custom value}
 
 \item{scores}{HockeyModel::scores or a custom value}
-
-\item{...}{Items to pass to update functions.}
 }
 \value{
 today's odds ggplot object

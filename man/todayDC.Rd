@@ -8,6 +8,8 @@ todayDC(
   today = Sys.Date(),
   rho = HockeyModel::rho,
   m = HockeyModel::m,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma,
   schedule = HockeyModel::schedule,
   expected_mean = NULL,
   season_percent = NULL
@@ -20,7 +22,11 @@ todayDC(
 
 \item{m}{DC m}
 
-\item{schedule}{shcedule to use, if not the builtin}
+\item{theta}{DC theta}
+
+\item{gamma}{DC gamma}
+
+\item{schedule}{schedule to use, if not the built-in}
 
 \item{expected_mean}{the mean lambda & mu, used only for regression}
 

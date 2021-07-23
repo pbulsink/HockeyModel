@@ -9,7 +9,9 @@ recordTodaysPredictions(
   file = "./data-raw/dailyodds.csv",
   schedule = HockeyModel::schedule,
   rho = HockeyModel::rho,
-  m = HockeyModel::m
+  m = HockeyModel::m,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ recordTodaysPredictions(
 \item{rho}{HockeyModel::rho or supplied}
 
 \item{m}{HockeyModel::m or supplied}
+
+\item{theta}{HockeyModel::theta or supplied}
+
+\item{gamma}{HockeyModel::gamma or supplied}
 }
 \description{
 Record today's predictions to file (for easy later retrieval). Run \code{cleanupPredictionsFile} periodically to tidy

@@ -8,6 +8,8 @@ removeUnscheduledGames(schedule = HockeyModel::schedule, save_data = FALSE)
 }
 \arguments{
 \item{schedule}{the schedule to check for unscheduled games}
+
+\item{save_data}{whether to save the cleaned schedule to package or not. Default False}
 }
 \value{
 a schedule with unscheduled games removed

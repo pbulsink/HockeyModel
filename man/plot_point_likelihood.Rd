@@ -5,20 +5,17 @@
 \title{Team Point Predict Plot}
 \usage{
 plot_point_likelihood(
-  preds = NULL,
+  preds,
   graphic_dir = "./prediction_results/graphics",
-  subdir = "pace",
-  ...
+  subdir = "pace"
 )
 }
 \arguments{
-\item{preds}{Raw predictions to generate ggridges point likelyhood plot. Otherwise will generate with current m, rho, scores and schedule in HockeyModel.}
+\item{preds}{Raw predictions to generate ggridges point likelyhood plot.}
 
 \item{graphic_dir}{Directory to save plot images}
 
 \item{subdir}{Subdirectory to save plot images}
-
-\item{...}{Additional parameters to pass to loopless sim}
 }
 \value{
 two plots in list, as $eastplot and $westplot

@@ -8,7 +8,10 @@ updatePredictions(
   data_dir = "./prediction_results/",
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
-  ...
+  m = HockeyModel::m,
+  rho = HockeyModel::rho,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma
 )
 }
 \arguments{
@@ -18,7 +21,13 @@ updatePredictions(
 
 \item{schedule}{HockeyModel::schedule or a custom value}
 
-\item{...}{Items to pass to update functions.}
+\item{m}{HockeyModel::m or supplied}
+
+\item{rho}{HockeyModel::rho or supplied}
+
+\item{theta}{HockeyModel::theta or supplied}
+
+\item{gamma}{HockeyModel::gamma or supplied}
 }
 \description{
 Update predictions

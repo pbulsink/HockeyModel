@@ -8,6 +8,8 @@ plot_odds_today(
   today = Sys.Date(),
   rho = HockeyModel::rho,
   m = HockeyModel::m,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma,
   schedule = HockeyModel::schedule,
   teamColours = HockeyModel::teamColours,
   ...
@@ -19,6 +21,10 @@ plot_odds_today(
 \item{rho}{HockeyModel::rho or a custom value}
 
 \item{m}{HockeyModel::m or a custom value}
+
+\item{theta}{HocekyModel::theta or a custom value}
+
+\item{gamma}{HockeyModel::gamma or a custom value}
 
 \item{schedule}{HockeyModel::schedule or a custom value}
 

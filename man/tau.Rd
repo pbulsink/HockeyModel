@@ -7,9 +7,9 @@
 tau(xx, yy, lambda, mu, rho)
 }
 \arguments{
-\item{xx}{Away Goal value for adjustment factor calculation}
+\item{xx}{Homeoal value for adjustment factor calculation}
 
-\item{yy}{Home Goal value for adjustment factor calculation}
+\item{yy}{Away Goal value for adjustment factor calculation}
 
 \item{lambda}{Home goal expected for adjustment factor calculation}
 

@@ -9,22 +9,25 @@ plot_game(
   away,
   m = HockeyModel::m,
   rho = HockeyModel::rho,
-  maxgoal = 10,
-  teamColours = HockeyModel::teamColours
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma,
+  maxgoal = 10
 )
 }
 \arguments{
 \item{home}{The Home Team}
 
-\item{away}{The AWay Team}
+\item{away}{The Away Team}
 
 \item{m}{the DC m model}
 
 \item{rho}{the DC rho value}
 
-\item{maxgoal}{the max number of goals to predict. Plot a few less.}
+\item{theta}{the DC theta value}
 
-\item{teamColours}{HockeyModel::teamColours or a custom value}
+\item{gamma}{the DC gamma value}
+
+\item{maxgoal}{the max number of goals to predict. Plot a few less.}
 }
 \value{
 a ggplot object

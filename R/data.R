@@ -79,17 +79,24 @@
 
 #' Dixon Coles' `rho`
 #'
-#' Rho for low score correction to Dixon Coles
+#' Rho for low score correction to Dixon Coles. Should be around -0.25
 #'
 #' @format a single numerical value
 "rho"
 
 #' Theta
 #'
-#' Theta for adjustment of tie games in the model
+#' Theta for adjustment of tie games in the model. Theta is the 'lambda' value of a Poisson distribution, optimized to fit the ties data. Should be around 2.5
 #'
 #' @format a single numerical value
 "theta"
+
+#' Gamma
+#'
+#' Gamma for adjustment of tie games in the model. Gamma is a multiplication value to the Poisson multiplier to the diagonal to get it to better estimate tie game odds. should be around 5 or 6
+#'
+#' @format a single numerical value
+"gamma"
 
 #' Team Colours
 #' Hex and RGB team colours (primary & secondary where applicable), and path to team logos

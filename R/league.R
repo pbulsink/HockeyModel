@@ -302,17 +302,19 @@ compile_predictions<-function(dir="./prediction_results"){
 #' @param scores Season to this point
 #' @param rho rho factor to pass. default HockeyModel::rho
 #' @param m m model to pass. default HockeyModel::m
+#' @param theta HockeyModel::theta or a custom value
+#' @param gamma HockeyModel::gamma or a custom value
 #' @param odds_table odds from remainderSeasonDC(Odds = TRUE), or null
 #' @param season_sofar The results of the season to date
 #'
 #' @return a two member list, of all results and summary results
 #' @export
-loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, rho = HockeyModel::rho, m = HockeyModel::m, odds_table = NULL, season_sofar=NULL){
+loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, rho = HockeyModel::rho, m = HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma, odds_table = NULL, season_sofar=NULL){
 
   nsims <- floor(nsims/cores)
 
   if(is.null(odds_table)){
-    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, rho = rho, m = m, nsims = nsims, mu_lambda = TRUE)
+    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, rho = rho, m = m, theta = theta, gamma = gamma, nsims = nsims, mu_lambda = TRUE)
   }
   #odds_table$Result <- NA
 
@@ -501,14 +503,15 @@ sim_engine<-function(all_season, nsims){
 #' @param away_wins Opponent Team Wins in Series
 #' @param m HockeyModel::m
 #' @param rho HockeyModel::rho
-#' @param ... additional parameters to pass to playoffSeriesOdds
+#' @param theta HockeyModel::theta
+#' @param gamma HockeyModel::gamma
 #'
 #' @return Odds from 0-1 of home team winning. Away odds are 1 - return value
 #' @export
-playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, m = HockeyModel::m, rho = HockeyModel::rho, ...){
-  home_odds<-DCPredict(home = home_team, away = away_team, draws=FALSE, m = m, rho = rho)
-  away_odds<-1-DCPredict(home = away_team, away = home_team, draws=FALSE,  m = m, rho = rho)
-  return(playoffSeriesOdds(home_odds = home_odds, away_odds = away_odds, home_win = home_wins, away_win = away_wins, ...))
+playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, m = HockeyModel::m, rho = HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma){
+  home_odds<-DCPredict(home = home_team, away = away_team, draws=FALSE, m = m, rho = rho, theta = theta, gamma = gamma)
+  away_odds<-1-DCPredict(home = away_team, away = home_team, draws=FALSE,  m = m, rho = rho, theta = theta, gamma = gamma)
+  return(playoffSeriesOdds(home_odds = home_odds, away_odds = away_odds, home_win = home_wins, away_win = away_wins))
 }
 
 #' Random Series Winner
@@ -642,10 +645,12 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames
 #' @param cores Number of processor cores to use
 #' @param m HockeyModel::m
 #' @param rho HockeyModel::rho
+#' @param theta HockeyModel::theta
+#' @param gamma HockeyModel::gamma
 #'
 #' @return a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)
 #' @export
-simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::detectCores() - 1, m = HockeyModel::m, rho=HockeyModel::rho){
+simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::detectCores() - 1, m = HockeyModel::m, rho=HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma){
   if(is.null(summary_results)){
     filelist<-list.files(path = "./prediction_results")
     pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
@@ -660,7 +665,7 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::de
   east_results<-summary_results %>% dplyr::filter(.data$Conf == "East")
   west_results<-summary_results %>% dplyr::filter(.data$Conf == "West")
 
-  homeAwayOdds<-getAllHomeAwayOdds(summary_results$Team, m = m, rho = rho)
+  homeAwayOdds<-getAllHomeAwayOdds(summary_results$Team, m = m, rho = rho, theta = theta, gamma = gamma)
 
   simresults<-data.frame("SimNo" = integer(),
                          "l1" = character(),
@@ -1083,10 +1088,10 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
   return(simresults)
 }
 
-getAllHomeAwayOdds<-function(teamlist, m = HockeyModel::m, rho = HockeyModel::rho){
+getAllHomeAwayOdds<-function(teamlist, m = HockeyModel::m, rho = HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma){
   homeAwayOdds<-expand.grid("HomeTeam" = teamlist, "AwayTeam" = teamlist, stringsAsFactors = FALSE)
   homeAwayOdds<-homeAwayOdds[homeAwayOdds$HomeTeam != homeAwayOdds$AwayTeam,]
-  homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) playoffWin(x[1], x[2], m = m, rho = rho))
+  homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) playoffWin(x[1], x[2], m = m, rho = rho, theta = theta, gamma = gamma))
   return(homeAwayOdds)
 }
 
@@ -1100,21 +1105,23 @@ getAllHomeAwayOdds<-function(teamlist, m = HockeyModel::m, rho = HockeyModel::rh
 #' @param schedule HockeyModel::schedule or supplied. \code{today} date must be in schedule
 #' @param rho HockeyModel::rho or supplied
 #' @param m HockeyModel::m or supplied
+#' @param theta HockeyModel::theta or supplied
+#' @param gamma HockeyModel::gamma or supplied
 #'
 #' @return NULL
 #' @export
-recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.csv", schedule=HockeyModel::schedule, rho=HockeyModel::rho, m=HockeyModel::m){
+recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.csv", schedule=HockeyModel::schedule, rho=HockeyModel::rho, m=HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma){
   stopifnot(is.Date(today))
   today<-as.Date(today)
   today_sched<-schedule[schedule$Date == today,]
   if(nrow(today_sched) == 0){
     stop("No games on date:", today)
   }
-  today_preds<-todayDC(today = today, rho = rho, m = m, schedule = schedule)
+  today_preds<-todayDC(today = today, rho = rho, m = m, theta = theta, gamma = gamma, schedule = schedule)
   preds<-dplyr::full_join(today_sched, today_preds, suffix=c("",""), by = c("HomeTeam", "AwayTeam"))
   preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw")]
 
-  write.table(preds, file="./data-raw/dailyodds.csv", append = TRUE, col.names = FALSE, row.names = FALSE, sep=",", dec=".")
+  utils::write.table(preds, file="./data-raw/dailyodds.csv", append = TRUE, col.names = FALSE, row.names = FALSE, sep=",", dec=".")
 }
 
 #' Cleanup Predictions File
@@ -1126,13 +1133,13 @@ recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.c
 #' @return NULL
 #' @export
 cleanupPredictionsFile<-function(file="./data-raw/dailyodds.csv"){
-  dailyodds<-read.csv(file)
+  dailyodds<-utils::read.csv(file)
   dailyodds<-dailyodds %>%
     dplyr::mutate("Date" = as.Date(.data$Date)) %>%
     dplyr::arrange(dplyr::desc(.data$Date)) %>%
     dplyr::distinct(.data$GameID, .keep_all=TRUE) %>%
     dplyr::arrange(.data$Date, .data$GameID)
-  write.table(dailyodds, file=file, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
+  utils::write.table(dailyodds, file=file, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
 }
 
 build_past_predictions<-function(startDate, endDate, file="./data-raw/dailyodds.csv"){
@@ -1154,8 +1161,11 @@ build_past_predictions<-function(startDate, endDate, file="./data-raw/dailyodds.
     sched<-schedule[schedule$Date == d,]
     m.day<-getM(scores = score, currentDate = d)
     rho.day<-getRho(m = m.day, scores = score)
+    t.day<-getTheta(m = m.day, rho=rho.day, scores = score)
+    theta.day<-t.day$theta
+    gamma.day<-t.day$gamma
 
-    recordTodaysPredictions(today=d, file=file, schedule = sched, rho = rho.day, m=m.day)
+    recordTodaysPredictions(today=d, file=file, schedule = sched, rho = rho.day, m=m.day, theta = theta.day, gamma = gamma.day)
   }
   return(TRUE)
 }

@@ -11,7 +11,8 @@ playoffWin(
   away_wins = 0,
   m = HockeyModel::m,
   rho = HockeyModel::rho,
-  ...
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma
 )
 }
 \arguments{
@@ -27,7 +28,9 @@ playoffWin(
 
 \item{rho}{HockeyModel::rho}
 
-\item{...}{additional parameters to pass to playoffSeriesOdds}
+\item{theta}{HockeyModel::theta}
+
+\item{gamma}{HockeyModel::gamma}
 }
 \value{
 Odds from 0-1 of home team winning. Away odds are 1 - return value

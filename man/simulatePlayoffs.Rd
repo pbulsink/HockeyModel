@@ -9,7 +9,9 @@ simulatePlayoffs(
   nsims = 1e+05,
   cores = parallel::detectCores() - 1,
   m = HockeyModel::m,
-  rho = HockeyModel::rho
+  rho = HockeyModel::rho,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ simulatePlayoffs(
 \item{m}{HockeyModel::m}
 
 \item{rho}{HockeyModel::rho}
+
+\item{theta}{HockeyModel::theta}
+
+\item{gamma}{HockeyModel::gamma}
 }
 \value{
 a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)

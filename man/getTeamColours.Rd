@@ -4,12 +4,7 @@
 \alias{getTeamColours}
 \title{Get Team Colours}
 \usage{
-getTeamColours(
-  home,
-  away,
-  delta = 0.15,
-  teamColours = HockeyModel::teamColours
-)
+getTeamColours(home, away, delta = 0.15)
 }
 \arguments{
 \item{home}{Home Team colours to get}
@@ -17,8 +12,6 @@ getTeamColours(
 \item{away}{Away Team's colours to get}
 
 \item{delta}{Colour delta required. Default 0.15. See [colourDelta]. Must be between 0 and 1}
-
-\item{teamColours}{HockeyModel::TeamColours, or other provided (optional)}
 }
 \value{
 a list with two items: home & away, each containing the appropriate hex colour value

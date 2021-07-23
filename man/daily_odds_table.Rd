@@ -8,6 +8,8 @@ daily_odds_table(
   today = Sys.Date(),
   rho = HockeyModel::rho,
   m = HockeyModel::m,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma,
   schedule = HockeyModel::schedule
 )
 }
@@ -17,6 +19,10 @@ daily_odds_table(
 \item{rho}{Hockey Model rho}
 
 \item{m}{Hockey Model m}
+
+\item{theta}{HockeyModel::theta}
+
+\item{gamma}{HockeyModel::gamma}
 
 \item{schedule}{Schedule, or HockeyModel Schedule}
 }

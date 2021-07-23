@@ -11,6 +11,8 @@ loopless_sim(
   scores = HockeyModel::scores,
   rho = HockeyModel::rho,
   m = HockeyModel::m,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma,
   odds_table = NULL,
   season_sofar = NULL
 )
@@ -27,6 +29,10 @@ loopless_sim(
 \item{rho}{rho factor to pass. default HockeyModel::rho}
 
 \item{m}{m model to pass. default HockeyModel::m}
+
+\item{theta}{HockeyModel::theta or a custom value}
+
+\item{gamma}{HockeyModel::gamma or a custom value}
 
 \item{odds_table}{odds from remainderSeasonDC(Odds = TRUE), or null}
 

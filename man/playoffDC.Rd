@@ -9,6 +9,8 @@ playoffDC(
   away,
   rho = HockeyModel::rho,
   m = HockeyModel::m,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma,
   home_wins = 0,
   away_wins = 0
 )
@@ -21,6 +23,10 @@ playoffDC(
 \item{rho}{HockeyModel::rho}
 
 \item{m}{HockeyModel::m}
+
+\item{theta}{HockeyModel::theta}
+
+\item{gamma}{HockeyModel::gamma}
 
 \item{home_wins}{Number of wins for home ice advantage team thus far in series}
 

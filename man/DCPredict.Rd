@@ -9,6 +9,8 @@ DCPredict(
   away,
   m = HockeyModel::m,
   rho = HockeyModel::rho,
+  theta = HockeyModel::theta,
+  gamma = HockeyModel::gamma,
   maxgoal = 8,
   scores = HockeyModel::scores,
   expected_mean = NULL,
@@ -24,6 +26,10 @@ DCPredict(
 \item{m}{result from getM}
 
 \item{rho}{rho from getRho}
+
+\item{theta}{theta from getTheta}
+
+\item{gamma}{gamma from getTheta}
 
 \item{maxgoal}{max number of goals per team}
 

@@ -4,10 +4,7 @@
 \alias{pointPredict}
 \title{Predict Points graphic}
 \usage{
-pointPredict(...)
-}
-\arguments{
-\item{...}{Items to pass to update and plot functions.}
+pointPredict()
 }
 \value{
 point prediction ggplot object
