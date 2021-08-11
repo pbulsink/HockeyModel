@@ -16,5 +16,5 @@ a data frame of all scheduled games for the season(s) requested, with Date, Home
 Gets the NHL schedule from the NHL API for the season(s) requested. Returns data formatted for further use. This can be slow if requesting many seasons due to the API rate limit.
 }
 \seealso{
-See [nhlapi::nhl_schedule_seasons()] for alternative schedule requests, and [nhlapi::nhl_games()] for more information on GameID
+See \code{\link[nhlapi:nhl_schedule]{nhlapi::nhl_schedule_seasons()}} for alternative schedule requests, and \code{\link[nhlapi:nhl_games]{nhlapi::nhl_games()}} for more information on GameID
 }

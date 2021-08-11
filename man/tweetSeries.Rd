@@ -6,23 +6,14 @@
 \usage{
 tweetSeries(
   token = rtweet::get_token(),
-  m = HockeyModel::m,
-  rho = HockeyModel::rho,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma,
+  params = NULL,
   graphic_dir = "./prediction_results/graphics/"
 )
 }
 \arguments{
 \item{token}{rtweet token}
 
-\item{m}{HockeyModel::m or supplied}
-
-\item{rho}{HockeyModel::rho or supplied}
-
-\item{theta}{HockeyModel::theta or supplied}
-
-\item{gamma}{HockeyModel::gamma or supplied}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{graphic_dir}{directory to save the image}
 }

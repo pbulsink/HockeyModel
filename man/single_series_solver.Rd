@@ -9,7 +9,8 @@ single_series_solver(
   currentSeries,
   homeTeam,
   awayTeam,
-  homeAwayOdds = NULL
+  homeAwayOdds = NULL,
+  params = NULL
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ single_series_solver(
 \item{awayTeam}{away Team extracted from summary_results}
 
 \item{homeAwayOdds}{if calculated, the odds of a home or away team win}
+
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
 \value{
 a series winner (team name)

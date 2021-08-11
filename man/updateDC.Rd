@@ -4,11 +4,32 @@
 \alias{updateDC}
 \title{Update Dixon Coles parameters}
 \usage{
-updateDC(scores = HockeyModel::scores)
+updateDC(
+  scores = HockeyModel::scores,
+  currentDate = Sys.Date(),
+  save_data = TRUE
+)
 }
 \arguments{
-\item{scores}{scores, if not then data(scores)}
+\item{scores}{scores, if not then HockeyModel::scores is used}
+
+\item{currentDate}{Current Date, usually today but useful to set a different date if back calculating results}
+
+\item{save_data}{Whether to save parameters to the package.}
+}
+\value{
+a named list containing m, rho, beta, eta and k values for the model.
 }
 \description{
-Update Dixon Coles parameters
+This function updates the model parameters to best fit the provided data. The parameters for this model are as follows:
+\itemize{
+\item \link{m} is the result of the main model fit and contains team attack and defense strengths, plus home ice advantage terms
+\item \link{rho} is the Dixon-Coles low scores adjustment term.
+\item \link{beta} is the Weibull distribution's 'shape' parameter. This is used with \link{eta} to produce a curve multiplied by the diagonal score possibility matrix to enhance the odds of tie games
+\item \link{eta} is the Weibull distribution's 'scale' parameter. See above for its importance
+\item \link{k} is the multiplication factor used with the Weibull distribution to enhance ties
+}
+}
+\seealso{
+\link{m}, \link{rho}, \link{beta}, \link{eta}, \link{k}
 }

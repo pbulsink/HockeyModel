@@ -9,8 +9,7 @@ dcPredictMultipleDays(
   end = Sys.Date(),
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
-  filedir = "./prediction_results",
-  ...
+  filedir = "./prediction_results"
 )
 }
 \arguments{
@@ -23,8 +22,6 @@ dcPredictMultipleDays(
 \item{schedule}{HockeyModel::schedule}
 
 \item{filedir}{Where to save prediction files.}
-
-\item{...}{Additional parameters to pass to dcRealSeasonPredict}
 }
 \value{
 true, if successful

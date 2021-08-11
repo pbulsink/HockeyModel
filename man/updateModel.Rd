@@ -7,7 +7,7 @@
 updateModel()
 }
 \value{
-a list of scores, schedule, m, rho, theta and gamma values. Values may be data frames, model output, or numeric
+a list of scores, schedule, and param named list
 }
 \description{
 updates the schedule, scores, and model parameters (m, rho, theta, gamma). Returns them in a list of named values

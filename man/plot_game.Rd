@@ -4,28 +4,14 @@
 \alias{plot_game}
 \title{Plot single game expected goals}
 \usage{
-plot_game(
-  home,
-  away,
-  m = HockeyModel::m,
-  rho = HockeyModel::rho,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma,
-  maxgoal = 10
-)
+plot_game(home, away, params = NULL, maxgoal = 10)
 }
 \arguments{
 \item{home}{The Home Team}
 
 \item{away}{The Away Team}
 
-\item{m}{the DC m model}
-
-\item{rho}{the DC rho value}
-
-\item{theta}{the DC theta value}
-
-\item{gamma}{the DC gamma value}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{maxgoal}{the max number of goals to predict. Plot a few less.}
 }

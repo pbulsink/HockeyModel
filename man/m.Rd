@@ -3,7 +3,7 @@
 \docType{data}
 \name{m}
 \alias{m}
-\title{Dixon Coles' `m`}
+\title{Dixon Coles' \code{m}}
 \format{
 a glm model fit
 }

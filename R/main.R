@@ -4,14 +4,14 @@
 #' Update Model
 #' @description updates the schedule, scores, and model parameters (m, rho, theta, gamma). Returns them in a list of named values
 #'
-#' @return a list of scores, schedule, m, rho, theta and gamma values. Values may be data frames, model output, or numeric
+#' @return a list of scores, schedule, and param named list
 #'
 #' @export
 updateModel <- function(){
   schedule<-updateScheduleAPI(save_data = TRUE)
-  scores<-updateScoresAPI(save_data = TRUE, schedule = schedule)
-  dcparams<-updateDC(scores = scores)
-  return(list("scores" = scores, "schedule" = schedule, "m" = dcparams$m, "rho" = dcparams$rho, "theta" = dcparams$theta, "gamma" = dcparams$gamma))
+  scores<-updateScoresAPI(schedule = schedule, save_data = TRUE)
+  params<-updateDC(scores = scores, save_data = TRUE)
+  return(list("scores" = scores, "schedule" = schedule, "params" = params))
 }
 
 #' Update predictions
@@ -19,15 +19,14 @@ updateModel <- function(){
 #' @param data_dir directory of predictions
 #' @param scores HockeyModel::scores or a custom value
 #' @param schedule HockeyModel::schedule or a custom value
-#' @param m HockeyModel::m or supplied
-#' @param rho HockeyModel::rho or supplied
-#' @param theta HockeyModel::theta or supplied
-#' @param gamma HockeyModel::gamma or supplied
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return NULL
 #'
 #' @export
-updatePredictions<- function(data_dir = "./prediction_results/", scores = HockeyModel::scores, schedule = HockeyModel::schedule, m=HockeyModel::m, rho=HockeyModel::rho, theta=HockeyModel::theta, gamma = HockeyModel::gamma){
+updatePredictions<- function(data_dir = "./prediction_results/", scores = HockeyModel::scores, schedule = HockeyModel::schedule, params=NULL){
+  params<-parse_dc_params(params)
+
   if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
     updateScoresAPI(save_data = TRUE)
   }
@@ -36,23 +35,22 @@ updatePredictions<- function(data_dir = "./prediction_results/", scores = Hockey
   pdates<-pdates[pdates != 'graphics']
   lastp<-as.Date(max(pdates))
   if(lastp != Sys.Date()){
-    dcPredictMultipleDays(start = as.Date(lastp)+1, scores = scores, schedule = schedule, m=m, rho=rho, theta=theta, gamma=gamma, filedir = data_dir)
+    dcPredictMultipleDays(start = as.Date(lastp)+1, scores = scores, schedule = schedule, filedir = data_dir)
   }
 }
 
 #' Today's game odds graphic
 #'
 #' @param date date to predict odds. Default today
-#' @param rho HockeyModel::rho or a custom value
-#' @param m HockeyModel::m or a custom value
-#' @param theta HockeyModel::theta or a custom value
-#' @param gamma HockeyModel::gamma or a custom value
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param scores HockeyModel::scores or a custom value
 #'
 #' @return today's odds ggplot object
 #' @export
-todayOddsPlot <- function(date = Sys.Date(), rho = HockeyModel::rho, m = HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma, schedule = HockeyModel::schedule, scores = HockeyModel::scores){
+todayOddsPlot <- function(date = Sys.Date(), params=NULL, schedule = HockeyModel::schedule, scores = HockeyModel::scores){
+  params<-parse_dc_params(params)
+
   if(scores$Date[nrow(scores)] < (date - 7)){
     message('Scores may be out of date. This can affect predictions. Please update if midseason.')
   }
@@ -60,7 +58,7 @@ todayOddsPlot <- function(date = Sys.Date(), rho = HockeyModel::rho, m = HockeyM
     message("No games today.")
     return()
   }
-  return(plot_odds_today(today = date, rho = rho, m = m, theta = theta, gamma = gamma, schedule = schedule))
+  return(plot_odds_today(today = date, params=params, schedule = schedule))
 }
 
 #' Predict playoff odds graphic
@@ -166,6 +164,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   }
   modelparams<-updateModel()
   sc<-modelparams$schedule
+  params<-parse_dc_params(params=modelparams$params)
 
   if(Sys.Date() > max(sc$Date)){
     stop('No future games planned')
@@ -179,7 +178,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   #generate plots
   if(Sys.Date() %in% sc$Date){
-    today <- todayOddsPlot(rho = modelparams$rho, m = modelparams$m, theta = modelparams$theta, gamma = modelparams$gamma, schedule = modelparams$schedule, scores = modelparams$scores)
+    today <- todayOddsPlot(params=params, schedule = modelparams$schedule, scores = modelparams$scores)
     #save to files.
     grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(today)
@@ -188,15 +187,15 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
       grDevices::dev.off()
     }
 
-    today_table <- daily_odds_table(rho=modelparams$rho, m = modelparams$m, theta = modelparams$theta, gamma = modelparams$gamma, schedule = modelparams$schedule)
+    today_table <- daily_odds_table(params=params, schedule = modelparams$schedule)
     gt::gtsave(today_table, filename = file.path(graphic_dir, 'today_odds_table.png'))
   }
   if(inRegularSeason()){
-    updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule, m=modelparams$m, rho=modelparams$rho, theta=modelparams$theta, gamma=modelparams$gamma)
+    updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule, params=params)
     playoff <- playoffOdds()
     president <- presidentOdds()
     point <- pointPredict()
-    rating <- ratings(m = modelparams$m)
+    rating <- ratings(m = params$m)
 
     Sys.sleep(15)
 
@@ -239,10 +238,10 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], m = modelparams$m, rho = modelparams$rho, theta=modelparams$theta, gamma = modelparams$gamma, graphic_dir = graphic_dir, token = token, delay=delay)
+  tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], params=params, graphic_dir = graphic_dir, token = token, delay=delay)
 
   if(as.numeric(format(Sys.Date(), "%m")) %in% c(3,4,5) & inRegularSeason()){
-    tweetPlayoffOdds(token = token, graphic_dir = graphic_dir, m=modelparams$m, rho=modelparams$rho, theta=modelparams$theta, gamma=modelparams$gamma)
+    tweetPlayoffOdds(token = token, graphic_dir = graphic_dir, params=params)
 
     #until Rtweet has scheduler
     message("Delaying ", delay/2, " seconds to space tweets...")
@@ -268,7 +267,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   series<-getAPISeries()
   if(nrow(series[series$Status == "Ongoing", ]) > 0){  # TODO: Watch next spring to see if this goes ok
-    tweetSeries(graphic_dir = graphic_dir, token=token, m = modelparams$m, rho = modelparams$rho, theta = modelparams$theta, gamma = modelparams$gamma)
+    tweetSeries(graphic_dir = graphic_dir, token=token, params=params)
     Sys.sleep(delay)
   }
 }
@@ -348,8 +347,7 @@ tweetPace<-function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = "./pred
 
   reply_id<-NULL
 
-  for (div in 1:length(HockeyModel::nhl_divisions)){
-    division<-names(HockeyModel::nhl_divisions)[div]
+  for (division in getDivisions()){
     status <- paste("Current Points compared to predicted (at season start) for #NHL teams in the", division, "division.\nPositive values are exceeding expectation, negative are performing below predicted. #HockeyTwitter")
     rtweet::post_tweet(status = status,
                        media = file.path(graphic_dir,
@@ -377,19 +375,17 @@ tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir 
   #make likelihood plots
   plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
 
-  #Tweet them out
-  rtweet::post_tweet(status = "#NHL Eastern Conference Team final point likelihoods:",
-                     media = file.path(graphic_dir,
-                                       subdir,
-                                       'eastlikelihood.png'),
-                     token = token)
-  #until Rtweet has scheduler
-  message("Delaying ", delay/2, " seconds to space tweets...")
-  Sys.sleep(delay/2)
-
-  rtweet::post_tweet(status = "#NHL Western Conference Team final point likelihoods:",
-                     media = file.path(graphic_dir,subdir,'westlikelihood.png'),
-                     token = token)
+  for (conf in getConferences()){
+    #Tweet them out
+    rtweet::post_tweet(status = paste0("#NHL ", conf, " Conference Team final point likelihoods:"),
+                       media = file.path(graphic_dir,
+                                         subdir,
+                                         paste0(tolower(conf), 'likelihood.png')),
+                       token = token)
+    #until Rtweet has scheduler
+    message("Delaying ", delay/2, " seconds to space tweets...")
+    Sys.sleep(delay/2)
+  }
 }
 
 #' Tweet Game Plots
@@ -397,14 +393,12 @@ tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir 
 #' @param games Games to tweet graphics from
 #' @param delay Delay between tweets
 #' @param graphic_dir the graphics directory
-#' @param m HockeyModel::m or a custom value
-#' @param rho HockeyModel::rho or a custom value
-#' @param theta HockeyModel::theta or a custom value
-#' @param gamma HockeyModel::gamma or a custom value
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param token the token for rtweet
 #'
 #' @export
-tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*60, graphic_dir = "./prediction_results/graphics/", m = HockeyModel::m, rho = HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma, token = rtweet::get_token()){
+tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*60, graphic_dir = "./prediction_results/graphics/", params=NULL, token = rtweet::get_token()){
+  params<-parse_dc_params(params)
   #Tweet each game
   if(is.null(games)){
     message("No games to tweet")
@@ -425,7 +419,7 @@ tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*6
   for(g in 1:nrow(games)){
     home<-as.character(games[g,"HomeTeam"])
     away<-as.character(games[g,"AwayTeam"])
-    plt<-plot_game(home = home, away = away, m=m, rho=rho, theta = theta, gamma = gamma)
+    plt<-plot_game(home = home, away = away, params=params)
     grDevices::png(filename = file.path(graphic_dir, 'predicted_goals.png'), width = 11, height = 8.5, units = 'in', res = 300)
     print(plt)
     while(grDevices::dev.cur()!=1){
@@ -466,14 +460,12 @@ tweetMetrics<-function(token = rtweet::get_token()){
 #'
 #' @param graphic_dir directory to save the image
 #' @param token rtweet token
-#' @param m HockeyModel::m or supplied
-#' @param rho HockeyModel::rho or supplied
-#' @param theta HockeyModel::theta or supplied
-#' @param gamma HockeyModel::gamma or supplied
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return NULL
 #' @export
-tweetSeries<-function(token = rtweet::get_token(), m=HockeyModel::m, rho=HockeyModel::rho, theta=HockeyModel::theta, gamma=HockeyModel::gamma, graphic_dir = "./prediction_results/graphics/"){
+tweetSeries<-function(token = rtweet::get_token(), params=NULL, graphic_dir = "./prediction_results/graphics/"){
+  params<-parse_dc_params(params)
   while(grDevices::dev.cur()!=1){
     grDevices::dev.off()
   }
@@ -483,7 +475,7 @@ tweetSeries<-function(token = rtweet::get_token(), m=HockeyModel::m, rho=HockeyM
     message('No Series to Tweet')
     return()
   }
-  plt<-plot_playoff_series_odds(series = series, rho = rho, m=m, theta=theta, gamma=gamma)
+  plt<-plot_playoff_series_odds(series = series, params=params)
   grDevices::png(filename = file.path(graphic_dir, 'series_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
   print(plt)
   while(grDevices::dev.cur()!=1){
@@ -506,15 +498,13 @@ tweetSeries<-function(token = rtweet::get_token(), m=HockeyModel::m, rho=HockeyM
 #' @param token token for twitter
 #' @param graphic_dir graphic dir
 #' @param trimcup trim to just cup winners
-#' @param m HockeyModel::m or supplied
-#' @param rho HockeyModel::rho or supplied
-#' @param theta HockeyModel::theta or supplied
-#' @param gamma HockeyModel::gamma or supplied
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return NULL
 #' @export
-tweetPlayoffOdds<-function(summary_results=NULL, m=HockeyModel::m, rho=HockeyModel::rho, theta=HockeyModel::theta, gamma=HockeyModel::gamma, token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/", trimcup = FALSE){
-  playoffodds <- simulatePlayoffs(summary_results = summary_results, m = m, rho=rho,theta=theta,gamma=gamma)
+tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/", trimcup = FALSE){
+  params<-parse_dc_params(params)
+  playoffodds <- simulatePlayoffs(summary_results = summary_results, params=params)
 
   eastplts<-format_playoff_odds(playoffodds$east, caption_text = "Eastern Conference", trim = FALSE, trimcup = trimcup)
   westplts<-format_playoff_odds(playoffodds$west, caption_text = "Western Conference", trim = FALSE, trimcup = trimcup)

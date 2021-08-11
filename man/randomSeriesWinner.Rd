@@ -10,7 +10,7 @@ randomSeriesWinner(
   home_wins = 0,
   away_wins = 0,
   homeAwayOdds = NULL,
-  ...
+  params = NULL
 )
 }
 \arguments{
@@ -22,9 +22,9 @@ randomSeriesWinner(
 
 \item{away_wins}{Number of away team wins (default 0)}
 
-\item{homeAwayOdds}{precalculated home & away team parings odds of a home win. Overrides playoffwin calculation}
+\item{homeAwayOdds}{pre-calculated home & away team parings odds of a home win. Overrides playoffwin calculation}
 
-\item{...}{additional parameters to pass to playoffWin}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
 \value{
 TRUE if the home team wins, else FALSE

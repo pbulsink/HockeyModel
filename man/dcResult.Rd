@@ -4,25 +4,14 @@
 \alias{dcResult}
 \title{DC Result Sample}
 \usage{
-dcResult(
-  lambda,
-  mu,
-  rho = HockeyModel::rho,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma,
-  maxgoal = 10
-)
+dcResult(lambda, mu, params = NULL, maxgoal = 8)
 }
 \arguments{
 \item{lambda}{home team lambda}
 
 \item{mu}{away team mu}
 
-\item{rho}{HockeyModel::rho}
-
-\item{theta}{HockeyModel::theta}
-
-\item{gamma}{HockeyModel::gamma}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{maxgoal}{max goals predicable per game, default 10}
 }

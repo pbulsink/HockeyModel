@@ -11,7 +11,7 @@ getTeamColours(home, away, delta = 0.15)
 
 \item{away}{Away Team's colours to get}
 
-\item{delta}{Colour delta required. Default 0.15. See [colourDelta]. Must be between 0 and 1}
+\item{delta}{Colour delta required. Default 0.15. See \link{colourDelta}. Must be between 0 and 1}
 }
 \value{
 a list with two items: home & away, each containing the appropriate hex colour value

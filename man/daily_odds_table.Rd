@@ -6,23 +6,14 @@
 \usage{
 daily_odds_table(
   today = Sys.Date(),
-  rho = HockeyModel::rho,
-  m = HockeyModel::m,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma,
+  params = NULL,
   schedule = HockeyModel::schedule
 )
 }
 \arguments{
 \item{today}{A date for games to create a table. Defaults to today.}
 
-\item{rho}{Hockey Model rho}
-
-\item{m}{Hockey Model m}
-
-\item{theta}{HockeyModel::theta}
-
-\item{gamma}{HockeyModel::gamma}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{schedule}{Schedule, or HockeyModel Schedule}
 }

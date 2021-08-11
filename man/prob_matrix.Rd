@@ -4,18 +4,14 @@
 \alias{prob_matrix}
 \title{Probability Matrix}
 \usage{
-prob_matrix(lambda, mu, rho, theta, gamma, maxgoal)
+prob_matrix(lambda, mu, params, maxgoal)
 }
 \arguments{
 \item{lambda}{home lambda}
 
 \item{mu}{away mu}
 
-\item{rho}{low score adjustment}
-
-\item{theta}{tie game adjustment}
-
-\item{gamma}{tie game multiplier}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{maxgoal}{max goals per game}
 }

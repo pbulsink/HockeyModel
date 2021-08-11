@@ -6,10 +6,7 @@
 \usage{
 tweetPlayoffOdds(
   summary_results = NULL,
-  m = HockeyModel::m,
-  rho = HockeyModel::rho,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma,
+  params = NULL,
   token = rtweet::get_token(),
   graphic_dir = "./prediction_results/graphics/",
   trimcup = FALSE
@@ -18,13 +15,7 @@ tweetPlayoffOdds(
 \arguments{
 \item{summary_results}{the summary results file, otherwise the msot recent will be loaded}
 
-\item{m}{HockeyModel::m or supplied}
-
-\item{rho}{HockeyModel::rho or supplied}
-
-\item{theta}{HockeyModel::theta or supplied}
-
-\item{gamma}{HockeyModel::gamma or supplied}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{token}{token for twitter}
 

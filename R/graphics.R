@@ -19,9 +19,9 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
   teams<-unique(all_predictions$Team)
   dates<-as.Date(unique(all_predictions$predictionDate))
   #Get division
-  all_predictions$Division<-getDivision(all_predictions$Team)
+  all_predictions$Division<-getTeamDivisions(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("North", "West", "Central", "East"))
+  all_predictions$facet <- factor(x = all_predictions$Division)
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
                                   as.character(paste0(getShortTeam(all_predictions$Team), '\n', round(all_predictions$meanPoints, digits = 0))),
@@ -66,11 +66,10 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
 
   #extract constants
   teams<-unique(all_predictions$Team)
-  dates<-as.Date(unique(all_predictions$predictionDate))
   #Get division
-  all_predictions$Division<-getDivision(all_predictions$Team)
+  all_predictions$Division<-getTeamDivisions(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("North", "West", "Central", "East"))
+  all_predictions$facet <- factor(x = all_predictions$Division)
   #make team label appear properly later with ggrepel
   playoff_odds<-all_predictions[all_predictions$predictionDate == lastdate,]$Playoffs
   label<-format(round(playoff_odds*100, digits = 0), nsmall = 0, trim = TRUE)
@@ -133,9 +132,9 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
   teams<-unique(all_predictions$Team)
   dates<-as.Date(unique(all_predictions$predictionDate))
   #Get division
-  all_predictions$Division<-getDivision(all_predictions$Team)
+  all_predictions$Division<-getTeamDivisions(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division, levels = names(HockeyModel::nhl_divisions))
+  all_predictions$facet <- factor(x = all_predictions$Division)
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
                                   as.character(paste0(getShortTeam(all_predictions$Team), '\n', signif(all_predictions$Presidents*100, digits = 2), '%')),
@@ -235,10 +234,11 @@ plot_pace_by_division<-function(graphic_dir = './prediction_results/graphics', s
     teamPerformance[teamPerformance$Team == team & teamPerformance$GameNum == max(teamPerformance[teamPerformance$Team == team & !is.na(teamPerformance$PointDiff), "GameNum"]), "label"]<-lab
   }
 
-  for(div in 1:length(HockeyModel::nhl_divisions)){
-    division<-names(HockeyModel::nhl_divisions)[div]
-    tl<-teamlist[teamlist %in% unlist(HockeyModel::nhl_divisions[division])]
-    tp<-teamPerformance[teamPerformance$Team %in% unlist(tl),]
+  teamPerformance$Div <- getTeamDivisions(teamPerformance$Team)
+
+  for(division in getDivisions()){
+    #tl<-teamlist[teamlist %in% unlist(HockeyModel::nhl_divisions[division])]
+    tp<-teamPerformance[teamPerformance$Div == division, ]
 
     plt<-ggplot2::ggplot(tp, ggplot2::aes_string(x = "GameNum", y = "PointDiff", colour = "Team"))+
       #ggplot2::geom_line(na.rm = TRUE) +
@@ -345,19 +345,16 @@ plot_pace_by_team<-function(graphic_dir = './prediction_results/graphics', subdi
 #' Plot Today's Odds
 #'
 #' @param today The day's odds to plot. Default today.
-#' @param rho HockeyModel::rho or a custom value
-#' @param m HockeyModel::m or a custom value
-#' @param theta HocekyModel::theta or a custom value
-#' @param gamma HockeyModel::gamma or a custom value
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param teamColours HockeyModel::teamColours or a custom value
-#' @param ... additional parameters to pass
 #'
 #' @return a ggplot image of odds
 #'
 #' @export
-plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
-  todayodds<-todayDC(today = today, rho = rho, m = m, theta=theta, gamma=gamma, schedule = schedule)
+plot_odds_today <- function(today = Sys.Date(), params=NULL, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours) {
+  params<-parse_dc_params(params)
+  todayodds<-todayDC(today = today, params, schedule = schedule)
 
   #add odds for each team in OT/SO
   todayodds$HomeWinOT<-(todayodds$HomeWin / (todayodds$HomeWin + todayodds$AwayWin)) * todayodds$Draw
@@ -419,10 +416,7 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
 #' Plot Today's Playoff Series Odds
 #'
 #' @param series A data frame of home team, away team, home wins, away wins
-#' @param rho HockeyModel::rho or a custom value
-#' @param m HockeyModel::m or a custom value
-#' @param theta HockekyModel::theta or a custom value
-#' @param gamma HockeyModel::gamma or a custom value
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param teamColours HockeyModel::teamColours or a custom value
 #' @param ... additional parameters to pass
@@ -430,9 +424,9 @@ plot_odds_today <- function(today = Sys.Date(), rho=HockeyModel::rho, m = Hockey
 #' @return a ggplot image of odds
 #'
 #' @export
-plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyModel::rho, m = HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
-
-  series$HomeOdds<-apply(series, MARGIN = 1, FUN = function(x) playoffWin(x[1], x[2], x[3], x[4], m=m, rho=rho, theta=theta, gamma=gamma))
+plot_playoff_series_odds <- function(series = HockeyModel::series, params=NULL, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
+  params<-parse_dc_params(params)
+  series$HomeOdds<-apply(series, MARGIN = 1, FUN = function(x) playoffWin(x[1], x[2], x[3], x[4], params=params))
   series$AwayOdds<-1-series$HomeOdds
   series2<-series
   #For now, drop won games:
@@ -489,21 +483,18 @@ plot_playoff_series_odds <- function(series = HockeyModel::series, rho=HockeyMod
 #'
 #' @param home The Home Team
 #' @param away The Away Team
-#' @param m the DC m model
-#' @param rho the DC rho value
-#' @param theta the DC theta value
-#' @param gamma the DC gamma value
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param maxgoal the max number of goals to predict. Plot a few less.
 #'
 #' @return a ggplot object
 #' @export
-plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, theta=HockeyModel::theta, gamma=HockeyModel::gamma, maxgoal = 10){
-
+plot_game<-function(home, away, params=NULL, maxgoal = 10){
+  params<-parse_dc_params(params)
   # Expected goals home
-  lambda <- try(stats::predict(m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
+  lambda <- try(stats::predict(params$m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
 
   # Expected goals away
-  mu<-try(stats::predict(m, data.frame(Home = 0, Team = away, Opponent = home), type = "response"), TRUE)
+  mu<-try(stats::predict(params$m, data.frame(Home = 0, Team = away, Opponent = home), type = "response"), TRUE)
 
   #fix errors
   if(!is.numeric(lambda)){
@@ -513,7 +504,7 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, theta=
     mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE)
   }
 
-  probability_matrix<-dcProbMatrix(home=home, away=away,m=m,rho=rho,theta=theta,gamma=gamma,maxgoal=maxgoal)
+  probability_matrix<-dcProbMatrix(home=home, away=away,params=params,maxgoal=maxgoal)
 
 
   goals<-data.frame(Goals = c(0:maxgoal), Home = 0, Away = 0)
@@ -572,52 +563,35 @@ plot_game<-function(home, away, m=HockeyModel::m, rho = HockeyModel::rho, theta=
 #' @return two plots in list, as $eastplot and $westplot
 #' @export
 plot_point_likelihood <- function(preds, graphic_dir = './prediction_results/graphics', subdir = 'pace') {
+  conferences<-getConferences()
 
-  east_preds<-preds$raw_results
-  east_preds<-east_preds[east_preds$Team %in% HockeyModel::nhl_conferences$East,]
-  west_preds<-preds$raw_results
-  west_preds<-west_preds[west_preds$Team %in% HockeyModel::nhl_conferences$West,]
+  preds$Conf<-getTeamConferences(preds$Team)
 
   teamColours <- HockeyModel::teamColours
   teamColoursList<-as.vector(teamColours$Hex)
   names(teamColoursList)<-teamColours$Team
-  east_colour <- teamColoursList[names(teamColoursList) %in% east_preds$Team]
-  west_colour <- teamColoursList[names(teamColoursList) %in% west_preds$Team]
 
+  for(conf in conferences){
+    conf_preds<-preds[preds$Conf == conf, ]
 
-  eastplot<-ggplot2::ggplot(east_preds, ggplot2::aes_(x = quote(Points), y = quote(Team), fill=quote(Team))) +
-    ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from=40, to=130)+
-    ggplot2::scale_fill_manual(values = east_colour) +
-    ggplot2::labs(x = 'Predicted Point Likelyhood',
-                  y = '',
-                  title = paste0("Point Likelyhoods for Eastern Conference - ", getCurrentSeason8()),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
-    ggridges::theme_ridges(grid = FALSE) +
-    ggplot2::theme(legend.position = "none",
-                   panel.grid.major.y = ggplot2::element_line(size=.1, color="grey"))
+    conf_colourslist<-teamColoursList[names(teamColoursList) %in% conf_preds$Teams]
 
-  westplot<-ggplot2::ggplot(west_preds, ggplot2::aes_(x = quote(Points), y = quote(Team), fill=quote(Team))) +
-    ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from = 40, to = 130)+
-    ggplot2::scale_fill_manual(values = west_colour) +
-    ggplot2::labs(x = 'Predicted Point Likelyhood',
-                  y = '',
-                  title = paste0("Point Likelyhoods for Western Conference - ", getCurrentSeason8()),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
-    ggridges::theme_ridges(grid = FALSE) +
-    ggplot2::theme(legend.position = "none",
-                   panel.grid.major.y = ggplot2::element_line(size=.1, color="grey"))
+    plot<-ggplot2::ggplot(conf_preds, ggplot2::aes_(x = quote(Points), y = quote(Team), fill=quote(Team))) +
+      ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from=40, to=130)+
+      ggplot2::scale_fill_manual(values = conf_colourslist) +
+      ggplot2::labs(x = 'Predicted Point Likelyhood',
+                    y = '',
+                    title = paste0("Point Likelyhoods for ", conf, " Conference - ", getCurrentSeason8()),
+                    caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+      ggridges::theme_ridges(grid = FALSE) +
+      ggplot2::theme(legend.position = "none",
+                     panel.grid.major.y = ggplot2::element_line(size=.1, color="grey"))
 
-
-  grDevices::png(filename = file.path(graphic_dir, subdir, 'eastlikelihood.png'), width = 11, height = 8.5, units = 'in', res = 300)
-  print(eastplot)
-  while(grDevices::dev.cur()!=1){
-    grDevices::dev.off()
-  }
-
-  grDevices::png(filename = file.path(graphic_dir, subdir, 'westlikelihood.png'), width = 11, height = 8.5, units = 'in', res = 300)
-  print(westplot)
-  while(grDevices::dev.cur()!=1){
-    grDevices::dev.off()
+    grDevices::png(filename = file.path(graphic_dir, subdir, paste0(tolower(conf), 'likelihood.png')), width = 11, height = 8.5, units = 'in', res = 300)
+    print(plot)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
   }
 }
 
@@ -824,25 +798,23 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
 #' @description Returns a gt table of odds for today's games (or games for a supplied date)
 #'
 #' @param today A date for games to create a table. Defaults to today.
-#' @param rho Hockey Model rho
-#' @param m Hockey Model m
-#' @param theta HockeyModel::theta
-#' @param gamma HockeyModel::gamma
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param schedule Schedule, or HockeyModel Schedule
 #'
 #' @return a gt table
 #' @export
-daily_odds_table <- function(today = Sys.Date(), rho=HockeyModel::rho, m = HockeyModel::m, theta=HockeyModel::theta, gamma=HockeyModel::gamma, schedule = HockeyModel::schedule){
-  todayodds<-todayDC(today = as.Date(today), m=m, rho=rho, theta=theta, gamma=gamma)
+daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyModel::schedule){
+  params<-parse_dc_params(params)
+  todayodds<-todayDC(today = as.Date(today), params = params)
   todayodds$HomexG<-NA
   todayodds$AwayxG<-NA
 
   for(g in 1:nrow(todayodds)){
     # Expected goals home
-    lambda <- try(stats::predict(m, data.frame(Home = 1, Team = todayodds$HomeTeam[g], Opponent = todayodds$AwayTeam[g]), type = "response"), TRUE)
+    lambda <- try(stats::predict(params$m, data.frame(Home = 1, Team = todayodds$HomeTeam[g], Opponent = todayodds$AwayTeam[g]), type = "response"), TRUE)
 
     # Expected goals away
-    mu<-try(stats::predict(m, data.frame(Home = 0, Team = todayodds$AwayTeam[g], Opponent = todayodds$HomeTeam[g]), type = "response"), TRUE)
+    mu<-try(stats::predict(params$m, data.frame(Home = 0, Team = todayodds$AwayTeam[g], Opponent = todayodds$HomeTeam[g]), type = "response"), TRUE)
 
     #fix errors
     if(!is.numeric(lambda)){

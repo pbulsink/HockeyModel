@@ -8,10 +8,7 @@ simulatePlayoffs(
   summary_results = NULL,
   nsims = 1e+05,
   cores = parallel::detectCores() - 1,
-  m = HockeyModel::m,
-  rho = HockeyModel::rho,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma
+  params = NULL
 )
 }
 \arguments{
@@ -21,13 +18,7 @@ simulatePlayoffs(
 
 \item{cores}{Number of processor cores to use}
 
-\item{m}{HockeyModel::m}
-
-\item{rho}{HockeyModel::rho}
-
-\item{theta}{HockeyModel::theta}
-
-\item{gamma}{HockeyModel::gamma}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
 \value{
 a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)

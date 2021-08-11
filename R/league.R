@@ -51,8 +51,8 @@ buildStats<-function(scores){
 
   team_stats<-team_stats %>%
     dplyr::mutate(Rank = rank(dplyr::desc(.data$Points), ties.method = 'random'), #TODO sort properly
-                  Conf = getConference(.data$Team), #convenience data, dropped later
-                  Div = getDivision(.data$Team)) %>%
+                  Conf = getTeamConferences(.data$Team), #convenience data, dropped later
+                  Div = getTeamDivisions(.data$Team)) %>%
     dplyr::group_by(.data$Conf) %>%
     dplyr::mutate(ConfRank = rank(dplyr::desc(.data$Points), ties.method = 'random')) %>%
     dplyr::ungroup() %>%
@@ -300,21 +300,20 @@ compile_predictions<-function(dir="./prediction_results"){
 #' @param cores number of cores in parallel to process
 #' @param schedule games to play
 #' @param scores Season to this point
-#' @param rho rho factor to pass. default HockeyModel::rho
-#' @param m m model to pass. default HockeyModel::m
-#' @param theta HockeyModel::theta or a custom value
-#' @param gamma HockeyModel::gamma or a custom value
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param odds_table odds from remainderSeasonDC(Odds = TRUE), or null
 #' @param season_sofar The results of the season to date
 #'
 #' @return a two member list, of all results and summary results
 #' @export
-loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, rho = HockeyModel::rho, m = HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma, odds_table = NULL, season_sofar=NULL){
+loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, params=NULL, odds_table = NULL, season_sofar=NULL){
+
+  params<-parse_dc_params(params)
 
   nsims <- floor(nsims/cores)
 
   if(is.null(odds_table)){
-    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, rho = rho, m = m, theta = theta, gamma = gamma, nsims = nsims, mu_lambda = TRUE)
+    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, params=params, nsims = nsims, mu_lambda = TRUE)
   }
   #odds_table$Result <- NA
 
@@ -339,24 +338,28 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
     all_season <- odds_table
   }
 
-  #this fixes CRAN checks
-  `%dopar%` <- foreach::`%dopar%`
-  #`%do%` <- foreach::`%do%`
+  if(cores == 1){
+    #for testing only, really.
+    all_results<-sim_engine(all_season = all_season, nsims = nsims, params = params)
+  } else {
+    #this fixes CRAN checks
+    `%dopar%` <- foreach::`%dopar%`
+    #`%do%` <- foreach::`%do%`
 
-  cl<-parallel::makeCluster(cores)
-  doSNOW::registerDoSNOW(cl)
+    cl<-parallel::makeCluster(cores)
+    doSNOW::registerDoSNOW(cl)
 
-  #for testing only
-  #all_results<-sim_engine(all_season = all_season, nsims = nsims)
 
-  #Ram management issues. Send smaller chunks more often, hopefully this helps.
-  all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
-    all_results<-sim_engine(all_season = all_season, nsims = floor(nsims/5))
-    return(all_results)
+
+    #Ram management issues. Send smaller chunks more often, hopefully this helps.
+    all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
+      all_results<-sim_engine(all_season = all_season, nsims = floor(nsims/5), params=params)
+      return(all_results)
+    }
+
+    parallel::stopCluster(cl)
+    gc(verbose = FALSE)
   }
-
-  parallel::stopCluster(cl)
-  gc(verbose = FALSE)
 
   summary_results<-all_results %>%
     dplyr::group_by(.data$Team) %>%
@@ -397,15 +400,15 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
 #'
 #' @param all_season One seasons' scores & odds schedule
 #' @param nsims Number of simulations to run
+#' @param params params
 #'
 #' @return results of `nsims` season simulations, as one long data frame score table.
 #' @export
-sim_engine<-function(all_season, nsims){
+sim_engine<-function(all_season, nsims, params=NULL){
+
+  params<-parse_dc_params(params)
 
   season_length<-nrow(all_season)
-  # if(season_length != 1271){
-  #   warning('Season length not as expected: ', season_length)
-  # }
 
   multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
   multi_season$sim<-rep(1:nsims, each = season_length)
@@ -413,10 +416,10 @@ sim_engine<-function(all_season, nsims){
   #Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call calmed it.
 
   if('lambda' %in% names(multi_season)){
-    multi_season <- multi_season %>%
-      mutate_cond(is.na(.data$Result), Result = dcResult(lambda = .data$lambda, mu = .data$mu))
+    multi_season$Result<-dcResult(lambda = multi_season$lambda, mu = multi_season$mu, params = params)
+  }
 
-  } else{
+  if(!('Result' %in% names(multi_season)) | sum(is.na(multi_season$Result) > 0)){
     multi_season$r1<-stats::runif(n=nrow(multi_season))
     multi_season$r2<-stats::runif(n=nrow(multi_season))
     multi_season$r3<-stats::runif(n=nrow(multi_season))
@@ -459,8 +462,8 @@ sim_engine<-function(all_season, nsims){
 
   all_results$Points<-all_results$W*2 + all_results$OTW*2 + all_results$SOW*2 + all_results$OTL + all_results$SOL
 
-  all_results$Conference <- getConference(all_results$Team)
-  all_results$Division <- getDivision(all_results$Team)
+  all_results$Conference <- getTeamConferences(all_results$Team)
+  all_results$Division <- getTeamDivisions(all_results$Team)
   all_results$Wildcard <- NA
 
   all_results <- all_results %>%
@@ -480,15 +483,14 @@ sim_engine<-function(all_season, nsims){
     dplyr::ungroup() %>%
     dplyr::mutate(Playoffs = ifelse(.data$DivRank <= 3, 1, 0)) %>% #Top 3 in each division
     dplyr::arrange(.data$SimNo, .data$Team) %>%
-    mutate_cond(.data$Wildcard <= 2, Playoffs = 1) %>% # Wildcard 2 teams/conference
+    #mutate_cond(.data$Wildcard <= 2, Playoffs = 1) %>% # Wildcard 2 teams/conference
     dplyr::select(.data$SimNo, .data$Team, .data$W, .data$OTW,
                   .data$SOW, .data$SOL, .data$OTL, .data$Points,
                   .data$Wildcard, .data$Rank, .data$ConfRank,
                   .data$DivRank, .data$Playoffs)
 
-  #all_results[!is.na(all_results$Wildcard) & all_results$Wildcard <= 2,]$Playoffs<-1
-  #all_results$Wildcard[is.na(all_results$Wildcard)]<-0
-
+  all_results[!is.na(all_results$Wildcard) & all_results$Wildcard <= 2,]$Playoffs<-1
+  all_results$Wildcard[is.na(all_results$Wildcard)]<-0
   #all_results$Wildcard<-NULL
 
   return(all_results)
@@ -501,16 +503,14 @@ sim_engine<-function(all_season, nsims){
 #' @param away_team Opponent Team
 #' @param home_wins Home Ice Advantage Team Wins in Series
 #' @param away_wins Opponent Team Wins in Series
-#' @param m HockeyModel::m
-#' @param rho HockeyModel::rho
-#' @param theta HockeyModel::theta
-#' @param gamma HockeyModel::gamma
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return Odds from 0-1 of home team winning. Away odds are 1 - return value
 #' @export
-playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, m = HockeyModel::m, rho = HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma){
-  home_odds<-DCPredict(home = home_team, away = away_team, draws=FALSE, m = m, rho = rho, theta = theta, gamma = gamma)
-  away_odds<-1-DCPredict(home = away_team, away = home_team, draws=FALSE,  m = m, rho = rho, theta = theta, gamma = gamma)
+playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, params=NULL){
+  params<-parse_dc_params(params)
+  home_odds<-DCPredict(home = home_team, away = away_team, draws=FALSE, params=params)
+  away_odds<-1-DCPredict(home = away_team, away = home_team, draws=FALSE,  params=params)
   return(playoffSeriesOdds(home_odds = home_odds, away_odds = away_odds, home_win = home_wins, away_win = away_wins))
 }
 
@@ -522,14 +522,15 @@ playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, m = Hoc
 #' @param away_team Away Team name (Required)
 #' @param home_wins Number of home wins (default 0)
 #' @param away_wins Number of away team wins (default 0)
-#' @param homeAwayOdds precalculated home & away team parings odds of a home win. Overrides playoffwin calculation
-#' @param ... additional parameters to pass to playoffWin
+#' @param homeAwayOdds pre-calculated home & away team parings odds of a home win. Overrides playoffwin calculation
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return TRUE if the home team wins, else FALSE
 #' @export
-randomSeriesWinner<-function(home_team, away_team, home_wins=0, away_wins=0, homeAwayOdds = NULL, ...){
+randomSeriesWinner<-function(home_team, away_team, home_wins=0, away_wins=0, homeAwayOdds = NULL, params=NULL){
   if(is.null(homeAwayOdds)){
-    return(ifelse(stats::runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, ... = ...),
+    params<-parse_dc_params(params)
+    return(ifelse(stats::runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, params=params),
            home_team, away_team))
   } else {
     hao<-homeAwayOdds[homeAwayOdds$HomeTeam == home_team & homeAwayOdds$AwayTeam == away_team, ]
@@ -537,7 +538,8 @@ randomSeriesWinner<-function(home_team, away_team, home_wins=0, away_wins=0, hom
       return(ifelse(stats::runif(1)<hao$HomeOdds, home_team, away_team))
     } else {
       #Calculated odds aren't in there, get it manually
-      return(ifelse(stats::runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, ... = ...),
+      params<-parse_dc_params(params)
+      return(ifelse(stats::runif(1)<playoffWin(home_team=home_team, away_team=away_team, home_wins=home_wins, away_wins=away_wins, params = params),
                     home_team, away_team))
     }
   }
@@ -643,14 +645,12 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames
 #' @param summary_results summary results
 #' @param nsims Number of playoff sims to run. Too many takes a long time.
 #' @param cores Number of processor cores to use
-#' @param m HockeyModel::m
-#' @param rho HockeyModel::rho
-#' @param theta HockeyModel::theta
-#' @param gamma HockeyModel::gamma
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)
 #' @export
-simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::detectCores() - 1, m = HockeyModel::m, rho=HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma){
+simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::detectCores() - 1, params=NULL){
+  params <- parse_dc_params(params)
   if(is.null(summary_results)){
     filelist<-list.files(path = "./prediction_results")
     pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
@@ -660,12 +660,12 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::de
   }
 
   summary_results<-summary_results %>%
-    dplyr::mutate("Conf" = getConference(.data$Team),
-                  "Div" = getDivision(.data$Team))
-  east_results<-summary_results %>% dplyr::filter(.data$Conf == "East")
-  west_results<-summary_results %>% dplyr::filter(.data$Conf == "West")
+    dplyr::mutate("Conf" = getTeamConferences(.data$Team),
+                  "Div" = getTeamDivisions(.data$Team))
+  east_results<-summary_results %>% dplyr::filter(.data$Conf == "Eastern")
+  west_results<-summary_results %>% dplyr::filter(.data$Conf == "Western")
 
-  homeAwayOdds<-getAllHomeAwayOdds(summary_results$Team, m = m, rho = rho, theta = theta, gamma = gamma)
+  homeAwayOdds<-getAllHomeAwayOdds(summary_results$Team, params=params)
 
   simresults<-data.frame("SimNo" = integer(),
                          "l1" = character(),
@@ -706,7 +706,7 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::de
                    away_team = currentSeries[currentSeries$SeriesID == s, ]$AwayTeam,
                    home_wins = currentSeries[currentSeries$SeriesID == s, ]$HomeWins,
                    away_wins = currentSeries[currentSeries$SeriesID == s, ]$AwayWins,
-                   m = m, rho = rho)
+                   params = params)
     }
   }
 
@@ -803,9 +803,11 @@ reseedTwoTeams<-function(team1, team2, summary_results, p1=NULL){
 #' @param homeTeam Home Team extracted from summary_results
 #' @param awayTeam away Team extracted from summary_results
 #' @param homeAwayOdds if calculated, the odds of a home or away team win
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return a series winner (team name)
-single_series_solver<-function(series_number, currentSeries, homeTeam, awayTeam, homeAwayOdds = NULL){
+single_series_solver<-function(series_number, currentSeries, homeTeam, awayTeam, homeAwayOdds = NULL, params=NULL){
+  params<-parse_dc_params(params)
   series<-currentSeries[currentSeries$SeriesID == series_number,]
   if(nrow(series[series$Status == "Complete",]) == 1){
     if(series$HomeTeam != homeTeam | series$AwayTeam != awayTeam){
@@ -816,9 +818,9 @@ single_series_solver<-function(series_number, currentSeries, homeTeam, awayTeam,
     if(series$HomeTeam != homeTeam | series$AwayTeam != awayTeam){
       warning("Team Mismatch series ", series_number, ". Home Team expected ", series$HomeTeam, " got ", homeTeam, ". Away Team expected ", series$AwayTeam, " got ", awayTeam,". Using API series information.")
     }
-    return(randomSeriesWinner(series$HomeTeam, series$AwayTeam, home_wins = series$HomeWins, away_wins = series$AwayWins, homeAwayOdds = homeAwayOdds))
+    return(randomSeriesWinner(series$HomeTeam, series$AwayTeam, home_wins = series$HomeWins, away_wins = series$AwayWins, homeAwayOdds = homeAwayOdds, params=params))
   } else {
-    return(randomSeriesWinner(homeTeam, awayTeam, homeAwayOdds = homeAwayOdds))
+    return(randomSeriesWinner(homeTeam, awayTeam, homeAwayOdds = homeAwayOdds, params=params))
   }
 }
 
@@ -846,9 +848,11 @@ getCompletedSeries<-function(currentSeries){
 #' @param currentSeries currentSeries
 #' @param summary_results summary_results
 #' @param homeAwayOdds precalculated home & away pairs of odds - if available.
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @export
-playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, currentSeries, summary_results, homeAwayOdds){
+playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, currentSeries, summary_results, homeAwayOdds, params=NULL){
+  params<-parse_dc_params(params)
   simresults<-data.frame("SimNo" = integer(),
                          "l1" = character(),
                          "l2" = character(),
@@ -874,6 +878,7 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
                          "series14" = character(),
                          "series15" = character())
   srvec<-c()
+  apiteams<-nhlapi::nhl_teams()
 
   for (sim in 1:nsims){
     if(all(paste0('series', 1:8) %in% completedSeries$Series)){
@@ -911,7 +916,7 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
         series1 <- single_series_solver(series_number = 1, currentSeries = currentSeries, homeTeam = e1.1, awayTeam = ewc2, homeAwayOdds = homeAwayOdds)
         l4 <- ifelse(series4 == e1.1, ewc2, e1.1) #If winner = a, then b, else a
       }
-      p1div<-getDivision(e1.1)
+      p1div<-getTeamDivisions(e1.1, apiteams=apiteams)
 
       if('series2' %in% completedSeries$Series){
         series2 <- completedSeries[completedSeries$Series == 'series2', ]$Winner
@@ -978,7 +983,7 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
         series5 <- single_series_solver(series_number = 5, currentSeries = currentSeries, homeTeam = w1.1, awayTeam = wwc2, homeAwayOdds = homeAwayOdds)
         l5 <- ifelse(series5 == w1.1, wwc2, w1.1) #If winner = a, then b, else a
       }
-      p1div<-getDivision(w1.1)
+      p1div<-getTeamDivisions(w1.1, apiteams=apiteams)
 
       if('series6' %in% completedSeries$Series){
         series6 <- completedSeries[completedSeries$Series == 'series6', ]$Winner
@@ -1088,10 +1093,11 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
   return(simresults)
 }
 
-getAllHomeAwayOdds<-function(teamlist, m = HockeyModel::m, rho = HockeyModel::rho, theta = HockeyModel::theta, gamma = HockeyModel::gamma){
+getAllHomeAwayOdds<-function(teamlist, params=NULL){
+  params<-parse_dc_params(params)
   homeAwayOdds<-expand.grid("HomeTeam" = teamlist, "AwayTeam" = teamlist, stringsAsFactors = FALSE)
   homeAwayOdds<-homeAwayOdds[homeAwayOdds$HomeTeam != homeAwayOdds$AwayTeam,]
-  homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) playoffWin(x[1], x[2], m = m, rho = rho, theta = theta, gamma = gamma))
+  homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) playoffWin(x[1], x[2], params=params))
   return(homeAwayOdds)
 }
 
@@ -1103,21 +1109,19 @@ getAllHomeAwayOdds<-function(teamlist, m = HockeyModel::m, rho = HockeyModel::rh
 #' @param today Day's predictions to record. Defaults to today, but can set any other day
 #' @param file csv file location to store predictions. Will append to file.
 #' @param schedule HockeyModel::schedule or supplied. \code{today} date must be in schedule
-#' @param rho HockeyModel::rho or supplied
-#' @param m HockeyModel::m or supplied
-#' @param theta HockeyModel::theta or supplied
-#' @param gamma HockeyModel::gamma or supplied
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return NULL
 #' @export
-recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.csv", schedule=HockeyModel::schedule, rho=HockeyModel::rho, m=HockeyModel::m, theta = HockeyModel::theta, gamma = HockeyModel::gamma){
+recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.csv", schedule=HockeyModel::schedule, params=NULL){
+  params<-parse_dc_params(params)
   stopifnot(is.Date(today))
   today<-as.Date(today)
   today_sched<-schedule[schedule$Date == today,]
   if(nrow(today_sched) == 0){
     stop("No games on date:", today)
   }
-  today_preds<-todayDC(today = today, rho = rho, m = m, theta = theta, gamma = gamma, schedule = schedule)
+  today_preds<-todayDC(today = today, params=params, schedule = schedule)
   preds<-dplyr::full_join(today_sched, today_preds, suffix=c("",""), by = c("HomeTeam", "AwayTeam"))
   preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw")]
 
@@ -1159,13 +1163,15 @@ build_past_predictions<-function(startDate, endDate, file="./data-raw/dailyodds.
     score<-scores[scores$Date < day,]
     score<-score[score$Date > (as.Date(startDate) - 4000),]  # only feed in ~ 11 years data to calculate m & rho
     sched<-schedule[schedule$Date == d,]
-    m.day<-getM(scores = score, currentDate = d)
-    rho.day<-getRho(m = m.day, scores = score)
-    t.day<-getTheta(m = m.day, rho=rho.day, scores = score)
-    theta.day<-t.day$theta
-    gamma.day<-t.day$gamma
+    params<-list()
+    params$m<-getM(scores = score, currentDate = d)
+    params$rho<-getRho(m = params$m, scores = score)
+    w.day<-getWeibullParams(m = params$m, rho=params$rho, scores = score)
+    params$beta<-w.day$beta
+    params$eta<-w.day$eta
+    params$k<-w.day$k
 
-    recordTodaysPredictions(today=d, file=file, schedule = sched, rho = rho.day, m=m.day, theta = theta.day, gamma = gamma.day)
+    recordTodaysPredictions(today=d, file=file, schedule = sched, params = params)
   }
   return(TRUE)
 }

@@ -7,7 +7,7 @@
 getNHLScores(gameIDs, schedule = HockeyModel::schedule, progress = TRUE)
 }
 \arguments{
-\item{gameIDs}{Game IDs (10 digit number). See [nhlapi::nhl_games()] for more information}
+\item{gameIDs}{Game IDs (10 digit number). See \code{\link[nhlapi:nhl_games]{nhlapi::nhl_games()}} for more information}
 
 \item{schedule}{optional, provide a schedule if not using the HockeyModel::schedule}
 
@@ -20,5 +20,5 @@ a data frame with Date, HomeTeam, AwayTeam, GameID, HomeGoals, AwayGoals, OTStat
 Get the NHL game scores from the NHL API for any game(s) with a final score. Returns data formatted for future use. Requires gameID(s) be provided.This can be slow if requesting many games due to the API rate limit.
 }
 \seealso{
-See [nhlapi::nhl_games()] for more information on gameIDs
+See \code{\link[nhlapi:nhl_games]{nhlapi::nhl_games()}} for more information on gameIDs
 }

@@ -4,29 +4,14 @@
 \alias{playoffDC}
 \title{Playoff Odds DC}
 \usage{
-playoffDC(
-  home,
-  away,
-  rho = HockeyModel::rho,
-  m = HockeyModel::m,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma,
-  home_wins = 0,
-  away_wins = 0
-)
+playoffDC(home, away, params, home_wins = 0, away_wins = 0)
 }
 \arguments{
 \item{home}{Series Home Ice Advantage Team Name}
 
 \item{away}{Away (Opponent) Team Name}
 
-\item{rho}{HockeyModel::rho}
-
-\item{m}{HockeyModel::m}
-
-\item{theta}{HockeyModel::theta}
-
-\item{gamma}{HockeyModel::gamma}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{home_wins}{Number of wins for home ice advantage team thus far in series}
 

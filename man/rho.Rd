@@ -3,9 +3,9 @@
 \docType{data}
 \name{rho}
 \alias{rho}
-\title{Dixon Coles' `rho`}
+\title{Dixon Coles' \code{rho}}
 \format{
-a single numerical value
+a single numerical value usually around -0.25
 }
 \usage{
 rho

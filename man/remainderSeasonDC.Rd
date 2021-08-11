@@ -6,16 +6,18 @@
 \usage{
 remainderSeasonDC(
   nsims = 10000,
+  params = NULL,
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
   odds = FALSE,
   regress = TRUE,
-  mu_lambda = FALSE,
-  ...
+  mu_lambda = FALSE
 )
 }
 \arguments{
 \item{nsims}{Number of simulations}
+
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{scores}{the historical scores}
 
@@ -25,9 +27,7 @@ remainderSeasonDC(
 
 \item{regress}{whether to apply a regression to the mean for team strength on future predictions}
 
-\item{mu_lambda}{whether to return team mu/lambda values. Can't be set true if odds is true}
-
-\item{...}{arguments to pass to dc predictor}
+\item{mu_lambda}{whether to return team xG values. Can't be set true if odds is true}
 }
 \value{
 data frame of Team, playoff odds.

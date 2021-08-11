@@ -6,6 +6,7 @@
 \usage{
 dcRealSeasonPredict(
   nsims = 1e+05,
+  params = NULL,
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
   cores = parallel::detectCores() - 1,
@@ -16,6 +17,8 @@ dcRealSeasonPredict(
 }
 \arguments{
 \item{nsims}{number of simulations}
+
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{scores}{historical scores}
 

@@ -6,10 +6,7 @@
 \usage{
 todayOddsPlot(
   date = Sys.Date(),
-  rho = HockeyModel::rho,
-  m = HockeyModel::m,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma,
+  params = NULL,
   schedule = HockeyModel::schedule,
   scores = HockeyModel::scores
 )
@@ -17,13 +14,7 @@ todayOddsPlot(
 \arguments{
 \item{date}{date to predict odds. Default today}
 
-\item{rho}{HockeyModel::rho or a custom value}
-
-\item{m}{HockeyModel::m or a custom value}
-
-\item{theta}{HockeyModel::theta or a custom value}
-
-\item{gamma}{HockeyModel::gamma or a custom value}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{schedule}{HockeyModel::schedule or a custom value}
 

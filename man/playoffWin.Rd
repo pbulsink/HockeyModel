@@ -4,16 +4,7 @@
 \alias{playoffWin}
 \title{Playoff Win Calculator}
 \usage{
-playoffWin(
-  home_team,
-  away_team,
-  home_wins = 0,
-  away_wins = 0,
-  m = HockeyModel::m,
-  rho = HockeyModel::rho,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma
-)
+playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, params = NULL)
 }
 \arguments{
 \item{home_team}{Home Ice Advantage Team}
@@ -24,13 +15,7 @@ playoffWin(
 
 \item{away_wins}{Opponent Team Wins in Series}
 
-\item{m}{HockeyModel::m}
-
-\item{rho}{HockeyModel::rho}
-
-\item{theta}{HockeyModel::theta}
-
-\item{gamma}{HockeyModel::gamma}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
 \value{
 Odds from 0-1 of home team winning. Away odds are 1 - return value

@@ -476,3 +476,63 @@ getSeason <- function(gamedate=Sys.Date()){
     return(unname(vgs(gd = gamedate, seasons = seasons)))
   }
 }
+
+
+getConferences <- function(apiteams=nhlapi::nhl_teams()){
+  return(unique(apiteams$conference.name))
+}
+
+getDivisions <- function(apiteams=nhlapi::nhl_teams()){
+  return(unique(apiteams$division.name))
+}
+
+getTeamConferences <- function(teams, apiteams=nhlapi::nhl_teams()){
+  getteamconf<-function(t, apiteams){
+    if(t %in% apiteams$name){
+      return(apiteams[apiteams$name == t, ]$conference.name)
+    } else {
+      return(NA)
+    }
+  }
+
+  v_getteamconf<-Vectorize(getteamconf, "t")
+  if(length(teams) == 1){
+    return(getteamconf(t = teams, apiteams = apiteams))
+  } else {
+    return(unname(v_getteamconf(t=teams, apiteams = apiteams)))
+  }
+}
+
+getTeamDivisions <- function(teams, apiteams=nhlapi::nhl_teams()){
+  getteamdiv<-function(t, apiteams){
+    if(t %in% apiteams$name){
+      return(apiteams[apiteams$name == t, ]$division.name)
+    } else {
+      return(NA)
+    }
+  }
+
+  v_getteamdiv<-Vectorize(getteamdiv, "t")
+  if(length(teams) == 1){
+    return(getteamdiv(t = teams, apiteams = apiteams))
+  } else {
+    return(unname(v_getteamdiv(t=teams, apiteams = apiteams)))
+  }
+}
+
+getShortTeam<-function(teams, apiteams=nhlapi::nhl_teams()){
+  getteamshort<-function(t, apiteams){
+    if(t %in% apiteams$name){
+      return(apiteams[apiteams$name == t, ]$abbreviation)
+    } else {
+      return(NA)
+    }
+  }
+
+  v_getteamshort<-Vectorize(getteamshort, "t")
+  if(length(teams) == 1){
+    return(getteamshort(t = teams, apiteams = apiteams))
+  } else {
+    return(unname(v_getteamshort(t=teams, apiteams = apiteams)))
+  }
+}

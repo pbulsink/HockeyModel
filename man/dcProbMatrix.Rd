@@ -7,10 +7,7 @@
 dcProbMatrix(
   home,
   away,
-  m = HockeyModel::m,
-  rho = HockeyModel::rho,
-  theta = HockeyModel::theta,
-  gamma = HockeyModel::gamma,
+  params = NULL,
   maxgoal = 8,
   scores = HockeyModel::scores,
   expected_mean = NULL,
@@ -22,13 +19,7 @@ dcProbMatrix(
 
 \item{away}{away team}
 
-\item{m}{result from getM}
-
-\item{rho}{rho from getRho}
-
-\item{theta}{theta from getTheta}
-
-\item{gamma}{from getTheta}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{maxgoal}{max number of goals per team}
 
