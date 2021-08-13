@@ -262,27 +262,43 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
 
 clean_names<-function(sc){
   if(is.vector(sc)){
-    sc<-stringi::stri_trans_geneneral(str=sc, 'latin-ascii')
+    sc<-stringi::stri_trans_general(str=sc, 'latin-ascii')
     sc<-replace(sc, sc == "Phoenix Coyotes", "Arizona Coyotes")
     sc<-replace(sc, sc == "Atlanta Thrashers", "Winnipeg Jets")
     sc<-replace(sc, sc == "Minnesota North Stars", "Dallas Stars")
     sc<-replace(sc, sc == "Quebec Nordiques", "Colorado Avalanche")
     sc<-replace(sc, sc == "Chicago Blackhawks", "Chicago")
   } else if (is.data.frame(sc)){
-    sc <- sc %>%
-      dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str=.data$HomeTeam, 'latin-ascii'),
-                    "AwayTeam" = stringi::stri_trans_general(str=.data$AwayTeam, 'latin-ascii')) %>%
-      dplyr::mutate("HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
-                    "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
-                    "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
-                    "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
-                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
-                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
-                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
-                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
-                    "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Chicago Blackhawks", "Chicago"),
-                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Chicago Blackhawks", "Chicago")
-                    )
+    if('HomeTeam' %in% names(sc)){
+      sc <- sc %>%
+        dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str=.data$HomeTeam, 'latin-ascii')) %>%
+        dplyr::mutate("HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+                      "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
+                      "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
+                      "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
+                      "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Chicago Blackhawks", "Chicago")
+                      )
+    }
+    if('AwayTeam' %in% names(sc)){
+      sc <- sc %>%
+        dplyr::mutate("AwayTeam" = stringi::stri_trans_general(str=.data$AwayTeam, 'latin-ascii')) %>%
+        dplyr::mutate("AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+                      "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
+                      "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
+                      "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
+                      "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Chicago Blackhawks", "Chicago")
+        )
+    }
+    if('Team' %in% names(sc)) {
+      sc <- sc %>%
+        dplyr::mutate("Team" = stringi::stri_trans_general(str=.data$Team, 'latin-ascii')) %>%
+        dplyr::mutate("Team" = replace(.data$Team, .data$Team == "Phoenix Coyotes", "Arizona Coyotes"),
+                      "Team" = replace(.data$Team, .data$Team == "Atlanta Thrashers", "Winnipeg Jets"),
+                      "Team" = replace(.data$Team, .data$Team == "Minnesota North Stars", "Dallas Stars"),
+                      "Team" = replace(.data$Team, .data$Team == "Quebec Nordiques", "Colorado Avalanche"),
+                      "Team" = replace(.data$Team, .data$Team == "Chicago Blackhawks", "Chicago")
+        )
+    }
     if('Date' %in% names(sc)){
       sc <- sc %>%
         dplyr::mutate("Date" = as.Date(.data$Date))
