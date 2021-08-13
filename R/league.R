@@ -400,7 +400,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
 #'
 #' @param all_season One seasons' scores & odds schedule
 #' @param nsims Number of simulations to run
-#' @param params params
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return results of `nsims` season simulations, as one long data frame score table.
 #' @export

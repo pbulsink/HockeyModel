@@ -261,27 +261,36 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
 
 
 clean_names<-function(sc){
-  sc <- sc %>%
-    dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str=.data$HomeTeam, 'latin-ascii'),
-                  "AwayTeam" = stringi::stri_trans_general(str=.data$AwayTeam, 'latin-ascii')) %>%
-    dplyr::mutate("HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
-                  "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
-                  "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
-                  "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
-                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
-                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
-                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
-                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
-                  "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Chicago Blackhawks", "Chicago"),
-                  "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Chicago Blackhawks", "Chicago")
-                  )
-  if('Date' %in% names(sc)){
+  if(is.vector(sc)){
+    sc<-stringi::stri_trans_geneneral(str=sc, 'latin-ascii')
+    sc<-replace(sc, sc == "Phoenix Coyotes", "Arizona Coyotes")
+    sc<-replace(sc, sc == "Atlanta Thrashers", "Winnipeg Jets")
+    sc<-replace(sc, sc == "Minnesota North Stars", "Dallas Stars")
+    sc<-replace(sc, sc == "Quebec Nordiques", "Colorado Avalanche")
+    sc<-replace(sc, sc == "Chicago Blackhawks", "Chicago")
+  } else if (is.data.frame(sc)){
     sc <- sc %>%
-      dplyr::mutate("Date" = as.Date(.data$Date))
-  }
-  if('OTStatus' %in% names(sc)){
-    if(any(sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"))){
-      sc[sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"),]$OTStatus <- "OT"
+      dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str=.data$HomeTeam, 'latin-ascii'),
+                    "AwayTeam" = stringi::stri_trans_general(str=.data$AwayTeam, 'latin-ascii')) %>%
+      dplyr::mutate("HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+                    "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
+                    "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
+                    "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
+                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
+                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
+                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
+                    "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Chicago Blackhawks", "Chicago"),
+                    "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Chicago Blackhawks", "Chicago")
+                    )
+    if('Date' %in% names(sc)){
+      sc <- sc %>%
+        dplyr::mutate("Date" = as.Date(.data$Date))
+    }
+    if('OTStatus' %in% names(sc)){
+      if(any(sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"))){
+        sc[sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"),]$OTStatus <- "OT"
+      }
     }
   }
   return(sc)
@@ -487,6 +496,7 @@ getDivisions <- function(apiteams=nhlapi::nhl_teams()){
 }
 
 getTeamConferences <- function(teams, apiteams=nhlapi::nhl_teams()){
+  apiteams<-clean_names(apiteams)
   getteamconf<-function(t, apiteams){
     if(t %in% apiteams$name){
       return(apiteams[apiteams$name == t, ]$conference.name)
@@ -504,6 +514,7 @@ getTeamConferences <- function(teams, apiteams=nhlapi::nhl_teams()){
 }
 
 getTeamDivisions <- function(teams, apiteams=nhlapi::nhl_teams()){
+  apiteams<-clean_names(apiteams)
   getteamdiv<-function(t, apiteams){
     if(t %in% apiteams$name){
       return(apiteams[apiteams$name == t, ]$division.name)
@@ -521,6 +532,7 @@ getTeamDivisions <- function(teams, apiteams=nhlapi::nhl_teams()){
 }
 
 getShortTeam<-function(teams, apiteams=nhlapi::nhl_teams()){
+  apiteams<-clean_names(apiteams)
   getteamshort<-function(t, apiteams){
     if(t %in% apiteams$name){
       return(apiteams[apiteams$name == t, ]$abbreviation)

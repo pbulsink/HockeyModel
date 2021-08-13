@@ -191,7 +191,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     gt::gtsave(today_table, filename = file.path(graphic_dir, 'today_odds_table.png'))
   }
   if(inRegularSeason()){
-    updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule, params=params)
+    updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule, params=modelparams$params)
     playoff <- playoffOdds()
     president <- presidentOdds()
     point <- pointPredict()
