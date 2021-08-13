@@ -299,6 +299,16 @@ clean_names<-function(sc){
                       "Team" = replace(.data$Team, .data$Team == "Chicago Blackhawks", "Chicago")
         )
     }
+    if('name' %in% names(sc)) {
+      sc <- sc %>%
+        dplyr::mutate("name" = stringi::stri_trans_general(str=.data$name, 'latin-ascii')) %>%
+        dplyr::mutate("name" = replace(.data$name, .data$name == "Phoenix Coyotes", "Arizona Coyotes"),
+                      "name" = replace(.data$name, .data$name == "Atlanta Thrashers", "Winnipeg Jets"),
+                      "name" = replace(.data$name, .data$name == "Minnesota North Stars", "Dallas Stars"),
+                      "name" = replace(.data$name, .data$name == "Quebec Nordiques", "Colorado Avalanche"),
+                      "name" = replace(.data$name, .data$name == "Chicago Blackhawks", "Chicago")
+        )
+    }
     if('Date' %in% names(sc)){
       sc <- sc %>%
         dplyr::mutate("Date" = as.Date(.data$Date))
@@ -522,6 +532,7 @@ getTeamConferences <- function(teams, apiteams=nhlapi::nhl_teams()){
   }
 
   v_getteamconf<-Vectorize(getteamconf, "t")
+  teams<-clean_names(teams)
   if(length(teams) == 1){
     return(getteamconf(t = teams, apiteams = apiteams))
   } else {
@@ -540,6 +551,7 @@ getTeamDivisions <- function(teams, apiteams=nhlapi::nhl_teams()){
   }
 
   v_getteamdiv<-Vectorize(getteamdiv, "t")
+  teams<-clean_names(teams)
   if(length(teams) == 1){
     return(getteamdiv(t = teams, apiteams = apiteams))
   } else {
@@ -558,6 +570,7 @@ getShortTeam<-function(teams, apiteams=nhlapi::nhl_teams()){
   }
 
   v_getteamshort<-Vectorize(getteamshort, "t")
+  teams<-clean_names(teams)
   if(length(teams) == 1){
     return(getteamshort(t = teams, apiteams = apiteams))
   } else {
