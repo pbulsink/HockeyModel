@@ -1,5 +1,9 @@
 # HockeyModel
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/pbulsink/HockeyModel/workflows/R-CMD-check/badge.svg)](https://github.com/pbulsink/HockeyModel/actions)
+<!-- badges: end -->
+
 This is a model to predict NHL game winners & their likely performance for the rest of the season.
 
 Read more about the package at [https://pbulsink.github.io/HockeyModel](https://pbulsink.github.io/HockeyModel)
