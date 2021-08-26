@@ -4,15 +4,17 @@
 \alias{sim_engine}
 \title{Simulation engine to be parallelized or used in single core}
 \usage{
-sim_engine(all_season, nsims)
+sim_engine(all_season, nsims, params = NULL)
 }
 \arguments{
 \item{all_season}{One seasons' scores & odds schedule}
 
 \item{nsims}{Number of simulations to run}
+
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
 \value{
-results of `nsims` season simulations, as one long data frame score table.
+results of \code{nsims} season simulations, as one long data frame score table.
 }
 \description{
 Simulation engine to be parallelized or used in single core

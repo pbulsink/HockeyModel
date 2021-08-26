@@ -3,14 +3,14 @@
 \docType{data}
 \name{rho}
 \alias{rho}
-\title{Dixon Coles' `rho`}
+\title{Dixon Coles' \code{rho}}
 \format{
-a single numerical value
+a single numerical value usually around -0.25
 }
 \usage{
 rho
 }
 \description{
-Rho for low score correction to Dixon Coles
+Rho for low score correction to Dixon Coles. Should be around -0.25
 }
 \keyword{datasets}

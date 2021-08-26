@@ -7,17 +7,16 @@
 \format{
 A data frame with  variables:
 \describe{
-  \item{Date}{Date of the game}
-  \item{AwayTeam}{Name of visiting team}
-  \item{AwayGoals}{Number of goals for the visiting team}
-  \item{HomeTeam}{Name of the home team}
-  \item{HomeGoals}{Number of goals for the home team}
-  \item{OTStatus}{The OT status of the game (none, OT, SO, 2OT, 3OT, ...)}
-  \item{League}{NHL or WHA}
-  \item{Tie}{Boolean, Tie or Not}
-  \item{Winner}{Name of the winning team}
-  \item{Loser}{Name of the losing team}
-  \item{Result}{Coded home win = 0, visitor win = 1}
+\item{Date}{Date of the game}
+\item{AwayTeam}{Name of visiting team}
+\item{AwayGoals}{Number of goals for the visiting team}
+\item{HomeTeam}{Name of the home team}
+\item{HomeGoals}{Number of goals for the home team}
+\item{OTStatus}{The OT status of the game (none, OT, SO, 2OT, 3OT, ...)}
+\item{GameID}{Unique GameID for each game}
+\item{GameType}{Game Type for each game}
+\item{GameStatus}{Game Status - 'Final'}
+\item{Result}{A numerically coded result for Hoome Team. Win=1, OTWin = 0.75, SOWin = 0.6, Tie = 0.5, SOLoss = 0.4, OTLoss = 0.25, Loss = 0}
 }
 }
 \source{

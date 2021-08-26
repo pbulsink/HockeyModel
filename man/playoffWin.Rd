@@ -4,7 +4,7 @@
 \alias{playoffWin}
 \title{Playoff Win Calculator}
 \usage{
-playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, ...)
+playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, params = NULL)
 }
 \arguments{
 \item{home_team}{Home Ice Advantage Team}
@@ -14,9 +14,11 @@ playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, ...)
 \item{home_wins}{Home Ice Advantage Team Wins in Series}
 
 \item{away_wins}{Opponent Team Wins in Series}
+
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
 \value{
-Odds from 0-1
+Odds from 0-1 of home team winning. Away odds are 1 - return value
 }
 \description{
 wraps PlayoffSeriesOdds with odds generator for a given home and away team

@@ -4,10 +4,7 @@
 \alias{presidentOdds}
 \title{Predict President's Odds graphic}
 \usage{
-presidentOdds(...)
-}
-\arguments{
-\item{...}{Items to pass to update and plot functions.}
+presidentOdds()
 }
 \value{
 president's odds ggplot object

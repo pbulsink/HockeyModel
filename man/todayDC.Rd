@@ -5,22 +5,19 @@
 \title{DC Predictions Today}
 \usage{
 todayDC(
+  params,
   today = Sys.Date(),
-  rho = HockeyModel::rho,
-  m = HockeyModel::m,
   schedule = HockeyModel::schedule,
   expected_mean = NULL,
   season_percent = NULL
 )
 }
 \arguments{
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+
 \item{today}{Generate predictions for this date. Defaults to today}
 
-\item{rho}{DC Rho}
-
-\item{m}{DC m}
-
-\item{schedule}{shcedule to use, if not the builtin}
+\item{schedule}{schedule to use, if not the built-in}
 
 \item{expected_mean}{the mean lambda & mu, used only for regression}
 

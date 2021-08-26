@@ -4,12 +4,10 @@
 \alias{ratings}
 \title{Current ratings}
 \usage{
-ratings(m = HockeyModel::m, ...)
+ratings(m = HockeyModel::m)
 }
 \arguments{
 \item{m}{HockeyModel::m or a custom value}
-
-\item{...}{Items to pass to plot functions.}
 }
 \value{
 today's ratings ggplot object

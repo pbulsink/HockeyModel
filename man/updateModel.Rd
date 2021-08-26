@@ -4,11 +4,11 @@
 \alias{updateModel}
 \title{Update Model}
 \usage{
-updateModel(...)
+updateModel()
 }
-\arguments{
-\item{...}{Items to pass to update functions.}
+\value{
+a list of scores, schedule, and param named list
 }
 \description{
-Update Model
+updates the schedule, scores, and model parameters (m, rho, theta, gamma). Returns them in a list of named values
 }

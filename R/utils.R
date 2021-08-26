@@ -21,135 +21,6 @@ cleanModel <- function(cm) {
 }
 
 
-#' Get Current Season
-#'
-#' @return current season (as 20172018 format) based on today's date
-#' @export
-getCurrentSeason8 <- function(){
-  getSeason(Sys.Date())
-}
-
-
-#' Get Current Season Start Date
-#'
-#' @return current season's nominal start date (Oct 01) as character, e.g. "2019-10-01"
-#' @export
-getCurrentSeasonStartDate <- function(){
-  return(paste0(strtrim(getSeason(Sys.Date()), 4), "-10-02"))
-}
-
-
-#' Get Season from Game Date
-#'
-#' @param gamedate The date of the game to check for season
-#'
-#' @return a character season id (e.g. 20172018)
-#' @export
-getSeason <- function(gamedate){
-  gs<-function(gd){
-    year<-as.integer(strftime(gd, '%Y'))
-    month<-as.integer(strftime(gd, '%m'))
-    if(month < 10){
-      return(paste0(year-1,year))
-    } else {
-      return(paste0(year,year+1))
-    }
-  }
-  vgs<-Vectorize(gs)
-
-
-  if(length(gamedate) == 1){
-    return(gs(gamedate))
-  } else if (length(gamedate) > 1) {
-    return(unname(vgs(gamedate)))
-  }
-}
-
-
-#' Get the division of a team or vector of teams
-#'
-#' @param team a single team or vector of teams
-#'
-#' @return the division (or vector of divisions) for the team(s)
-getDivision<-function(team){
-  gd <- function(t){
-    nhl_divisions <- HockeyModel::nhl_divisions
-    d<-grep(t, nhl_divisions)
-    if(length(d) != 1) {
-      return (NA)
-    } else {
-      return(names(nhl_divisions)[d])
-    }
-  }
-
-  vgd<-Vectorize(gd)
-
-  if(length(team) == 1) {
-    return(gd(team))
-  } else {
-    return(as.vector(vgd(team)))
-  }
-}
-
-
-#' Get the conference of a team or vector of teams
-#'
-#' @param team a single team or vector of teams
-#'
-#' @return the conference (or vector of conferences) for the team(s)
-getConference<-function(team){
-  gconf <- function(t){
-    nhl_conferences <- HockeyModel::nhl_conferences
-    d<-grep(t, nhl_conferences)
-    if(length(d) != 1) {
-      return (NA)
-    } else {
-      return(names(nhl_conferences)[d])
-    }
-  }
-
-  vgconf<-Vectorize(gconf)
-
-  if(length(team) == 1) {
-    return(gconf(team))
-  } else {
-    return(as.vector(vgconf(team)))
-  }
-}
-
-
-#' Get a Team's short code
-#'
-#' @param team a single team or vector of teams
-#'
-#' @return the team's (or teams') short code(s)
-getShortTeam<-function(team){
-  team_short<-list(
-    "Anaheim Ducks" = "ANA", "Arizona Coyotes" = "ARI", "Boston Bruins" = "BOS", "Buffalo Sabres" ="BUF",
-    "Calgary Flames" = "CGY", "Carolina Hurricanes" = "CAR", "Chicago Blackhawks" = "CHI",
-    "Colorado Avalanche" = "COL", "Columbus Blue Jackets" = "CBJ", "Dallas Stars" = "DAL",
-    "Detroit Red Wings" = "DET", "Edmonton Oilers" = "EDM", "Florida Panthers" = "FLA",
-    "Los Angeles Kings" = "LAK","Minnesota Wild" = "MIN", "Montreal Canadiens" = "MTL",
-    "Nashville Predators" = "NSH", "New Jersey Devils" = "NJD", "New York Islanders" = "NYI",
-    "New York Rangers" = "NYR", "Ottawa Senators" = "OTT", "Philadelphia Flyers" = "PHI",
-    "Pittsburgh Penguins" = "PIT", "San Jose Sharks" = "SJS", "St. Louis Blues" = "STL",
-    "Tampa Bay Lightning" = "TBL", "Toronto Maple Leafs" = "TOR", "Vancouver Canucks" = "VAN",
-    "Vegas Golden Knights" = "VGK","Washington Capitals" = "WSH", "Winnipeg Jets" = "WPG"
-  )
-  ts<-function(t){
-    return(team_short[[t]])
-  }
-
-  vts<-Vectorize(ts)
-
-  if(length(team) == 1){
-    return(ts(team))
-  } else {
-    return(as.vector(vts(team)))
-  }
-}
-
-
 #' Normalize Odds
 #'
 #' @param odds a vector of odds to normalize
@@ -179,16 +50,8 @@ historicalPoints<-function(sc){
     if(i == "20122013"){
       next
     }
-    if(as.numeric(i) >= 20172018){
-      ngames<-1271
-    } else {
-      ngames<-1230
-    }
 
-    s<-sc[sc$Season == i,]
-    if(ngames < nrow(s)){
-      s<-s[1:ngames, ]
-    }
+    s<-sc[sc$Season == i & sc$GameType == "R",]
     b<-buildStats(s)
     b$Season <- i
 
@@ -251,25 +114,6 @@ accuracy<-function(predicted, actual){
   accuracy <- sum(as.numeric(predicted == actual))/length(predicted)
 
   return(accuracy)
-}
-
-
-#' Add Series Win
-#'
-#' @param series the full series dataframe
-#' @param winner Team to add a win to
-#'
-#' @return updated series
-#' @export
-addSeriesWin<-function(winner, series=HockeyModel::series){
-  index<-which(winner == series, arr.ind = TRUE)
-  if(length(index) == 2){
-    series[index[1],index[2]+2]<-series[index[1],index[2]+2] + 1
-  } else {
-    stop('Winning team series not found')
-  }
-  updateSeries(series = series)
-  return(series)
 }
 
 
@@ -341,6 +185,7 @@ formatPredsForHockeyVisContest<-function(predictions, candyType = 'Fuzzy Peaches
                   "'PHI':(", round(predictions[predictions$Team == "Philadelphia Flyers",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Philadelphia Flyers",]$sdPoints, 2), "), ",
                   "'PIT':(", round(predictions[predictions$Team == "Pittsburgh Penguins",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Pittsburgh Penguins",]$sdPoints, 2), "), ",
                   "'S.J':(", round(predictions[predictions$Team == "San Jose Sharks",]$meanPoints, 1), ",", round(predictions[predictions$Team == "San Jose Sharks",]$sdPoints, 2), "), ",
+                  "'SEA':(", round(predictions[predictions$Team == "Seattle Kracken",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Seattle Kracken",]$sdPoints, 2),
                   "'STL':(", round(predictions[predictions$Team == "St. Louis Blues",]$meanPoints, 1), ",", round(predictions[predictions$Team == "St. Louis Blues",]$sdPoints, 2), "), ",
                   "'T.B':(", round(predictions[predictions$Team == "Tampa Bay Lightning",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Tampa Bay Lightning",]$sdPoints, 2), "), ",
                   "'TOR':(", round(predictions[predictions$Team == "Toronto Maple Leafs",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Toronto Maple Leafs",]$sdPoints, 2), "), ",
@@ -351,4 +196,28 @@ formatPredsForHockeyVisContest<-function(predictions, candyType = 'Fuzzy Peaches
                   "} }"
   )
   return(output)
+}
+
+#' Validate GameID numbers
+#'
+#' @param gameIDs a single game ID or vector of game IDs
+#'
+#' @return TRUE if gameIDs is valid, or FALSE if gameIDs is not (or a vector of length of input of TRUE/FALSE
+#' @export
+gameIDValidator<-function(gameIDs){
+  return(grepl("(19|20)\\d{2}0[1-4][0-1]\\d{3}", gameIDs))
+}
+
+#' Is this a Date?
+#'
+#' @description Is this a date?
+#'
+#' @param date is this a date?
+#'
+#' @return is it a date?
+#' @export
+#'
+#' @examples is.Date("2020-12-13"); is.Date("bob")
+is.Date<-function(date){
+  tryCatch(!is.na(as.Date(date)),error=function(err){FALSE})
 }

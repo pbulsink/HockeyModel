@@ -7,8 +7,7 @@
 DCPredict(
   home,
   away,
-  m = HockeyModel::m,
-  rho = HockeyModel::rho,
+  params = NULL,
   maxgoal = 8,
   scores = HockeyModel::scores,
   expected_mean = NULL,
@@ -21,9 +20,7 @@ DCPredict(
 
 \item{away}{away team}
 
-\item{m}{result from getM}
-
-\item{rho}{rho from getRho}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{maxgoal}{max number of goals per team}
 
@@ -39,5 +36,5 @@ DCPredict(
 a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
 }
 \description{
-Using Dixon Coles technique, predict odds each of home win, draw, and away win.
+Using Dixon-Coles' technique, predict odds each of home win, draw, and away win.
 }

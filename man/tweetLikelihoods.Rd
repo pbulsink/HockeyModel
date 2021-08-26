@@ -5,7 +5,7 @@
 \title{Tweet Likelihood plots (ggridges)}
 \usage{
 tweetLikelihoods(
-  delay = 60 * 5,
+  delay = stats::runif(1, min = 3, max = 6) * 60,
   graphic_dir = "./prediction_results/graphics/",
   subdir = "pace",
   token = rtweet::get_token(),

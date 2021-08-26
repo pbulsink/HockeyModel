@@ -4,10 +4,7 @@
 \alias{playoffOdds}
 \title{Predict playoff odds graphic}
 \usage{
-playoffOdds(...)
-}
-\arguments{
-\item{...}{Items to pass to update and plot functions.}
+playoffOdds()
 }
 \value{
 playoff odds ggplot object

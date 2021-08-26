@@ -5,18 +5,24 @@
 \title{Tweet Playoff Odds}
 \usage{
 tweetPlayoffOdds(
-  playoffOdds = covid_play_in_solver(),
+  summary_results = NULL,
+  params = NULL,
   token = rtweet::get_token(),
-  graphic_dir = "./prediction_results/graphics/"
+  graphic_dir = "./prediction_results/graphics/",
+  trimcup = FALSE
 )
 }
 \arguments{
-\item{playoffOdds}{During COVID, pass covid_play_in_solver(), afterwards change to all_results = all_results}
+\item{summary_results}{the summary results file, otherwise the msot recent will be loaded}
 
-\item{token}{rtweet token}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
-\item{graphic_dir}{directory to save images}
+\item{token}{token for twitter}
+
+\item{graphic_dir}{graphic dir}
+
+\item{trimcup}{trim to just cup winners}
 }
 \description{
-Tweet the formattable graphics with each team's odds of each round/cup win
+Tweet a graphic of the playoff odds
 }

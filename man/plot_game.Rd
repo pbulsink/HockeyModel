@@ -4,27 +4,16 @@
 \alias{plot_game}
 \title{Plot single game expected goals}
 \usage{
-plot_game(
-  home,
-  away,
-  m = HockeyModel::m,
-  rho = HockeyModel::rho,
-  maxgoal = 10,
-  teamColours = HockeyModel::teamColours
-)
+plot_game(home, away, params = NULL, maxgoal = 10)
 }
 \arguments{
 \item{home}{The Home Team}
 
-\item{away}{The AWay Team}
+\item{away}{The Away Team}
 
-\item{m}{the DC m model}
-
-\item{rho}{the DC rho value}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{maxgoal}{the max number of goals to predict. Plot a few less.}
-
-\item{teamColours}{HockeyModel::teamColours or a custom value}
 }
 \value{
 a ggplot object

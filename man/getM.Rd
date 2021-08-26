@@ -11,10 +11,10 @@ getM(scores = HockeyModel::scores, currentDate = Sys.Date(), xi = 0.00426)
 
 \item{currentDate}{(for date weight adjustment)}
 
-\item{xi}{agressiveness of date weighting}
+\item{xi}{aggressiveness of date weighting}
 }
 \value{
-a model 'm' of dixon coles type parameters.
+a model 'm' of Dixon-Coles' type parameters.
 }
 \description{
 Produces a DC model

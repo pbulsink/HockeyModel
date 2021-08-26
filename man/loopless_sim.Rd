@@ -9,8 +9,7 @@ loopless_sim(
   cores = parallel::detectCores() - 1,
   schedule = HockeyModel::schedule,
   scores = HockeyModel::scores,
-  rho = HockeyModel::rho,
-  m = HockeyModel::m,
+  params = NULL,
   odds_table = NULL,
   season_sofar = NULL
 )
@@ -24,11 +23,11 @@ loopless_sim(
 
 \item{scores}{Season to this point}
 
-\item{rho}{rho factor to pass. default HockeyModel::rho}
-
-\item{m}{m model to pass. default HockeyModel::m}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{odds_table}{odds from remainderSeasonDC(Odds = TRUE), or null}
+
+\item{season_sofar}{The results of the season to date}
 }
 \value{
 a two member list, of all results and summary results

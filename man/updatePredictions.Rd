@@ -8,7 +8,7 @@ updatePredictions(
   data_dir = "./prediction_results/",
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
-  ...
+  params = NULL
 )
 }
 \arguments{
@@ -18,7 +18,7 @@ updatePredictions(
 
 \item{schedule}{HockeyModel::schedule or a custom value}
 
-\item{...}{Items to pass to update functions.}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
 \description{
 Update predictions

@@ -6,8 +6,7 @@
 \usage{
 plot_playoff_series_odds(
   series = HockeyModel::series,
-  rho = HockeyModel::rho,
-  m = HockeyModel::m,
+  params = NULL,
   schedule = HockeyModel::schedule,
   teamColours = HockeyModel::teamColours,
   ...
@@ -16,9 +15,7 @@ plot_playoff_series_odds(
 \arguments{
 \item{series}{A data frame of home team, away team, home wins, away wins}
 
-\item{rho}{HockeyModel::rho or a custom value}
-
-\item{m}{HockeyModel::m or a custom value}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{schedule}{HockeyModel::schedule or a custom value}
 

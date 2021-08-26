@@ -2,7 +2,7 @@
 % Please edit documentation in R/dixon-coles.R
 \name{plotDC}
 \alias{plotDC}
-\title{Produce a plot of each team's offence and defence scores}
+\title{Produce a plot of each team's offence and defense scores}
 \usage{
 plotDC(m = HockeyModel::m, teamlist = NULL)
 }
@@ -15,5 +15,5 @@ plotDC(m = HockeyModel::m, teamlist = NULL)
 a ggplot object
 }
 \description{
-Produce a plot of each team's offence and defence scores
+Produce a plot of each team's offence and defense scores
 }

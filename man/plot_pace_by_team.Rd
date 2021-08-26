@@ -8,8 +8,7 @@ plot_pace_by_team(
   graphic_dir = "./prediction_results/graphics",
   subdir = "pace",
   prediction_dir = "./prediction_results",
-  scores = HockeyModel::scores,
-  teamColours = HockeyModel::teamColours
+  scores = HockeyModel::scores
 )
 }
 \arguments{
@@ -20,8 +19,6 @@ plot_pace_by_team(
 \item{prediction_dir}{The predictions directory}
 
 \item{scores}{The HockeyModel::scores object, or custom scores in the same format.}
-
-\item{teamColours}{HockeyModel::teamColours or a custom value}
 }
 \description{
 Plot Pace by team

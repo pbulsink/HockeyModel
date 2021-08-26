@@ -7,8 +7,7 @@
 dailySummary(
   graphic_dir = "./prediction_results/graphics/",
   token = rtweet::get_token(),
-  delay = 60 * 10,
-  ...
+  delay = stats::runif(1, min = 4, max = 8) * 60
 )
 }
 \arguments{
@@ -17,8 +16,6 @@ dailySummary(
 \item{token}{token to pass to rtweet calls}
 
 \item{delay}{delay between tweet posts}
-
-\item{...}{Items to pass to update and plot functions.}
 }
 \description{
 Daily functions, rolled into one call
