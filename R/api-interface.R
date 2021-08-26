@@ -333,7 +333,7 @@ clean_names<-function(sc){
 getAPISeries <- function(season=getCurrentSeason8()){
   series<-nhlapi::nhl_tournaments_playoffs(expand = 'round.series', seasons = as.character(season))
   playoffSeries<-data.frame("Round"=integer(), "Series"=integer(), "HomeTeam"=character(), "AwayTeam"=character(),
-                            "HomeWins"=integer(), "AwayWins"=integer(), "HomeSeed"=integer(), "AwaySeed"=integer(), requiredWins=integer())
+                            "HomeWins"=integer(), "AwayWins"=integer(), "HomeSeed"=integer(), "AwaySeed"=integer(), "requiredWins"=integer())
   for(rnd in 1:length(series[[1]]$rounds$series)){
     if('matchupTeams' %in% names(series[[1]]$rounds$series[[rnd]])){
       for(srs in 1:length(series[[1]]$rounds$series[[rnd]]$matchupTeams)){
@@ -347,7 +347,8 @@ getAPISeries <- function(season=getCurrentSeason8()){
     }
   }
   if(nrow(playoffSeries) == 0){
-    stop('No Series Data Available')
+    return(NA)
+    #stop('No Series Data Available')
   }
 
   playoffSeries<-clean_names(playoffSeries)

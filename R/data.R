@@ -80,6 +80,12 @@
 #' @format a data frame of colours & logos
 "teamColours"
 
+#' Summary Results (Testing)
+#' A testing dataset from 2021 presesason. Not for regular use.
+#'
+#' @format a data frame
+"summary_results_testing"
+
 buildTeamColours <- function(){
   teamColours <- utils::read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
   teamlist<-unique(teamColours$Team)
