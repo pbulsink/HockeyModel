@@ -9,32 +9,65 @@
 buildStats<-function(scores){
   scores<-droplevels(scores)
   teamlist <- sort(unique(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))))
-  tmp1<-scores %>%
-    dplyr::group_by(.data$HomeTeam) %>%
-    dplyr::summarise(
-      GP = dplyr::n(),
-      W = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == ''),
-      OTW = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == 'OT'),
-      SOW = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == 'SO'),
-      OTL = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == 'OT'),
-      SOL = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == 'SO'),
-      L = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == ''),
-      P = as.numeric(.data$W*2 + .data$OTW*2 + .data$SOW*2 + .data$OTL + .data$SOL)
-    ) %>%
-    dplyr::ungroup()
-  tmp2<-scores %>%
-    dplyr::group_by(.data$AwayTeam) %>%
-    dplyr::summarise(
-      GP = dplyr::n(),
-      W = sum(.data$AwayGoals > .data$HomeGoals & .data$OTStatus == ''),
-      OTW = sum(.data$AwayGoals > .data$HomeGoals & .data$OTStatus == 'OT'),
-      SOW = sum(.data$AwayGoals > .data$HomeGoals & .data$OTStatus == 'SO'),
-      OTL = sum(.data$AwayGoals < .data$HomeGoals & .data$OTStatus == 'OT'),
-      SOL = sum(.data$AwayGoals < .data$HomeGoals & .data$OTStatus == 'SO'),
-      L = sum(.data$AwayGoals < .data$HomeGoals & .data$OTStatus == ''),
-      P = as.numeric(.data$W*2 + .data$OTW*2 + .data$SOW*2 + .data$OTL + .data$SOL)
-    ) %>%
-    dplyr::ungroup()
+
+  #remainderSeasonDC(nsims=10, cores=1, scores=scor, schedule = sched, regress = TRUE) testing passes results instead of home & Away goals
+  if('HomeGoals' %in% colnames(scores)){
+    tmp1<-scores %>%
+      dplyr::group_by(.data$HomeTeam) %>%
+      dplyr::summarise(
+        GP = dplyr::n(),
+        W = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == ''),
+        OTW = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == 'OT'),
+        SOW = sum(.data$HomeGoals > .data$AwayGoals & .data$OTStatus == 'SO'),
+        OTL = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == 'OT'),
+        SOL = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == 'SO'),
+        L = sum(.data$HomeGoals < .data$AwayGoals & .data$OTStatus == ''),
+        P = as.numeric(.data$W*2 + .data$OTW*2 + .data$SOW*2 + .data$OTL + .data$SOL)
+      ) %>%
+      dplyr::ungroup()
+    tmp2<-scores %>%
+      dplyr::group_by(.data$AwayTeam) %>%
+      dplyr::summarise(
+        GP = dplyr::n(),
+        W = sum(.data$AwayGoals > .data$HomeGoals & .data$OTStatus == ''),
+        OTW = sum(.data$AwayGoals > .data$HomeGoals & .data$OTStatus == 'OT'),
+        SOW = sum(.data$AwayGoals > .data$HomeGoals & .data$OTStatus == 'SO'),
+        OTL = sum(.data$AwayGoals < .data$HomeGoals & .data$OTStatus == 'OT'),
+        SOL = sum(.data$AwayGoals < .data$HomeGoals & .data$OTStatus == 'SO'),
+        L = sum(.data$AwayGoals < .data$HomeGoals & .data$OTStatus == ''),
+        P = as.numeric(.data$W*2 + .data$OTW*2 + .data$SOW*2 + .data$OTL + .data$SOL)
+      ) %>%
+      dplyr::ungroup()
+  } else if ('Result' %in% colnames(scores)) {
+    tmp1<-scores %>%
+      dplyr::group_by(.data$HomeTeam) %>%
+      dplyr::summarise(
+        GP = dplyr::n(),
+        W = sum(.data$Result == 1),
+        OTW = sum(.data$Result == 0.75),
+        SOW = sum(.data$Result == 0.60),
+        OTL = sum(.data$Result == 0.40),
+        SOL = sum(.data$Result == 0.25),
+        L = sum(.data$Result == 0),
+        P = as.numeric(.data$W*2 + .data$OTW*2 + .data$SOW*2 + .data$OTL + .data$SOL)
+      ) %>%
+      dplyr::ungroup()
+    tmp2<-scores %>%
+      dplyr::group_by(.data$AwayTeam) %>%
+      dplyr::summarise(
+        GP = dplyr::n(),
+        W = sum(.data$Result == 0),
+        OTW = sum(.data$Result == 0.25),
+        SOW = sum(.data$Result == 0.40),
+        OTL = sum(.data$Result == 0.60),
+        SOL = sum(.data$Result == 0.75),
+        L = sum(.data$Result == 1),
+        P = as.numeric(.data$W*2 + .data$OTW*2 + .data$SOW*2 + .data$OTL + .data$SOL)
+      ) %>%
+      dplyr::ungroup()
+  } else {
+    stop("Scores must contain home & away goal info or result info.")
+  }
 
   team_stats<-data.frame(
     Team=teamlist,
@@ -50,7 +83,7 @@ buildStats<-function(scores){
   )
 
   team_stats<-team_stats %>%
-    dplyr::mutate(Rank = rank(dplyr::desc(.data$Points), ties.method = 'random'), #TODO sort properly
+    dplyr::mutate(Rank = rank(dplyr::desc(.data$Points), ties.method = 'random'),#TODO sort properly using point%, reg. win, ROW, W, head to head
                   Conf = getTeamConferences(.data$Team), #convenience data, dropped later
                   Div = getTeamDivisions(.data$Team)) %>%
     dplyr::group_by(.data$Conf) %>%
@@ -67,6 +100,25 @@ buildStats<-function(scores){
 
   return(tibble::as_tibble(team_stats))
 }
+
+
+#' Today's Odds
+#'
+#' @description Determine today's games' odds (if today has games), or a specified date's odds
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param today The date for which you want game odds
+#' @param schedule The schedule, default to internal schedule
+#' @param expected_mean the mean lambda & mu, used only for regression
+#' @param season_percent the percent complete of the season, used for regression
+#'
+#' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
+#' @export
+#'
+#' @examples todayOdds(today=as.Date("2019-11-01"))
+todayOdds <- function(params=NULL, today=Sys.Date(), schedule=HockeyModel::schedule, expected_mean=NULL, season_percent=NULL){
+  return(todayDC(params=params, today=today, schedule=schedule, expected_mean=expected_mean, season_percent=season_percent))
+}
+
 
 #' Simulate the remainder of the season
 #'
@@ -206,47 +258,79 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
     cores <- 2
   }
 
-  `%dopar%` <- foreach::`%dopar%`  # This hack passes R CMD CHK
-  cl<-parallel::makeCluster(cores)
-  doSNOW::registerDoSNOW(cl)
-  if(progress){
-    pb<-utils::txtProgressBar(max = nsims, style = 3)
-    progress <- function(n) utils::setTxtProgressBar(pb, n)
-    opts <- list(progress = progress)
+  if(cores > 1){
+    `%dopar%` <- foreach::`%dopar%`  # This hack passes R CMD CHK
+    cl<-parallel::makeCluster(cores)
+    doSNOW::registerDoSNOW(cl)
+    if(progress){
+      pb<-utils::txtProgressBar(max = nsims, style = 3)
+      progress <- function(n) utils::setTxtProgressBar(pb, n)
+      opts <- list(progress = progress)
+    } else {
+      opts <- list()
+    }
+    all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts) %dopar% {
+      #Generate Games results once
+      tmp<-odds_table
+      tmp$res1<-stats::runif(n = nrow(tmp))
+      tmp$res2<-stats::runif(n = nrow(tmp))
+      tmp$res3<-stats::runif(n = nrow(tmp))
+      tmp$Result <- 1*(as.numeric(tmp$res1<tmp$HomeWin)) +
+        0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 < 0.75))) +
+        0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 > 0.75))) +
+        0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 > 0.75))) +
+        0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 < 0.75))) +
+        0
+
+      tmp$HomeWin <- NULL
+      tmp$AwayWin <- NULL
+      tmp$Draw <- NULL
+      tmp$res1<-NULL
+      tmp$res2<-NULL
+      tmp$res3<-NULL
+
+      tmp<-rbind(season_sofar, tmp)
+      #Make the season table
+      table<-buildStats(tmp)
+      table$SimNo<-i
+
+      table
+    }
+    if(progress){
+      close(pb)
+    }
+    parallel::stopCluster(cl)
+    gc(verbose = FALSE)
+
   } else {
-    opts <- list()
-  }
-  all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts) %dopar% {
-    #Generate Games results once
-    tmp<-odds_table
-    tmp$res1<-stats::runif(n = nrow(tmp))
-    tmp$res2<-stats::runif(n = nrow(tmp))
-    tmp$res3<-stats::runif(n = nrow(tmp))
-    tmp$Result <- 1*(as.numeric(tmp$res1<tmp$HomeWin)) +
-      0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 < 0.75))) +
-      0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 > 0.75))) +
-      0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 > 0.75))) +
-      0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 < 0.75))) +
-      0
+    all_results<-list()
+    for(i in 1:nsims){
+      tmp<-odds_table
+      tmp$res1<-stats::runif(n = nrow(tmp))
+      tmp$res2<-stats::runif(n = nrow(tmp))
+      tmp$res3<-stats::runif(n = nrow(tmp))
+      tmp$Result <- 1*(as.numeric(tmp$res1<tmp$HomeWin)) +
+        0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 < 0.75))) +
+        0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 > 0.75))) +
+        0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 > 0.75))) +
+        0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 < 0.75))) +
+        0
 
-    tmp$HomeWin <- NULL
-    tmp$AwayWin <- NULL
-    tmp$Draw <- NULL
-    tmp$res1<-NULL
-    tmp$res2<-NULL
-    tmp$res3<-NULL
+      tmp$HomeWin <- NULL
+      tmp$AwayWin <- NULL
+      tmp$Draw <- NULL
+      tmp$res1<-NULL
+      tmp$res2<-NULL
+      tmp$res3<-NULL
 
-    tmp<-rbind(season_sofar, tmp)
-    #Make the season table
-    table<-buildStats(tmp)
-
-    table
+      tmp<-rbind(season_sofar, tmp)
+      #Make the season table
+      table<-buildStats(tmp)
+      table$SimNo<-i
+      all_results[[i]]<-table
+    }
+    all_results<-dplyr::bind_rows(all_results)
   }
-  if(progress){
-    close(pb)
-  }
-  parallel::stopCluster(cl)
-  gc(verbose = FALSE)
 
   summary_results<-all_results %>%
     dplyr::group_by(.data$Team) %>%

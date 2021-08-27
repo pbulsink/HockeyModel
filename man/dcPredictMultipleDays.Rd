@@ -9,7 +9,9 @@ dcPredictMultipleDays(
   end = Sys.Date(),
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
-  filedir = "./prediction_results"
+  filedir = "./prediction_results",
+  nsims = 1e+05,
+  cores = parallel::detectCores() - 1
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ dcPredictMultipleDays(
 \item{schedule}{HockeyModel::schedule}
 
 \item{filedir}{Where to save prediction files.}
+
+\item{nsims}{number of simulations to run}
+
+\item{cores}{number of cores in parallel to simulate on}
 }
 \value{
 true, if successful

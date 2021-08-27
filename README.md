@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/pbulsink/HockeyModel/workflows/R-CMD-check/badge.svg)](https://github.com/pbulsink/HockeyModel/actions)
+[![codecov](https://codecov.io/gh/pbulsink/HockeyModel/branch/master/graph/badge.svg?token=KhNU6DCahv)](https://codecov.io/gh/pbulsink/HockeyModel)
 <!-- badges: end -->
 
 This is a model to predict NHL game winners & their likely performance for the rest of the season.

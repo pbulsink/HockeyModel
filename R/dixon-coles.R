@@ -90,8 +90,7 @@ plotDC <- function(m = HockeyModel::m, teamlist = NULL){
 #' @param season_percent the percent complete of the season, used for regression
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
-#' @export
-todayDC <- function(params, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL){
+todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL){
   params<-parse_dc_params(params)
   games<-schedule[schedule$Date == today, ]
   if(nrow(games) == 0){
@@ -322,6 +321,7 @@ dcRealSeasonPredict<-function(nsims=1e5, params=NULL, scores = HockeyModel::scor
 #' @description Odds for each team to get to playoffs.
 #'
 #' @param nsims Number of simulations
+#' @param cores The number of cores to use if using parallel processing
 #' @param scores the historical scores
 #' @param schedule un-played future games
 #' @param odds whether to return odds table or simulate season
@@ -331,7 +331,7 @@ dcRealSeasonPredict<-function(nsims=1e5, params=NULL, scores = HockeyModel::scor
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonDC <- function(nsims=1e4, params=NULL, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, regress = TRUE, mu_lambda = FALSE){
+remainderSeasonDC <- function(nsims=1e4, cores = parallel::detectCores()-1, params=NULL, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, regress = TRUE, mu_lambda = FALSE){
 
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
@@ -410,7 +410,7 @@ remainderSeasonDC <- function(nsims=1e4, params=NULL, scores = HockeyModel::scor
     return(odds_table)
   }
 
-  summary_results <- simulateSeasonParallel(odds_table = odds_table, nsims = nsims, scores = scores, schedule = schedule)
+  summary_results <- simulateSeasonParallel(odds_table = odds_table, nsims = nsims, cores = cores, scores = scores, schedule = schedule)
 
   return(summary_results)
 }
@@ -852,10 +852,12 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #' @param scores HockeyModel::scores
 #' @param schedule HockeyModel::schedule
 #' @param filedir Where to save prediction files.
+#' @param nsims number of simulations to run
+#' @param cores number of cores in parallel to simulate on
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = "./prediction_results"){
+dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = "./prediction_results", nsims = 1e5, cores = parallel::detectCores() - 1){
 
   if(!dir.exists(filedir)){
     dir.create(filedir, recursive = TRUE)
@@ -884,7 +886,7 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
     preds<-tryCatch(expr = {
       message("Predicting with Loopless Sim")
       #remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE)
-      loopless_sim(nsims = 1e5, scores = score, schedule = sched, params = params)
+      loopless_sim(nsims = nsims, cores = cores, scores = score, schedule = sched, params = params)
     },
     error = function(error) {
       message('An error occurred:')

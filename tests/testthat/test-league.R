@@ -19,4 +19,12 @@ test_that("Playoff Sim finishes OK", {
   expect_equal(sum(playoffResults$Win_Conference), 2)
   expect_equal(sum(playoffResults$Win_Cup), 1)
 
+  playoffResults<-simulatePlayoffs(summary_results = summary_results, nsims=4, cores=2)
+  expect_true(is.data.frame(playoffResults))
+  expect_true(all(playoffResults$Make_Playoffs <= 1))
+  expect_equal(sum(playoffResults$Make_Playoffs), 16)
+  expect_equal(sum(playoffResults$Win_First_Round), 8)
+  expect_equal(sum(playoffResults$Win_Second_Round), 4)
+  expect_equal(sum(playoffResults$Win_Conference), 2)
+  expect_equal(sum(playoffResults$Win_Cup), 1)
 })
