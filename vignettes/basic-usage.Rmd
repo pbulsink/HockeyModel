@@ -33,23 +33,30 @@ We can call this directly because the package has historical data already saved 
 Having performed the model update and retrieved the parameters by calling `model <- updateModel()` above, we can generate predictions for today's game(s).
 
 ```{r today_odds, eval=FALSE}
-todayOdds(rho = model$rho, m = model$m, schedule = model$schedule, scores = model$scores)
+todayOdds(params=model$params, schedule = model$schedule)
 ```
 
-<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png" alt="Today's Game Odds">
+```{r echo = FALSE, fig.align='center', out.width="679px", out.height="525px"}
+knitr::include_graphics('https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png')
+```
 
 Playoff odds, president trophy odds, expected points, etc. can all be generated as well. Start by updating the predictions, then generate the images. Depending on how long it has been since predictions were generated, this may take some time. 
 
 ```{r projected_points, eval = FALSE}
-updatePredictions(scores = model$scores, schedule = model$schedule)
+updatePredictions(data_dir = devtools::package_file("prediction_results"), scores = model$scores, schedule = model$schedule)
 playoffOdds()
 ```
 
-<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/playoff_odds.png" alt="Playoff Odds">
-
-There's a playoff solver placed in the package. It works only before the playoffs start through the end of the first round, and returns a tibble of likely playoff position and progression for each team as a `tidyverse::tibble`. There is no graphic associated, and the results aren't guaranteed to be accurate. We'll look at what these playoff odds looked like toward the end of last season (2018-2019). We'll download the predictions file from that date so we don't have to generate it ourselves.
-
-```{r playoff_solver}
-playoffSolver(all_results = readRDS(url("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2019-04-01-predictions.RDS","rb")), pretty_format = FALSE)
+```{r echo = FALSE, fig.align='center', out.width="679px", out.height="525px"}
+knitr::include_graphics('https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/playoff_odds.png')
 ```
 
+There's a playoff solver placed in the package. It works only before the playoffs start through the end of the first round, and returns a tibble of likely playoff position and progression for each team as a `tidyverse::tibble`. The results aren't guaranteed to be accurate. We'll look at what these playoff odds looked like as of the start of the 2021-2022 season. We'll download the predictions file from that date so we don't have to generate it ourselves.
+
+```{r playoff_solver_example, eval=FALSE}
+simulatePlayoffs(summary_results = readRDS(url("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2021-08-12-predictions.RDS","rb")))
+```
+```{r playoff_solver, echo=FALSE}
+po<-simulatePlayoffs(summary_results = HockeyModel::summary_results_testing, nsims = 10, cores = 2)
+knitr::kable(po, caption = "Playoff Simulation from the start of the 2021-2022 season")
+```

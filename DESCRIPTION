@@ -40,5 +40,6 @@ Suggests:
     rmarkdown,
     testthat, 
     webshot,
-    progress
+    progress,
+    markdown
 VignetteBuilder: knitr
