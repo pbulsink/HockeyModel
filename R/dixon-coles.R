@@ -41,45 +41,6 @@ updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), sav
   return(list("m" = m, "rho"=rho, "beta" = beta, "eta" = eta, "k" = k))
 }
 
-#' Produce a plot of each team's offence and defense scores
-#'
-#' @param m m from data(m)
-#' @param teamlist Teams to plot.
-#'
-#' @return a ggplot object
-#' @export
-plotDC <- function(m = HockeyModel::m, teamlist = NULL){
-  if(is.null(teamlist)){
-    teamlist<-as.character(unique(m$data$Team))
-  }
-  team_params <- data.frame(Attack = as.numeric(m$coefficients[1:length(teamlist)]),
-                            Defence = c(0, -m$coefficients[(length(teamlist)+1):(length(teamlist)*2-1)]),
-                            Team = sort(teamlist))
-
-  #Build and trim team colours for plot
-  teamColoursList<-as.vector(HockeyModel::teamColours$Hex)
-  names(teamColoursList)<-HockeyModel::teamColours$Team
-  teamColoursList<-teamColoursList[names(teamColoursList) %in% teamlist]
-
-  p<-ggplot2::ggplot(team_params,
-                     ggplot2::aes_(x=quote(Attack),
-                                   y=quote(Defence),
-                                   color=quote(Team),
-                                   label=quote(Team)
-                                   )
-                     ) +
-    ggplot2::geom_point() +
-    ggplot2::scale_colour_manual(values = teamColoursList) +
-    ggrepel::geom_text_repel(force=2, max.iter=5000) +
-    ggplot2::labs(x = "Attack",
-                  y = "Defence",
-                  title = "Current Team Attack & Defense Ratings",
-                  subtitle = paste0("As of ", Sys.Date()),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
-    ggplot2::theme_minimal() +
-    ggplot2::theme(legend.position="none")
-  return(p)
-}
 
 #' DC Predictions Today
 #'

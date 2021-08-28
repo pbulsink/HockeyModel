@@ -603,6 +603,7 @@ plot_point_likelihood <- function(preds, graphic_dir = './prediction_results/gra
 #' @param teamlist select a subset of teams, if desired
 #'
 #' @return a ggplot2 plot
+#' @export
 plot_team_rating<-function(m = HockeyModel::m, teamlist = NULL){
   if(is.null(teamlist)){
     teamlist<-as.character(unique(m$data$Team))
@@ -888,6 +889,7 @@ daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyM
       }
     )
   }
+  return(todayodds_gt)
 }
 
 
