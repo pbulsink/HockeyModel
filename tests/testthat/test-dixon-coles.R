@@ -32,6 +32,14 @@ test_that("DC Functions function", {
 test_that("DC Convenience functions are ok", {
   params<-parse_dc_params(NULL)
   expect_true(dcResult(lambda = 3, mu = 3, params=params) %in% c(0, 0.25, 0.4, 0.5, 0.6, 0.75, 1))
+
+  sim<-dcSample(home = "Nashville Predators", away = "Colorado Avalanche")
+  expect_true(sim %in% c(0, 0.25, 0.4, 0.6, 0.75, 1))
+
+  sim<-dcSample("Dallas Stars", "Columbus Blue Jackets", as_result = FALSE)
+  expect_true(sim$OTStatus %in% c("", "OT", "SO"))
+  expect_equal(length(sim), 3)
+  expect_equal(names(sim), c("HomeGoals", "AwayGoals", "OTStatus"))
 })
 
 test_that("Predictions Run", {
@@ -43,13 +51,25 @@ test_that("Predictions Run", {
   file.remove("./2021-08-01-predictions.RDS")
   expect_false(file.exists("./2021-08-01-predictions.RDS"))
 
-  #Try again, multicore
+  #Try again parallel, multicore
   expect_true(suppressWarnings(dcPredictMultipleDays(start=as.Date("2021-08-01"), end = as.Date("2021-08-01"), schedule = sched, scores = scor, nsims=10, cores=2, filedir = "./")))
   expect_true(file.exists("./2021-08-01-predictions.RDS"))
   file.remove("./2021-08-01-predictions.RDS")
   expect_false(file.exists("./2021-08-01-predictions.RDS"))
 
-  #once more, loopedsim
+  #first shot, loopedsim
   remainderseason<-remainderSeasonDC(nsims=10, cores=1, scores=scor, schedule = sched, regress = TRUE)
+  expect_equal(names(remainderseason), c("summary_results", "raw_results"))
+  expect_equal(nrow(remainderseason$summary_results)*10, nrow(remainderseason$raw_results))
 
-  })
+  #try again parallel
+  remainderseason<-remainderSeasonDC(nsims=10, cores=2, scores=scor, schedule = sched, regress = TRUE)
+  expect_equal(names(remainderseason), c("summary_results", "raw_results"))
+  expect_equal(nrow(remainderseason$summary_results)*10, nrow(remainderseason$raw_results))
+})
+
+test_that("DC Playoffs functions", {
+  po_odds<-playoffDC("Toronto Maple Leafs", "Carolina Hurricanes")
+  expect_lt(po_odds, 1)
+  expect_gt(po_odds, 0)
+})

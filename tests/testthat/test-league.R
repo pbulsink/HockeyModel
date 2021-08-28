@@ -28,3 +28,8 @@ test_that("Playoff Sim finishes OK", {
   expect_equal(sum(playoffResults$Win_Conference), 2)
   expect_equal(sum(playoffResults$Win_Cup), 1)
 })
+
+test_that("Convenience Functions are OK", {
+  expect_equal(nrow(todayOdds(today=as.Date("2019-11-01"))), 8)
+  expect_equal(ncol(todayOdds(today=as.Date("2019-11-01"))), 5)
+})

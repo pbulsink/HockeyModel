@@ -4,7 +4,7 @@
 \alias{playoffDC}
 \title{Playoff Odds DC}
 \usage{
-playoffDC(home, away, params, home_wins = 0, away_wins = 0)
+playoffDC(home, away, params = NULL, home_wins = 0, away_wins = 0)
 }
 \arguments{
 \item{home}{Series Home Ice Advantage Team Name}
