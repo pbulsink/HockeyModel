@@ -38,7 +38,8 @@ Current predictions are below, and are always posted on twitter at [@BulsinkBot]
 
 # To Do
 
-- Twitter user [@MOCallanain](https://www.twitter.com/MOCallanain) highlighted that the predicted tie rate is < ~0.2, when in actuality it's higher. Likely due to teams playing for loser point, can we parameterize the model to include a tie boost? Diagonal enhanced metric should work - calculate like the DC 0/1 goal enahancement. Model currently rescales to increase odds to a reasonable amount.
-- Currently, only scores are used for model generation. Moneypuck has an expansive expected goals model available for download and updated regularly (see [http://moneypuck.com/data.htm]). Deriving the team performance by expected goals instead of actual could reduce the impact of luck on expected future performance.
-- Switch to NHL API for scores and schedule
+- Twitter user [@MOCallanain](https://www.twitter.com/MOCallanain) highlighted that the predicted tie rate is < ~0.2, when in actuality it's higher. Likely due to teams playing for loser point, ~~can we parameterize the model to include a tie boost? Diagonal enhanced metric should work - calculate like the DC 0/1 goal enahancement. Model currently rescales to increase odds to a reasonable amount.~~ DONE?
+- Currently, only scores are used for model generation. Moneypuck has an expansive expected goals model available for download and updated regularly (see http://moneypuck.com/data.htm). Deriving the team performance by expected goals instead of actual could reduce the impact of luck on expected future performance.
+- ~~Switch to NHL API for scores and schedule~~ DONE
 - Twitter user [@joseph__ii](https://www.twitter.com/joseph__ii) picked up on a quirk of the OT/SO odds assignment (see https://twitter.com/joseph__ii/status/1357785234285109248). Try rebalance with league or teams' OT performance measure?
+- Store prediction results in inst/prediction_data so it can be accessed by installed package elsewhere.

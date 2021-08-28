@@ -4,7 +4,9 @@
 \alias{cleanupPredictionsFile}
 \title{Cleanup Predictions File}
 \usage{
-cleanupPredictionsFile(file = "./data-raw/dailyodds.csv")
+cleanupPredictionsFile(
+  filepath = file.path(devtools::package_file(), "data-raw", "dailyodds.csv")
+)
 }
 \arguments{
 \item{file}{file path to cleanup}

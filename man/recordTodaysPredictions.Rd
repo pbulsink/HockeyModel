@@ -6,7 +6,7 @@
 \usage{
 recordTodaysPredictions(
   today = Sys.Date(),
-  file = "./data-raw/dailyodds.csv",
+  filepath = file.path(devtools::package_file(), "data-raw", "dailyodds.csv"),
   schedule = HockeyModel::schedule,
   params = NULL
 )
@@ -14,11 +14,11 @@ recordTodaysPredictions(
 \arguments{
 \item{today}{Day's predictions to record. Defaults to today, but can set any other day}
 
-\item{file}{csv file location to store predictions. Will append to file.}
-
 \item{schedule}{HockeyModel::schedule or supplied. \code{today} date must be in schedule}
 
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+
+\item{file}{csv file location to store predictions. Will append to file.}
 }
 \description{
 Record today's predictions to file (for easy later retrieval). Run \code{cleanupPredictionsFile} periodically to tidy

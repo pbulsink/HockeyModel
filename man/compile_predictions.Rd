@@ -4,7 +4,9 @@
 \alias{compile_predictions}
 \title{Compile predictions to one object}
 \usage{
-compile_predictions(dir = "./prediction_results")
+compile_predictions(
+  dir = file.path(devtools::package_file(), "prediction_results")
+)
 }
 \arguments{
 \item{dir}{Directory holding the prediction .RDS files.}

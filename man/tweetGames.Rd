@@ -7,7 +7,7 @@
 tweetGames(
   games = games_today(),
   delay = stats::runif(1, min = 4, max = 8) * 60,
-  graphic_dir = "./prediction_results/graphics/",
+  graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
   params = NULL,
   token = rtweet::get_token()
 )

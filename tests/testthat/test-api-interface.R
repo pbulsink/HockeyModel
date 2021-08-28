@@ -1,5 +1,41 @@
 context("test-api-interface")
 
+test_that("Scores and Schedules download", {
+  sched<-getNHLSchedule()
+  expect_true(is.data.frame(sched))
+  expect_equal(ncol(sched), 6)
+  expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameState"))
+  expect_true(all(sched$GameType %in% c("R", "P")))
+
+  score<-getNHLScores(2020020001, progress = F)
+  expect_true(is.data.frame(score))
+  expect_equal(ncol(score), 10)
+  expect_equal(nrow(score), 1)
+  goodscore<-structure(list(Date = structure(18640, class = "Date"), HomeTeam = "Philadelphia Flyers",
+                            AwayTeam = "Pittsburgh Penguins", GameID = 2020020001, HomeGoals = 6L,
+                            AwayGoals = 3L, OTStatus = "", GameType = "R", GameStatus = "Final",
+                            Result = 1), row.names = c(NA, -1L), class = "data.frame")
+  expect_identical(score, goodscore)
+
+  today<-games_today(date=as.Date("2019-11-01"))
+  expect_true(is.null(today)) #Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
+})
+
+test_that("Series is ok", {
+  #tough to test as it's a moving target
+  series<-getAPISeries()
+  if(inPlayoffs()){
+    #now there should be a series
+    expect_gt(nrow(series), 0)
+    expect_true(is.data.frame(series))
+  }
+  series<-getAPISeries("20182019")
+  expect_true(is.data.frame(series))
+  expect_equal(nrow(series), 15)
+  expect_equal(ncol(series), 10)
+  expect_true(all(series$Status == "Complete"))
+})
+
 test_that("Season Dates & Binaries work", {
   expect_visible(inRegularSeason())
   expect_visible(inPlayoffs())
@@ -37,7 +73,7 @@ test_that("Get Team Info is OK", {
   expect_equal(getDivisions(), unique(apiteams$division.name))
 })
 
-test_that("Other Functions are OK", {
+test_that("Other Utility Functions are OK", {
   expect_equal(clean_names(c("Chicago Blackhawks", "Toronto Maple Leafs")), c("Chicago", "Toronto Maple Leafs"))
   expect_equal(getTeamConferences("Chicago Blackhawks"), "Western")
   expect_equal(getTeamConferences('Chicago'), "Western")

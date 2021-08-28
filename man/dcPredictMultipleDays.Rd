@@ -9,7 +9,7 @@ dcPredictMultipleDays(
   end = Sys.Date(),
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
-  filedir = "./prediction_results",
+  filedir = file.path(devtools::package_file(), "prediction_results"),
   nsims = 1e+05,
   cores = parallel::detectCores() - 1
 )

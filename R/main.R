@@ -24,7 +24,7 @@ updateModel <- function(){
 #' @return NULL
 #'
 #' @export
-updatePredictions<- function(data_dir = "./prediction_results/", scores = HockeyModel::scores, schedule = HockeyModel::schedule, params=NULL){
+updatePredictions<- function(data_dir = file.path(devtools::package_file(), "prediction_results"), scores = HockeyModel::scores, schedule = HockeyModel::schedule, params=NULL){
   params<-parse_dc_params(params)
 
   if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
@@ -282,7 +282,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 #' @param scores HockeyModel::scores or a custom value
 #'
 #' @export
-tweetPace<-function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = "./prediction_results/graphics/", subdir = "pace", prediction_dir = "./prediction_results/", token = rtweet::get_token(), scores = HockeyModel::scores){
+tweetPace<-function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", prediction_dir = file.path(devtools::package_file(), "prediction_results"), token = rtweet::get_token(), scores = HockeyModel::scores){
   #make sure we're working with the most up-to-date info.
   scores<-updateScoresAPI(save_data = T)
 
@@ -371,7 +371,7 @@ tweetPace<-function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = "./pred
 #' @param scores updated scores
 #
 #' @export
-tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = "./prediction_results/graphics/", subdir = "pace", token = rtweet::get_token(), scores = HockeyModel::scores) {
+tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", token = rtweet::get_token(), scores = HockeyModel::scores) {
   #make likelihood plots
   plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
 
@@ -397,7 +397,7 @@ tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir 
 #' @param token the token for rtweet
 #'
 #' @export
-tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*60, graphic_dir = "./prediction_results/graphics/", params=NULL, token = rtweet::get_token()){
+tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), params=NULL, token = rtweet::get_token()){
   params<-parse_dc_params(params)
   #Tweet each game
   if(is.null(games)){
@@ -464,7 +464,7 @@ tweetMetrics<-function(token = rtweet::get_token()){
 #'
 #' @return NULL
 #' @export
-tweetSeries<-function(token = rtweet::get_token(), params=NULL, graphic_dir = "./prediction_results/graphics/"){
+tweetSeries<-function(token = rtweet::get_token(), params=NULL, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics")){
   params<-parse_dc_params(params)
   while(grDevices::dev.cur()!=1){
     grDevices::dev.off()
@@ -502,7 +502,7 @@ tweetSeries<-function(token = rtweet::get_token(), params=NULL, graphic_dir = ".
 #'
 #' @return NULL
 #' @export
-tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::get_token(), graphic_dir = "./prediction_results/graphics/", trimcup = FALSE){
+tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::get_token(), graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), trimcup = FALSE){
   params<-parse_dc_params(params)
   playoffodds <- simulatePlayoffs(summary_results = summary_results, params=params)
 

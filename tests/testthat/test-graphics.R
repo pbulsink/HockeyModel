@@ -25,8 +25,7 @@ test_that("Playoffs Predictions by Team Graphics Produce", {
 })
 
 test_that("Presidents Predictions by Team Graphics Produce", {
-  p<-suppressWarnings(plot_prediction_presidents_by_team(past_days=365))
-  sleep(30) # presidents' very slow for some reason currently
+  p<-suppressWarnings(plot_prediction_presidents_by_team(past_days=365, minimum = 0))
   expect_true(ggplot2::is.ggplot(p))
   expect_identical(p$labels$title, "President's Trophy Odds Over the Past 365 Days")
   expect_identical(p$labels$y, "President's Trophy Odds")

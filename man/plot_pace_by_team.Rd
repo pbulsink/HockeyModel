@@ -5,9 +5,9 @@
 \title{Plot Pace by team}
 \usage{
 plot_pace_by_team(
-  graphic_dir = "./prediction_results/graphics",
+  graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
   subdir = "pace",
-  prediction_dir = "./prediction_results",
+  prediction_dir = file.path(devtools::package_file(), "prediction_results"),
   scores = HockeyModel::scores
 )
 }

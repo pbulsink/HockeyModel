@@ -366,7 +366,7 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
 #'
 #' @return a data frame.
 #' @export
-compile_predictions<-function(dir="./prediction_results"){
+compile_predictions<-function(dir=file.path(devtools::package_file(), "prediction_results")){
   #Find the files
   filelist<-list.files(path = dir)
   pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
@@ -738,12 +738,13 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames
 #' @export
 simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::detectCores() - 1, params=NULL){
   params <- parse_dc_params(params)
+  #TODO use compile_predictions for this?
   if(is.null(summary_results)){
-    filelist<-list.files(path = "./prediction_results")
+    filelist<-list.files(path = file.path(devtools::package_file(), "prediction_results"))
     pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
     pdates<-pdates[pdates != 'graphics']
     lastp<-as.Date(max(pdates))
-    summary_results<-readRDS(file.path("./prediction_results", paste0(lastp,"-predictions.RDS")))
+    summary_results<-readRDS(file.path(devtools::package_file(), "prediction_results", paste0(lastp,"-predictions.RDS")))
   }
 
   summary_results<-summary_results %>%
@@ -1271,7 +1272,7 @@ getAllHomeAwayOdds<-function(teamlist, params=NULL){
 #'
 #' @return NULL
 #' @export
-recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.csv", schedule=HockeyModel::schedule, params=NULL){
+recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv"), schedule=HockeyModel::schedule, params=NULL){
   params<-parse_dc_params(params)
   stopifnot(is.Date(today))
   today<-as.Date(today)
@@ -1283,7 +1284,7 @@ recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.c
   preds<-dplyr::full_join(today_sched, today_preds, suffix=c("",""), by = c("HomeTeam", "AwayTeam"))
   preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw")]
 
-  utils::write.table(preds, file="./data-raw/dailyodds.csv", append = TRUE, col.names = FALSE, row.names = FALSE, sep=",", dec=".")
+  utils::write.table(preds, file=filepath, append = TRUE, col.names = FALSE, row.names = FALSE, sep=",", dec=".")
 }
 
 #' Cleanup Predictions File
@@ -1294,17 +1295,17 @@ recordTodaysPredictions<-function(today=Sys.Date(), file="./data-raw/dailyodds.c
 #'
 #' @return NULL
 #' @export
-cleanupPredictionsFile<-function(file="./data-raw/dailyodds.csv"){
-  dailyodds<-utils::read.csv(file)
+cleanupPredictionsFile<-function(filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv")){
+  dailyodds<-utils::read.csv(filepath)
   dailyodds<-dailyodds %>%
     dplyr::mutate("Date" = as.Date(.data$Date)) %>%
     dplyr::arrange(dplyr::desc(.data$Date)) %>%
     dplyr::distinct(.data$GameID, .keep_all=TRUE) %>%
     dplyr::arrange(.data$Date, .data$GameID)
-  utils::write.table(dailyodds, file=file, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
+  utils::write.table(dailyodds, file=filepath, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
 }
 
-build_past_predictions<-function(startDate, endDate, file="./data-raw/dailyodds.csv"){
+build_past_predictions<-function(startDate, endDate, filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv")){
   stopifnot(is.Date(startDate))
   stopifnot(is.Date(endDate))
   startDate<-as.Date(startDate)
@@ -1329,7 +1330,7 @@ build_past_predictions<-function(startDate, endDate, file="./data-raw/dailyodds.
     params$eta<-w.day$eta
     params$k<-w.day$k
 
-    recordTodaysPredictions(today=d, file=file, schedule = sched, params = params)
+    recordTodaysPredictions(today=d, filepath=filepath, schedule = sched, params = params)
   }
   return(TRUE)
 }

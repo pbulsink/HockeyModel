@@ -636,7 +636,7 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = "./prediction_results", nsims = 1e5, cores = parallel::detectCores() - 1){
+dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = file.path(devtools::package_file(), "prediction_results"), nsims = 1e5, cores = parallel::detectCores() - 1){
 
   if(!dir.exists(filedir)){
     dir.create(filedir, recursive = TRUE)
