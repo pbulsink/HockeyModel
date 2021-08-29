@@ -412,7 +412,7 @@ getSeasonEndDate<-function(season=NULL){
   seasons<-nhlapi::nhl_seasons()
   if(!is.null(season)){
     if(season %in% seasons$seasonId){
-      return(as.Date(seasons[seasons$seasonId == season]$seasonEndDate))
+      return(as.Date(seasons[seasons$seasonId == season, ]$seasonEndDate))
     } else {
       stop("Season not found: ", season)
     }

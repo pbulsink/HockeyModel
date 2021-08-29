@@ -3,7 +3,7 @@ Title: NHL Hockey Model for 2018-2019
 Version: 0.1.2021
 Authors@R: person("Philip", "Bulsink", email = "bulsinkp@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-9668-2429"))
 Description: Using various techniques, predict the winners of upcoming NHL hockey games, the expected points for the season, and odds for playoffs & cup winning.
-Depends: R (>= 3.5.0)
+Depends: R (>= 4.0.0)
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
