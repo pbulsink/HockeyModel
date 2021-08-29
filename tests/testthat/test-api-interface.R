@@ -1,12 +1,27 @@
 context("test-api-interface")
 
-test_that("Scores and Schedules download", {
+test_that("Schedules are ok", {
   sched<-getNHLSchedule()
   expect_true(is.data.frame(sched))
   expect_equal(ncol(sched), 6)
   expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameState"))
   expect_true(all(sched$GameType %in% c("R", "P")))
 
+  sched2<-updateScheduleAPI(schedule=sched)
+  expect_true(is.data.frame(sched2))
+  expect_equal(ncol(sched), 6)
+  expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameState"))
+  expect_true(all(sched$GameType %in% c("R", "P")))
+  expect_equal(sched, sched2)
+
+  #add a dummy game to sched2
+  sched2<-rbind(sched2, data.frame("Date" = as.Date("2019-10-31"), "HomeTeam" = "New Jersey Devils", "AwayTeam" = "Philadelphia Flyers",
+                                   "GameID" = 2019020196, "GameType" = "R", "GameState" = "Scheduled"))
+  sched2 <- removeUnscheduledGames(schedule = sched2)
+  expect_equal(sched, sched2)
+})
+
+test_that("Scores are OK", {
   score<-getNHLScores(2020020001, progress = F)
   expect_true(is.data.frame(score))
   expect_equal(ncol(score), 10)
@@ -19,6 +34,8 @@ test_that("Scores and Schedules download", {
 
   today<-games_today(date=as.Date("2019-11-01"))
   expect_true(is.null(today)) #Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
+
+
 })
 
 test_that("Series is ok", {

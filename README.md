@@ -2,7 +2,6 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/pbulsink/HockeyModel/workflows/R-CMD-check/badge.svg)](https://github.com/pbulsink/HockeyModel/actions)
-[![codecov](https://codecov.io/gh/pbulsink/HockeyModel/branch/master/graph/badge.svg?token=KhNU6DCahv)](https://codecov.io/gh/pbulsink/HockeyModel)
 [![Codecov test coverage](https://codecov.io/gh/pbulsink/HockeyModel/branch/master/graph/badge.svg)](https://codecov.io/gh/pbulsink/HockeyModel?branch=master)
 <!-- badges: end -->
 
