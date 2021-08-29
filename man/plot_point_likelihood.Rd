@@ -5,9 +5,10 @@
 \title{Team Point Predict Plot}
 \usage{
 plot_point_likelihood(
-  preds,
-  graphic_dir = "./prediction_results/graphics",
-  subdir = "pace"
+  preds = NULL,
+  graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
+  subdir = "pace",
+  savefiles = TRUE
 )
 }
 \arguments{
@@ -16,9 +17,11 @@ plot_point_likelihood(
 \item{graphic_dir}{Directory to save plot images}
 
 \item{subdir}{Subdirectory to save plot images}
+
+\item{savefiles}{Whether to save files to disk}
 }
 \value{
-two plots in list, as $eastplot and $westplot
+plot(s) in a list, named for conference(s) in use at the time.
 }
 \description{
 Team Point Predict Plot

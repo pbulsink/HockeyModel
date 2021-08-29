@@ -416,15 +416,14 @@ plot_odds_today <- function(today = Sys.Date(), params=NULL, schedule = HockeyMo
 #'
 #' @param series A data frame of home team, away team, home wins, away wins
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
-#' @param schedule HockeyModel::schedule or a custom value
 #' @param teamColours HockeyModel::teamColours or a custom value
-#' @param ... additional parameters to pass
 #'
 #' @return a ggplot image of odds
 #'
 #' @export
-plot_playoff_series_odds <- function(series = HockeyModel::series, params=NULL, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours, ...) {
+plot_playoff_series_odds <- function(series = getAPISeries(), params=NULL, teamColours=HockeyModel::teamColours) {
   params<-parse_dc_params(params)
+  series<-series[,c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
   series$HomeOdds<-apply(series, MARGIN = 1, FUN = function(x) playoffWin(x[1], x[2], x[3], x[4], params=params))
   series$AwayOdds<-1-series$HomeOdds
   series2<-series
@@ -556,12 +555,20 @@ plot_game<-function(home, away, params=NULL, maxgoal = 10){
 #' Team Point Predict Plot
 #'
 #' @param preds Raw predictions to generate ggridges point likelyhood plot.
+#' @param savefiles Whether to save files to disk
 #' @param graphic_dir Directory to save plot images
 #' @param subdir Subdirectory to save plot images
 #'
-#' @return two plots in list, as $eastplot and $westplot
+#' @return plot(s) in a list, named for conference(s) in use at the time.
 #' @export
-plot_point_likelihood <- function(preds, graphic_dir = './prediction_results/graphics', subdir = 'pace') {
+plot_point_likelihood <- function(preds=NULL, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = 'pace', savefiles = TRUE) {
+  if(is.null(preds)){
+    #This produces an empty graphic but better that than an error?
+    preds<-compile_predictions()
+    preds<-preds[preds$predictionDate == max(preds$predictionDate),]
+    preds$Points<-preds$meanPoints
+  }
+
   conferences<-getConferences()
 
   preds$Conf<-getTeamConferences(preds$Team)
@@ -570,10 +577,12 @@ plot_point_likelihood <- function(preds, graphic_dir = './prediction_results/gra
   teamColoursList<-as.vector(teamColours$Hex)
   names(teamColoursList)<-teamColours$Team
 
+  p<-list()
+
   for(conf in conferences){
     conf_preds<-preds[preds$Conf == conf, ]
 
-    conf_colourslist<-teamColoursList[names(teamColoursList) %in% conf_preds$Teams]
+    conf_colourslist<-teamColoursList[names(teamColoursList) %in% conf_preds$Team]
 
     plot<-ggplot2::ggplot(conf_preds, ggplot2::aes_(x = quote(Points), y = quote(Team), fill=quote(Team))) +
       ggridges::geom_density_ridges(rel_min_height = 0.01, quantile_lines = TRUE, quantiles = 2, alpha=.6, from=40, to=130)+
@@ -586,12 +595,17 @@ plot_point_likelihood <- function(preds, graphic_dir = './prediction_results/gra
       ggplot2::theme(legend.position = "none",
                      panel.grid.major.y = ggplot2::element_line(size=.1, color="grey"))
 
-    grDevices::png(filename = file.path(graphic_dir, subdir, paste0(tolower(conf), 'likelihood.png')), width = 11, height = 8.5, units = 'in', res = 300)
-    print(plot)
-    while(grDevices::dev.cur()!=1){
-      grDevices::dev.off()
+    p[[conf]]<-plot
+
+    if(savefiles){
+      grDevices::png(filename = file.path(graphic_dir, subdir, paste0(tolower(conf), 'likelihood.png')), width = 11, height = 8.5, units = 'in', res = 300)
+      print(plot)
+      while(grDevices::dev.cur()!=1){
+        grDevices::dev.off()
+      }
     }
   }
+  return(p)
 }
 
 #' Plot Team Rating
@@ -805,7 +819,7 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
 #' @export
 daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyModel::schedule){
   params<-parse_dc_params(params)
-  todayodds<-todayDC(today = as.Date(today), params = params)
+  todayodds<-todayDC(today = as.Date(today), params = params, schedule = schedule)
   todayodds$HomexG<-NA
   todayodds$AwayxG<-NA
 

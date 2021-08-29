@@ -5,11 +5,9 @@
 \title{Plot Today's Playoff Series Odds}
 \usage{
 plot_playoff_series_odds(
-  series = HockeyModel::series,
+  series = getAPISeries(),
   params = NULL,
-  schedule = HockeyModel::schedule,
-  teamColours = HockeyModel::teamColours,
-  ...
+  teamColours = HockeyModel::teamColours
 )
 }
 \arguments{
@@ -17,11 +15,7 @@ plot_playoff_series_odds(
 
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
-\item{schedule}{HockeyModel::schedule or a custom value}
-
 \item{teamColours}{HockeyModel::teamColours or a custom value}
-
-\item{...}{additional parameters to pass}
 }
 \value{
 a ggplot image of odds

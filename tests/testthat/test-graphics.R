@@ -45,3 +45,35 @@ test_that("Today Odds plot OK", {
   expect_true('gt_tbl' %in% class(p))
   expect_identical(p$`_heading`$title, "Game Odds")
 })
+
+test_that("Single Game xG plot OK", {
+  p<-suppressWarnings(plot_game("Vancouver Canucks", "Edmonton Oilers"))
+  expect_true(ggplot2::is.ggplot(p))
+  expect_identical(p$labels$title, "Predicted Goals")
+  expect_identical(p$labels$y, "Odds")
+  expect_identical(p$labels$x, "Predicted Team Goals")
+})
+
+test_that("Predicted Points plot OK", {
+  preds<-HockeyModel::example_predictions
+  preds<-preds[preds$predictionDate == "2021-01-30", ]
+  p<-suppressWarnings(plot_point_likelihood(preds = preds, savefiles = F))
+  for(i in 1:length(p)){
+    expect_true(ggplot2::is.ggplot(p[[i]]))
+    expect_identical(p[[i]]$labels$y, "")
+    expect_identical(p[[i]]$labels$x, "Predicted Point Likelyhood")
+  }
+})
+
+test_that("Series Graphics are OK", {
+  series<-getAPISeries("20182019")
+  series<-series[1:3, c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
+  series$HomeWins<-c(0, 3, 3)
+  series$AwayWins<-c(4, 3, 2)
+
+  p<-suppressWarnings(plot_playoff_series_odds(series=series))
+  expect_true(ggplot2::is.ggplot(p))
+  expect_identical(p$labels$title, "Predictions for Playoff Series")
+  expect_identical(p$labels$y, "Series Odds")
+  expect_identical(p$labels$x, "")
+})
