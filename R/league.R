@@ -1266,7 +1266,7 @@ getAllHomeAwayOdds<-function(teamlist, params=NULL){
 #' @description Record today's predictions to file (for easy later retrieval). Run \code{cleanupPredictionsFile} periodically to tidy
 #'
 #' @param today Day's predictions to record. Defaults to today, but can set any other day
-#' @param file csv file location to store predictions. Will append to file.
+#' @param filepath csv file location to store predictions. Will append to file.
 #' @param schedule HockeyModel::schedule or supplied. \code{today} date must be in schedule
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
@@ -1291,7 +1291,7 @@ recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools:
 #'
 #' @description Sometimes the predictions file may end up with game duplicates (last minute postponements, etc,) This deduplicates, taking only the latest instance of a prediction (Games are unique by GameID)
 #'
-#' @param file file path to cleanup
+#' @param filepath file path to cleanup
 #'
 #' @return NULL
 #' @export

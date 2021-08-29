@@ -42,4 +42,3 @@ Current predictions are below, and are always posted on twitter at [@BulsinkBot]
 - Currently, only scores are used for model generation. Moneypuck has an expansive expected goals model available for download and updated regularly (see http://moneypuck.com/data.htm). Deriving the team performance by expected goals instead of actual could reduce the impact of luck on expected future performance.
 - ~~Switch to NHL API for scores and schedule~~ DONE
 - Twitter user [@joseph__ii](https://www.twitter.com/joseph__ii) picked up on a quirk of the OT/SO odds assignment (see https://twitter.com/joseph__ii/status/1357785234285109248). Try rebalance with league or teams' OT performance measure?
-- Store prediction results in inst/prediction_data so it can be accessed by installed package elsewhere.

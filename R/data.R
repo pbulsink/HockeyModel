@@ -80,11 +80,18 @@
 #' @format a data frame of colours & logos
 "teamColours"
 
+
 #' Summary Results (Testing)
 #' A testing dataset from 2021 presesason. Not for regular use.
 #'
 #' @format a data frame
 "summary_results_testing"
+
+#' Example Predictions
+#' A example 'predictions' compiled for each team's change in predictions over the 2020-2021 season (Contains predictions from 2021-01-12 to 2021-05-08)
+#'
+#' @format a tibble
+"example_predictions"
 
 buildTeamColours <- function(){
   teamColours <- utils::read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
