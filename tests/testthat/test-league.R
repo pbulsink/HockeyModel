@@ -33,3 +33,17 @@ test_that("Convenience Functions are OK", {
   expect_equal(nrow(todayOdds(today=as.Date("2019-11-01"))), 8)
   expect_equal(ncol(todayOdds(today=as.Date("2019-11-01"))), 5)
 })
+
+test_that("Predictions File saves", {
+  expect_true(suppressWarnings(build_past_predictions(startDate = "2021-01-30", endDate = "2021-01-30", filepath = "./odds.csv")))
+  expect_true(file.exists("./odds.csv"))
+  preds<-read.csv("./odds.csv")
+  expect_equal(nrow(preds), 12)
+  expect_equal(ncol(preds), 7)
+  expect_equal(names(preds), c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw"))
+
+  expect_true(cleanupPredictionsFile("./odds.csv"))
+
+  file.remove("./odds.csv")
+  expect_false(file.exists("./odds.csv"))
+})

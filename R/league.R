@@ -1172,7 +1172,12 @@ recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools:
   preds<-dplyr::full_join(today_sched, today_preds, suffix=c("",""), by = c("HomeTeam", "AwayTeam"))
   preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw")]
 
-  utils::write.table(preds, file=filepath, append = TRUE, col.names = FALSE, row.names = FALSE, sep=",", dec=".")
+  if(file.exists(filepath)){
+    utils::write.table(preds, file=filepath, append = TRUE, col.names = FALSE, row.names = FALSE, sep=",", dec=".")
+  } else {
+    utils::write.table(preds, file=filepath, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
+  }
+
 }
 
 #' Cleanup Predictions File
@@ -1191,6 +1196,8 @@ cleanupPredictionsFile<-function(filepath=file.path(devtools::package_file(), "d
     dplyr::distinct(.data$GameID, .keep_all=TRUE) %>%
     dplyr::arrange(.data$Date, .data$GameID)
   utils::write.table(dailyodds, file=filepath, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
+
+  return(TRUE)
 }
 
 build_past_predictions<-function(startDate, endDate, filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv")){
