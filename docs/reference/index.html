@@ -8,21 +8,29 @@
 
 <title>Function reference • HockeyModel</title>
 
+
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -30,7 +38,9 @@
 
 
 
+
 <meta property="og:title" content="Function reference" />
+
 
 
 
@@ -44,9 +54,10 @@
 <![endif]-->
 
 
+
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-index">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -60,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">HockeyModel</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.2021</span>
       </span>
     </div>
 
@@ -68,7 +79,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -83,16 +94,21 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/basic-usage.html">Basic Usage</a>
+    </li>
+    <li>
       <a href="../articles/model-description.html">Model Description</a>
+    </li>
+    <li>
+      <a href="../articles/updates-2021.html">2021 Updates</a>
     </li>
   </ul>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/pbulsink/HockeyModel">
-    <span class="fa fa-github fa-lg"></span>
+  <a href="https://github.com/pbulsink/HockeyModel/">
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -103,6 +119,7 @@
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -126,6 +143,11 @@
           <p class="section-desc"></p>
         </th>
       </tr>
+      
+      
+    </tbody><tbody>
+      
+      
       <tr>
         
         <td>
@@ -135,15 +157,33 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="advanced_scores.html">advanced_scores</a></code> </p>
+          <p><code><a href="beta.html">beta</a></code> </p>
         </td>
-        <td><p>Historical NHL scores with Advanced Stats</p></td>
+        <td><p>Beta</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="buildStats.html">buildStats()</a></code> </p>
         </td>
         <td><p>Bulid Stats Table</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cleanModel.html">cleanModel()</a></code> </p>
+        </td>
+        <td><p>Clean a model</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cleanupPredictionsFile.html">cleanupPredictionsFile()</a></code> </p>
+        </td>
+        <td><p>Cleanup Predictions File</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="colourDelta.html">colourDelta()</a></code> </p>
+        </td>
+        <td><p>Check Colour Delta</p></td>
       </tr><tr>
         
         <td>
@@ -159,10 +199,9 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="dataBT.html">dataBT</a></code> </p>
+          <p><code><a href="daily_odds_table.html">daily_odds_table()</a></code> </p>
         </td>
-        <td><p>Bradley-Terry formatted data
-Data formatted for Bradley Terry Model with Generalized Davidson terms</p></td>
+        <td><p>Today Odds Table</p></td>
       </tr><tr>
         
         <td>
@@ -178,35 +217,82 @@ Data formatted for Bradley Terry Model with Generalized Davidson terms</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="dcRealSeasonPredict.html">dcRealSeasonPredict()</a></code> </p>
+          <p><code><a href="dcProbMatrix.html">dcProbMatrix()</a></code> </p>
         </td>
-        <td><p>DC Simulate season with reevaluation every n days</p></td>
+        <td><p>Generate the Dixon-Coles' Probability Matrix</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="elos.html">elos</a></code> </p>
+          <p><code><a href="dcResult.html">dcResult()</a></code> </p>
         </td>
-        <td><p>Elo History</p></td>
+        <td><p>DC Result Sample</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="fittedBT.html">fittedBT</a></code> </p>
+          <p><code><a href="dcSample.html">dcSample()</a></code> </p>
         </td>
-        <td><p>Generalized Davidson Bradley-Terry model
-Results of fitting Bradley Terry Model with Generalized Davidson terms</p></td>
+        <td><p>DC Sample</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="fittedBTSimple.html">fittedBTSimple</a></code> </p>
+          <p><code><a href="eta.html">eta</a></code> </p>
         </td>
-        <td><p>Simple Bradley-Terry model
-Results of fitting Bradley Terry Model</p></td>
+        <td><p>Eta</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="example_predictions.html">example_predictions</a></code> </p>
+        </td>
+        <td><p>Example Predictions
+A example 'predictions' compiled for each team's change in predictions over the 2020-2021 season (Contains predictions from 2021-01-12 to 2021-05-08)</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="format_playoff_odds.html">format_playoff_odds()</a></code> </p>
+        </td>
+        <td><p>Format Playoff Odds</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="gameIDValidator.html">gameIDValidator()</a></code> </p>
+        </td>
+        <td><p>Validate GameID numbers</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="games_today.html">games_today()</a></code> </p>
+        </td>
+        <td><p>Games Today</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getAPISeries.html">getAPISeries()</a></code> </p>
+        </td>
+        <td><p>Get Playoff Series using the NHL API</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getCurrentSeason8.html">getCurrentSeason8()</a></code> </p>
+        </td>
+        <td><p>Get Current Season</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="getM.html">getM()</a></code> </p>
         </td>
         <td><p>Fast Dixon-Coles model fitting 'm'.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getNHLSchedule.html">getNHLSchedule()</a></code> </p>
+        </td>
+        <td><p>Get NHL Schedule</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getNHLScores.html">getNHLScores()</a></code> </p>
+        </td>
+        <td><p>Get NHL Scores</p></td>
       </tr><tr>
         
         <td>
@@ -222,9 +308,75 @@ Results of fitting Bradley Terry Model</p></td>
       </tr><tr>
         
         <td>
+          <p><code><a href="getSeasonEndDate.html">getSeasonEndDate()</a></code> </p>
+        </td>
+        <td><p>GetCurrentSeasonEndDate</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="getSeasonMetricsDC.html">getSeasonMetricsDC()</a></code> </p>
         </td>
         <td><p>Get Season Metrics</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getSeasonStartDate.html">getSeasonStartDate()</a></code> </p>
+        </td>
+        <td><p>getSeasonStartDate</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getTeamColours.html">getTeamColours()</a></code> </p>
+        </td>
+        <td><p>Get Team Colours</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getWeibullParams.html">getWeibullParams()</a></code> </p>
+        </td>
+        <td><p>Get Weibull Params</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="hexToRGB.html">hexToRGB()</a></code> </p>
+        </td>
+        <td><p>Hex to RGB</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="historicalPoints.html">historicalPoints()</a></code> </p>
+        </td>
+        <td><p>Get Historical Points for all teams listed in a scores frame</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="inOffSeason.html">inOffSeason()</a></code> </p>
+        </td>
+        <td><p>In Off Season</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="inPlayoffs.html">inPlayoffs()</a></code> </p>
+        </td>
+        <td><p>In Playoffs</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="inRegularSeason.html">inRegularSeason()</a></code> </p>
+        </td>
+        <td><p>In Regular Season</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="is.Date.html">is.Date()</a></code> </p>
+        </td>
+        <td><p>Is this a Date?</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="k.html">k</a></code> </p>
+        </td>
+        <td><p>k</p></td>
       </tr><tr>
         
         <td>
@@ -242,25 +394,13 @@ Results of fitting Bradley Terry Model</p></td>
         <td>
           <p><code><a href="m.html">m</a></code> </p>
         </td>
-        <td><p>Dixon Coles' `m`</p></td>
+        <td><p>Dixon Coles' <code>m</code></p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="mutate_cond.html">mutate_cond()</a></code> </p>
         </td>
         <td><p>Conditional Mutate</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="nhl_conferences.html">nhl_conferences</a></code> </p>
-        </td>
-        <td><p>NHL Conferences</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="nhl_divisions.html">nhl_divisions</a></code> </p>
-        </td>
-        <td><p>NHL Divisions</p></td>
       </tr><tr>
         
         <td>
@@ -288,15 +428,15 @@ Results of fitting Bradley Terry Model</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="playoffSolver.html">playoffSolver()</a></code> </p>
+          <p><code><a href="playoffSolverEngine.html">playoffSolverEngine()</a></code> </p>
         </td>
-        <td><p>Playoff solver: chances of making each round &amp; winning cup</p></td>
+        <td><p>Playoff Solver Engine</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="plotDC.html">plotDC()</a></code> </p>
+          <p><code><a href="playoffWin.html">playoffWin()</a></code> </p>
         </td>
-        <td><p>Produce a plot of each team's offence and defence scores</p></td>
+        <td><p>Playoff Win Calculator</p></td>
       </tr><tr>
         
         <td>
@@ -312,9 +452,27 @@ Results of fitting Bradley Terry Model</p></td>
       </tr><tr>
         
         <td>
+          <p><code><a href="plot_pace_by_division.html">plot_pace_by_division()</a></code> </p>
+        </td>
+        <td><p>Plot Pace By Division</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="plot_pace_by_team.html">plot_pace_by_team()</a></code> </p>
         </td>
         <td><p>Plot Pace by team</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="plot_playoff_series_odds.html">plot_playoff_series_odds()</a></code> </p>
+        </td>
+        <td><p>Plot Today's Playoff Series Odds</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="plot_point_likelihood.html">plot_point_likelihood()</a></code> </p>
+        </td>
+        <td><p>Team Point Predict Plot</p></td>
       </tr><tr>
         
         <td>
@@ -336,9 +494,21 @@ Results of fitting Bradley Terry Model</p></td>
       </tr><tr>
         
         <td>
+          <p><code><a href="plot_team_rating.html">plot_team_rating()</a></code> </p>
+        </td>
+        <td><p>Plot Team Rating</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="pointPredict.html">pointPredict()</a></code> </p>
         </td>
         <td><p>Predict Points graphic</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="predictMultipleDaysResultsDC.html">predictMultipleDaysResultsDC()</a></code> </p>
+        </td>
+        <td><p>Predict Multiple Days's W/L/D results</p></td>
       </tr><tr>
         
         <td>
@@ -348,15 +518,27 @@ Results of fitting Bradley Terry Model</p></td>
       </tr><tr>
         
         <td>
+          <p><code><a href="prob_matrix.html">prob_matrix()</a></code> </p>
+        </td>
+        <td><p>Probability Matrix</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="randomSeriesWinner.html">randomSeriesWinner()</a></code> </p>
+        </td>
+        <td><p>Random Series Winner</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="ratings.html">ratings()</a></code> </p>
         </td>
         <td><p>Current ratings</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="recovery.html">recovery()</a></code> </p>
+          <p><code><a href="recordTodaysPredictions.html">recordTodaysPredictions()</a></code> </p>
         </td>
-        <td><p>Recovery Calculating</p></td>
+        <td><p>Record Today's Predictions</p></td>
       </tr><tr>
         
         <td>
@@ -366,21 +548,21 @@ Results of fitting Bradley Terry Model</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="remainderSeasonELO.html">remainderSeasonELO()</a></code> </p>
+          <p><code><a href="removeUnscheduledGames.html">removeUnscheduledGames()</a></code> </p>
         </td>
-        <td><p>ELO remainder of season</p></td>
+        <td><p>Remove Unscheduled Games</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="rho.html">rho</a></code> </p>
         </td>
-        <td><p>Dixon Coles' `rho`</p></td>
+        <td><p>Dixon Coles' <code>rho</code></p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="schedule.html">schedule</a></code> </p>
         </td>
-        <td><p>Schedule for 2018-2019.</p></td>
+        <td><p>Schedule for current season.</p></td>
       </tr><tr>
         
         <td>
@@ -390,9 +572,9 @@ Results of fitting Bradley Terry Model</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="simulateSeason.html">simulateSeason()</a></code> </p>
+          <p><code><a href="simulatePlayoffs.html">simulatePlayoffs()</a></code> </p>
         </td>
-        <td><p>Simulate the remainder of the season</p></td>
+        <td><p>simulate Playoffs</p></td>
       </tr><tr>
         
         <td>
@@ -405,6 +587,19 @@ Results of fitting Bradley Terry Model</p></td>
           <p><code><a href="sim_engine.html">sim_engine()</a></code> </p>
         </td>
         <td><p>Simulation engine to be parallelized or used in single core</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="single_series_solver.html">single_series_solver()</a></code> </p>
+        </td>
+        <td><p>Given current seriess and a series number and home and away teams, either return true series winner, random series winner (with home/away wins considered) or random series winner</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="summary_results_testing.html">summary_results_testing</a></code> </p>
+        </td>
+        <td><p>Summary Results (Testing)
+A testing dataset from 2021 presesason. Not for regular use.</p></td>
       </tr><tr>
         
         <td>
@@ -421,25 +616,19 @@ Hex and RGB team colours (primary &amp; secondary where applicable), and path to
       </tr><tr>
         
         <td>
-          <p><code><a href="team_progression_odds.html">team_progression_odds()</a></code> </p>
-        </td>
-        <td><p>Team Progression Odds</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="todayDC.html">todayDC()</a></code> </p>
         </td>
         <td><p>DC Predictions Today</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="todayELO.html">todayELO()</a></code> </p>
+          <p><code><a href="todayOdds.html">todayOdds()</a></code> </p>
         </td>
-        <td><p>Elo Predictions Today</p></td>
+        <td><p>Today's Odds</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="todayOdds.html">todayOdds()</a></code> </p>
+          <p><code><a href="todayOddsPlot.html">todayOddsPlot()</a></code> </p>
         </td>
         <td><p>Today's game odds graphic</p></td>
       </tr><tr>
@@ -448,6 +637,12 @@ Hex and RGB team colours (primary &amp; secondary where applicable), and path to
           <p><code><a href="tweetGames.html">tweetGames()</a></code> </p>
         </td>
         <td><p>Tweet Game Plots</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="tweetLikelihoods.html">tweetLikelihoods()</a></code> </p>
+        </td>
+        <td><p>Tweet Likelihood plots (ggridges)</p></td>
       </tr><tr>
         
         <td>
@@ -463,15 +658,21 @@ Hex and RGB team colours (primary &amp; secondary where applicable), and path to
       </tr><tr>
         
         <td>
-          <p><code><a href="updateDC.html">updateDC()</a></code> </p>
+          <p><code><a href="tweetPlayoffOdds.html">tweetPlayoffOdds()</a></code> </p>
         </td>
-        <td><p>Update Dixon Coles parameters</p></td>
+        <td><p>Tweet Playoff Odds</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="updateELO.html">updateELO()</a></code> </p>
+          <p><code><a href="tweetSeries.html">tweetSeries()</a></code> </p>
         </td>
-        <td><p>Update Elo rankings</p></td>
+        <td><p>Tweet Series</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="updateDC.html">updateDC()</a></code> </p>
+        </td>
+        <td><p>Update Dixon Coles parameters</p></td>
       </tr><tr>
         
         <td>
@@ -487,41 +688,44 @@ Hex and RGB team colours (primary &amp; secondary where applicable), and path to
       </tr><tr>
         
         <td>
-          <p><code><a href="updateSchedule.html">updateSchedule()</a></code> </p>
+          <p><code><a href="updateScheduleAPI.html">updateScheduleAPI()</a></code> </p>
         </td>
-        <td><p>Update Schedule</p></td>
+        <td><p>Update schedule using the NHL API</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="updateScores.html">updateScores()</a></code> </p>
+          <p><code><a href="updateScoresAPI.html">updateScoresAPI()</a></code> </p>
         </td>
-        <td><p>Update Scores</p></td>
+        <td><p>Update past scores using the NHL API</p></td>
       </tr>
     </tbody>
     </table>
   </div>
 
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#section-all-functions">All functions</a></li>
-    </ul>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
+
       <footer>
       <div class="copyright">
-  <p>Developed by Philip bulsink.</p>
+  <p>Developed by Philip Bulsink.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

@@ -36,3 +36,4 @@ prediction_results/graphics/predicted_goals.png
 dailyupdate.bat
 dailyupdate.R
 *.Rout
+docs

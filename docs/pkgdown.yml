@@ -1,7 +1,9 @@
-pandoc: 1.19.2.1
-pkgdown: 1.3.0
+pandoc: 2.11.4
+pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
+  basic-usage: basic-usage.html
   model-description: model-description.html
-  _game-impact: _game-impact.html
+  updates-2021: updates-2021.html
+last_built: 2021-08-30T01:42Z
 

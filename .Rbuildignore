@@ -9,3 +9,5 @@
 ^data-raw$
 ^\.dailyupdate.*$
 ^codecov\.yml$
+^_pkgdown\.yml$
+^pkgdown$
