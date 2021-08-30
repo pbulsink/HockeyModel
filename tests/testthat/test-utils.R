@@ -51,3 +51,19 @@ test_that("Date Checks are OK", {
   expect_false(is.Date(8))
   expect_false(is.Date("2020-02-30"))
 })
+
+test_that("GameIDs are validated", {
+  expect_true(gameIDValidator("2021021001"))
+  expect_true(gameIDValidator(2021021001))
+  expect_false(gameIDValidator("2021091001"))
+  expect_false(gameIDValidator("bob"))
+
+})
+
+test_that("IneffectiveMath HockeyVis Contest output is a string", {
+  preds<-HockeyModel::example_predictions
+  preds<-preds[preds$predictionDate == max(preds$predictionDate), ]
+  im<-formatPredsForHockeyVisContest(predictions=preds)
+  expect_true(is.character(im))
+  expect_true(grepl("pbulsink", x=im))
+})
