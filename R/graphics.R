@@ -173,7 +173,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
 #'
 #' @return ggplot graphic of team pace vs. predicted
 #' @export
-plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file(), "prediction_results","graphics"), subdir = 'pace', prediction_dir = "./prediction_results", scores=HockeyModel::scores){
+plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file(), "prediction_results","graphics"), subdir = 'pace', prediction_dir = file.path(devtools::package_file(), "prediction_results"), scores=HockeyModel::scores){
   sc<-scores[scores$Date >= as.Date(getSeasonStartDate()),]
   sc<-sc[sc$GameType == "R",]
 

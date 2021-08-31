@@ -1,5 +1,5 @@
 test_that("model Updates OK", {
-  model<-supressWarnings(updateModel())
+  model<-suppressWarnings(updateModel())
   expect_equal(names(model), c("scores", "schedule", "params"))
 })
 
