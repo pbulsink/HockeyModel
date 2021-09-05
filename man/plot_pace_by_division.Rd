@@ -7,7 +7,7 @@
 plot_pace_by_division(
   graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
   subdir = "pace",
-  prediction_dir = "./prediction_results",
+  prediction_dir = file.path(devtools::package_file(), "prediction_results"),
   scores = HockeyModel::scores
 )
 }
