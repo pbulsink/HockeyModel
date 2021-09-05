@@ -1,0 +1,40 @@
+---
+output: md_document
+params:
+  filename: gamedate.md
+---
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r setup, include=FALSE, echo=FALSE}
+library(HockeyModel)
+games<-HockeyModel::schedule
+games<-games[games$Date == Sys.Date(), ]
+if(nrow(games) == 0){
+  knitr::knit_exit()
+}
+```
+A list of today's games are shown here:
+
+```{r gametable, echo=FALSE}
+HockeyModel::daily_odds_table()
+```
+Including draws, the outcomes today's teams are:
+
+```{r gameodds, echo=FALSE, fig.width=8, fig.height=5}
+HockeyModel::plot_odds_today()
+```
+
+The expected goals plots for today's games:
+
+```{r xGplots, echo=FALSE, fig.width=8, fig.height=5, fig.show="hold"}
+for(g in 1:nrow(games)){
+  home<-as.character(games[g,"HomeTeam"])
+  away<-as.character(games[g,"AwayTeam"])
+  p<-HockeyModel::plot_game(home = home, away = away)
+  print(p)
+}
+```

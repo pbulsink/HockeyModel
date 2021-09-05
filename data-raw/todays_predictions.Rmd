@@ -1,0 +1,22 @@
+---
+output: md_document
+params:
+  filename: todays_predictions.md
+---
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r setup, include=FALSE, echo=FALSE}
+library(HockeyModel)
+```
+```{r today, include=FALSE}
+if(is.null(HockeyModel::games_today())){
+  t<-"There are no games today."
+} else {
+  t<-knitr::knit_expand(file="https://raw.githubusercontent.com/pbulsink/HockeyModel/master/data-raw/gamedate.Rmd")
+}
+t
+```
