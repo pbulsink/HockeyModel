@@ -439,7 +439,15 @@ prob_matrix<-function(lambda, mu, params, maxgoal){
     #probability_matrix[d,d]<-probability_matrix[d,d] * (stats::dweibull(d, shape = params$beta, scale = params$eta) * params$k)
   #}
 
-  probability_matrix <- probability_matrix/sum(probability_matrix)  # turn into a sum=1 matrix
+  #probability_matrix <- probability_matrix/sum(probability_matrix)  # turn into a sum=1 matrix
+  #  #  Normalizing the whole matrix reduces the effect of the tie enhancement.
+
+  renorm <- 1-sum(diag(probability_matrix))
+  normfact <- sum(probability_matrix[upper.tri(probability_matrix)], probability_matrix[lower.tri(probability_matrix)])/renorm
+
+  probability_matrix[upper.tri(probability_matrix)]<-probability_matrix[upper.tri(probability_matrix)] / normfact
+  probability_matrix[lower.tri(probability_matrix)]<-probability_matrix[lower.tri(probability_matrix)] / normfact
+
 
   return(probability_matrix)
 }
