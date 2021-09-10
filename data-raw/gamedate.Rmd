@@ -1,31 +1,20 @@
----
-output: md_document
-params:
-  filename: gamedate.md
----
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
 ```{r setup, include=FALSE, echo=FALSE}
 library(HockeyModel)
 games<-HockeyModel::schedule
-games<-games[games$Date == Sys.Date(), ]
+games<-games[games$Date == as.Date("2019-11-01"), ]
 if(nrow(games) == 0){
-  knitr::knit_exit()
+  knitr::knit_exit(fully = FALSE)
 }
 ```
 A list of today's games are shown here:
 
 ```{r gametable, echo=FALSE}
-HockeyModel::daily_odds_table()
+HockeyModel::daily_odds_table(today=as.Date("2019-11-01"))
 ```
 Including draws, the outcomes today's teams are:
 
 ```{r gameodds, echo=FALSE, fig.width=8, fig.height=5}
-HockeyModel::plot_odds_today()
+HockeyModel::plot_odds_today(today=as.Date("2019-11-01"))
 ```
 
 The expected goals plots for today's games:

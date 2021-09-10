@@ -95,7 +95,7 @@ ratings <- function(m = HockeyModel::m) {
   return(plot_team_rating(m=m))
 }
 
-tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay =stats::runif(1, min=4,max=10)*60, games_today = games_today(), schedule=HockeyModel::schedule){
+tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay =stats::runif(1, min=2,max=6)*60, games_today = games_today(), schedule=HockeyModel::schedule){
 
   if(!is.null(games_today)){
     #don't try tweet todays' games if none exist
@@ -151,11 +151,12 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 #' Daily functions, rolled into one call
 #'
 #' @param graphic_dir Directory for graphic files
+#' @param subdir subdirectory to `graphic_dir` for pace plots
 #' @param token token to pass to rtweet calls
 #' @param delay delay between tweet posts
 #'
 #' @export
-dailySummary <- function(graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay =stats::runif(1, min=4,max=8)*60){
+dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir = "pace", token = rtweet::get_token(), delay =stats::runif(1, min=2,max=6)*60){
 
   if(inOffSeason()){
     if(getSeasonStartDate()-Sys.Date() > 7 | getSeasonStartDate() - Sys.Date() < 0){
@@ -230,6 +231,11 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
     while(grDevices::dev.cur()!=1){
       grDevices::dev.off()
     }
+
+    #Make Pace Plots
+    plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, scores = modelparams$scores)
+    plot_pace_by_division(graphic_dir = graphic_dir, subdir = subdir, scores=modelparams$scores)
+    plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
   }
 
   message("Posting Tweets...")
@@ -240,7 +246,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 
   tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], params=params, graphic_dir = graphic_dir, token = token, delay=delay)
 
-  if(as.numeric(format(Sys.Date(), "%m")) %in% c(3,4,5) & inRegularSeason()){
+  if(inRegularSeason()){
     tweetPlayoffOdds(token = token, graphic_dir = graphic_dir, params=params)
 
     #until Rtweet has scheduler
@@ -282,7 +288,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', token =
 #' @param scores HockeyModel::scores or a custom value
 #'
 #' @export
-tweetPace<-function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", prediction_dir = file.path(devtools::package_file(), "prediction_results"), token = rtweet::get_token(), scores = HockeyModel::scores){
+tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", prediction_dir = file.path(devtools::package_file(), "prediction_results"), token = rtweet::get_token(), scores = HockeyModel::scores){
   #make sure we're working with the most up-to-date info.
   scores<-updateScoresAPI(save_data = T)
 
@@ -323,7 +329,7 @@ tweetPace<-function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = file.pa
 
     #until Rtweet has scheduler
     message("Delaying ", delay, " seconds to space tweets...")
-    Sys.sleep(delay)
+    Sys.sleep(stats::runif(1,min=1,max=3)*60)
     my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
     reply_id<-my_timeline$status_id[1]
   }
@@ -340,7 +346,7 @@ tweetPace<-function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = file.pa
                      in_reply_to_status_id = reply_id,
                      token = token)
 
-  Sys.sleep(delay*2)
+  Sys.sleep(stats::runif(1,min=2,max=6)*60)
 
   #Make Division Plots
   plot_pace_by_division(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores=scores)

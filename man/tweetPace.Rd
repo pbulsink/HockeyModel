@@ -5,7 +5,7 @@
 \title{Tweet Pace Plots}
 \usage{
 tweetPace(
-  delay = stats::runif(1, min = 3, max = 6) * 60,
+  delay = stats::runif(1, min = 1, max = 3) * 60,
   graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
   subdir = "pace",
   prediction_dir = file.path(devtools::package_file(), "prediction_results"),

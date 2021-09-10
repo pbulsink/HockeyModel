@@ -6,12 +6,15 @@
 \usage{
 dailySummary(
   graphic_dir = "./prediction_results/graphics/",
+  subdir = "pace",
   token = rtweet::get_token(),
-  delay = stats::runif(1, min = 4, max = 8) * 60
+  delay = stats::runif(1, min = 2, max = 6) * 60
 )
 }
 \arguments{
 \item{graphic_dir}{Directory for graphic files}
+
+\item{subdir}{subdirectory to \code{graphic_dir} for pace plots}
 
 \item{token}{token to pass to rtweet calls}
 

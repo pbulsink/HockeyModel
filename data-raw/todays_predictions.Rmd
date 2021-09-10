@@ -12,11 +12,11 @@ knitr::opts_chunk$set(
 ```{r setup, include=FALSE, echo=FALSE}
 library(HockeyModel)
 ```
-```{r today, include=FALSE}
-if(is.null(HockeyModel::games_today())){
-  t<-"There are no games today."
+```{r today, echo=FALSE, }
+if(FALSE){#is.null(HockeyModel::games_today())){
+  print("There are no games today.")
 } else {
-  t<-knitr::knit_expand(file="https://raw.githubusercontent.com/pbulsink/HockeyModel/master/data-raw/gamedate.Rmd")
+  knitr::knit_expand(file="https://raw.githubusercontent.com/pbulsink/HockeyModel/master/data-raw/gamedate.Rmd")
 }
-t
+
 ```
