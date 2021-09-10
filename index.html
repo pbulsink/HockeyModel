@@ -139,7 +139,7 @@
 <h1 class="hasAnchor">
 <a href="#to-do" class="anchor"></a>To Do</h1>
 <ul>
-<li>Twitter user <a href="https://www.twitter.com/MOCallanain">@MOCallanain</a> highlighted that the predicted tie rate is &lt; ~0.2, when in actuality it’s higher. Likely due to teams playing for loser point, <del>can we parameterize the model to include a tie boost? Diagonal enhanced metric should work - calculate like the DC 0/1 goal enahancement. Model currently rescales to increase odds to a reasonable amount.</del> DONE?</li>
+<li>Twitter user <a href="https://www.twitter.com/MOCallanain">@MOCallanain</a> highlighted that the predicted tie rate is &lt; ~0.2, when in actuality it’s higher. Likely due to teams playing for loser point, <del>can we parameterize the model to include a tie boost? Diagonal enhanced metric should work - calculate like the DC 0/1 goal enhancement. Model currently re-scales to increase odds to a reasonable amount.</del> DONE</li>
 <li>Currently, only scores are used for model generation. Moneypuck has an expansive expected goals model available for download and updated regularly (see <a href="http://moneypuck.com/data.htm" class="uri">http://moneypuck.com/data.htm</a>). Deriving the team performance by expected goals instead of actual could reduce the impact of luck on expected future performance.</li>
 <li>
 <del>Switch to NHL API for scores and schedule</del> DONE</li>
@@ -179,6 +179,7 @@
 <ul class="list-unstyled">
 <li><a href="https://github.com/pbulsink/HockeyModel/actions"><img src="https://github.com/pbulsink/HockeyModel/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
 <li><a href="https://codecov.io/gh/pbulsink/HockeyModel?branch=master"><img src="https://codecov.io/gh/pbulsink/HockeyModel/branch/master/graph/badge.svg" alt="Codecov test coverage"></a></li>
+<li><a href="https://bulsink.ca"><img src="https://api.netlify.com/api/v1/badges/1ededd90-c1c2-44cc-8bed-e3d5cea3a284/deploy-status" alt="Netlify Status"></a></li>
 </ul>
 </div>
 </div>
