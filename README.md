@@ -15,7 +15,7 @@ Current predictions are below, and are always posted on twitter at [@BulsinkBot]
 Visit our website: [bulsink.ca](https://bulsink.ca).
 
 ## Team Ranking
-<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png" alt="Team Rankings">
+![Team Rankings]("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png)
 
 ## Today's Games
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png" alt="Today's Games">
