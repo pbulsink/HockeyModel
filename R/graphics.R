@@ -185,8 +185,7 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
     dir.create(file.path(graphic_dir, subdir), recursive = TRUE)
   }
 
-  s<-nhlapi::nhl_seasons()
-  ngames<-s$numberOfGames[nrow(s)]
+  ngames<-getNumGames()
   teamlist<-unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
 
   teampoints<-as.list(rep(NA, length(teamlist)))
@@ -291,6 +290,7 @@ plot_pace_by_team<-function(graphic_dir = file.path(devtools::package_file(), "p
   if(!dir.exists(file.path(graphic_dir, subdir))){
     dir.create(file.path(graphic_dir, subdir), recursive = TRUE)
   }
+  numgames<-getNumGames()
 
   teamColours <- HockeyModel::teamColours
 
@@ -317,20 +317,20 @@ plot_pace_by_team<-function(graphic_dir = file.path(devtools::package_file(), "p
 
     plt <- ggplot2::ggplot(teamscores, ggplot2::aes_(x = quote(GameNum), y = quote(cPoints), colour = quote(Venue))) +
       ggplot2::geom_point() +
-      ggplot2::scale_x_continuous(limits = c(0, 82)) +
-      ggplot2::scale_y_continuous(limits = c(0, 164)) +
+      ggplot2::scale_x_continuous(limits = c(0, numgames)) +
+      ggplot2::scale_y_continuous(limits = c(0, numgames*2)) +
       ggplot2::labs(x = "Game Number",
                     y = "Points",
                     title = "Points Pace",
                     subtitle = paste0(team, ' Expected Points: ', format(round(qpoints, 1), nsmall = 1)),
                     caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
       ggplot2::theme_minimal() +
-      ggplot2::geom_segment(x = 0, y = 0, xend = 82, yend = ppoints, alpha = 0.05, colour = 'grey')+
-      ggplot2::geom_segment(x = 0, y = 0, xend = 82, yend = maxp, alpha = 0.05, colour = 'grey')+
-      ggplot2::geom_segment(x = 0, y = 0, xend = 82, yend = minp, alpha = 0.05, colour = 'grey')+
-      ggplot2::geom_segment(x = ngames, y = cp, xend = 82, yend = qpoints, alpha = 0.2, colour = colour)+
-      ggplot2::geom_segment(x = ngames, y = cp, xend = 82, yend = maxq, alpha = 0.2, colour = colour)+
-      ggplot2::geom_segment(x = ngames, y = cp, xend = 82, yend = minq, alpha = 0.2, colour = colour)
+      ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = ppoints, alpha = 0.05, colour = 'grey')+
+      ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = maxp, alpha = 0.05, colour = 'grey')+
+      ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = minp, alpha = 0.05, colour = 'grey')+
+      ggplot2::geom_segment(x = ngames, y = cp, xend = numgames, yend = qpoints, alpha = 0.2, colour = colour)+
+      ggplot2::geom_segment(x = ngames, y = cp, xend = numgames, yend = maxq, alpha = 0.2, colour = colour)+
+      ggplot2::geom_segment(x = ngames, y = cp, xend = numgames, yend = minq, alpha = 0.2, colour = colour)
 
     grDevices::png(filename = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", team)), '.png')), width = 11, height = 8.5, units = 'in', res = 300)
     print(plt)

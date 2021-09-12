@@ -57,7 +57,7 @@ test_that("GameIDs are validated", {
   expect_true(gameIDValidator(2021021001))
   expect_false(gameIDValidator("2021091001"))
   expect_false(gameIDValidator("bob"))
-
+  expect_false(gameIDValidator(TRUE))
 })
 
 test_that("IneffectiveMath HockeyVis Contest output is a string", {
@@ -66,4 +66,11 @@ test_that("IneffectiveMath HockeyVis Contest output is a string", {
   im<-formatPredsForHockeyVisContest(predictions=preds)
   expect_true(is.character(im))
   expect_true(grepl("pbulsink", x=im))
+})
+
+test_that("Season Validates", {
+  expect_true(seasonValidator("20202021"))
+  expect_false(seasonValidator(20202021))
+  expect_false(seasonValidator("Bob"))
+  expect_false(seasonValidator(TRUE))
 })

@@ -83,20 +83,24 @@ buildStats<-function(scores){
   )
 
   team_stats<-team_stats %>%
-    dplyr::mutate(Rank = rank(dplyr::desc(.data$Points), ties.method = 'random'),#TODO sort properly using point%, reg. win, ROW, W, head to head
+    dplyr::mutate(PointPercent = .data$Points/.data$GP,
+                  ROW = .data$W + .data$OTW,
+                  ROSW = .data$W + .data$OTW + .data$SOW,
+                  Rand = stats::runif(dplyr::n())) %>%
+    dplyr::mutate(Rank = order(order(-.data$Points, -.data$PointPercent, -.data$W, -.data$ROW, -.data$ROSW, .data$Rand)),  # include Random for random ties sorting, else Anaheim will always beat Vegas if they're tied.
                   Conf = getTeamConferences(.data$Team), #convenience data, dropped later
                   Div = getTeamDivisions(.data$Team)) %>%
     dplyr::group_by(.data$Conf) %>%
-    dplyr::mutate(ConfRank = rank(dplyr::desc(.data$Points), ties.method = 'random')) %>%
+    dplyr::mutate(ConfRank = rank(.data$Rank, ties.method = 'random')) %>%
     dplyr::ungroup() %>%
     dplyr::group_by(.data$Div) %>%
-    dplyr::mutate(DivRank = rank(dplyr::desc(.data$Points), ties.method = 'random')) %>%
+    dplyr::mutate(DivRank = rank(.data$Rank, ties.method = 'random')) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Playoffs = ifelse(.data$DivRank <= 3, 1, 0)) %>%
     dplyr::group_by(.data$Conf, .data$Playoffs) %>%
     dplyr::mutate(Playoffs = ifelse(.data$Rank %in% utils::tail(sort(.data$Rank), 2), 1, .data$Playoffs)) %>% ## Renaming top two playoff teams as 'in' doesn't matter, because they're in already
     dplyr::ungroup() %>%
-    dplyr::select(-c("Conf", "Div"))
+    dplyr::select(-c("Conf", "Div", "PointPercent", "ROW", "ROSW", "Rand"))
 
   return(tibble::as_tibble(team_stats))
 }

@@ -364,10 +364,6 @@ DCPredict <- function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel
   AwayWinProbability <- sum(probability_matrix[upper.tri(probability_matrix)])
 
   #Simple Adjust for under-predicting odds
-  #TODO Fix it: add draw parameter to model
-  #HomeWinProbability <- HomeWinProbability * (0.43469786 / 0.4558628)
-  #AwayWinProbability <- AwayWinProbability * (0.33333333 / 0.3597192)
-  #DrawProbability <- DrawProbability * (0.2319688 / 0.1755118)
   odds <- normalizeOdds(c(HomeWinProbability, DrawProbability, AwayWinProbability))
 
   if(!draws){
@@ -661,14 +657,7 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
     score<-scores[scores$Date < day,]
     score<-score[score$Date > as.Date("2008-08-01"),]
     sched<-schedule[schedule$Date >= day,]
-    params<-list()
-    params$m<-getM(scores = score, currentDate = d)
-    params$rho<-getRho(m = params$m, scores = score)
-    #TODO This should change to updateDC(date=d)?
-    w.day <- getWeibullParams(m=params$m, rho=params$rho, scores=score)
-    params$beta <- w.day$beta
-    params$eta <- w.day$eta
-    params$k <- w.day$k
+    params<-updateDC(scores=score, currentDate = d)
     preds<-NULL
     preds<-tryCatch(expr = {
       message("Predicting with Loopless Sim")

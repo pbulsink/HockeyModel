@@ -221,3 +221,11 @@ gameIDValidator<-function(gameIDs){
 is.Date<-function(date){
   tryCatch(!is.na(as.Date(date)),error=function(err){FALSE})
 }
+
+seasonValidator<-function(season){
+  #TODO: Currently 19272099 would pass - make sure the two years are sequential
+  if(!is.character(season)){
+    return(FALSE)
+  }
+  return(grepl("(19|20)\\d{2}(19|20)\\d{2}", season))
+}

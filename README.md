@@ -12,6 +12,8 @@ Read more about the package at [https://pbulsink.github.io/HockeyModel](https://
 
 Current predictions are below, and are always posted on twitter at [@BulsinkBot](https://www.twitter.com/BulsinkB).
 
+Visit our website: [bulsink.ca](https://bulsink.ca).
+
 ## Team Ranking
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png" alt="Team Rankings">
 

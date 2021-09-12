@@ -100,5 +100,5 @@ test_that("Other Utility Functions are OK", {
   expect_equal(getTeamDivisions("Toronto Maple Leafs"), "Atlantic")
   expect_equal(getShortTeam("Toronto Maple Leafs"), "TOR")
   expect_equal(getSeasonEndDate(season="20182019"), as.Date("2019-06-15"))
+  expect_equal(getNumGames("20202021"), 56)
 })
-

@@ -578,3 +578,11 @@ getShortTeam<-function(teams, apiteams=nhlapi::nhl_teams()){
     return(unname(v_getteamshort(t=teams, apiteams = apiteams)))
   }
 }
+
+getNumGames<-function(season=NULL){
+  if(!is.null(season)){
+    stopifnot(seasonValidator(season))
+  }
+  apiseasons<-nhlapi::nhl_seasons(season)
+  return(apiseasons$numberOfGames[nrow(apiseasons)])
+}
