@@ -229,3 +229,16 @@ seasonValidator<-function(season){
   }
   return(grepl("(19|20)\\d{2}(19|20)\\d{2}", season))
 }
+
+
+extraTimeSolver<-function(home_win, away_win, draw){
+  stopifnot(sum(home_win, away_win, draw)==1)
+
+  homenorm<-normalizeOdds(c(home_win, away_win))[1]
+  home_ot<-0.345*homenorm+0.315
+
+  home_draw<-draw*home_ot
+  away_draw<-draw*(1-home_ot)
+
+  return(c(home_win, home_draw, away_draw, away_win))
+}

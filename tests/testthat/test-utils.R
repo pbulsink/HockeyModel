@@ -74,3 +74,7 @@ test_that("Season Validates", {
   expect_false(seasonValidator("Bob"))
   expect_false(seasonValidator(TRUE))
 })
+
+test_that("Draws Normalize", {
+  expect_equal(extraTimeSolver(0.45, 0.35, 0.2), c(0.45, 0.1018125, 0.0981875, 0.35))
+})
