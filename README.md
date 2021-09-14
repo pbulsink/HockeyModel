@@ -18,7 +18,7 @@ Visit our website: [bulsink.ca](https://bulsink.ca).
 ![Team Rankings]("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png)
 
 ## Today's Games
-<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png" alt="Today's Games">
+![Today's Games](https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png)
 
 ## Total Point Predictions
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/point_predict.png" alt="Total Point Predictions">
