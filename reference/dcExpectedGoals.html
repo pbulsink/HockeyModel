@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DC Predictions Today — todayDC • HockeyModel</title>
+<title>DC Expected Goals — dcExpectedGoals • HockeyModel</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="DC Predictions Today — todayDC" />
-<meta property="og:description" content="DC Predictions Today" />
+<meta property="og:title" content="DC Expected Goals — dcExpectedGoals" />
+<meta property="og:description" content="Given a home and away team, provide expected goals for both." />
 
 
 
@@ -126,57 +126,48 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>DC Predictions Today</h1>
+    <h1>DC Expected Goals</h1>
     <small class="dont-index">Source: <a href='https://github.com/pbulsink/HockeyModel/blob/master/R/dixon-coles.R'><code>R/dixon-coles.R</code></a></small>
-    <div class="hidden name"><code>todayDC.Rd</code></div>
+    <div class="hidden name"><code>dcExpectedGoals.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>DC Predictions Today</p>
+    <p>Given a home and away team, provide expected goals for both.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>todayDC</span><span class='op'>(</span>
-  params <span class='op'>=</span> <span class='cn'>NULL</span>,
-  today <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.Date</a></span><span class='op'>(</span><span class='op'>)</span>,
-  schedule <span class='op'>=</span> <span class='fu'>HockeyModel</span><span class='fu'>::</span><span class='va'><a href='schedule.html'>schedule</a></span>,
-  expected_mean <span class='op'>=</span> <span class='cn'>NULL</span>,
-  season_percent <span class='op'>=</span> <span class='cn'>NULL</span>,
-  include_xG <span class='op'>=</span> <span class='cn'>FALSE</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>dcExpectedGoals</span><span class='op'>(</span><span class='va'>home</span>, <span class='va'>away</span>, params <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
+      <th>home</th>
+      <td><p>The home team name</p></td>
+    </tr>
+    <tr>
+      <th>away</th>
+      <td><p>The away team name</p></td>
+    </tr>
+    <tr>
       <th>params</th>
       <td><p>The named list containing m, rho, beta, eta, and k. See <a href='updateDC.html'>updateDC</a> for information on the params list</p></td>
-    </tr>
-    <tr>
-      <th>today</th>
-      <td><p>Generate predictions for this date. Defaults to today</p></td>
-    </tr>
-    <tr>
-      <th>schedule</th>
-      <td><p>schedule to use, if not the built-in</p></td>
-    </tr>
-    <tr>
-      <th>expected_mean</th>
-      <td><p>the mean lambda &amp; mu, used only for regression</p></td>
-    </tr>
-    <tr>
-      <th>season_percent</th>
-      <td><p>the percent complete of the season, used for regression</p></td>
-    </tr>
-    <tr>
-      <th>include_xG</th>
-      <td><p>Whether to include team expected goals. default FALSE</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today</p>
+    <p>a list of $home and $away expected goals</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'>dcExpectedGoals</span><span class='op'>(</span><span class='st'>"Toronto Maple Leafs"</span>, <span class='st'>"Ottawa Senators"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; $home
+#&gt;        1 
+#&gt; 3.828076 
+#&gt; 
+#&gt; $away
+#&gt;        1 
+#&gt; 2.550212 
+#&gt; </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
