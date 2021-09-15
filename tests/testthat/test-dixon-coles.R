@@ -73,3 +73,20 @@ test_that("DC Playoffs functions", {
   expect_lt(po_odds, 1)
   expect_gt(po_odds, 0)
 })
+
+test_that("DC Today is good", {
+  today_odds<-todayDC(today=as.Date("2019-11-01"))
+  expect_equal(nrow(today_odds), 8)
+  expect_equal(ncol(today_odds), 5)
+  expect_equal(colnames(today_odds), c("HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw"))
+
+  today_odds_xg<-todayDC(today=as.Date("2019-11-01"), include_xG = TRUE)
+  expect_equal(nrow(today_odds_xg), 8)
+  expect_equal(ncol(today_odds_xg), 7)
+  expect_equal(colnames(today_odds_xg), c("HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw", "Home_xG", "Away_xG"))
+
+  today_odds_xg$Home_xG<-today_odds_xg$Away_xG<-NULL
+
+  expect_identical(today_odds, today_odds_xg)
+
+})

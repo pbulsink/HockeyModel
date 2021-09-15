@@ -49,9 +49,10 @@ updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), sav
 #' @param schedule schedule to use, if not the built-in
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
+#' @param include_xG Whether to include team expected goals. default FALSE
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
-todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL){
+todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL, include_xG = FALSE){
   params<-parse_dc_params(params)
   games<-schedule[schedule$Date == today, ]
   if(nrow(games) == 0){
@@ -61,11 +62,19 @@ todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::sch
   preds<-data.frame(HomeTeam=games$HomeTeam, AwayTeam=games$AwayTeam,
                     HomeWin=0, AwayWin = 0, Draw = 0,
                     stringsAsFactors = FALSE)
+  if(include_xG){
+    preds$Away_xG<-preds$Home_xG<-0
+  }
   for(i in 1:nrow(preds)){
     p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], params=params, expected_mean=expected_mean, season_percent=season_percent)
     preds$HomeWin[[i]]<-p[[1]]
     preds$AwayWin[[i]]<-p[[3]]
     preds$Draw[[i]]<-p[[2]]
+    if(include_xG){
+      xg<-dcExpectedGoals(home = preds$HomeTeam[[i]], away = preds$AwayTeam[[i]], params=params)
+      preds$Home_xG[[i]]<-xg$home
+      preds$Away_xG[[i]]<-xg$away
+    }
   }
 
   return(preds)
@@ -374,6 +383,38 @@ DCPredict <- function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel
   return(odds)
 }
 
+#' DC Expected Goals
+#'
+#' @description Given a home and away team, provide expected goals for both.
+#'
+#' @param home The home team name
+#' @param away The away team name
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#'
+#' @return a list of $home and $away expected goals
+#' @export
+#'
+#' @examples dcExpectedGoals("Toronto Maple Leafs", "Ottawa Senators")
+dcExpectedGoals<-function(home, away, params=NULL){
+  params<-parse_dc_params(params=params)
+  xg<-list("home"=NA, "away"=NA)
+
+  # Expected goals home
+  xg$home <- try(stats::predict(params$m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
+
+  # Expected goals away
+  xg$away <- try(stats::predict(params$m, data.frame(Home = 0, Team = away, Opponent = home), type = "response"), TRUE)
+
+  if(!is.numeric(xg$home)){
+    xg$home<-DCPredictErrorRecover(team = home, opponent = away, homeiceadv = TRUE)
+  }
+  if(!is.numeric(xg$away)){
+    xg$away<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE)
+  }
+
+  return(xg)
+}
+
 #' Generate the Dixon-Coles' Probability Matrix
 #'
 #' @param home home team
@@ -388,18 +429,12 @@ DCPredict <- function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel
 dcProbMatrix<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
   params<-parse_dc_params(params=params)
 
+  xg<-dcExpectedGoals(home = home, away = away, params=params)
   # Expected goals home
-  lambda <- try(stats::predict(params$m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
+  lambda <- xg$home
 
   # Expected goals away
-  mu<-try(stats::predict(params$m, data.frame(Home = 0, Team = away, Opponent = home), type = "response"), TRUE)
-
-  if(!is.numeric(lambda)){
-    lambda<-DCPredictErrorRecover(team = home, opponent = away, homeiceadv = TRUE)
-  }
-  if(!is.numeric(mu)){
-    mu<-DCPredictErrorRecover(team = away, opponent = home, homeiceadv = FALSE)
-  }
+  mu <- xg$away
 
   if(!is.null(expected_mean) & ! is.null(season_percent)) {
     lambda <- lambda * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
