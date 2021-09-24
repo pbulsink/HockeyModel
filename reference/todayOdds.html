@@ -140,7 +140,8 @@
   today <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.Date</a></span><span class='op'>(</span><span class='op'>)</span>,
   schedule <span class='op'>=</span> <span class='fu'>HockeyModel</span><span class='fu'>::</span><span class='va'><a href='schedule.html'>schedule</a></span>,
   expected_mean <span class='op'>=</span> <span class='cn'>NULL</span>,
-  season_percent <span class='op'>=</span> <span class='cn'>NULL</span>
+  season_percent <span class='op'>=</span> <span class='cn'>NULL</span>,
+  include_xG <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -165,6 +166,10 @@
     <tr>
       <th>season_percent</th>
       <td><p>the percent complete of the season, used for regression</p></td>
+    </tr>
+    <tr>
+      <th>include_xG</th>
+      <td><p>Whether to include xG values in reported odds</p></td>
     </tr>
     </table>
 
