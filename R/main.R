@@ -4,13 +4,15 @@
 #' Update Model
 #' @description updates the schedule, scores, and model parameters (m, rho, theta, gamma). Returns them in a list of named values
 #'
+#' @param save_data whether to save data to the package file
+#'
 #' @return a list of scores, schedule, and param named list
 #'
 #' @export
-updateModel <- function(){
-  schedule<-updateScheduleAPI(save_data = TRUE)
-  scores<-updateScoresAPI(schedule = schedule, save_data = TRUE)
-  params<-updateDC(scores = scores, save_data = TRUE)
+updateModel <- function(save_data=TRUE){
+  schedule<-updateScheduleAPI(save_data = save_data)
+  scores<-updateScoresAPI(schedule = schedule, save_data = save_data)
+  params<-updateDC(scores = scores, save_data = save_data)
   return(list("scores" = scores, "schedule" = schedule, "params" = params))
 }
 

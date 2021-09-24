@@ -71,7 +71,7 @@ todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::sch
     preds$AwayWin[[i]]<-p[[3]]
     preds$Draw[[i]]<-p[[2]]
     if(include_xG){
-      xg<-dcExpectedGoals(home = preds$HomeTeam[[i]], away = preds$AwayTeam[[i]], params=params)
+      xg<-dcxG(home = preds$HomeTeam[[i]], away = preds$AwayTeam[[i]], params=params)
       preds$Home_xG[[i]]<-xg$home
       preds$Away_xG[[i]]<-xg$away
     }
@@ -392,7 +392,6 @@ DCPredict <- function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return a list of $home and $away expected goals
-#' @export
 #'
 #' @examples dcExpectedGoals("Toronto Maple Leafs", "Ottawa Senators")
 dcExpectedGoals<-function(home, away, params=NULL){
@@ -414,6 +413,16 @@ dcExpectedGoals<-function(home, away, params=NULL){
 
   return(xg)
 }
+
+dcxG<-function(home, away, params=NULL, maxgoal=10){
+  pm<-dcProbMatrix(home=home, away=away, params=params, maxgoal=maxgoal)
+
+  away_xg<-stats::weighted.mean(0:maxgoal, colSums(pm))
+  home_xg<-stats::weighted.mean(0:maxgoal, rowSums(pm))
+
+  return(list("home"=home_xg, "away"=away_xg))
+}
+
 
 #' Generate the Dixon-Coles' Probability Matrix
 #'

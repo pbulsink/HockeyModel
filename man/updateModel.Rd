@@ -4,7 +4,10 @@
 \alias{updateModel}
 \title{Update Model}
 \usage{
-updateModel()
+updateModel(save_data = TRUE)
+}
+\arguments{
+\item{save_data}{whether to save data to the package file}
 }
 \value{
 a list of scores, schedule, and param named list

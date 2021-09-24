@@ -9,7 +9,8 @@ todayOdds(
   today = Sys.Date(),
   schedule = HockeyModel::schedule,
   expected_mean = NULL,
-  season_percent = NULL
+  season_percent = NULL,
+  include_xG = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ todayOdds(
 \item{expected_mean}{the mean lambda & mu, used only for regression}
 
 \item{season_percent}{the percent complete of the season, used for regression}
+
+\item{include_xG}{Whether to include xG values in reported odds}
 }
 \value{
 a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
