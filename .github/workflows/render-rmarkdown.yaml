@@ -30,6 +30,8 @@ jobs:
       - name: Render Rmarkdown files
         run: |
           install.packages('rmarkdown')
+          install.packages('remotes')
+          remotes::install_github("pbulsink/HockeyModel")
           rmarkdown::render("./email.Rmd")
         shell: Rscript {0}
       - name: Commit results
