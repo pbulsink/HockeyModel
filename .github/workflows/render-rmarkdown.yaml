@@ -29,6 +29,7 @@ jobs:
           rm ./email.md
       - name: Render Rmarkdown files
         run: |
+          require('rmarkdown')
           rmarkdown::render("./email.Rmd")
         shell: Rscript {0}
       - name: Commit results
@@ -39,14 +40,6 @@ jobs:
           git add --all
           git commit -am 'Re-build Rmarkdown files'
           git push
-
-  send-email:
-    name: Send email
-    needs: render-email
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-    steps:
       - name: Send Mail
         uses: dawidd6/action-send-mail@v3
         with:

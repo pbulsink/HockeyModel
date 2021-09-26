@@ -11,3 +11,5 @@
 ^codecov\.yml$
 ^_pkgdown\.yml$
 ^pkgdown$
+email.Rmd
+email.md
