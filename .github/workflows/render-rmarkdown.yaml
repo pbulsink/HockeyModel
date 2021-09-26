@@ -63,7 +63,7 @@ jobs:
           # Required recipients' addresses:
           to: ${{secrets.MAIL_RECIPIENT}}
           # Required sender full name (address can be skipped):
-          from: ${{secrects.MAIL_FROM}}
+          from: ${{secrets.MAIL_FROM}}
           # Optional whether this connection use TLS (default is true if server_port is 465)
           secure: true
           # Optional HTML body read from file:
