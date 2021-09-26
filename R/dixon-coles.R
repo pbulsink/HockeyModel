@@ -385,16 +385,14 @@ DCPredict <- function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel
 
 #' DC Expected Goals
 #'
-#' @description Given a home and away team, provide expected goals for both.
+#' @description Given a home and away team, provide lambda values
 #'
 #' @param home The home team name
 #' @param away The away team name
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
-#' @return a list of $home and $away expected goals
-#'
-#' @examples dcExpectedGoals("Toronto Maple Leafs", "Ottawa Senators")
-dcExpectedGoals<-function(home, away, params=NULL){
+#' @return a list of $home and $away Poisson Lambda values -
+dcLambda<-function(home, away, params=NULL){
   params<-parse_dc_params(params=params)
   xg<-list("home"=NA, "away"=NA)
 
@@ -438,7 +436,7 @@ dcxG<-function(home, away, params=NULL, maxgoal=10){
 dcProbMatrix<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
   params<-parse_dc_params(params=params)
 
-  xg<-dcExpectedGoals(home = home, away = away, params=params)
+  xg<-dcLambda(home = home, away = away, params=params)
   # Expected goals home
   lambda <- xg$home
 
