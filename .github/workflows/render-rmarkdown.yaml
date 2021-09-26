@@ -3,7 +3,7 @@ name: Daily Email
 on:
   push:
     branches:
-      - main
+      - master
   schedule:
     - cron: '15 10 * * *'
 
