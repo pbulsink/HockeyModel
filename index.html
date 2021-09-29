@@ -93,16 +93,10 @@
 <p>This is a model to predict NHL game winners &amp; their likely performance for the rest of the season.</p>
 <p>Read more about the package at <a href="https://pbulsink.github.io/HockeyModel">https://pbulsink.github.io/HockeyModel</a></p>
 <p>Current predictions are below, and are always posted on twitter at <a href="https://www.twitter.com/BulsinkB">@BulsinkBot</a>.</p>
-<p>Visit our website: <a href="https://bulsink.ca">bulsink.ca</a>.</p>
 <div id="team-ranking" class="section level2">
 <h2 class="hasAnchor">
 <a href="#team-ranking" class="anchor"></a>Team Ranking</h2>
 <p><img src="%22https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png" alt="Team Rankings"></p>
-</div>
-<div id="todays-games" class="section level2">
-<h2 class="hasAnchor">
-<a href="#todays-games" class="anchor"></a>Today’s Games</h2>
-<p><img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png" alt="Today’s Games"></p>
 </div>
 <div id="total-point-predictions" class="section level2">
 <h2 class="hasAnchor">
@@ -140,11 +134,12 @@
 <h1 class="hasAnchor">
 <a href="#to-do" class="anchor"></a>To Do</h1>
 <ul>
-<li>Twitter user <a href="https://www.twitter.com/MOCallanain">@MOCallanain</a> highlighted that the predicted tie rate is &lt; ~0.2, when in actuality it’s higher. Likely due to teams playing for loser point, <del>can we parameterize the model to include a tie boost? Diagonal enhanced metric should work - calculate like the DC 0/1 goal enhancement. Model currently re-scales to increase odds to a reasonable amount.</del> DONE</li>
+<li>
+<del>Twitter user <a href="https://www.twitter.com/MOCallanain">@MOCallanain</a> highlighted that the predicted tie rate is &lt; ~0.2, when in actuality it’s higher. Likely due to teams playing for loser point, can we parameterize the model to include a tie boost? Diagonal enhanced metric should work - calculate like the DC 0/1 goal enhancement. Model currently re-scales to increase odds to a reasonable amount.</del> DONE</li>
 <li>Currently, only scores are used for model generation. Moneypuck has an expansive expected goals model available for download and updated regularly (see <a href="http://moneypuck.com/data.htm" class="uri">http://moneypuck.com/data.htm</a>). Deriving the team performance by expected goals instead of actual could reduce the impact of luck on expected future performance.</li>
 <li>
 <del>Switch to NHL API for scores and schedule</del> DONE</li>
-<li>Twitter user <a href="https://www.twitter.com/joseph__ii">@joseph__ii</a> picked up on a quirk of the OT/SO odds assignment (see <a href="https://twitter.com/joseph__ii/status/1357785234285109248" class="uri">https://twitter.com/joseph__ii/status/1357785234285109248</a>). Try rebalance with league or teams’ OT performance measure?</li>
+<li>~~Twitter user <a href="https://www.twitter.com/joseph__ii">@joseph__ii</a> picked up on a quirk of the OT/SO odds assignment (see <a href="https://twitter.com/joseph__ii/status/1357785234285109248" class="uri">https://twitter.com/joseph__ii/status/1357785234285109248</a>). Try rebalance with league or teams’ OT performance measure? ~~ DONE</li>
 </ul>
 </div>
 
