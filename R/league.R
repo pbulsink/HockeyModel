@@ -151,6 +151,9 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
     cores <- 2
   }
 
+  odds_table$HOT<-HockeyModel:::extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,2]
+  odds_table$AOT<-HockeyModel:::extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,3]
+
   if(cores > 1){
     `%dopar%` <- foreach::`%dopar%`  # This hack passes R CMD CHK
     cl<-parallel::makeCluster(cores)
@@ -162,25 +165,25 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
     } else {
       opts <- list()
     }
-    all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts) %dopar% {
+    all_results <- foreach::foreach(i=1:nsims, .combine='rbind', .options.snow = opts, .packages = c("HockeyModel")) %dopar% {
       #Generate Games results once
       tmp<-odds_table
       tmp$res1<-stats::runif(n = nrow(tmp))
       tmp$res2<-stats::runif(n = nrow(tmp))
-      tmp$res3<-stats::runif(n = nrow(tmp))
       tmp$Result <- 1*(as.numeric(tmp$res1<tmp$HomeWin)) +
-        0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 < 0.75))) +
-        0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 > 0.75))) +
-        0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 > 0.75))) +
-        0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 < 0.75))) +
+        0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$HOT)) * as.numeric (tmp$res2 < 0.6858606)) +
+        0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$HOT)) * as.numeric (tmp$res2 > 0.6858606)) +
+        0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$HOT + tmp$AOT)) * as.numeric (tmp$res2 > 0.6858606)) +
+        0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$HOT + tmp$AOT)) * as.numeric (tmp$res2 < 0.6858606)) +
         0
 
       tmp$HomeWin <- NULL
       tmp$AwayWin <- NULL
+      tmp$HOT <- NULL
+      tmp$AOT <- NULL
       tmp$Draw <- NULL
       tmp$res1<-NULL
       tmp$res2<-NULL
-      tmp$res3<-NULL
 
       tmp<-rbind(season_sofar, tmp)
       #Make the season table
@@ -199,22 +202,24 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
     all_results<-list()
     for(i in 1:nsims){
       tmp<-odds_table
+      tmp$HOT<-extraTimeSolver(tmp$HomeWin, tmp$AwayWin, tmp$Draw)[,2]
+      tmp$AOT<-extraTimeSolver(tmp$HomeWin, tmp$AwayWin, tmp$Draw)[,3]
       tmp$res1<-stats::runif(n = nrow(tmp))
       tmp$res2<-stats::runif(n = nrow(tmp))
-      tmp$res3<-stats::runif(n = nrow(tmp))
       tmp$Result <- 1*(as.numeric(tmp$res1<tmp$HomeWin)) +
-        0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 < 0.75))) +
-        0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 > 0.5) * as.numeric (tmp$res3 > 0.75))) +
-        0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 > 0.75))) +
-        0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$Draw)) * (as.numeric(tmp$res2 < 0.5) * as.numeric (tmp$res3 < 0.75))) +
+        0.75 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$HOT)) * as.numeric (tmp$res2 < 0.6858606)) +
+        0.6 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$HOT)) * as.numeric (tmp$res2 > 0.6858606)) +
+        0.4 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$HOT + tmp$AOT)) * as.numeric (tmp$res2 > 0.6858606)) +
+        0.25 * (as.numeric(tmp$res1 > tmp$HomeWin & tmp$res1 < (tmp$HomeWin + tmp$HOT + tmp$AOT)) * as.numeric (tmp$res2 < 0.6858606)) +
         0
 
       tmp$HomeWin <- NULL
       tmp$AwayWin <- NULL
+      tmp$HOT <- NULL
+      tmp$AOT <- NULL
       tmp$Draw <- NULL
       tmp$res1<-NULL
       tmp$res2<-NULL
-      tmp$res3<-NULL
 
       tmp<-rbind(season_sofar, tmp)
       #Make the season table

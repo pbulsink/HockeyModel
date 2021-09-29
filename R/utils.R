@@ -232,13 +232,21 @@ seasonValidator<-function(season){
 
 
 extraTimeSolver<-function(home_win, away_win, draw){
-  stopifnot(sum(home_win, away_win, draw)==1)
 
-  homenorm<-normalizeOdds(c(home_win, away_win))[1]
-  home_ot<-0.345*homenorm+0.315
+  ets<-function(home_win, away_win, draw){
+    homenorm<-normalizeOdds(c(home_win, away_win))[1]
+    home_ot<-0.345*homenorm+0.315
 
-  home_draw<-draw*home_ot
-  away_draw<-draw*(1-home_ot)
+    home_draw<-draw*home_ot
+    away_draw<-draw*(1-home_ot)
 
-  return(c(home_win, home_draw, away_draw, away_win))
+    return(c(home_win, home_draw, away_draw, away_win))
+  }
+
+  v_ets<-Vectorize(ets, )
+  if(length(home_win) == 1){
+    return(ets(home_win = home_win, away_win = away_win, draw = draw))
+  } else {
+    return(t(v_ets(home_win, away_win, draw)))
+  }
 }

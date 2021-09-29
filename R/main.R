@@ -99,23 +99,23 @@ ratings <- function(m = HockeyModel::m) {
 
 tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay =stats::runif(1, min=2,max=6)*60, games_today = games_today(), schedule=HockeyModel::schedule){
 
-  if(!is.null(games_today)){
-    #don't try tweet todays' games if none exist
-    rtweet::post_tweet(status = "Predicted odds table for today's #NHL games. #HockeyTwitter",
-                      media = file.path(graphic_dir, "today_odds_table.png"), token = token)
-    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
-    reply_id<-my_timeline$status_id[1]
-    rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
-                       media = file.path(graphic_dir, "today_odds.png"), token = token)
-    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
-    reply_id<-my_timeline$status_id[1]
-    rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
-                      media = file.path(graphic_dir, "current_rating.png"),
-                      in_reply_to_status_id = reply_id, token = token)
-  } else {
+  # if(!is.null(games_today)){
+  #   #don't try tweet todays' games if none exist
+  #   rtweet::post_tweet(status = "Predicted odds table for today's #NHL games. #HockeyTwitter",
+  #                     media = file.path(graphic_dir, "today_odds_table.png"), token = token)
+  #   my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+  #   reply_id<-my_timeline$status_id[1]
+  #   rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
+  #                      media = file.path(graphic_dir, "today_odds.png"), token = token)
+  #   my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+  #   reply_id<-my_timeline$status_id[1]
+  #   rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
+  #                     media = file.path(graphic_dir, "current_rating.png"),
+  #                     in_reply_to_status_id = reply_id, token = token)
+  # } else {
     rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
                        media = file.path(graphic_dir, "current_rating.png"))
-  }
+  #}
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
@@ -180,19 +180,20 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
   message("Creating graphics...")
 
   #generate plots
-  if(Sys.Date() %in% sc$Date){
-    today <- todayOddsPlot(params=params, schedule = modelparams$schedule, scores = modelparams$scores)
-    #save to files.
-    grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
-    print(today)
-    Sys.sleep(5)
-    while(grDevices::dev.cur()!=1){
-      grDevices::dev.off()
-    }
+  # if(Sys.Date() %in% sc$Date){
+  #   today <- todayOddsPlot(params=params, schedule = modelparams$schedule, scores = modelparams$scores)
+  #   #save to files.
+  #   grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+  #   print(today)
+  #   Sys.sleep(5)
+  #   while(grDevices::dev.cur()!=1){
+  #     grDevices::dev.off()
+  #   }
+  #
+  #   today_table <- daily_odds_table(params=params, schedule = modelparams$schedule)
+  #   gt::gtsave(today_table, filename = file.path(graphic_dir, 'today_odds_table.png'))
+  # }
 
-    today_table <- daily_odds_table(params=params, schedule = modelparams$schedule)
-    gt::gtsave(today_table, filename = file.path(graphic_dir, 'today_odds_table.png'))
-  }
   if(inRegularSeason()){
     updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule, params=params)
     playoff <- playoffOdds()
@@ -246,7 +247,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], params=params, graphic_dir = graphic_dir, token = token, delay=delay)
+  # tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], params=params, graphic_dir = graphic_dir, token = token, delay=delay)
 
   if(inRegularSeason()){
     tweetPlayoffOdds(token = token, graphic_dir = graphic_dir, params=params)

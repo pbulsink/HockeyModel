@@ -90,3 +90,8 @@ test_that("DC Today is good", {
   expect_identical(today_odds, today_odds_xg)
 
 })
+
+test_that("DC Result works", {
+  expect_true(dcResult(4,2) %in% c(1, 0.75, 0.6, 0.4, 0.25, 0))
+  expect_true(all(dcResult(c(4,2), c(2,4)) %in% c(1, 0.75, 0.6, 0.4, 0.25, 0)))
+})

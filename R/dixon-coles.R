@@ -521,7 +521,7 @@ dcSample<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::s
   if (goals[1] == goals[2]){
     #TODO Verify OT/SO ratio and also verify if wniner is coin flip or stronger team has better chance?
     otstatus = sample(c("OT", "SO"), size = 1, prob = c(0.6858606, 0.3141394))
-    otwinner = sample(c("Home", "Away"), size = 1, prob = c(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)])))
+    otwinner = sample(c("Home", "Away"), size = 1, prob = extraTimeSolver(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)]), sum(diag(pm)))[2:3])
     if(otwinner == "Home"){
       goals[1] <- goals[1] + 1
     } else {
@@ -572,7 +572,7 @@ dcResult<-function(lambda, mu, params=NULL, maxgoal=8){
     } else{
       #TODO Verify OT/SO ratio and also verify if wniner is coin flip or stronger team has better chance?
       otstatus = sample(c(0.25, 0.1), size = 1, prob = c(0.6858606, 0.3141394))
-      otwinner = sample(c(1, -1), size = 1, prob = c(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)])))
+      otwinner = sample(c(1, -1), size = 1, prob = extraTimeSolver(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)]), sum(diag(pm)))[2:3])
       return(0.5+(otstatus*otwinner))  # this will yield 0.75 for home OT, 0.25 for away OT, 0.6 for home SO, 0.4 for away SO win.
     }
   }
