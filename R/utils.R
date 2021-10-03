@@ -185,7 +185,7 @@ formatPredsForHockeyVisContest<-function(predictions, candyType = 'Fuzzy Peaches
                   "'PHI':(", round(predictions[predictions$Team == "Philadelphia Flyers",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Philadelphia Flyers",]$sdPoints, 2), "), ",
                   "'PIT':(", round(predictions[predictions$Team == "Pittsburgh Penguins",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Pittsburgh Penguins",]$sdPoints, 2), "), ",
                   "'S.J':(", round(predictions[predictions$Team == "San Jose Sharks",]$meanPoints, 1), ",", round(predictions[predictions$Team == "San Jose Sharks",]$sdPoints, 2), "), ",
-                  "'SEA':(", round(predictions[predictions$Team == "Seattle Kracken",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Seattle Kracken",]$sdPoints, 2),
+                  "'SEA':(", round(predictions[predictions$Team == "Seattle Kraken",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Seattle Kraken",]$sdPoints, 2), "), ",
                   "'STL':(", round(predictions[predictions$Team == "St. Louis Blues",]$meanPoints, 1), ",", round(predictions[predictions$Team == "St. Louis Blues",]$sdPoints, 2), "), ",
                   "'T.B':(", round(predictions[predictions$Team == "Tampa Bay Lightning",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Tampa Bay Lightning",]$sdPoints, 2), "), ",
                   "'TOR':(", round(predictions[predictions$Team == "Toronto Maple Leafs",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Toronto Maple Leafs",]$sdPoints, 2), "), ",

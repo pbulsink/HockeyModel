@@ -31,8 +31,7 @@ Imports:
     scales,
     rlang,
     methods,
-    tidyr,
-    plumber
+    tidyr
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
 RoxygenNote: 7.1.1
@@ -43,5 +42,6 @@ Suggests:
     webshot,
     progress,
     markdown,
-    covr
+    covr,
+    plumber
 VignetteBuilder: knitr

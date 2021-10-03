@@ -1244,3 +1244,43 @@ build_past_predictions<-function(startDate, endDate, filepath=file.path(devtools
   }
   return(TRUE)
 }
+
+
+#' Get Series Odds
+#'
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#'
+#' @return NULL if no series are currently set but not complete, else a data frame.
+#' @export
+getSeriesOdds<-function(params=NULL){
+  series<-getAPISeries()
+
+  if(is.na(series)){
+    return(NULL)
+  }
+  if(nrow(series)==0){
+    return(NULL)
+  }
+
+  series<-series[series$Status != "Complete", ]
+
+
+  if(nrow(series)==0){
+    return(NULL)
+  }
+
+  params<-parse_dc_params(params)
+
+  series$HomeSeed<-NULL
+  series$AwaySeed<-NULL
+  series$SeriesID<-NULL
+  series$HomeOdds<-0
+  for(i in 1:nrow(series)){
+    series[i,]$HomeOdds<-playoffWin(series[i,]$HomeTeam, series[i,]$AwayTeam,
+                                    series[i,]$HomeWins, series[i,]$AwayWins,
+                                    params = params)
+  }
+  series$AwayOdds<-1-series$HomeOdds
+
+  return(series)
+}

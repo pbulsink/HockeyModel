@@ -267,7 +267,6 @@ clean_names<-function(sc){
     sc<-replace(sc, sc == "Atlanta Thrashers", "Winnipeg Jets")
     sc<-replace(sc, sc == "Minnesota North Stars", "Dallas Stars")
     sc<-replace(sc, sc == "Quebec Nordiques", "Colorado Avalanche")
-    sc<-replace(sc, sc == "Chicago Blackhawks", "Chicago")
   } else if (is.data.frame(sc)){
     if('HomeTeam' %in% names(sc)){
       sc <- sc %>%
@@ -276,7 +275,6 @@ clean_names<-function(sc){
                       "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
                       "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
                       "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
-                      "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Chicago Blackhawks", "Chicago")
                       )
     }
     if('AwayTeam' %in% names(sc)){
@@ -286,7 +284,6 @@ clean_names<-function(sc){
                       "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
                       "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
                       "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
-                      "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Chicago Blackhawks", "Chicago")
         )
     }
     if('Team' %in% names(sc)) {
@@ -296,7 +293,6 @@ clean_names<-function(sc){
                       "Team" = replace(.data$Team, .data$Team == "Atlanta Thrashers", "Winnipeg Jets"),
                       "Team" = replace(.data$Team, .data$Team == "Minnesota North Stars", "Dallas Stars"),
                       "Team" = replace(.data$Team, .data$Team == "Quebec Nordiques", "Colorado Avalanche"),
-                      "Team" = replace(.data$Team, .data$Team == "Chicago Blackhawks", "Chicago")
         )
     }
     if('name' %in% names(sc)) {
@@ -306,7 +302,6 @@ clean_names<-function(sc){
                       "name" = replace(.data$name, .data$name == "Atlanta Thrashers", "Winnipeg Jets"),
                       "name" = replace(.data$name, .data$name == "Minnesota North Stars", "Dallas Stars"),
                       "name" = replace(.data$name, .data$name == "Quebec Nordiques", "Colorado Avalanche"),
-                      "name" = replace(.data$name, .data$name == "Chicago Blackhawks", "Chicago")
         )
     }
     if('Date' %in% names(sc)){
