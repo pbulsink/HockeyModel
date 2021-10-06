@@ -91,12 +91,9 @@ test_that("Get Team Info is OK", {
 })
 
 test_that("Other Utility Functions are OK", {
-  expect_equal(clean_names(c("Chicago Blackhawks", "Toronto Maple Leafs")), c("Chicago", "Toronto Maple Leafs"))
+  expect_equal(clean_names(c("Chicago Blackhawks", "Toronto Maple Leafs")), c("Chicago Blackhawks", "Toronto Maple Leafs"))
   expect_equal(getTeamConferences("Chicago Blackhawks"), "Western")
-  expect_equal(getTeamConferences('Chicago'), "Western")
   expect_equal(getTeamConferences("Toronto Maple Leafs"), "Eastern")
-  expect_equal(getShortTeam("Chicago"), "CHI")
-  expect_equal(getTeamDivisions("Chicago"), "Central")
   expect_equal(getTeamDivisions("Toronto Maple Leafs"), "Atlantic")
   expect_equal(getShortTeam("Toronto Maple Leafs"), "TOR")
   expect_equal(getSeasonEndDate(season="20182019"), as.Date("2019-06-15"))

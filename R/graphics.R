@@ -179,7 +179,6 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
 
   #Get old predictions
   p<-readRDS(file.path(prediction_dir, paste0(getSeasonStartDate(), "-predictions.RDS")))
-  p[p$Team == "Chicago Blackhawks", "Team"]<-"Chicago"
 
   if(!dir.exists(file.path(graphic_dir, subdir))){
     dir.create(file.path(graphic_dir, subdir), recursive = TRUE)
