@@ -515,17 +515,17 @@ tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::ge
   params<-parse_dc_params(params)
   playoffodds <- simulatePlayoffs(summary_results = summary_results, params=params)
 
-  eastplts<-format_playoff_odds(playoffodds$east, caption_text = "Eastern Conference", trim = FALSE, trimcup = trimcup)
-  westplts<-format_playoff_odds(playoffodds$west, caption_text = "Western Conference", trim = FALSE, trimcup = trimcup)
+  playoffodds$Conference <- getTeamConferences(playoffodd$Team)
 
-  gt::gtsave(eastplts, filename = file.path(graphic_dir, "east_playoff_odds.png"))
-  gt::gtsave(westplts, filename = file.path(graphic_dir, "west_playoff_odds.png"))
-
+  for(conf in unique(playoffodds$Conference)){
+    plt<-format_playoff_odds(playoff_odds = playoffodds[playoffodds$Conference == conf, which(names(playoffodds) != "Conference")], caption_text = paste(conf, "Conference"), trim=FALSE, trimcup=trimcup)
+    gt::gtsave(plt, filename = file.path(graphic_dir, paste0(tolower(conf), "_playoff_odds.png")))
+  }
   status<- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
 
   #Posting Tweet
   rtweet::post_tweet(status = status,
-                     media = c(file.path(graphic_dir, "east_playoff_odds.png"), file.path(graphic_dir, "west_playoff_odds.png")),
+                     media = c(file.path(graphic_dir, "eastern_playoff_odds.png"), file.path(graphic_dir, "western_playoff_odds.png")),
                      token = token)
 
 }
