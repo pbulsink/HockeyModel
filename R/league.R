@@ -1242,6 +1242,7 @@ build_past_predictions<-function(startDate, endDate, filepath=file.path(devtools
 
     recordTodaysPredictions(today=d, filepath=filepath, schedule = sched, params = params, include_xG = include_xG)
   }
+  cleanupPredictionsFile(filepath=filepath)
   return(TRUE)
 }
 

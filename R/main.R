@@ -279,6 +279,11 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
     tweetSeries(graphic_dir = graphic_dir, token=token, params=params)
     Sys.sleep(delay)
   }
+
+  #record daily odds to file (with 1 day delay)
+  season_preds<-utils::read.csv(file.path(devtools::package_file(), "data-raw","dailyodds.csv"))
+  last_preds<-tail(season_preds,1)$Date
+  build_past_predictions(startDate = last_preds, endDate = Sys.Date()-1)
 }
 
 #' Tweet Pace Plots
@@ -382,18 +387,21 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.p
 #' @export
 tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", token = rtweet::get_token(), scores = HockeyModel::scores) {
   #make likelihood plots
-  plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
+  #plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
 
   for (conf in getConferences()){
-    #Tweet them out
-    rtweet::post_tweet(status = paste0("#NHL ", conf, " Conference Team final point likelihoods:"),
-                       media = file.path(graphic_dir,
-                                         subdir,
-                                         paste0(tolower(conf), 'likelihood.png')),
-                       token = token)
-    #until Rtweet has scheduler
-    message("Delaying ", delay/2, " seconds to space tweets...")
-    Sys.sleep(delay/2)
+    if(file.exists(file.path(graphic_dir, subdir, paste0(tolower(conf), 'likelihood.png'))) &
+       as.Date(file.mtime(file.path(graphic_dir, subdir, paste0(tolower(conf), 'likelihood.png'))))==Sys.Date()){
+      #Tweet them out
+      rtweet::post_tweet(status = paste0("#NHL ", conf, " Conference Team final point likelihoods:"),
+                         media = file.path(graphic_dir,
+                                           subdir,
+                                           paste0(tolower(conf), 'likelihood.png')),
+                         token = token)
+      #until Rtweet has scheduler
+      message("Delaying ", delay/2, " seconds to space tweets...")
+      Sys.sleep(delay/2)
+    }
   }
 }
 
@@ -515,7 +523,7 @@ tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::ge
   params<-parse_dc_params(params)
   playoffodds <- simulatePlayoffs(summary_results = summary_results, params=params)
 
-  playoffodds$Conference <- getTeamConferences(playoffodd$Team)
+  playoffodds$Conference <- getTeamConferences(playoffodds$Team)
 
   for(conf in unique(playoffodds$Conference)){
     plt<-format_playoff_odds(playoff_odds = playoffodds[playoffodds$Conference == conf, which(names(playoffodds) != "Conference")], caption_text = paste(conf, "Conference"), trim=FALSE, trimcup=trimcup)

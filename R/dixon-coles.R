@@ -714,6 +714,9 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
     if(!is.null(preds) & 'summary_results' %in% names(preds)){
       message('Saving Prediction file...')
       saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))
+      if(d == Sys.Date()){
+        plot_point_likelihood(preds=preds$raw_results)
+      }
     } else {
       message('An error occurred, retrying ', d, '.')
       preds<-NULL
