@@ -97,7 +97,7 @@ ratings <- function(m = HockeyModel::m) {
   return(plot_team_rating(m=m))
 }
 
-tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay =stats::runif(1, min=2,max=6)*60, games_today = games_today(), schedule=HockeyModel::schedule){
+tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay =stats::runif(1, min=2,max=6)*60, schedule=HockeyModel::schedule){
 
   # if(!is.null(games_today)){
   #   #don't try tweet todays' games if none exist
@@ -113,7 +113,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   #                     media = file.path(graphic_dir, "current_rating.png"),
   #                     in_reply_to_status_id = reply_id, token = token)
   # } else {
-    rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
+  rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
                        media = file.path(graphic_dir, "current_rating.png"))
   #}
   #until Rtweet has scheduler
@@ -242,7 +242,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
   }
 
   message("Posting Tweets...")
-  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir, games_today = Sys.Date() %in% sc[sc$GameState != "Postponed", ]$Date)
+  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir)#, games_today = Sys.Date() %in% sc[sc$GameState != "Postponed", ]$Date)
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
@@ -259,10 +259,10 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
     tweetPlayoffOdds(token=token, graphic_dir = graphic_dir, trimcup = TRUE)
   }
 
-  if(as.numeric(format(Sys.Date(), "%w")) == 1 & inRegularSeason()){
-    #On monday post pace plots
-    tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
-  }
+  # if(as.numeric(format(Sys.Date(), "%w")) == 1 & inRegularSeason()){
+  #   #On monday post pace plots
+  #   tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
+  # }
 
   if(as.numeric(format(Sys.Date(), "%w")) == 0 & inRegularSeason()) {
     #On Sunday post metrics

@@ -37,3 +37,4 @@ dailyupdate.bat
 dailyupdate.R
 *.Rout
 docs
+prediction_results/graphics
