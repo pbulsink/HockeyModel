@@ -38,3 +38,4 @@ dailyupdate.R
 *.Rout
 docs
 prediction_results/graphics
+prediction_results
