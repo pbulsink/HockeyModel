@@ -34,7 +34,7 @@ Imports:
     tidyr
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: 
     knitr,
     rmarkdown,

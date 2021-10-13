@@ -151,8 +151,8 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
     cores <- 2
   }
 
-  odds_table$HOT<-HockeyModel:::extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,2]
-  odds_table$AOT<-HockeyModel:::extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,3]
+  odds_table$HOT<-extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,2]
+  odds_table$AOT<-extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,3]
 
   if(cores > 1){
     `%dopar%` <- foreach::`%dopar%`  # This hack passes R CMD CHK
