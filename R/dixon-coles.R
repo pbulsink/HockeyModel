@@ -557,9 +557,12 @@ dcResult<-function(lambda, mu, params=NULL, maxgoal=8){
   params<-parse_dc_params(params)
 
   dcr<-function(lambda, mu, params, maxgoal){
+    if(is.na(lambda)){
+      return(NA)
+    }
     pm <- prob_matrix(lambda=lambda, mu=mu, params=params, maxgoal=maxgoal)
 
-    #sometimes there's negative probabilities. This handles that with fakign a very low value instead
+    #sometimes there's negative probabilities. This handles that with faking a very low value instead
     pm2<-pm
     pm2[pm2<0]<-1e-8
 
