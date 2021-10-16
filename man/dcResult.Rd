@@ -4,7 +4,7 @@
 \alias{dcResult}
 \title{DC Result Sample}
 \usage{
-dcResult(lambda, mu, params = NULL, maxgoal = 8)
+dcResult(lambda, mu, params = NULL, maxgoal = 8, nsim = 1)
 }
 \arguments{
 \item{lambda}{home team lambda}
@@ -14,6 +14,8 @@ dcResult(lambda, mu, params = NULL, maxgoal = 8)
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{maxgoal}{max goals predicable per game, default 10}
+
+\item{nsim}{the number of simulations in each result}
 }
 \value{
 a result from 0 to 1 corresponding to \link{scores} results

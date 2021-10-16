@@ -551,38 +551,43 @@ dcSample<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::s
 #' @param mu away team mu
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param maxgoal max goals predicable per game, default 10
+#' @param nsim the number of simulations in each result
 #'
 #' @return a result from 0 to 1 corresponding to \link{scores} results
-dcResult<-function(lambda, mu, params=NULL, maxgoal=8){
+dcResult<-function(lambda, mu, params=NULL, maxgoal=8, nsim=1){
   params<-parse_dc_params(params)
 
-  dcr<-function(lambda, mu, params, maxgoal){
+  dcr<-function(lambda, mu, params, maxgoal, nsim){
     pm <- prob_matrix(lambda=lambda, mu=mu, params=params, maxgoal=maxgoal)
 
     #sometimes there's negative probabilities. This handles that with fakign a very low value instead
     pm2<-pm
     pm2[pm2<0]<-1e-8
 
-    goals<-as.vector(arrayInd(sample(1:length(pm2), size = 1, prob = pm2), .dim = dim(pm2)))-1
+    results<-c()
+    for(i in 1:nsim){
+      goals<-as.vector(arrayInd(sample(1:length(pm2), size = 1, prob = pm2), .dim = dim(pm2)))-1
 
-    if (goals[1] > goals[2]){
-      return(1)
-    } else if(goals[1]<goals[2]){
-      return(0)
-    } else{
-      #TODO Verify OT/SO ratio and also verify if wniner is coin flip or stronger team has better chance?
-      otstatus = sample(c(0.25, 0.1), size = 1, prob = c(0.6858606, 0.3141394))
-      otwinner = sample(c(1, -1), size = 1, prob = extraTimeSolver(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)]), sum(diag(pm)))[2:3])
-      return(0.5+(otstatus*otwinner))  # this will yield 0.75 for home OT, 0.25 for away OT, 0.6 for home SO, 0.4 for away SO win.
+      if (goals[1] > goals[2]){
+        results<-c(results, 1)
+      } else if(goals[1]<goals[2]){
+        results<-c(results, 0)
+      } else{
+        #TODO Verify OT/SO ratio and also verify if wniner is coin flip or stronger team has better chance?
+        otstatus = sample(c(0.25, 0.1), size = 1, prob = c(0.6858606, 0.3141394))
+        otwinner = sample(c(1, -1), size = 1, prob = extraTimeSolver(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)]), sum(diag(pm)))[2:3])
+        results<-c(results, 0.5+(otstatus*otwinner))  # this will yield 0.75 for home OT, 0.25 for away OT, 0.6 for home SO, 0.4 for away SO win.
+      }
     }
+    return(results)
   }
 
   v_dcr<-Vectorize(dcr, c('lambda', 'mu'))
 
   if(length(lambda) == 1){
-    return(dcr(lambda, mu, params, maxgoal))
+    return(dcr(lambda, mu, params, maxgoal, nsim))
   } else {
-    return(as.vector(v_dcr(lambda, mu, params, maxgoal)))
+    return(as.vector(v_dcr(lambda, mu, params, maxgoal,nsim)))
   }
 }
 
