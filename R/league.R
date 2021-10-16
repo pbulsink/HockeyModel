@@ -398,7 +398,9 @@ sim_engine<-function(all_season, nsims, params=NULL){
   #Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call calmed it.
 
   if('lambda' %in% names(multi_season)){
-    multi_season$Result<-dcResult(lambda = multi_season$lambda, mu = multi_season$mu, params = params)
+    multi_season$Resultnew<-dcResult(lambda = multi_season$lambda, mu = multi_season$mu, params = params)
+    multi_season[is.na(multi_season$Result),]$Result<-multi_season[is.na(multi_season$Result),]$Resultnew
+    multi_season$Resultnew<-NULL
   }
 
   if(!('Result' %in% names(multi_season)) | sum(is.na(multi_season$Result) > 0)){

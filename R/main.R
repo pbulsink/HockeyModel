@@ -275,7 +275,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
   }
 
   series<-getAPISeries()
-  if(nrow(series[series$Status == "Ongoing", ]) > 0){  # TODO: Watch next spring to see if this goes ok
+  if(!is.na(series) & nrow(series[series$Status == "Ongoing", ]) > 0){  # TODO: Watch next spring to see if this goes ok
     tweetSeries(graphic_dir = graphic_dir, token=token, params=params)
     Sys.sleep(delay)
   }
