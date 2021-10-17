@@ -14,6 +14,7 @@ test_that("Season from Game Date works", {
 
 test_that("Past points are calculated correctly", {
   sc<-scores[scores$Date > as.Date("2015-08-01"), ]
+  sc<-sc[sc$Date < as.Date("2018-09-01"), ]
   p<-historicalPoints(sc = sc)
   expect_equal(as.numeric(p[p$Team == "Anaheim Ducks" & p$Season == "20152016", "Points"]), 103)
   expect_equal(as.numeric(p[p$Team == "Ottawa Senators" & p$Season == "20162017", "Points"]), 98)

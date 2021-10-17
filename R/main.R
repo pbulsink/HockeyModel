@@ -167,7 +167,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
   }
   modelparams<-updateModel()
   sc<-modelparams$schedule
-  params<-parse_dc_params(params=modelparams$params)
+  params<-parse_dc_params(params=modelparams)
 
   if(Sys.Date() > max(sc$Date)){
     stop('No future games planned')

@@ -300,7 +300,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
   #odds_table$Result <- NA
 
   if(is.null(season_sofar)){
-    season_sofar<-scores[scores$Date > as.Date(getSeasonStartDate()),]
+    season_sofar<-scores[scores$Date >= as.Date(getSeasonStartDate()),]
   }
 
   #if(is.na(season_sofar)) {
@@ -312,12 +312,13 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
     last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
     odds_table<-odds_table[odds_table$Date > last_scores_date, ]
 
-    season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result')]
+    season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result', 'GameID')]
     #season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
 
     all_season<-dplyr::bind_rows(season_sofar, odds_table)
   } else {
     all_season <- odds_table
+    all_season$Result <- NA
   }
 
   if(cores == 1){
@@ -398,9 +399,11 @@ sim_engine<-function(all_season, nsims, params=NULL){
   #Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call calmed it.
 
   if('lambda' %in% names(multi_season)){
-    multi_season$Resultnew<-dcResult(lambda = multi_season$lambda, mu = multi_season$mu, params = params)
-    multi_season[is.na(multi_season$Result),]$Result<-multi_season[is.na(multi_season$Result),]$Resultnew
-    multi_season$Resultnew<-NULL
+    for(g in all_season$GameID){
+      if(is.na(all_season[all_season$GameID == g,'Result'])){
+        multi_season[multi_season$GameID == g, 'Result']<-dcResult(lambda = all_season[all_season$GameID == g,'lambda'], mu=all_season[all_season$GameID == g,'mu'], params=params, nsim=nsims)
+      } # else not needed - multi-season already has results entered.
+    }
   }
 
   if(!('Result' %in% names(multi_season)) | sum(is.na(multi_season$Result) > 0)){
