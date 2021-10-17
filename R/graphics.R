@@ -353,10 +353,15 @@ plot_pace_by_team<-function(graphic_dir = file.path(devtools::package_file(), "p
 plot_odds_today <- function(today = Sys.Date(), params=NULL, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours) {
   params<-parse_dc_params(params)
   todayodds<-todayDC(today = today, params, schedule = schedule)
+  todayodds$GameID<-NULL
+  todayodds$HomeWinOT<-todayodds$AwayWinOT<-0
 
   #add odds for each team in OT/SO
-  todayodds$HomeWinOT<-(todayodds$HomeWin / (todayodds$HomeWin + todayodds$AwayWin)) * todayodds$Draw
-  todayodds$AwayWinOT<-todayodds$Draw-todayodds$HomeWinOT
+  for(g in 1:nrow(todayodds)){
+    todayodds$HomeWinOT[g] <- extraTimeSolver(home_win = todayodds$HomeWin[g], away_win = todayodds$AwayWin[g], draw = todayodds$Draw[g])[2]
+    todayodds$AwayWinOT[g] <- extraTimeSolver(home_win = todayodds$HomeWin[g], away_win = todayodds$AwayWin[g], draw = todayodds$Draw[g])[3]
+
+  }
 
   #Melt data to work with ggplot
   melted<-reshape2::melt(todayodds, id.vars = c('HomeTeam', 'AwayTeam'))

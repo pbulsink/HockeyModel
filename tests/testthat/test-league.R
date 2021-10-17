@@ -31,7 +31,7 @@ test_that("Playoff Sim finishes OK", {
 
 test_that("Convenience Functions are OK", {
   expect_equal(nrow(todayOdds(today=as.Date("2019-11-01"))), 8)
-  expect_equal(ncol(todayOdds(today=as.Date("2019-11-01"))), 5)
+  expect_equal(ncol(todayOdds(today=as.Date("2019-11-01"))), 6)
 })
 
 test_that("Predictions File saves", {

@@ -51,7 +51,7 @@ updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), sav
 #' @param season_percent the percent complete of the season, used for regression
 #' @param include_xG Whether to include team expected goals. default FALSE
 #'
-#' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
+#' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
 todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL, include_xG = FALSE){
   params<-parse_dc_params(params)
   games<-schedule[schedule$Date == today, ]
@@ -60,7 +60,7 @@ todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::sch
   }
 
   preds<-data.frame(HomeTeam=games$HomeTeam, AwayTeam=games$AwayTeam,
-                    HomeWin=0, AwayWin = 0, Draw = 0,
+                    HomeWin=0, AwayWin = 0, Draw = 0, GameID=games$GameID,
                     stringsAsFactors = FALSE)
   if(include_xG){
     preds$Away_xG<-preds$Home_xG<-0
@@ -75,6 +75,10 @@ todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::sch
       preds$Home_xG[[i]]<-xg$home
       preds$Away_xG[[i]]<-xg$away
     }
+  }
+
+  if(include_xG){
+    preds$GameID <- NULL
   }
 
   return(preds)
@@ -123,7 +127,7 @@ remainderSeasonDC <- function(nsims=1e4, cores = parallel::detectCores()-1, para
 
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
-                    stringsAsFactors = FALSE)
+                    GameID=numeric(), stringsAsFactors = FALSE)
 
   params<-parse_dc_params(params=params)
 
@@ -551,12 +555,13 @@ dcSample<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::s
 #' @param mu away team mu
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param maxgoal max goals predicable per game, default 10
+#' @param nsim the number of simulations in each result
 #'
 #' @return a result from 0 to 1 corresponding to \link{scores} results
-dcResult<-function(lambda, mu, params=NULL, maxgoal=8){
+dcResult<-function(lambda, mu, params=NULL, maxgoal=8, nsim=1){
   params<-parse_dc_params(params)
 
-  dcr<-function(lambda, mu, params, maxgoal){
+  dcr<-function(lambda, mu, params, maxgoal, nsim){
     if(is.na(lambda)){
       return(NA)
     }
@@ -566,26 +571,31 @@ dcResult<-function(lambda, mu, params=NULL, maxgoal=8){
     pm2<-pm
     pm2[pm2<0]<-1e-8
 
-    goals<-as.vector(arrayInd(sample(1:length(pm2), size = 1, prob = pm2), .dim = dim(pm2)))-1
+    results<-c()
+    otwinnerprob<-extraTimeSolver(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)]), sum(diag(pm)))[2:3]
+    for(i in 1:nsim){
+      goals<-as.vector(arrayInd(sample(1:length(pm2), size = 1, prob = pm2), .dim = dim(pm2)))-1
 
-    if (goals[1] > goals[2]){
-      return(1)
-    } else if(goals[1]<goals[2]){
-      return(0)
-    } else{
-      #TODO Verify OT/SO ratio and also verify if wniner is coin flip or stronger team has better chance?
-      otstatus = sample(c(0.25, 0.1), size = 1, prob = c(0.6858606, 0.3141394))
-      otwinner = sample(c(1, -1), size = 1, prob = extraTimeSolver(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)]), sum(diag(pm)))[2:3])
-      return(0.5+(otstatus*otwinner))  # this will yield 0.75 for home OT, 0.25 for away OT, 0.6 for home SO, 0.4 for away SO win.
+      if (goals[1] > goals[2]){
+        results<-c(results, 1)
+      } else if(goals[1]<goals[2]){
+        results<-c(results, 0)
+      } else{
+        #TODO Verify OT/SO ratio and also verify if wniner is coin flip or stronger team has better chance?
+        otstatus = sample(c(0.25, 0.1), size = 1, prob = c(0.6858606, 0.3141394))
+        otwinner = sample(c(1, -1), size = 1, prob = otwinnerprob)
+        results<-c(results, 0.5+(otstatus*otwinner))  # this will yield 0.75 for home OT, 0.25 for away OT, 0.6 for home SO, 0.4 for away SO win.
+      }
     }
+    return(results)
   }
 
   v_dcr<-Vectorize(dcr, c('lambda', 'mu'))
 
   if(length(lambda) == 1){
-    return(dcr(lambda, mu, params, maxgoal))
+    return(dcr(lambda, mu, params, maxgoal, nsim))
   } else {
-    return(as.vector(v_dcr(lambda, mu, params, maxgoal)))
+    return(as.vector(v_dcr(lambda, mu, params, maxgoal,nsim)))
   }
 }
 
@@ -815,6 +825,9 @@ predictMultipleDaysResultsDC <- function(startDate, endDate, schedule = HockeyMo
 
 parse_dc_params<-function(params=NULL){
   returnparams<-list()
+  while('params' %in% names(params)){
+    params<-params$params
+  }
 
   if("m" %in% names(params)){
     returnparams$m<-params$m

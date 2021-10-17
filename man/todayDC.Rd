@@ -27,7 +27,7 @@ todayDC(
 \item{include_xG}{Whether to include team expected goals. default FALSE}
 }
 \value{
-a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today
+a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
 }
 \description{
 DC Predictions Today
