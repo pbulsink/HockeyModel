@@ -185,6 +185,7 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
   }
 
   ngames<-getNumGames()
+
   teamlist<-unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
 
   teampoints<-as.list(rep(NA, length(teamlist)))
@@ -210,6 +211,9 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
     teamPerformance<-dplyr::left_join(teamPerformance, teamscores, by="GameNum")
   }
 
+  games_played <- max(which(rowSums(teamPerformance[,2:ncol(teamPerformance)], na.rm = T) != 0))
+
+  teamPerformance<-teamPerformance[teamPerformance$GameNum <= (games_played + 1),]
 
   teamPerformance<-tidyr::pivot_longer(teamPerformance,
                                        !.data$GameNum,
@@ -233,23 +237,23 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
 
   teamPerformance$Div <- getTeamDivisions(teamPerformance$Team)
 
-  for(division in getDivisions()){
+  for(division in unique(teamPerformance$Div)){
     #tl<-teamlist[teamlist %in% unlist(HockeyModel::nhl_divisions[division])]
     tp<-teamPerformance[teamPerformance$Div == division, ]
 
     plt<-ggplot2::ggplot(tp, ggplot2::aes_string(x = "GameNum", y = "PointDiff", colour = "Team"))+
       #ggplot2::geom_line(na.rm = TRUE) +
-      ggplot2::geom_smooth(span = 0.1, n=ngames*100, na.rm=TRUE, se = FALSE) +
+      ggplot2::geom_smooth(n=(max(teamPerformance$GameNum,12)*100), na.rm=TRUE, se = FALSE) +
       ggplot2::geom_hline(yintercept = 0) +
-      ggplot2::coord_cartesian(xlim=c(0,ngames), clip="off")+
+      ggplot2::coord_cartesian(xlim=c(0,max(teamPerformance$GameNum, 12)), clip="off")+
       ggplot2::labs(title = "Points vs. Predicted at Season Start by Game",
                     subtitle = paste(division, "Division Teams"),
                     x = "Game Number",
                     y = "Points Above/Below Predicted",
                     caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date())) +
       ggplot2::scale_colour_manual(values = teamColoursList) +
-      ggplot2::scale_x_continuous(breaks = seq(from=0, to=ngames, by = 10))+#, expand = ggplot2::expansion(mult = c(0, .1)))+
-      ggrepel::geom_label_repel(ggplot2::aes_string(label = "label"), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(ngames, ngames+ngames*.2))+
+      ggplot2::scale_x_continuous(breaks = seq(from=0, to=max(teamPerformance$GameNum), by = 5))+#, expand = ggplot2::expansion(mult = c(0, .1)))+
+      ggrepel::geom_label_repel(ggplot2::aes_string(label = "label"), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(max(teamPerformance$GameNum,12), max(teamPerformance$GameNum,12)+max(teamPerformance$GameNum,12)*.2))+
       ggplot2::theme_minimal() +
       ggplot2::theme(legend.position = "none",
                      plot.margin = ggplot2::unit(c(1,5,1,1), "lines"))
@@ -567,10 +571,8 @@ plot_game<-function(home, away, params=NULL, maxgoal = 10){
 #' @export
 plot_point_likelihood <- function(preds=NULL, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = 'pace', savefiles = TRUE) {
   if(is.null(preds)){
-    #This produces an empty graphic but better that than an error?
-    preds<-compile_predictions()
-    preds<-preds[preds$predictionDate == max(preds$predictionDate),]
-    preds$Points<-preds$meanPoints
+    #Try this:
+    preds<-loopless_sim(nsims = 1e4)$raw_results
   }
 
   conferences<-getConferences()
@@ -582,6 +584,15 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = file.path(devtools::
   names(teamColoursList)<-teamColours$Team
 
   p<-list()
+
+  #sort the likelihood plots by points
+  teamsorted<-preds %>%
+    dplyr::group_by(.data$Team) %>%
+    dplyr::summarise(mean.points = mean(.data$Points)) %>%
+    dplyr::arrange(.data$mean.points) %>%
+    dplyr::pull(.data$Team)
+
+  preds$Team <- factor(preds$Team, levels = teamsorted)
 
   for(conf in conferences){
     conf_preds<-preds[preds$Conf == conf, ]

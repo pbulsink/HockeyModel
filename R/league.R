@@ -376,6 +376,8 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
       p_rank8 = sum(.data$Wildcard == 2)/dplyr::n()
     )
 
+  plot_point_likelihood(preds=all_results)
+
   return(list(summary_results = summary_results, raw_results = all_results))
 }
 
