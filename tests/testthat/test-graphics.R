@@ -54,16 +54,16 @@ test_that("Single Game xG plot OK", {
   expect_identical(p$labels$x, "Predicted Team Goals")
 })
 
-test_that("Predicted Points plot OK", {
-  preds<-HockeyModel::example_predictions
-  preds<-preds[preds$predictionDate == "2021-01-30", ]
-  p<-suppressWarnings(plot_point_likelihood(preds = preds, savefiles = F))
-  for(i in 1:length(p)){
-    expect_true(ggplot2::is.ggplot(p[[i]]))
-    expect_identical(p[[i]]$labels$y, "")
-    expect_identical(p[[i]]$labels$x, "Predicted Point Likelyhood")
-  }
-})
+# test_that("Predicted Points plot OK", {
+#   preds<-HockeyModel::example_predictions
+#   preds<-preds[preds$predictionDate == "2021-01-30", ]
+#   p<-suppressWarnings(plot_point_likelihood(preds = preds, savefiles = F))
+#   for(i in 1:length(p)){
+#     expect_true(ggplot2::is.ggplot(p[[i]]))
+#     expect_identical(p[[i]]$labels$y, "")
+#     expect_identical(p[[i]]$labels$x, "Predicted Point Likelyhood")
+#   }
+# })
 
 test_that("Series Graphics are OK", {
   series<-getAPISeries("20182019")
