@@ -55,8 +55,7 @@ test_that("Single Game xG plot OK", {
 })
 
 test_that("Predicted Points plot OK", {
-  preds<-HockeyModel::example_predictions
-  preds<-preds[preds$predictionDate == "2021-01-30", ]
+  preds<-HockeyModel::example_raw_predictions
   p<-suppressWarnings(plot_point_likelihood(preds = preds, savefiles = F))
   for(i in 1:length(p)){
     expect_true(ggplot2::is.ggplot(p[[i]]))

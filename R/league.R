@@ -83,6 +83,7 @@ buildStats<-function(scores){
   )
 
   team_stats<-team_stats %>%
+    dtplyr::lazy_dt() %>%
     dplyr::mutate(PointPercent = .data$Points/.data$GP,
                   ROW = .data$W + .data$OTW,
                   ROSW = .data$W + .data$OTW + .data$SOW,
@@ -100,9 +101,10 @@ buildStats<-function(scores){
     dplyr::group_by(.data$Conf, .data$Playoffs) %>%
     dplyr::mutate(Playoffs = ifelse(.data$Rank %in% utils::tail(sort(.data$Rank), 2), 1, .data$Playoffs)) %>% ## Renaming top two playoff teams as 'in' doesn't matter, because they're in already
     dplyr::ungroup() %>%
-    dplyr::select(-c("Conf", "Div", "PointPercent", "ROW", "ROSW", "Rand"))
+    dplyr::select(-c("Conf", "Div", "PointPercent", "ROW", "ROSW", "Rand")) %>%
+    tibble::as_tibble()
 
-  return(tibble::as_tibble(team_stats))
+  return(team_stats)
 }
 
 
@@ -127,16 +129,16 @@ todayOdds <- function(params=NULL, today=Sys.Date(), schedule=HockeyModel::sched
 
 #' Simulate the remainder of the season
 #'
-#' @param odds_table A dataframe with HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, and Date
 #' @param scores Past (historical) season scores. Defaults to HockeyModel::Scores
 #' @param schedule Future unplayed games. Defaults to HockeyModel::schedule
 #' @param nsims number of simulations to run
 #' @param cores number of cores to use in parallel.
 #' @param progress whether to show a progress bar.
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return a data frame of results
 #' @export
-simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, cores = parallel::detectCores() - 1, progress = FALSE){
+simulateSeasonParallel <- function(scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, cores = parallel::detectCores() - 1, progress = FALSE, params=NULL){
   teamlist<-c()
   if(!is.null(scores)){
     season_sofar<-scores[scores$Date > as.Date(getSeasonStartDate()),]
@@ -150,6 +152,8 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
   if(!is.finite(cores)) {
     cores <- 2
   }
+
+  odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, params=params, odds = T)
 
   odds_table$HOT<-extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,2]
   odds_table$AOT<-extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,3]
@@ -231,6 +235,7 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
   }
 
   summary_results<-all_results %>%
+    dtplyr::lazy_dt() %>%
     dplyr::group_by(.data$Team) %>%
     dplyr::summarise(
       Playoffs = mean(.data$Playoffs),
@@ -251,7 +256,8 @@ simulateSeasonParallel <- function(odds_table, scores=HockeyModel::scores, nsims
       sdRank = stats::sd(.data$Rank, na.rm = TRUE),
       #sdConfRank = stats::sd(.data$ConfRank, na.rm = TRUE),
       sdDivRank = stats::sd(.data$DivRank, na.rm = TRUE)
-    )
+    ) %>%
+    tibble::as_tibble()
 
 
   return(list(summary_results = summary_results, raw_results = all_results))
@@ -283,43 +289,37 @@ compile_predictions<-function(dir=file.path(devtools::package_file(), "predictio
 #' @param schedule games to play
 #' @param scores Season to this point
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
-#' @param odds_table odds from remainderSeasonDC(Odds = TRUE), or null
 #' @param season_sofar The results of the season to date
+#' @param likelihood_graphic whether to create a likelihood graphic
 #'
 #' @return a two member list, of all results and summary results
 #' @export
-loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, params=NULL, odds_table = NULL, season_sofar=NULL){
+loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, params=NULL, season_sofar=NULL, likelihood_graphic=TRUE){
 
   params<-parse_dc_params(params)
 
   nsims <- floor(nsims/cores)
 
-  if(is.null(odds_table)){
-    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, params=params, nsims = nsims, mu_lambda = TRUE)
-  }
-  #odds_table$Result <- NA
+  odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, params=params, nsims = nsims, odds = T)
 
-  if(is.null(season_sofar)){
-    season_sofar<-scores[scores$Date >= as.Date(getSeasonStartDate()),]
-  }
-
-  #if(is.na(season_sofar)) {
-  #  season_sofar<-scores[NULL,]
-  #}
+  season_sofar<-scores[scores$Date >= as.Date(getSeasonStartDate(getSeason(schedule[,"Date"][1]))),]
 
   if(nrow(season_sofar) > 0){
-
-    last_scores_date<-season_sofar[nrow(season_sofar), 'Date']
-    odds_table<-odds_table[odds_table$Date > last_scores_date, ]
-
     season_sofar<-season_sofar[, c('Date', 'HomeTeam','AwayTeam','Result', 'GameID')]
-    #season_sofar$HomeWin <- season_sofar$AwayWin <- season_sofar$Draw <- NA
-
+    odds_table<-odds_table[!(odds_table$GameID %in% season_sofar$GameID), ]
     all_season<-dplyr::bind_rows(season_sofar, odds_table)
   } else {
     all_season <- odds_table
     all_season$Result <- NA
   }
+
+  oddsseason<-extraTimeSolver(all_season$HomeWin, all_season$AwayWin, 1-(all_season$HomeWin+all_season$AwayWin))
+  all_season$HomeOT<-oddsseason[,2]*0.6858606
+  all_season$HomeSO<-oddsseason[,2]*0.3141394
+  all_season$AwaySO<-oddsseason[,3]*0.3141394
+  all_season$AwayOT<-oddsseason[,3]*0.6858606
+
+  rm(oddsseason, season_sofar, odds_table)
 
   if(cores == 1){
     #for testing only, really.
@@ -336,7 +336,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
 
     #Ram management issues. Send smaller chunks more often, hopefully this helps.
     all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
-      all_results<-sim_engine(all_season = all_season, nsims = floor(nsims/5), params=params)
+      all_results<-sim_engine(all_season = all_season, nsims = ceiling(nsims/5), params=params)
       return(all_results)
     }
 
@@ -345,6 +345,7 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
   }
 
   summary_results<-all_results %>%
+    #dtplyr::lazy_dt() %>%
     dplyr::group_by(.data$Team) %>%
     dplyr::summarise(
       Playoffs = mean(.data$Playoffs),
@@ -373,10 +374,12 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
       p_rank_34 = sum(.data$DivRank == 2)/dplyr::n(),
       p_rank_56 = sum(.data$DivRank == 3)/dplyr::n(),
       p_rank7 = sum(.data$Wildcard == 1)/dplyr::n(),
-      p_rank8 = sum(.data$Wildcard == 2)/dplyr::n()
-    )
+      p_rank8 = sum(.data$Wildcard == 2)/dplyr::n()) %>%
+    tibble::as_tibble()
 
-  plot_point_likelihood(preds=all_results)
+  if(likelihood_graphic){
+    plot_point_likelihood(preds=all_results)
+  }
 
   return(list(summary_results = summary_results, raw_results = all_results))
 }
@@ -395,48 +398,29 @@ sim_engine<-function(all_season, nsims, params=NULL){
 
   season_length<-nrow(all_season)
 
-  multi_season<-dplyr::bind_rows(replicate(nsims, all_season, simplify = FALSE))
-  multi_season$sim<-rep(1:nsims, each = season_length)
+  #multi_season<-dplyr::bind_rows(replicate(nsims, all_season[,c('HomeTeam', 'AwayTeam', 'Result', 'GameID')], simplify = FALSE))
+  #multi_season$sim<-rep(1:nsims, each = season_length)
 
-  #Result <- dplyr::sym('Result')  # is.na(!!dplyr::sym('Result')) got really mad. offload to before call calmed it.
+  resultslist<-list()
 
-  if('lambda' %in% names(multi_season)){
-    for(g in all_season$GameID){
-      if(is.na(all_season[all_season$GameID == g,'Result'])){
-        multi_season[multi_season$GameID == g, 'Result']<-dcResult(lambda = all_season[all_season$GameID == g,'lambda'], mu=all_season[all_season$GameID == g,'mu'], params=params, nsim=nsims)
-      } # else not needed - multi-season already has results entered.
+  for(g in all_season$GameID){
+    if(is.na(all_season[all_season$GameID == g,]$Result)) {
+      odds<-as.vector(all_season[all_season$GameID == g, c('HomeWin', 'HomeOT', 'HomeSO', 'AwaySO', 'AwayOT', 'AwayWin')])
+      #multi_season[multi_season$GameID == g,]$Result <- sampleResult(odds[[1]], odds[[2]], odds[[3]], odds[[4]], odds[[5]], odds[[6]], size=nsims)
+      resultslist[[as.character(g)]] <- sampleResult(odds[[1]], odds[[2]], odds[[3]], odds[[4]], odds[[5]], odds[[6]], size=nsims)
+    } else {
+      resultslist[[as.character(g)]] <- rep(all_season[all_season$GameID == g,]$Result, nsims)
     }
   }
 
-  if(!('Result' %in% names(multi_season)) | sum(is.na(multi_season$Result) > 0)){
-    multi_season$r1<-stats::runif(n=nrow(multi_season))
-    multi_season$r2<-stats::runif(n=nrow(multi_season))
-    multi_season$r3<-stats::runif(n=nrow(multi_season))
+  long_season<-data.frame(Team = c(rep(all_season$HomeTeam, each=nsims), rep(all_season$AwayTeam, each=nsims)),
+                          SimNo = c(rep(1:nsims, season_length), rep(1:nsims, season_length)),
+                          Result = c(unlist(resultslist), 1-unlist(resultslist)))
 
-    multi_season<-multi_season %>%
-      mutate_cond(is.na(.data$Result), Result = 1*(as.numeric(.data$r1<.data$HomeWin)) +
-                    0.75 * (as.numeric(.data$r1 > .data$HomeWin &
-                                         .data$r1 < (.data$HomeWin + .data$Draw)) *
-                              (as.numeric(.data$r2 > 0.5) * as.numeric(.data$r3 < 0.75))) +
-                    0.6 * (as.numeric(.data$r1 > .data$HomeWin &
-                                        .data$r1 < (.data$HomeWin + .data$Draw)) *
-                             (as.numeric(.data$r2 > 0.5) * as.numeric (.data$r3 > 0.75))) +
-                    0.4 * (as.numeric(.data$r1 > .data$HomeWin &
-                                        .data$r1 < (.data$HomeWin + .data$Draw)) *
-                             (as.numeric(.data$r2 < 0.5) * as.numeric (.data$r3 > 0.75))) +
-                    0.25 * (as.numeric(.data$r1 > .data$HomeWin &
-                                         .data$r1 < (.data$HomeWin + .data$Draw)) *
-                              (as.numeric(.data$r2 < 0.5) * as.numeric (.data$r3 < 0.75))) +
-                    0)
-
-  }
-  long_season<-data.frame(Team = c(as.character(multi_season$HomeTeam), as.character(multi_season$AwayTeam)), stringsAsFactors = FALSE)
-  long_season$Result<-c(multi_season$Result, 1-multi_season$Result)
-  long_season$SimNo<-c(multi_season$sim, multi_season$sim)
-
-  rm(multi_season)
+  rm(resultslist)
 
   all_results<-long_season %>%
+    dtplyr::lazy_dt() %>%
     dplyr::group_by(.data$SimNo, .data$Team) %>%
     dplyr::summarise(W = sum(.data$Result == 1),
               OTW = sum(.data$Result == 0.75),
@@ -453,9 +437,10 @@ sim_engine<-function(all_season, nsims, params=NULL){
 
   all_results$Conference <- getTeamConferences(all_results$Team)
   all_results$Division <- getTeamDivisions(all_results$Team)
-  all_results$Wildcard <- NA
+  all_results$Wildcard <- 100
 
   all_results <- all_results %>%
+    dtplyr::lazy_dt() %>%
     dplyr::group_by(.data$SimNo) %>%
     dplyr::mutate(Rank = rank(-.data$Points, ties.method = 'random')) %>%
     dplyr::ungroup() %>%
@@ -468,15 +453,14 @@ sim_engine<-function(all_season, nsims, params=NULL){
     dplyr::mutate(Playoffs = ifelse(.data$DivRank <=3, 1, 0)) %>%
     dplyr::group_by(.data$SimNo, .data$Conference) %>%
     dplyr::arrange(.data$Playoffs, .data$ConfRank) %>%
-    dplyr::mutate(Wildcard = ifelse(.data$Playoffs == 0, dplyr::row_number(), NA)) %>%
+    dplyr::mutate(Wildcard = ifelse(.data$Playoffs == 0, dplyr::row_number(), 100)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(Playoffs = ifelse(.data$DivRank <= 3, 1, 0)) %>% #Top 3 in each division
     dplyr::arrange(.data$SimNo, .data$Team) %>%
-    #mutate_cond(.data$Wildcard <= 2, Playoffs = 1) %>% # Wildcard 2 teams/conference
     dplyr::select(.data$SimNo, .data$Team, .data$W, .data$OTW,
                   .data$SOW, .data$SOL, .data$OTL, .data$Points,
                   .data$Wildcard, .data$Rank, .data$ConfRank,
-                  .data$DivRank, .data$Playoffs)
+                  .data$DivRank, .data$Playoffs) %>%
+    tibble::as_tibble()
 
   all_results[!is.na(all_results$Wildcard) & all_results$Wildcard <= 2,]$Playoffs<-1
   all_results$Wildcard[is.na(all_results$Wildcard)]<-0
@@ -484,6 +468,7 @@ sim_engine<-function(all_season, nsims, params=NULL){
 
   return(all_results)
 }
+
 
 #' Playoff Win Calculator
 #'
@@ -502,6 +487,7 @@ playoffWin<-function(home_team, away_team, home_wins = 0, away_wins = 0, params=
   away_odds<-1-DCPredict(home = away_team, away = home_team, draws=FALSE,  params=params)[1]
   return(playoffSeriesOdds(home_odds = home_odds, away_odds = away_odds, home_win = home_wins, away_win = away_wins))
 }
+
 
 #' Random Series Winner
 #'
@@ -1216,8 +1202,8 @@ cleanupPredictionsFile<-function(filepath=file.path(devtools::package_file(), "d
     dplyr::mutate("Date" = as.Date(.data$Date)) %>%
     dplyr::arrange(dplyr::desc(.data$Date)) %>%
     dplyr::distinct(.data$GameID, .keep_all=TRUE) %>%
-    dplyr::arrange(.data$Date, .data$GameID)
-  utils::write.table(dailyodds, file=filepath, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
+    dplyr::arrange(.data$Date, .data$GameID) %>%
+    utils::write.table(file=filepath, append = FALSE, col.names = TRUE, row.names = FALSE, sep=",", dec=".")
 
   return(TRUE)
 }

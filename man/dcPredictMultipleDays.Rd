@@ -11,7 +11,8 @@ dcPredictMultipleDays(
   schedule = HockeyModel::schedule,
   filedir = file.path(devtools::package_file(), "prediction_results"),
   nsims = 1e+05,
-  cores = parallel::detectCores() - 1
+  cores = parallel::detectCores() - 1,
+  likelihood_graphic = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ dcPredictMultipleDays(
 \item{nsims}{number of simulations to run}
 
 \item{cores}{number of cores in parallel to simulate on}
+
+\item{likelihood_graphic}{Whether to call for creation of likelihood graphic. Default True}
 }
 \value{
 true, if successful

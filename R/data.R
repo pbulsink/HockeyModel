@@ -93,6 +93,12 @@
 #' @format a tibble
 "example_predictions"
 
+#' Example Raw Predictions
+#' A example 'raw predictions' compiled for testing purposes
+#'
+#' @format a tibble
+"example_raw_predictions"
+
 buildTeamColours <- function(){
   teamColours <- utils::read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
   teamlist<-unique(teamColours$Team)

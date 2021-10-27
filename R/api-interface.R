@@ -377,7 +377,7 @@ getSeasonStartDate<-function(season=NULL){
   seasons<-nhlapi::nhl_seasons()
   if(!is.null(season)){
     if(season %in% seasons$seasonId){
-      return(as.Date(seasons[seasons$seasonId == season]$regularSeasonStartDate))
+      return(as.Date(seasons[seasons$seasonId == season, ]$regularSeasonStartDate))
     } else {
       stop("Season not found: ", season)
     }
@@ -520,11 +520,7 @@ getDivisions <- function(apiteams=nhlapi::nhl_teams()){
 getTeamConferences <- function(teams, apiteams=nhlapi::nhl_teams()){
   apiteams<-clean_names(apiteams)
   getteamconf<-function(t, apiteams){
-    if(t %in% apiteams$name){
-      return(apiteams[apiteams$name == t, ]$conference.name)
-    } else {
-      return(NA)
-    }
+    return(apiteams[apiteams$name == t, ]$conference.name)
   }
 
   v_getteamconf<-Vectorize(getteamconf, "t")
@@ -539,11 +535,7 @@ getTeamConferences <- function(teams, apiteams=nhlapi::nhl_teams()){
 getTeamDivisions <- function(teams, apiteams=nhlapi::nhl_teams()){
   apiteams<-clean_names(apiteams)
   getteamdiv<-function(t, apiteams){
-    if(t %in% apiteams$name){
-      return(apiteams[apiteams$name == t, ]$division.name)
-    } else {
-      return(NA)
-    }
+    return(apiteams[apiteams$name == t, ]$division.name)
   }
 
   v_getteamdiv<-Vectorize(getteamdiv, "t")
@@ -558,11 +550,7 @@ getTeamDivisions <- function(teams, apiteams=nhlapi::nhl_teams()){
 getShortTeam<-function(teams, apiteams=nhlapi::nhl_teams()){
   apiteams<-clean_names(apiteams)
   getteamshort<-function(t, apiteams){
-    if(t %in% apiteams$name){
-      return(apiteams[apiteams$name == t, ]$abbreviation)
-    } else {
-      return(NA)
-    }
+    return(apiteams[apiteams$name == t, ]$abbreviation)
   }
 
   v_getteamshort<-Vectorize(getteamshort, "t")

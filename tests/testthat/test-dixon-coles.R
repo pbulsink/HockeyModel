@@ -43,21 +43,22 @@ test_that("DC Convenience functions are ok", {
 })
 
 test_that("Predictions Run", {
-  sched<-schedule[schedule$Date > as.Date("2021-09-01") & schedule$Date <= as.Date("2022-04-29"),]
-  scor<-scores[scores$Date < as.Date("2021-09-01"),]
+  sched<-schedule[schedule$Date > as.Date("2018-09-01") & schedule$Date <= as.Date("2019-04-06"),]
+  scor<-scores[scores$Date < as.Date("2018-09-01"),]
 
-  expect_true(suppressWarnings(dcPredictMultipleDays(start=as.Date("2021-08-01"), end = as.Date("2021-08-01"), schedule = sched, scores = scor, nsims=10, cores=1, filedir = "./")))
-  expect_true(file.exists("./2021-08-01-predictions.RDS"))
-  file.remove("./2021-08-01-predictions.RDS")
-  expect_false(file.exists("./2021-08-01-predictions.RDS"))
+  #First shot, loopedSim
+  expect_true(suppressWarnings(dcPredictMultipleDays(start=as.Date("2018-08-01"), end = as.Date("2018-08-01"), schedule = sched, scores = scor, nsims=10, cores=1, filedir = "./", likelihood_graphic=FALSE)))
+  expect_true(file.exists("./2018-08-01-predictions.RDS"))
+  file.remove("./2018-08-01-predictions.RDS")
+  expect_false(file.exists("./2018-08-01-predictions.RDS"))
 
-  #Try again parallel, multicore
-  expect_true(suppressWarnings(dcPredictMultipleDays(start=as.Date("2021-08-01"), end = as.Date("2021-08-01"), schedule = sched, scores = scor, nsims=10, cores=2, filedir = "./")))
-  expect_true(file.exists("./2021-08-01-predictions.RDS"))
-  file.remove("./2021-08-01-predictions.RDS")
-  expect_false(file.exists("./2021-08-01-predictions.RDS"))
+  #Try again parallel
+  expect_true(suppressWarnings(dcPredictMultipleDays(start=as.Date("2018-08-01"), end = as.Date("2018-08-01"), schedule = sched, scores = scor, nsims=10, cores=2, filedir = "./", likelihood_graphic=FALSE)))
+  expect_true(file.exists("./2018-08-01-predictions.RDS"))
+  file.remove("./2018-08-01-predictions.RDS")
+  expect_false(file.exists("./2018-08-01-predictions.RDS"))
 
-  #first shot, loopedsim
+  #first shot, remainderSeason
   remainderseason<-remainderSeasonDC(nsims=10, cores=1, scores=scor, schedule = sched, regress = TRUE)
   expect_equal(names(remainderseason), c("summary_results", "raw_results"))
   expect_equal(nrow(remainderseason$summary_results)*10, nrow(remainderseason$raw_results))

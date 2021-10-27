@@ -10,8 +10,8 @@ loopless_sim(
   schedule = HockeyModel::schedule,
   scores = HockeyModel::scores,
   params = NULL,
-  odds_table = NULL,
-  season_sofar = NULL
+  season_sofar = NULL,
+  likelihood_graphic = TRUE
 )
 }
 \arguments{
@@ -25,9 +25,9 @@ loopless_sim(
 
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
-\item{odds_table}{odds from remainderSeasonDC(Odds = TRUE), or null}
-
 \item{season_sofar}{The results of the season to date}
+
+\item{likelihood_graphic}{whether to create a likelihood graphic}
 }
 \value{
 a two member list, of all results and summary results
