@@ -606,7 +606,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = file.path(devtools::
                     y = '',
                     title = paste0("Point Likelyhoods for ", conf, " Conference - ", getCurrentSeason8()),
                     caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
-      ggridges::theme_ridges(grid = FALSE) +
+      ggridges::theme_ridges(grid = TRUE) +
       ggplot2::theme(legend.position = "none",
                      panel.grid.major.y = ggplot2::element_line(size=.1, color="grey"))
 

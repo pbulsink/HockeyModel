@@ -202,7 +202,7 @@ remainderSeasonDC <- function(nsims=1e4, cores = parallel::detectCores()-1, para
     return(odds_table)
   }
 
-  summary_results <- simulateSeasonParallel(odds_table = odds_table, nsims = nsims, cores = cores, scores = scores, schedule = schedule)
+  summary_results <- simulateSeasonParallel(nsims = nsims, cores = cores, scores = scores, schedule = schedule)
 
   return(summary_results)
 }
@@ -567,26 +567,11 @@ dcResult<-function(lambda, mu, params=NULL, maxgoal=8, nsim=1){
     }
     pm <- prob_matrix(lambda=lambda, mu=mu, params=params, maxgoal=maxgoal)
 
-    #sometimes there's negative probabilities. This handles that with faking a very low value instead
-    pm2<-pm
-    pm2[pm2<0]<-1e-8
-
-    results<-c()
-    otwinnerprob<-extraTimeSolver(sum(pm[lower.tri(pm)]), sum(pm[upper.tri(pm)]), sum(diag(pm)))[2:3]
-    for(i in 1:nsim){
-      goals<-as.vector(arrayInd(sample(1:length(pm2), size = 1, prob = pm2), .dim = dim(pm2)))-1
-
-      if (goals[1] > goals[2]){
-        results<-c(results, 1)
-      } else if(goals[1]<goals[2]){
-        results<-c(results, 0)
-      } else{
-        #TODO Verify OT/SO ratio and also verify if wniner is coin flip or stronger team has better chance?
-        otstatus = sample(c(0.25, 0.1), size = 1, prob = c(0.6858606, 0.3141394))
-        otwinner = sample(c(1, -1), size = 1, prob = otwinnerprob)
-        results<-c(results, 0.5+(otstatus*otwinner))  # this will yield 0.75 for home OT, 0.25 for away OT, 0.6 for home SO, 0.4 for away SO win.
-      }
-    }
+    homewinprob<-sum(pm[lower.tri(pm)])
+    awaywinprob<-sum(pm[upper.tri(pm)])
+    otwinnerprob<-extraTimeSolver(homewinprob, awaywinprob, sum(diag(pm)))[2:3]
+    resultprob<-c(homewinprob, otwinnerprob[1]*0.6858606, otwinnerprob[1]*0.3141394, otwinnerprob[2]*0.3141394, otwinnerprob[1]*0.6858606, awaywinprob)
+    results<-sample(c(1,0.75,0.6,0.4,0.25,0), size=nsim, replace=TRUE, prob=resultprob)
     return(results)
   }
 
@@ -599,6 +584,46 @@ dcResult<-function(lambda, mu, params=NULL, maxgoal=8, nsim=1){
   }
 }
 
+
+sampleResult<-function(hw,hot,hso,aso,aot,aw,size=1){
+
+  sr<-function(hw,hot,hso,aso,aot,aw, size){
+    return(sample(c(1,0.75,0.6,0.4,0.25,0), size=size, replace=TRUE, prob=c(hw,hot,hso,aso,aot,aw)))
+  }
+  v_sr<-Vectorize(sr, c('hw','hot','hso','aso','aot','aw'))
+
+  if(size == 1){
+    return(sr(hw,hot,hso,aso,aot,aw, size))
+  } else {
+    return(as.vector(v_sr(hw,hot,hso,aso,aot,aw, size)))
+  }
+}
+
+
+dcExpandedOdds<-function(lambda, mu, params=NULL, maxgoal=8){
+  params<-parse_dc_params(params)
+
+  dceo<-function(lambda, mu, params, maxgoal, nsim){
+    if(is.na(lambda)){
+      return(NA)
+    }
+    pm <- prob_matrix(lambda=lambda, mu=mu, params=params, maxgoal=maxgoal)
+
+    homewinprob<-sum(pm[lower.tri(pm)])
+    awaywinprob<-sum(pm[upper.tri(pm)])
+    otwinnerprob<-extraTimeSolver(homewinprob, awaywinprob, sum(diag(pm)))[2:3]
+    resultprob<-c(homewinprob, otwinnerprob[1]*0.6858606, otwinnerprob[1]*0.3141394, otwinnerprob[2]*0.3141394, otwinnerprob[1]*0.6858606, awaywinprob)
+    return(resultprob)
+  }
+
+  v_dceo<-Vectorize(dceo, c('lambda', 'mu'))
+
+  if(length(lambda) == 1){
+    return(dceo(lambda, mu, params, maxgoal))
+  } else {
+    return(v_dceo(lambda, mu, params, maxgoal))
+  }
+}
 
 #' DC Weight
 #'
@@ -692,10 +717,11 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #' @param filedir Where to save prediction files.
 #' @param nsims number of simulations to run
 #' @param cores number of cores in parallel to simulate on
+#' @param likelihood_graphic Whether to call for creation of likelihood graphic. Default True
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = file.path(devtools::package_file(), "prediction_results"), nsims = 1e5, cores = parallel::detectCores() - 1){
+dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = file.path(devtools::package_file(), "prediction_results"), nsims = 1e5, cores = parallel::detectCores() - 1, likelihood_graphic=TRUE){
 
   if(!dir.exists(filedir)){
     dir.create(filedir, recursive = TRUE)
@@ -716,8 +742,7 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
     preds<-NULL
     preds<-tryCatch(expr = {
       message("Predicting with Loopless Sim")
-      #remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE)
-      loopless_sim(nsims = nsims, cores = cores, scores = score, schedule = sched, params = params)
+      loopless_sim(nsims = nsims, cores = cores, scores = score, schedule = sched, params = params, likelihood_graphic=likelihood_graphic)
     },
     error = function(error) {
       message('An error occurred:')
@@ -735,7 +760,7 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
       preds<-NULL
       preds<-tryCatch(expr = {
           message("Predicting with Old Version Sim")
-          remainderSeasonDC(nsims=1e5, scores=score, schedule = sched, regress = TRUE)
+          remainderSeasonDC(nsims=nsims, scores=score, schedule = sched, regress = TRUE)
         }, error = function(error) {
           message('An error occurred:')
           message(error)

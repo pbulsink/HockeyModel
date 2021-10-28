@@ -5,17 +5,15 @@
 \title{Simulate the remainder of the season}
 \usage{
 simulateSeasonParallel(
-  odds_table,
   scores = HockeyModel::scores,
   nsims = 10000,
   schedule = HockeyModel::schedule,
   cores = parallel::detectCores() - 1,
-  progress = FALSE
+  progress = FALSE,
+  params = NULL
 )
 }
 \arguments{
-\item{odds_table}{A dataframe with HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, and Date}
-
 \item{scores}{Past (historical) season scores. Defaults to HockeyModel::Scores}
 
 \item{nsims}{number of simulations to run}
@@ -25,6 +23,8 @@ simulateSeasonParallel(
 \item{cores}{number of cores to use in parallel.}
 
 \item{progress}{whether to show a progress bar.}
+
+\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
 \value{
 a data frame of results
