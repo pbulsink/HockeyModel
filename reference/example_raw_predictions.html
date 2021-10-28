@@ -6,7 +6,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Simulate the remainder of the season — simulateSeasonParallel • HockeyModel</title>
+<title>Example Raw Predictions
+A example 'raw predictions' compiled for testing purposes — example_raw_predictions • HockeyModel</title>
 
 
 <!-- jquery -->
@@ -39,8 +40,10 @@
 
 
 
-<meta property="og:title" content="Simulate the remainder of the season — simulateSeasonParallel" />
-<meta property="og:description" content="Simulate the remainder of the season" />
+<meta property="og:title" content="Example Raw Predictions
+A example 'raw predictions' compiled for testing purposes — example_raw_predictions" />
+<meta property="og:description" content="Example Raw Predictions
+A example 'raw predictions' compiled for testing purposes" />
 
 
 
@@ -126,56 +129,23 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Simulate the remainder of the season</h1>
-    <small class="dont-index">Source: <a href='https://github.com/pbulsink/HockeyModel/blob/master/R/league.R'><code>R/league.R</code></a></small>
-    <div class="hidden name"><code>simulateSeasonParallel.Rd</code></div>
+    <h1>Example Raw Predictions
+A example 'raw predictions' compiled for testing purposes</h1>
+    <small class="dont-index">Source: <a href='https://github.com/pbulsink/HockeyModel/blob/master/R/data.R'><code>R/data.R</code></a></small>
+    <div class="hidden name"><code>example_raw_predictions.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Simulate the remainder of the season</p>
+    <p>Example Raw Predictions
+A example 'raw predictions' compiled for testing purposes</p>
     </div>
 
-    <pre class="usage"><span class='fu'>simulateSeasonParallel</span><span class='op'>(</span>
-  scores <span class='op'>=</span> <span class='fu'>HockeyModel</span><span class='fu'>::</span><span class='va'><a href='scores.html'>scores</a></span>,
-  nsims <span class='op'>=</span> <span class='fl'>10000</span>,
-  schedule <span class='op'>=</span> <span class='fu'>HockeyModel</span><span class='fu'>::</span><span class='va'><a href='schedule.html'>schedule</a></span>,
-  cores <span class='op'>=</span> <span class='fu'>parallel</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/r/parallel/detectCores.html'>detectCores</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>-</span> <span class='fl'>1</span>,
-  progress <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  params <span class='op'>=</span> <span class='cn'>NULL</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='va'>example_raw_predictions</span></pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>scores</th>
-      <td><p>Past (historical) season scores. Defaults to HockeyModel::Scores</p></td>
-    </tr>
-    <tr>
-      <th>nsims</th>
-      <td><p>number of simulations to run</p></td>
-    </tr>
-    <tr>
-      <th>schedule</th>
-      <td><p>Future unplayed games. Defaults to HockeyModel::schedule</p></td>
-    </tr>
-    <tr>
-      <th>cores</th>
-      <td><p>number of cores to use in parallel.</p></td>
-    </tr>
-    <tr>
-      <th>progress</th>
-      <td><p>whether to show a progress bar.</p></td>
-    </tr>
-    <tr>
-      <th>params</th>
-      <td><p>The named list containing m, rho, beta, eta, and k. See <a href='updateDC.html'>updateDC</a> for information on the params list</p></td>
-    </tr>
-    </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
 
-    <p>a data frame of results</p>
+    <p>a tibble</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
