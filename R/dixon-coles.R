@@ -50,9 +50,10 @@ updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), sav
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
 #' @param include_xG Whether to include team expected goals. default FALSE
+#' @param draws whether to report draws in odds (AwayWin/HomeWin/Draw) or not (AwayWin/HomeWin). Default True
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
-todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL, include_xG = FALSE){
+todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL, include_xG = FALSE, draws=TRUE){
   params<-parse_dc_params(params)
   games<-schedule[schedule$Date == today, ]
   if(nrow(games) == 0){
@@ -66,10 +67,16 @@ todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::sch
     preds$Away_xG<-preds$Home_xG<-0
   }
   for(i in 1:nrow(preds)){
-    p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], params=params, expected_mean=expected_mean, season_percent=season_percent)
-    preds$HomeWin[[i]]<-p[[1]]
-    preds$AwayWin[[i]]<-p[[3]]
-    preds$Draw[[i]]<-p[[2]]
+    p<-DCPredict(preds$HomeTeam[[i]], preds$AwayTeam[[i]], params=params, expected_mean=expected_mean, season_percent=season_percent, draws = draws)
+    if(draws){
+      preds$HomeWin[[i]]<-p[[1]]
+      preds$AwayWin[[i]]<-p[[3]]
+      preds$Draw[[i]]<-p[[2]]
+    } else {
+      preds$HomeWin[[i]]<-p[[1]]
+      preds$AwayWin[[i]]<-p[[2]]
+    }
+
     if(include_xG){
       xg<-dcxG(home = preds$HomeTeam[[i]], away = preds$AwayTeam[[i]], params=params)
       preds$Home_xG[[i]]<-xg$home

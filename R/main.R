@@ -287,7 +287,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
 
   season_preds<-utils::read.csv(file.path(".", "data-raw","20212022odds.csv"))
   last_preds<-utils::tail(season_preds,1)$Date
-  build_past_predictions(startDate = last_preds, endDate = as.Date(Sys.Date()-1), filepath=file.path(".", "data-raw", "20212022odds.csv"))
+  build_past_predictions(startDate = last_preds, endDate = as.Date(Sys.Date()-1), filepath=file.path(".", "data-raw", "20212022odds.csv"), draws=FALSE)
 }
 
 #' Tweet Pace Plots

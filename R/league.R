@@ -1161,10 +1161,11 @@ getAllHomeAwayOdds<-function(teamlist, params=NULL){
 #' @param schedule HockeyModel::schedule or supplied. \code{today} date must be in schedule
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param include_xG Whether to record daily XG values
+#' @param draws whether to record draw odds (True) or not (False). Default is True
 #'
 #' @return NULL
 #' @export
-recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv"), schedule=HockeyModel::schedule, params=NULL, include_xG=FALSE){
+recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv"), schedule=HockeyModel::schedule, params=NULL, include_xG=FALSE, draws=TRUE){
   params<-parse_dc_params(params)
   stopifnot(is.Date(today))
   today<-as.Date(today)
@@ -1172,12 +1173,20 @@ recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools:
   if(nrow(today_sched) == 0){
     stop("No games on date:", today)
   }
-  today_preds<-todayDC(today = today, params=params, schedule = schedule, include_xG = include_xG)
+  today_preds<-todayDC(today = today, params=params, schedule = schedule, include_xG = include_xG, draws=draws)
   preds<-dplyr::full_join(today_sched, today_preds, suffix=c("",""), by = c("HomeTeam", "AwayTeam"))
   if(!include_xG){
-    preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw")]
+    if(!draws){
+      preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin")]
+    } else {
+      preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw")]
+    }
   } else {
-    preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw", "Home_xG", "Away_xG")]
+    if(!draws){
+      preds<-preds[,c("Date", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Home_xG", "Away_xG")]
+    } else {
+      preds<-preds[,c("Date", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw", "Home_xG", "Away_xG")]
+    }
   }
 
   if(file.exists(filepath)){
@@ -1208,7 +1217,7 @@ cleanupPredictionsFile<-function(filepath=file.path(devtools::package_file(), "d
   return(TRUE)
 }
 
-build_past_predictions<-function(startDate, endDate, filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv"), include_xG=FALSE){
+build_past_predictions<-function(startDate, endDate, filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv"), include_xG=FALSE, draws=TRUE){
   stopifnot(is.Date(startDate))
   stopifnot(is.Date(endDate))
   startDate<-as.Date(startDate)
@@ -1233,7 +1242,7 @@ build_past_predictions<-function(startDate, endDate, filepath=file.path(devtools
     params$eta<-w.day$eta
     params$k<-w.day$k
 
-    recordTodaysPredictions(today=d, filepath=filepath, schedule = sched, params = params, include_xG = include_xG)
+    recordTodaysPredictions(today=d, filepath=filepath, schedule = sched, params = params, include_xG = include_xG, draws=draws)
   }
   cleanupPredictionsFile(filepath=filepath)
   return(TRUE)
