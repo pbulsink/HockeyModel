@@ -264,12 +264,12 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
   #   tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
   # }
 
-  if(as.numeric(format(Sys.Date(), "%w")) == 0 & inRegularSeason()) {
+  if(as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason()) {
     #On Sunday post metrics
     tweetMetrics(token = token)
   }
 
-  if(as.numeric(format(Sys.Date(), "%w")) == 2 & inRegularSeason()) {
+  if(as.numeric(format(Sys.Date(), "%w")) == 2 && inRegularSeason()) {
     #On Tuesday post expected points (likelihood)
     tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
   }
@@ -280,10 +280,14 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
     Sys.sleep(delay)
   }
 
-  #record daily odds to file (with 1 day delay)
-  season_preds<-utils::read.csv(file.path(devtools::package_file(), "data-raw","dailyodds.csv"))
+  #record daily odds to ongoing file and season file (with 1 day delay)
+  season_preds<-utils::read.csv(file.path(".", "data-raw","dailyodds.csv"))
   last_preds<-utils::tail(season_preds,1)$Date
-  build_past_predictions(startDate = last_preds, endDate = as.Date(Sys.Date()-1))
+  build_past_predictions(startDate = last_preds, endDate = as.Date(Sys.Date()-1), filepath=file.path(".", "data-raw", "dailyodds.csv"))
+
+  season_preds<-utils::read.csv(file.path(".", "data-raw","20212022odds.csv"))
+  last_preds<-utils::tail(season_preds,1)$Date
+  build_past_predictions(startDate = last_preds, endDate = as.Date(Sys.Date()-1), filepath=file.path(".", "data-raw", "20212022odds.csv"))
 }
 
 #' Tweet Pace Plots
