@@ -21,7 +21,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
   #Get division
   all_predictions$Division<-getTeamDivisions(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division)
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
                                   as.character(paste0(getShortTeam(all_predictions$Team), '\n', round(all_predictions$meanPoints, digits = 0))),
@@ -69,7 +69,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
   #Get division
   all_predictions$Division<-getTeamDivisions(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division)
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
   #make team label appear properly later with ggrepel
   playoff_odds<-all_predictions[all_predictions$predictionDate == lastdate,]$Playoffs
   label<-format(round(playoff_odds*100, digits = 0), nsmall = 0, trim = TRUE)
@@ -133,7 +133,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
   #Get division
   all_predictions$Division<-getTeamDivisions(all_predictions$Team)
   #Set divisions to logical order
-  all_predictions$facet <- factor(x = all_predictions$Division)
+  all_predictions$facet <- factor(x = all_predictions$Division, levels = c("Pacific", "Central", "Metropolitan", "Atlantic"))
   #make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(all_predictions$predictionDate == max(all_predictions$predictionDate),
                                   as.character(paste0(getShortTeam(all_predictions$Team), '\n', signif(all_predictions$Presidents*100, digits = 2), '%')),
@@ -231,7 +231,8 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
 
 
   for(team in teamlist){
-    lab<-paste(getShortTeam(team), "-", teampoints[team], "pts.")
+    pointdiff<-teamPerformance[teamPerformance$Team == team & teamPerformance$GameNum == max(teamPerformance[teamPerformance$Team == team & !is.na(teamPerformance$PointDiff), "GameNum"]), "PointDiff"]
+    lab<-paste0(getShortTeam(team), " - ", teampoints[team], " pts. (", ifelse(pointdiff > 0, "+", ""), round(pointdiff, 1), ")")
     teamPerformance[teamPerformance$Team == team & teamPerformance$GameNum == max(teamPerformance[teamPerformance$Team == team & !is.na(teamPerformance$PointDiff), "GameNum"]), "label"]<-lab
   }
 
@@ -243,10 +244,10 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
 
     plt<-ggplot2::ggplot(tp, ggplot2::aes_string(x = "GameNum", y = "PointDiff", colour = "Team"))+
       #ggplot2::geom_line(na.rm = TRUE) +
-      ggplot2::geom_smooth(n=(max(teamPerformance$GameNum,12)*100), na.rm=TRUE, se = FALSE) +
+      ggplot2::geom_smooth(span=0.2, na.rm=TRUE, se = FALSE) +
       ggplot2::geom_hline(yintercept = 0) +
       ggplot2::coord_cartesian(xlim=c(0,max(teamPerformance$GameNum, 12)), clip="off")+
-      ggplot2::labs(title = "Points vs. Predicted at Season Start by Game",
+      ggplot2::labs(title = "Points vs. Predicted at Season Start",
                     subtitle = paste(division, "Division Teams"),
                     x = "Game Number",
                     y = "Points Above/Below Predicted",
@@ -829,10 +830,11 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
 #' @param today A date for games to create a table. Defaults to today.
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param schedule Schedule, or HockeyModel Schedule
+#' @param include_logo whether to include dailyfaceoff logo
 #'
 #' @return a gt table
 #' @export
-daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyModel::schedule){
+daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyModel::schedule, include_logo=FALSE){
   params<-parse_dc_params(params)
   todayodds<-todayDC(today = as.Date(today), params = params, schedule = schedule)
   todayodds$HomexG<-NA
@@ -888,7 +890,9 @@ daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyM
     #gt::data_color(columns = c(5,7), color = scales::col_bin(palette = c("#fefffe", "#ffffff", "#3ccc3c"), bins = c(0,0.5, 1)))%>%
     gt::fmt_percent(columns = 5:6, decimals = 1) %>%
     gt::fmt_number(columns = c(4, 7), drop_trailing_zeros = FALSE, decimals = 2) %>%
-    gt::tab_options(heading.align = 'left')
+    gt::tab_options(heading.align = 'left',
+                    table.border.bottom.color = "white",
+                    table.border.top.color = "white")
 
   for(i in 1:nrow(todayodds)) {
     todayodds_gt <- todayodds_gt %>%
@@ -917,6 +921,12 @@ daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyM
       }
     )
   }
+
+  if(include_logo){
+  todayodds_gt <- todayodds_gt %>%
+    gt::tab_source_note(gt::md("<img src='https://www.dailyfaceoff.com/wp-content/uploads/2021/06/DFO-Logo-Mobile-Large.png' style='height:35px;'>"))
+  }
+
   return(todayodds_gt)
 }
 

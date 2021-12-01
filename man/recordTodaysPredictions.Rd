@@ -9,7 +9,8 @@ recordTodaysPredictions(
   filepath = file.path(devtools::package_file(), "data-raw", "dailyodds.csv"),
   schedule = HockeyModel::schedule,
   params = NULL,
-  include_xG = FALSE
+  include_xG = FALSE,
+  draws = TRUE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ recordTodaysPredictions(
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{include_xG}{Whether to record daily XG values}
+
+\item{draws}{whether to record draw odds (True) or not (False). Default is True}
 }
 \description{
 Record today's predictions to file (for easy later retrieval). Run \code{cleanupPredictionsFile} periodically to tidy

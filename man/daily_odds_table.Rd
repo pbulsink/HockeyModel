@@ -7,7 +7,8 @@
 daily_odds_table(
   today = Sys.Date(),
   params = NULL,
-  schedule = HockeyModel::schedule
+  schedule = HockeyModel::schedule,
+  include_logo = FALSE
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ daily_odds_table(
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{schedule}{Schedule, or HockeyModel Schedule}
+
+\item{include_logo}{whether to include dailyfaceoff logo}
 }
 \value{
 a gt table

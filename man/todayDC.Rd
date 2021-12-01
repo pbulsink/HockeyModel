@@ -10,7 +10,8 @@ todayDC(
   schedule = HockeyModel::schedule,
   expected_mean = NULL,
   season_percent = NULL,
-  include_xG = FALSE
+  include_xG = FALSE,
+  draws = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ todayDC(
 \item{season_percent}{the percent complete of the season, used for regression}
 
 \item{include_xG}{Whether to include team expected goals. default FALSE}
+
+\item{draws}{whether to report draws in odds (AwayWin/HomeWin/Draw) or not (AwayWin/HomeWin). Default True}
 }
 \value{
 a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
