@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,18 +33,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">HockeyModel</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.2021</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.2021</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
@@ -67,7 +63,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/pbulsink/HockeyModel/">
+  <a href="https://github.com/pbulsink/HockeyModel/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -86,11 +82,11 @@
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Basic Usage</h1>
-                        <h4 class="author">Philip Bulsink</h4>
+                        <h4 data-toc-skip class="author">Philip Bulsink</h4>
             
-            <h4 class="date">2019-11-15</h4>
+            <h4 data-toc-skip class="date">2019-11-15</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/pbulsink/HockeyModel/blob/master/vignettes/basic-usage.Rmd"><code>vignettes/basic-usage.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/pbulsink/HockeyModel/blob/HEAD/vignettes/basic-usage.Rmd" class="external-link"><code>vignettes/basic-usage.Rmd</code></a></small>
       <div class="hidden name"><code>basic-usage.Rmd</code></div>
 
     </div>
@@ -99,10 +95,10 @@
     
 <p>This vignette will describe basic usage of the model to predict games and generate graphics.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/pbulsink/HockeyModel">HockeyModel</a></span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/pbulsink/HockeyModel" class="external-link">HockeyModel</a></span><span class="op">)</span></code></pre></div>
 <p>At it’s most simple, we’ll ask the model to retrieve the required data and predict results. You can specify a particular raw data location if you prefer by changing the data_dir parameter.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/updateModel.html">updateModel</a></span><span class="op">(</span>data_dir <span class="op">=</span> <span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/package_file.html">package_file</a></span><span class="op">(</span><span class="st">"data-raw"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/updateModel.html">updateModel</a></span><span class="op">(</span>data_dir <span class="op">=</span> <span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/package_file.html" class="external-link">package_file</a></span><span class="op">(</span><span class="st">"data-raw"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p>We can call this directly because the package has historical data already saved within it. This historical data can always be viewed by calling <code><a href="../reference/scores.html">HockeyModel::scores</a></code>, in an interactive session, or more simply just <code>scores</code> if the package is loaded. Of course, this will return all historical data for the NHL and WHL since their inceptions, so it may be more interesting to subset this data. For examples, scores since the start of the 2019-2020 season can be viewed by calling <code>scores[scores$Date &gt; as.Date("2019-10-01"),]</code>.</p>
 <p>Having performed the model update and retrieved the parameters by calling <code>model &lt;- updateModel()</code> above, we can generate predictions for today’s game(s).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -110,13 +106,13 @@
 <p><img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png" width="679px" height="525px" style="display: block; margin: auto;"></p>
 <p>Playoff odds, president trophy odds, expected points, etc. can all be generated as well. Start by updating the predictions, then generate the images. Depending on how long it has been since predictions were generated, this may take some time.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="../reference/updatePredictions.html">updatePredictions</a></span><span class="op">(</span>data_dir <span class="op">=</span> <span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/package_file.html">package_file</a></span><span class="op">(</span><span class="st">"prediction_results"</span><span class="op">)</span>, scores <span class="op">=</span> <span class="va">model</span><span class="op">$</span><span class="va">scores</span>, schedule <span class="op">=</span> <span class="va">model</span><span class="op">$</span><span class="va">schedule</span><span class="op">)</span>
+<code class="sourceCode R"><span class="fu"><a href="../reference/updatePredictions.html">updatePredictions</a></span><span class="op">(</span>data_dir <span class="op">=</span> <span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/package_file.html" class="external-link">package_file</a></span><span class="op">(</span><span class="st">"prediction_results"</span><span class="op">)</span>, scores <span class="op">=</span> <span class="va">model</span><span class="op">$</span><span class="va">scores</span>, schedule <span class="op">=</span> <span class="va">model</span><span class="op">$</span><span class="va">schedule</span><span class="op">)</span>
 <span class="fu"><a href="../reference/playoffOdds.html">playoffOdds</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <p><img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/playoff_odds.png" width="679px" height="525px" style="display: block; margin: auto;"></p>
 <p>There’s a playoff solver placed in the package. It works only before the playoffs start through the end of the first round, and returns a tibble of likely playoff position and progression for each team as a <code>tidyverse::tibble</code>. The results aren’t guaranteed to be accurate. We’ll look at what these playoff odds looked like as of the start of the 2021-2022 season. We’ll download the predictions file from that date so we don’t have to generate it ourselves.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="../reference/simulatePlayoffs.html">simulatePlayoffs</a></span><span class="op">(</span>summary_results <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/connections.html">url</a></span><span class="op">(</span><span class="st">"https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2021-08-12-predictions.RDS"</span>,<span class="st">"rb"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<pre><code>#&gt; too early to mix in real-life series</code></pre>
+<code class="sourceCode R"><span class="fu"><a href="../reference/simulatePlayoffs.html">simulatePlayoffs</a></span><span class="op">(</span>summary_results <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">url</a></span><span class="op">(</span><span class="st">"https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2021-08-12-predictions.RDS"</span>,<span class="st">"rb"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<pre><code><span class="co">#&gt; too early to mix in real-life series</span></code></pre>
 <table class="table">
 <caption>Playoff Simulation from the start of the 2021-2022 season</caption>
 <thead><tr class="header">
@@ -129,79 +125,79 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="left">Colorado Avalanche</td>
-<td align="right">1.0</td>
-<td align="right">0.9</td>
-<td align="right">0.6</td>
-<td align="right">0.5</td>
-<td align="right">0.4</td>
-</tr>
-<tr class="even">
-<td align="left">Minnesota Wild</td>
-<td align="right">0.8</td>
-<td align="right">0.4</td>
-<td align="right">0.2</td>
-<td align="right">0.2</td>
-<td align="right">0.2</td>
-</tr>
-<tr class="odd">
-<td align="left">Tampa Bay Lightning</td>
-<td align="right">0.7</td>
-<td align="right">0.7</td>
-<td align="right">0.5</td>
-<td align="right">0.4</td>
-<td align="right">0.1</td>
-</tr>
-<tr class="even">
 <td align="left">Carolina Hurricanes</td>
-<td align="right">0.8</td>
+<td align="right">0.9</td>
+<td align="right">0.7</td>
+<td align="right">0.6</td>
+<td align="right">0.3</td>
+<td align="right">0.3</td>
+</tr>
+<tr class="even">
+<td align="left">Dallas Stars</td>
+<td align="right">1.0</td>
 <td align="right">0.6</td>
 <td align="right">0.4</td>
-<td align="right">0.2</td>
-<td align="right">0.1</td>
-</tr>
-<tr class="odd">
-<td align="left">Calgary Flames</td>
-<td align="right">0.7</td>
 <td align="right">0.3</td>
 <td align="right">0.2</td>
-<td align="right">0.1</td>
+</tr>
+<tr class="odd">
+<td align="left">Colorado Avalanche</td>
+<td align="right">0.9</td>
+<td align="right">0.5</td>
+<td align="right">0.3</td>
+<td align="right">0.2</td>
 <td align="right">0.1</td>
 </tr>
 <tr class="even">
 <td align="left">Florida Panthers</td>
 <td align="right">0.7</td>
-<td align="right">0.4</td>
-<td align="right">0.1</td>
-<td align="right">0.1</td>
+<td align="right">0.6</td>
+<td align="right">0.2</td>
+<td align="right">0.2</td>
 <td align="right">0.1</td>
 </tr>
 <tr class="odd">
 <td align="left">Vegas Golden Knights</td>
-<td align="right">0.9</td>
-<td align="right">0.9</td>
+<td align="right">0.7</td>
 <td align="right">0.6</td>
-<td align="right">0.1</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="even">
-<td align="left">New York Islanders</td>
-<td align="right">0.9</td>
 <td align="right">0.4</td>
-<td align="right">0.3</td>
 <td align="right">0.1</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="odd">
-<td align="left">Washington Capitals</td>
-<td align="right">0.5</td>
-<td align="right">0.3</td>
-<td align="right">0.3</td>
 <td align="right">0.1</td>
-<td align="right">0.0</td>
 </tr>
 <tr class="even">
 <td align="left">Edmonton Oilers</td>
+<td align="right">1.0</td>
+<td align="right">0.5</td>
+<td align="right">0.3</td>
+<td align="right">0.1</td>
+<td align="right">0.1</td>
+</tr>
+<tr class="odd">
+<td align="left">Pittsburgh Penguins</td>
+<td align="right">0.7</td>
+<td align="right">0.4</td>
+<td align="right">0.2</td>
+<td align="right">0.1</td>
+<td align="right">0.1</td>
+</tr>
+<tr class="even">
+<td align="left">Nashville Predators</td>
+<td align="right">0.6</td>
+<td align="right">0.2</td>
+<td align="right">0.2</td>
+<td align="right">0.2</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="odd">
+<td align="left">Tampa Bay Lightning</td>
+<td align="right">0.9</td>
+<td align="right">0.5</td>
+<td align="right">0.4</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="even">
+<td align="left">Minnesota Wild</td>
 <td align="right">0.7</td>
 <td align="right">0.5</td>
 <td align="right">0.2</td>
@@ -209,64 +205,80 @@
 <td align="right">0.0</td>
 </tr>
 <tr class="odd">
-<td align="left">Toronto Maple Leafs</td>
-<td align="right">0.7</td>
-<td align="right">0.3</td>
+<td align="left">Washington Capitals</td>
+<td align="right">0.6</td>
+<td align="right">0.5</td>
 <td align="right">0.1</td>
 <td align="right">0.1</td>
 <td align="right">0.0</td>
 </tr>
 <tr class="even">
 <td align="left">Boston Bruins</td>
-<td align="right">0.9</td>
-<td align="right">0.5</td>
+<td align="right">0.6</td>
+<td align="right">0.3</td>
+<td align="right">0.1</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="odd">
+<td align="left">New York Rangers</td>
+<td align="right">0.6</td>
+<td align="right">0.2</td>
+<td align="right">0.1</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="even">
+<td align="left">Toronto Maple Leafs</td>
+<td align="right">0.8</td>
+<td align="right">0.3</td>
 <td align="right">0.2</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 </tr>
 <tr class="odd">
-<td align="left">New York Rangers</td>
-<td align="right">0.7</td>
-<td align="right">0.4</td>
+<td align="left">St. Louis Blues</td>
+<td align="right">0.6</td>
+<td align="right">0.3</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="even">
+<td align="left">Calgary Flames</td>
+<td align="right">0.5</td>
+<td align="right">0.3</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="odd">
+<td align="left">Montreal Canadiens</td>
+<td align="right">0.6</td>
+<td align="right">0.2</td>
 <td align="right">0.1</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 </tr>
 <tr class="even">
 <td align="left">Winnipeg Jets</td>
+<td align="right">1.0</td>
+<td align="right">0.2</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="odd">
+<td align="left">New York Islanders</td>
 <td align="right">0.8</td>
 <td align="right">0.2</td>
-<td align="right">0.1</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="odd">
-<td align="left">St. Louis Blues</td>
-<td align="right">0.4</td>
-<td align="right">0.1</td>
-<td align="right">0.1</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="even">
-<td align="left">Pittsburgh Penguins</td>
-<td align="right">0.7</td>
-<td align="right">0.4</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="odd">
-<td align="left">Nashville Predators</td>
-<td align="right">0.6</td>
-<td align="right">0.3</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 </tr>
 <tr class="even">
-<td align="left">Dallas Stars</td>
-<td align="right">0.9</td>
+<td align="left">Vancouver Canucks</td>
+<td align="right">0.5</td>
 <td align="right">0.1</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
@@ -274,47 +286,31 @@
 </tr>
 <tr class="odd">
 <td align="left">Los Angeles Kings</td>
-<td align="right">0.4</td>
-<td align="right">0.1</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="even">
-<td align="left">Vancouver Canucks</td>
 <td align="right">0.3</td>
 <td align="right">0.1</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 </tr>
+<tr class="even">
+<td align="left">Anaheim Ducks</td>
+<td align="right">0.1</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+</tr>
 <tr class="odd">
-<td align="left">San Jose Sharks</td>
-<td align="right">0.2</td>
+<td align="left">Columbus Blue Jackets</td>
+<td align="right">0.1</td>
 <td align="right">0.1</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 </tr>
 <tr class="even">
-<td align="left">Montreal Canadiens</td>
-<td align="right">0.6</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="odd">
 <td align="left">Philadelphia Flyers</td>
-<td align="right">0.5</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-</tr>
-<tr class="even">
-<td align="left">Arizona Coyotes</td>
-<td align="right">0.2</td>
+<td align="right">0.3</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
@@ -329,7 +325,7 @@
 <td align="right">0.0</td>
 </tr>
 <tr class="even">
-<td align="left">Anaheim Ducks</td>
+<td align="left">Arizona Coyotes</td>
 <td align="right">0.1</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
@@ -345,6 +341,14 @@
 <td align="right">0.0</td>
 </tr>
 <tr class="even">
+<td align="left">New Jersey Devils</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="odd">
 <td align="left">Buffalo Sabres</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
@@ -352,7 +356,7 @@
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">Chicago</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
@@ -360,16 +364,8 @@
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 </tr>
-<tr class="even">
-<td align="left">Columbus Blue Jackets</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
-</tr>
 <tr class="odd">
-<td align="left">New Jersey Devils</td>
+<td align="left">San Jose Sharks</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
 <td align="right">0.0</td>
@@ -397,11 +393,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Philip Bulsink.</p>
+  <p></p>
+<p>Developed by Philip Bulsink.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.0.</p>
 </div>
 
       </footer>
@@ -409,6 +407,8 @@
 
   
 
+
+  
 
   </body>
 </html>

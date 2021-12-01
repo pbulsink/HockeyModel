@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,18 +33,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">HockeyModel</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.2021</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.2021</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="reference/index.html">Reference</a>
 </li>
@@ -67,7 +63,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/pbulsink/HockeyModel/">
+  <a href="https://github.com/pbulsink/HockeyModel/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -85,43 +81,45 @@
       </header><div class="row">
   <div class="contents col-md-9">
 
-<div id="hockeymodel" class="section level1">
-<div class="page-header"><h1 class="hasAnchor">
-<a href="#hockeymodel" class="anchor"></a>HockeyModel</h1></div>
+<div class="section level1">
+<div class="page-header"><h1 id="hockeymodel">HockeyModel<a class="anchor" aria-label="anchor" href="#hockeymodel"></a>
+</h1></div>
 <!-- badges: start -->
 
 <p>This is a model to predict NHL game winners &amp; their likely performance for the rest of the season.</p>
-<p>Read more about the package at <a href="https://pbulsink.github.io/HockeyModel">https://pbulsink.github.io/HockeyModel</a></p>
-<p>Current predictions are below, and are always posted on twitter at <a href="https://www.twitter.com/BulsinkB">@BulsinkBot</a>.</p>
-<div id="team-ranking" class="section level2">
-<h2 class="hasAnchor">
-<a href="#team-ranking" class="anchor"></a>Team Ranking</h2>
-<p><img src="%22https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png" alt="Team Rankings"></p>
+<p>Read more about the package at <a href="https://pbulsink.github.io/HockeyModel" class="external-link">https://pbulsink.github.io/HockeyModel</a></p>
+<p>Current predictions are below, and are always posted on twitter at <a href="https://www.twitter.com/BulsinkB" class="external-link">@BulsinkBot</a>.</p>
+<div class="section level2">
+<h2 id="team-ranking">Team Ranking<a class="anchor" aria-label="anchor" href="#team-ranking"></a>
+</h2>
+<div class="figure">
+<img src="%22https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png" alt=""><p class="caption">Team Rankings</p>
 </div>
-<div id="total-point-predictions" class="section level2">
-<h2 class="hasAnchor">
-<a href="#total-point-predictions" class="anchor"></a>Total Point Predictions</h2>
+</div>
+<div class="section level2">
+<h2 id="total-point-predictions">Total Point Predictions<a class="anchor" aria-label="anchor" href="#total-point-predictions"></a>
+</h2>
 <p><img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/point_predict.png" alt="Total Point Predictions"></p>
 </div>
-<div id="point-liklihood-ranges" class="section level2">
-<h2 class="hasAnchor">
-<a href="#point-liklihood-ranges" class="anchor"></a>Point Liklihood Ranges</h2>
+<div class="section level2">
+<h2 id="point-liklihood-ranges">Point Liklihood Ranges<a class="anchor" aria-label="anchor" href="#point-liklihood-ranges"></a>
+</h2>
 <p><img src="https://raw.githubusercontent.com/pbulsink/HockeyModel/master/prediction_results/graphics/pace/westlikelihood.png" width="425" alt="West Coast Team Point Liklihood"><img src="https://raw.githubusercontent.com/pbulsink/HockeyModel/master/prediction_results/graphics/pace/eastlikelihood.png" width="425" alt="East Coast Team Point Likelihood"></p>
 </div>
-<div id="playoff-odds" class="section level2">
-<h2 class="hasAnchor">
-<a href="#playoff-odds" class="anchor"></a>Playoff Odds</h2>
+<div class="section level2">
+<h2 id="playoff-odds">Playoff Odds<a class="anchor" aria-label="anchor" href="#playoff-odds"></a>
+</h2>
 <p><img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/playoff_odds.png" alt="Playoff Odds"></p>
 </div>
-<div id="presidents-trophy-odds" class="section level2">
-<h2 class="hasAnchor">
-<a href="#presidents-trophy-odds" class="anchor"></a>President’s Trophy Odds</h2>
+<div class="section level2">
+<h2 id="presidents-trophy-odds">President’s Trophy Odds<a class="anchor" aria-label="anchor" href="#presidents-trophy-odds"></a>
+</h2>
 <p><img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/president_odds.png" alt="President's Trophy Odds"></p>
 </div>
 </div>
-<div id="recent-changes" class="section level1">
-<h1 class="hasAnchor">
-<a href="#recent-changes" class="anchor"></a>Recent Changes</h1>
+<div class="section level1">
+<h1 id="recent-changes">Recent Changes<a class="anchor" aria-label="anchor" href="#recent-changes"></a>
+</h1>
 <ul>
 <li>Implemented Ridges plot for expected end-of-season points per team.</li>
 <li>Lots of teams have blue or red primary colours. Implemented new algorithm to use an alternate colour for one or both teams if the primary colours are too similar.</li>
@@ -130,16 +128,16 @@
 </li>
 </ul>
 </div>
-<div id="to-do" class="section level1">
-<h1 class="hasAnchor">
-<a href="#to-do" class="anchor"></a>To Do</h1>
+<div class="section level1">
+<h1 id="to-do">To Do<a class="anchor" aria-label="anchor" href="#to-do"></a>
+</h1>
 <ul>
 <li>
-<del>Twitter user <a href="https://www.twitter.com/MOCallanain">@MOCallanain</a> highlighted that the predicted tie rate is &lt; ~0.2, when in actuality it’s higher. Likely due to teams playing for loser point, can we parameterize the model to include a tie boost? Diagonal enhanced metric should work - calculate like the DC 0/1 goal enhancement. Model currently re-scales to increase odds to a reasonable amount.</del> DONE</li>
-<li>Currently, only scores are used for model generation. Moneypuck has an expansive expected goals model available for download and updated regularly (see <a href="http://moneypuck.com/data.htm" class="uri">http://moneypuck.com/data.htm</a>). Deriving the team performance by expected goals instead of actual could reduce the impact of luck on expected future performance.</li>
+<del>Twitter user <a href="https://www.twitter.com/MOCallanain" class="external-link">@MOCallanain</a> highlighted that the predicted tie rate is &lt; ~0.2, when in actuality it’s higher. Likely due to teams playing for loser point, can we parameterize the model to include a tie boost? Diagonal enhanced metric should work - calculate like the DC 0/1 goal enhancement. Model currently re-scales to increase odds to a reasonable amount.</del> DONE</li>
+<li>Currently, only scores are used for model generation. Moneypuck has an expansive expected goals model available for download and updated regularly (see <a href="http://moneypuck.com/data.htm" class="external-link uri">http://moneypuck.com/data.htm</a>). Deriving the team performance by expected goals instead of actual could reduce the impact of luck on expected future performance.</li>
 <li>
 <del>Switch to NHL API for scores and schedule</del> DONE</li>
-<li>~~Twitter user <a href="https://www.twitter.com/joseph__ii">@joseph__ii</a> picked up on a quirk of the OT/SO odds assignment (see <a href="https://twitter.com/joseph__ii/status/1357785234285109248" class="uri">https://twitter.com/joseph__ii/status/1357785234285109248</a>). Try rebalance with league or teams’ OT performance measure? ~~ DONE</li>
+<li>~~Twitter user <a href="https://www.twitter.com/joseph__ii" class="external-link">@joseph__ii</a> picked up on a quirk of the OT/SO odds assignment (see <a href="https://twitter.com/joseph__ii/status/1357785234285109248" class="external-link uri">https://twitter.com/joseph__ii/status/1357785234285109248</a>). Try rebalance with league or teams’ OT performance measure? ~~ DONE</li>
 </ul>
 </div>
 
@@ -147,47 +145,58 @@
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="links">
-<h2>Links</h2>
+<h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li>Browse source code at <br><a href="https://github.com/pbulsink/HockeyModel/">https://​github.com/​pbulsink/​HockeyModel/​</a>
-</li>
-<li>Report a bug at <br><a href="https://github.com/pbulsink/HockeyModel/issues">https://​github.com/​pbulsink/​HockeyModel/​issues</a>
-</li>
-</ul>
-</div>
-<div class="license">
-<h2>License</h2>
-<ul class="list-unstyled">
-<li>
-<a href="https://www.r-project.org/Licenses/GPL-3">GPL-3</a> + file <a href="LICENSE-text.html">LICENSE</a>
-</li>
-</ul>
-</div>
-<div class="developers">
-<h2>Developers</h2>
-<ul class="list-unstyled">
-<li>Philip Bulsink <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0001-9668-2429" target="orcid.widget" aria-label="ORCID"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li><a href="https://github.com/pbulsink/HockeyModel/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/pbulsink/HockeyModel/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
-  <div class="dev-status">
-<h2>Dev status</h2>
+<div class="license">
+<h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/pbulsink/HockeyModel/actions"><img src="https://github.com/pbulsink/HockeyModel/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
-<li><a href="https://codecov.io/gh/pbulsink/HockeyModel?branch=master"><img src="https://codecov.io/gh/pbulsink/HockeyModel/branch/master/graph/badge.svg" alt="Codecov test coverage"></a></li>
-<li><a href="https://bulsink.ca"><img src="https://api.netlify.com/api/v1/badges/1ededd90-c1c2-44cc-8bed-e3d5cea3a284/deploy-status" alt="Netlify Status"></a></li>
+<li>
+<a href="https://www.r-project.org/Licenses/GPL-3" class="external-link">GPL-3</a> + file <a href="LICENSE-text.html">LICENSE</a>
+</li>
 </ul>
 </div>
+
+
+<div class="citation">
+<h2 data-toc-skip>Citation</h2>
+<ul class="list-unstyled">
+<li><a href="authors.html#citation">Citing HockeyModel</a></li>
+</ul>
 </div>
+
+<div class="developers">
+<h2 data-toc-skip>Developers</h2>
+<ul class="list-unstyled">
+<li>Philip Bulsink <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0001-9668-2429" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+</ul>
+</div>
+
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/pbulsink/HockeyModel/actions" class="external-link"><img src="https://github.com/pbulsink/HockeyModel/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://codecov.io/gh/pbulsink/HockeyModel?branch=master" class="external-link"><img src="https://codecov.io/gh/pbulsink/HockeyModel/branch/master/graph/badge.svg" alt="Codecov test coverage"></a></li>
+<li><a href="https://bulsink.ca" class="external-link"><img src="https://api.netlify.com/api/v1/badges/1ededd90-c1c2-44cc-8bed-e3d5cea3a284/deploy-status" alt="Netlify Status"></a></li>
+</ul>
+</div>
+
+  </div>
 </div>
 
 
       <footer><div class="copyright">
-  <p>Developed by Philip Bulsink.</p>
+  <p></p>
+<p>Developed by Philip Bulsink.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.0.</p>
 </div>
 
       </footer>
@@ -195,6 +204,8 @@
 
   
 
+
+  
 
   </body>
 </html>
