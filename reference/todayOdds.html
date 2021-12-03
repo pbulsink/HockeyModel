@@ -65,14 +65,16 @@
     <p>Determine today's games' odds (if today has games), or a specified date's odds</p>
     </div>
 
-    <div id="ref-usage">Usage,<div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">todayOdds</span><span class="op">(</span>
+    <div id="ref-usage">
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">todayOdds</span><span class="op">(</span>
   params <span class="op">=</span> <span class="cn">NULL</span>,
   today <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>,
   schedule <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="schedule.html">schedule</a></span>,
   expected_mean <span class="op">=</span> <span class="cn">NULL</span>,
   season_percent <span class="op">=</span> <span class="cn">NULL</span>,
   include_xG <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div></div>
+<span class="op">)</span></code></pre></div>
+    </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
@@ -98,14 +100,14 @@
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="fu">todayOdds</span><span class="op">(</span>today<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-11-01"</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              HomeTeam              AwayTeam   HomeWin   AwayWin      Draw</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   New Jersey Devils   Philadelphia Flyers 0.4184775 0.3453538 0.2361688</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  New York Islanders   Tampa Bay Lightning 0.3128214 0.4192895 0.2678891</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Washington Capitals        Buffalo Sabres 0.6628357 0.1649616 0.1722027</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Carolina Hurricanes     Detroit Red Wings 0.6182825 0.1691165 0.2126010</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     St. Louis Blues Columbus Blue Jackets 0.5099658 0.2725558 0.2174784</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  Colorado Avalanche          Dallas Stars 0.5465882 0.2361286 0.2172832</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7       Anaheim Ducks     Vancouver Canucks 0.4847594 0.2716262 0.2436144</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8     San Jose Sharks         Winnipeg Jets 0.3701336 0.3722565 0.2576099</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   New Jersey Devils   Philadelphia Flyers 0.4187964 0.3442994 0.2369042</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  New York Islanders   Tampa Bay Lightning 0.3055579 0.4261837 0.2682584</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Washington Capitals        Buffalo Sabres 0.6591128 0.1700201 0.1708670</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Carolina Hurricanes     Detroit Red Wings 0.6061474 0.1768728 0.2169798</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     St. Louis Blues Columbus Blue Jackets 0.5069749 0.2736679 0.2193572</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  Colorado Avalanche          Dallas Stars 0.5367396 0.2448492 0.2184112</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7       Anaheim Ducks     Vancouver Canucks 0.4764798 0.2823728 0.2411474</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     San Jose Sharks         Winnipeg Jets 0.3684178 0.3721256 0.2594567</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       GameID</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 2019020196</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 2019020197</span>
@@ -129,7 +131,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
 </div>
 
       </footer></div>
