@@ -801,7 +801,7 @@ getSeasonMetricsDC<-function(schedule = HockeyModel::schedule, scores = HockeyMo
   sched$Home.WLD<-sched$Away.WLD<-sched$Draw.WLD<-sched$Home.WL<-sched$Away.WL<-sched$Result<-NA
   season_sofar<-scores[scores$Date > as.Date(getSeasonStartDate()), c("GameID", "Result")]
 
-  sched<-predictMultipleDaysResultsDC(startDate = getSeasonStartDate(), endDate = Sys.Date)
+  sched<-predictMultipleDaysResultsDC(startDate = getSeasonStartDate(), endDate = Sys.Date())
   sched<-dplyr::left_join(sched, season_sofar, by="GameID", )
 
   sched$Home.WL<-(sched$HomeWin/(sched$HomeWin + sched$AwayWin))*sched$Draw + sched$HomeWin
