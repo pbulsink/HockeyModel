@@ -265,17 +265,20 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
   # }
 
   if(as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason()) {
+    message("Tweeting Metrics")
     #On Sunday post metrics
     tweetMetrics(token = token)
   }
 
   if(as.numeric(format(Sys.Date(), "%w")) == 2 && inRegularSeason()) {
+    message("Tweeting Likelihoods")
     #On Tuesday post expected points (likelihood)
     tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
   }
 
   series<-getAPISeries()
   if(!is.na(series) & nrow(series[series$Status == "Ongoing", ]) > 0){  # TODO: Watch next spring to see if this goes ok
+    message("Tweeting Series")
     tweetSeries(graphic_dir = graphic_dir, token=token, params=params)
     Sys.sleep(delay)
   }
