@@ -284,14 +284,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
   }
 
   #record daily odds to ongoing file and season file (with 1 day delay)
-  message("Recording Odds")
-  season_preds<-utils::read.csv("./data-raw/dailyodds.csv")
-  last_preds<-utils::tail(season_preds,1)$Date
-  build_past_predictions(startDate = last_preds, endDate = as.Date(Sys.Date()-1), filepath=file.path("./data-raw/dailyodds.csv"))
 
-  season_preds<-utils::read.csv("./data-raw/20212022odds.csv")
-  last_preds<-utils::tail(season_preds,1)$Date
-  build_past_predictions(startDate = last_preds, endDate = as.Date(Sys.Date()-1), filepath=file.path("./data-raw/20212022odds.csv"), draws=FALSE)
 }
 
 #' Tweet Pace Plots
