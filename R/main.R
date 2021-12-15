@@ -283,8 +283,6 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
     Sys.sleep(delay)
   }
 
-  #record daily odds to ongoing file and season file (with 1 day delay)
-
 }
 
 #' Tweet Pace Plots
