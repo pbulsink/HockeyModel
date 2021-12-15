@@ -177,20 +177,21 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
       pb$tick()
     }
   }
-  scores<-clean_names(scores)
-  scores[scores$OTStatus == "3rd", ]$OTStatus<-""
-  scores<-scores %>%
-    dplyr::mutate(Result = dplyr::case_when(
-                    (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "" ~ 1,
-                    (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "" ~ 0,
-                    (.data$HomeGoals == .data$AwayGoals) ~ 0.5,
-                    (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.75,
-                    (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.6,
-                    (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.4,
-                    (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.25,
-    )) %>%
-    dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
-
+  if(!is.null(scores)){
+    scores<-clean_names(scores)
+    scores[scores$OTStatus == "3rd", ]$OTStatus<-""
+    scores<-scores %>%
+      dplyr::mutate(Result = dplyr::case_when(
+                      (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "" ~ 1,
+                      (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "" ~ 0,
+                      (.data$HomeGoals == .data$AwayGoals) ~ 0.5,
+                      (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.75,
+                      (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.6,
+                      (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.4,
+                      (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.25,
+      )) %>%
+      dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
+  }
   return(scores)
 }
 
@@ -246,12 +247,14 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
   }
   if(length(neededGames)>0){
     updatedSc<-getNHLScores(neededGames)
-    scores<-scores %>%
-      dplyr::filter(!(.data$GameID %in% neededGames)) %>%
-      dplyr::bind_rows(updatedSc) %>%
-      dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
-    if (save_data){
-      suppressMessages(usethis::use_data(scores, overwrite=TRUE))
+    if(!is.null(updatedSc)){
+      scores<-scores %>%
+        dplyr::filter(!(.data$GameID %in% neededGames)) %>%
+        dplyr::bind_rows(updatedSc) %>%
+        dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
+      if (save_data){
+        suppressMessages(usethis::use_data(scores, overwrite=TRUE))
+      }
     }
   } else {
     message("Scores are updated to today's date already.")
