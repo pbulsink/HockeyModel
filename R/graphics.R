@@ -934,3 +934,4 @@ daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyM
 series_odds_table <- function(){
   NULL  # TODO: DO IT
 }
+

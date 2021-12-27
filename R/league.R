@@ -300,6 +300,10 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
 
   nsims <- floor(nsims/cores)
 
+  schedule<-schedule[schedule$Date >= as.Date(getSeasonStartDate()), ]
+
+  schedule<-add_postponed_to_schedule_end(schedule)
+
   odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, params=params, nsims = nsims, odds = T)
 
   season_sofar<-scores[scores$Date >= as.Date(getSeasonStartDate(getSeason(schedule[,"Date"][1]))),]

@@ -139,6 +139,7 @@ remainderSeasonDC <- function(nsims=1e4, cores = parallel::detectCores()-1, para
   params<-parse_dc_params(params=params)
 
   last_game_date<-as.Date(max(scores$Date))
+  schedule <- add_postponed_to_schedule_end(schedule)
   schedule <- schedule[schedule$Date > last_game_date, ]
 
   #cant regress through playoffs, turn off if not regular season anymore
@@ -737,6 +738,7 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
   predict_dates<-seq(from = end, to = start, by = -1)
 
   schedule$Date<-as.Date(schedule$Date)
+  schedule<-add_postponed_to_schedule_end(schedule)
 
   message("Running predictions for ", length(predict_dates), " day(s).")
   for(day in predict_dates){

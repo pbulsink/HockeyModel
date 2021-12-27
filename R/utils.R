@@ -250,3 +250,33 @@ extraTimeSolver<-function(home_win, away_win, draw){
     return(t(v_ets(home_win, away_win, draw)))
   }
 }
+
+
+
+#' Add Postponed Games to Schedule End
+#'
+#' @description Sometimes games are postponed without a makeup date initially announced. The model just drops those games if this function is not employed to move the games to the end of the season
+#' Note that the games are all dumped on one day so it doesn't account for back to back or travel days or anything.
+#'
+#' @param schedule the schedule to reconfigure
+#'
+#' @return a schedule with postponed games moved to the end of the schedule - helps to not drop games that are otherwise in the past but weren't played.
+add_postponed_to_schedule_end<-function(schedule = HockeyModel::schedule){
+  if(!any(schedule$GameState == "Postponed")){
+    #no postponed games
+    return(schedule)
+  } else if(all(schedule[schedule$GameState == "Postponed", "Date"] > Sys.Date())){
+    #all game postponements are in future games - just play them.
+    return(schedule)
+  }
+
+  for(g in schedule[schedule$GameState == "Postponed" & schedule$Date < Sys.Date(), ]$GameID){
+    #The model doesn't (currently) account for what games are back to back or anything - so they can all be played on the same (last) date of the schedule
+    #Using the last date of the regualr sseason to not interfere with playoffs
+    schedule[schedule$GameID == g, ]$Date <- max(schedule[schedule$GameType == "R",]$Date, Sys.Date())
+  }
+  schedule<-schedule %>%
+    dplyr::arrange(.data$Date, .data$GameID)
+  return(schedule)
+
+}
