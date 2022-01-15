@@ -33,5 +33,5 @@ playoffSolverEngine(
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
 \description{
-Does the actual simulating. A function so it's parallelizable. Not to be called directly
+Does the actual simulating. A function so it's parallelizable. Not to be called directly. Exported for parallel's use
 }
