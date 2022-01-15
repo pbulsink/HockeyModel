@@ -93,36 +93,36 @@
 
     
     
-<div class="section level1">
-<h1 id="hockey-model-description">Hockey Model Description<a class="anchor" aria-label="anchor" href="#hockey-model-description"></a>
-</h1>
+<div class="section level2">
+<h2 id="hockey-model-description">Hockey Model Description<a class="anchor" aria-label="anchor" href="#hockey-model-description"></a>
+</h2>
 <p>This season is the first season of my hockey model, currently lacking a cool name. The model is very simple, using Dixon-Coles’ (DC) method for predicting the outcome of sports games. DC predictions were first described for soccer (football) and are commonly used in that domain.</p>
 <p>The method uses strength of scoring and defense (plus a home ice advantage term) to predict a expected goals for away and home teams, and then modifies the results to enhance the prevalance of low-scoring games. Using a poisson distribution, the density of expected total goals for home and away can be summed to produce a win percent. I then apply a factor to enhance the number of tie games, as the model under-predicts ties since it doesn’t understand the tendancy to play for the loser point.</p>
-<div class="section level2">
-<h2 id="model-details">Model Details<a class="anchor" aria-label="anchor" href="#model-details"></a>
-</h2>
+<div class="section level3">
+<h3 id="model-details">Model Details<a class="anchor" aria-label="anchor" href="#model-details"></a>
+</h3>
 <p>Much of the groundwork for this model was by <a href="http://opisthokonta.net/?p=939" class="external-link">OpisThokonta</a> in his 2014 series on Dixon-Coles for his blog. For each team, the attack and defense parameters are compared to the goals scored and allowed against each other team in each game. Optimization of these attack and defense parameters produces values that pass the smell test:</p>
 <p><img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png" width="679px" height="525px" style="display: block; margin: auto;"></p>
 <p>In addition, a home team enhancement and low-scoring parameters are produced. More information on the code particulars can be seen <a href="https://pbulsink.github.io/blog/2016-08-05/dixon_coles_and_hockey_data.html" class="external-link">in my blog</a> from a few years ago. Topics such as past game weights and low-scoring adjustments are covered there.</p>
 <p>The attack, defense and home parameters are blended together to produce a matrix of outcome probabilities, with the odds that a specific score (e.g. 3-2 for the home team) will occur. The odds of a home team win, then, are the sum of all the odd shwere the home team has a higher score. Similar simple sums show us odds of away win or a ‘draw’.</p>
-<div class="section level3">
-<h3 id="draws">Draws<a class="anchor" aria-label="anchor" href="#draws"></a>
-</h3>
+<div class="section level4">
+<h4 id="draws">Draws<a class="anchor" aria-label="anchor" href="#draws"></a>
+</h4>
 <p>The model tends to inherently under-predict draws. Improving this (by a similar method as low scoring adjustments) is in the plans, but not being actively developed. In the mean time, draws are artificially enhanced by a simple ratio adjustment, bringing draws towards an average probability of draws in the last year. Of course, some games will still have higher or lower probabilities, but this adjustment brings odds of a draw from ~0.18 to ~0.23.</p>
 <p>Draws are predicted without opinion to the outcome. However, games don’t end in a tie. The daily predictions that are posted show instead an odds that the home or away teams will win in OT/SO. These odds are found by splitting the draw odds by the ratio of Home to Away win odds. Simply, if a draw was predicted at 0.2 odds, the home team expected win was 0.5, and away win was 0.3, then the home ot/so win would be 0.2 x (0.5/0.8) = 0.125, and the away odds the remainder (0.075).</p>
 </div>
 </div>
-<div class="section level2">
-<h2 id="predictions">Predictions<a class="anchor" aria-label="anchor" href="#predictions"></a>
-</h2>
+<div class="section level3">
+<h3 id="predictions">Predictions<a class="anchor" aria-label="anchor" href="#predictions"></a>
+</h3>
 <p>Each game is predicted using the model, producing a simple prediction output.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="../reference/todayOdds.html">todayOdds</a></span><span class="op">(</span>today<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">'2018-10-03'</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt;              HomeTeam           AwayTeam   HomeWin   AwayWin      Draw</span>
-<span class="co">#&gt; 1 Toronto Maple Leafs Montreal Canadiens 0.6235236 0.1703754 0.2061010</span>
-<span class="co">#&gt; 2 Washington Capitals      Boston Bruins 0.3920901 0.3614516 0.2464583</span>
-<span class="co">#&gt; 3   Vancouver Canucks     Calgary Flames 0.3210050 0.4229984 0.2559966</span>
-<span class="co">#&gt; 4     San Jose Sharks      Anaheim Ducks 0.3808971 0.3652476 0.2538553</span>
+<span class="co">#&gt; 1 Toronto Maple Leafs Montreal Canadiens 0.6247067 0.1702464 0.2050469</span>
+<span class="co">#&gt; 2 Washington Capitals      Boston Bruins 0.3916373 0.3622697 0.2460929</span>
+<span class="co">#&gt; 3   Vancouver Canucks     Calgary Flames 0.3300061 0.4137512 0.2562427</span>
+<span class="co">#&gt; 4     San Jose Sharks      Anaheim Ducks 0.3797140 0.3679958 0.2522903</span>
 <span class="co">#&gt;       GameID</span>
 <span class="co">#&gt; 1 2018020001</span>
 <span class="co">#&gt; 2 2018020002</span>
@@ -135,14 +135,14 @@
 <p>Periodically, the Twitter bot also plots pace plots, showing how each team is doing relative to their original prediction.</p>
 <p><img src="https://pbs.twimg.com/media/Dv4SOCCUYAAW2Z9.jpg:large" width="679px" height="525px" style="display: block; margin: auto;"></p>
 </div>
-<div class="section level2">
-<h2 id="performance">Performance<a class="anchor" aria-label="anchor" href="#performance"></a>
-</h2>
+<div class="section level3">
+<h3 id="performance">Performance<a class="anchor" aria-label="anchor" href="#performance"></a>
+</h3>
 <p>As of Jan 03, 2018, the model produced a Log Loss of 0.6888 and accuracy of 59.0 %. These are results from 614 games (approximately 1/2 season).</p>
 </div>
-<div class="section level2">
-<h2 id="code-availability">Code Availability<a class="anchor" aria-label="anchor" href="#code-availability"></a>
-</h2>
+<div class="section level3">
+<h3 id="code-availability">Code Availability<a class="anchor" aria-label="anchor" href="#code-availability"></a>
+</h3>
 <p>The code for all of this is available on <a href="https://www.github.com/pbulsink/HockeyModel" class="external-link">GitHub</a>.</p>
 </div>
 </div>
@@ -165,7 +165,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer>

@@ -95,14 +95,14 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/pbulsink/HockeyModel" class="external-link">HockeyModel</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></code></pre></div>
-<div class="section level1">
-<h1 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
-</h1>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
 <p>The code has gone through a lot of changes for the 2021-2022 season. This article highlights those changes.</p>
 </div>
-<div class="section level1">
-<h1 id="model-enhancements">Model Enhancements<a class="anchor" aria-label="anchor" href="#model-enhancements"></a>
-</h1>
+<div class="section level2">
+<h2 id="model-enhancements">Model Enhancements<a class="anchor" aria-label="anchor" href="#model-enhancements"></a>
+</h2>
 <p>The most significant part of the improvements for 2021 are enhancements to the model itself. A known issue was the under-performance of the model in predicting tie games. Looking at the prevalence of goals for tie games it was quickly apparent that the model under-predicted 2-2 and 3-3 ties significantly. While normally the model performs well in predictions of 2 or 3 goals for a team, the teams are motivated to play to a draw and take the game to overtime, as it guarantees them at least one point. By adding two factors (named <code>theta</code> and <code>gamma</code>), the chances of having a ‘regular time’ tie game are adjusted to match the actual.</p>
 <p>Let’s demonstrate. I’ll select for games that are only included in the most recent model parameters. Then for all games that were ties (i.e. went to OT or SO for resolution) pulling the goals at which they were tied at the end of regulation time.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -140,27 +140,27 @@
 <p><img src="updates-2021_files/figure-html/theta-1.png" width="700"></p>
 <p>This could likely be better, but for now it’s better than before. The past predicted tie rate was about 17%. With this change, it’s up to 19%, but draws occur in about 23.5% of games.</p>
 </div>
-<div class="section level1">
-<h1 id="data-sources">Data Sources<a class="anchor" aria-label="anchor" href="#data-sources"></a>
-</h1>
+<div class="section level2">
+<h2 id="data-sources">Data Sources<a class="anchor" aria-label="anchor" href="#data-sources"></a>
+</h2>
 <p>The model originally used a scraper that I had written for Hockey-Reference.com. While this worked well, changes in their website had, periodically, put the data unavailable until fixes were installed. The NHL has an API for accessing data directly from them, but until now I haven’t put that to use.</p>
 <p>A package called <code>nhlapi</code> (available on <a href="https://cran.r-project.org/package=nhlapi" class="external-link"><code>CRAN</code></a> and <a href="https://github.com/jozefhajnala/nhlapi" class="external-link">GitHub</a>) has helped with this extensively. Unlike some other api access packages, this one is very lightweight. The code includes a complete adoption of this package and the removal of <a href="https://github.com/pbulsink/HockeyScrapR" class="external-link"><code>HockeyScrapR</code></a> as a dependency. <code>HockeyScrapR</code> will be retired.</p>
 <p>This also provides some of the previously manual data, such as series limiting errors and having to scramble to get predictions up before games start.</p>
 <p>We also now use conference and division assignments from the NHL instead of manually setting that up each year. Removal of hard coded data allows more time for improvements as less time is spent on updating these items.</p>
 </div>
-<div class="section level1">
-<h1 id="playoff-cup-chances">Playoff / Cup Chances<a class="anchor" aria-label="anchor" href="#playoff-cup-chances"></a>
-</h1>
+<div class="section level2">
+<h2 id="playoff-cup-chances">Playoff / Cup Chances<a class="anchor" aria-label="anchor" href="#playoff-cup-chances"></a>
+</h2>
 <p>The way that playoff and Stanley Cup chances used to be calculated was based on the playoff format that the past few years had used. But both 2019-2020 and 2020-2021 used different formats (re-seeding, divisions/conferences, etc.). So the code now uses a slower, but more accurate and much more flexible. The new method is a Monte Carlo simulation, it simulates the playoffs millions of times to estimate the odds of each result.</p>
 </div>
-<div class="section level1">
-<h1 id="odds-recording">Odds Recording<a class="anchor" aria-label="anchor" href="#odds-recording"></a>
-</h1>
+<div class="section level2">
+<h2 id="odds-recording">Odds Recording<a class="anchor" aria-label="anchor" href="#odds-recording"></a>
+</h2>
 <p>Daily processing code records the predicted odds to a file (located at <code>./data-raw/dailyodds.csv</code>). This will help with calculating in-season metrics (log loss/accuracy), and in reading past day’s predictions. A helper function was also added that will clean up the file if there’s any duplicates (e.g. if a game gets postponed after the predictions are posted)</p>
 </div>
-<div class="section level1">
-<h1 id="general-code-improvements">General Code Improvements<a class="anchor" aria-label="anchor" href="#general-code-improvements"></a>
-</h1>
+<div class="section level2">
+<h2 id="general-code-improvements">General Code Improvements<a class="anchor" aria-label="anchor" href="#general-code-improvements"></a>
+</h2>
 <p>The past two NHL seasons have been atypical, to say the least. It has highlighted the may assumptions that were baked into the code, such as the number of games in a season, the way that playoffs are seeded, etc. Many of those are fixed in this update.</p>
 </div>
   </div>
@@ -182,7 +182,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer>
