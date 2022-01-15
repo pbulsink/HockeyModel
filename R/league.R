@@ -727,7 +727,22 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::de
 
   simodds<-simodds %>%
     dplyr::rowwise() %>%
-    dplyr::mutate("Make_Playoffs" = summary_results[summary_results$Team == .data$Team,]$Playoffs,
+    dplyr::mutate("Make_Playoffs" =(nrow(simresults[simresults$series1 == .data$Team, ]) +
+                    nrow(simresults[simresults$series2 == .data$Team, ]) +
+                    nrow(simresults[simresults$series3 == .data$Team, ]) +
+                    nrow(simresults[simresults$series4 == .data$Team, ]) +
+                    nrow(simresults[simresults$series5 == .data$Team, ]) +
+                    nrow(simresults[simresults$series6 == .data$Team, ]) +
+                    nrow(simresults[simresults$series7 == .data$Team, ]) +
+                    nrow(simresults[simresults$series8 == .data$Team, ]) +
+                    nrow(simresults[simresults$l1 == .data$Team, ]) +
+                    nrow(simresults[simresults$l2 == .data$Team, ]) +
+                    nrow(simresults[simresults$l3 == .data$Team, ]) +
+                    nrow(simresults[simresults$l4 == .data$Team, ]) +
+                    nrow(simresults[simresults$l5 == .data$Team, ]) +
+                    nrow(simresults[simresults$l6 == .data$Team, ]) +
+                    nrow(simresults[simresults$l7 == .data$Team, ]) +
+                    nrow(simresults[simresults$l8 == .data$Team, ]))/nrow(simresults),
                   "Win_First_Round" = (nrow(simresults[simresults$series1 == .data$Team, ]) +
                     nrow(simresults[simresults$series2 == .data$Team, ]) +
                     nrow(simresults[simresults$series3 == .data$Team, ]) +
@@ -946,7 +961,7 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
         series3<-sample(c(e2.1, ewc1), size = 1, prob = c(odds, 1-odds))
         l3 <- ifelse(series3 == e2.2, e2.3, e2.2) #If winner = a, then b, else a
       } else {
-        e2.1<-er[er$Div != p1div,]$Team[sample(1:nrow(er[er$Div != p1div, ]), size = 1, prob = er[er$Div != p1div, ]$p_rank2)]
+        e2.1<-er[sample(1:nrow(er), size = 1, prob = er$p_rank2),]$Team
         er<-er[er$Team != e2.1,]
         ewc1<-er[sample(1:nrow(er), size = 1, prob = er$p_rank7),]$Team
         er<-er[er$Team != ewc1,]
@@ -1010,7 +1025,7 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
         wr<-wr[wr$Team != l6,]
       } else if (6 %in% currentSeries$SeriesID) {
         w1.2 <- currentSeries[currentSeries$SeriesID == 6, ]$HomeTeam
-        wr<-wr[wr$Team != w1.2,]
+        wr<-wr[wr$Team != w1.1,]
         w1.3 <- currentSeries[currentSeries$SeriesID == 6, ]$AwayTeam
         wr<-wr[wr$Team != w1.3,]
         odds<-playoffWin(w1.2, w1.3, currentSeries[currentSeries$SeriesID == 6, ]$HomeWins,
@@ -1033,7 +1048,7 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
         wr<-wr[wr$Team != l7,]
       } else if (7 %in% currentSeries$SeriesID){
         w2.1 <- currentSeries[currentSeries$SeriesID == 7, ]$HomeTeam
-        wr<-wr[wr$Team != w2.1,]
+        wr<-wr[wr$Team != w1.1,]
         wwc1 <- currentSeries[currentSeries$SeriesID == 7, ]$AwayTeam
         wr<-wr[wr$Team != wwc1,]
         odds<-playoffWin(w2.1, wwc1, currentSeries[currentSeries$SeriesID == 7, ]$HomeWins,
@@ -1041,7 +1056,7 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
         series7<-sample(c(w2.1, wwc1), size = 1, prob = c(odds, 1-odds))
         l7 <- ifelse(series7 == w2.1, wwc1, w2.1) #If winner = a, then b, else a
       } else {
-        w2.1<-wr[wr$Div != p1div,]$Team[sample(1:nrow(wr[wr$Div != p1div, ]), size = 1, prob = wr[wr$Div != p1div, ]$p_rank2)]
+        w2.1<-wr[sample(1:nrow(wr), size = 1, prob = wr$p_rank2),]$Team
         wr<-wr[wr$Team != w2.1,]
         wwc1<-wr[sample(1:nrow(wr), size = 1, prob = wr$p_rank7),]$Team
         wr<-wr[wr$Team != wwc1,]
@@ -1068,7 +1083,7 @@ playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, 
         wr<-wr[wr$Team != w2.2,]
         w2.3<-wr[wr$Div != p1div,]$Team[sample(1:nrow(wr[wr$Div != p1div, ]), size = 1, prob = wr[wr$Div != p1div, ]$p_rank_56)]
         wr<-wr[wr$Team != w2.3,]
-        series8 <- single_series_solver(series_number = 8, currentSeries = currentSeries, homeTeam = w2.2, awayTeam = w2.3, homeAwayOdds = homeAwayOdds)
+        series8 <- single_series_solver(series_number = 4, currentSeries = currentSeries, homeTeam = w2.2, awayTeam = w2.3, homeAwayOdds = homeAwayOdds)
         l8 <- ifelse(series8 == w2.2, w2.3, w2.2) #If winner = a, then b, else a
       }
     }
