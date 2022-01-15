@@ -820,7 +820,7 @@ getCompletedSeries<-function(currentSeries){
 
 #' Playoff Solver Engine
 #'
-#' @description Does the actual simulating. A function so it's parallelizable. Not to be called directly
+#' @description Does the actual simulating. A function so it's parallelizable. Not to be called directly. Exported for parallel's use
 #' @param nsims number of sims (in each core)
 #' @param completedSeries completed series
 #' @param east_results east_results
@@ -829,6 +829,8 @@ getCompletedSeries<-function(currentSeries){
 #' @param summary_results summary_results
 #' @param homeAwayOdds precalculated home & away pairs of odds - if available.
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#'
+#' @export
 playoffSolverEngine<-function(nsims,completedSeries,east_results, west_results, currentSeries, summary_results, homeAwayOdds, params=NULL){
   params<-parse_dc_params(params)
   simresults<-data.frame("SimNo" = integer(),
