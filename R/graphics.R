@@ -254,7 +254,7 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
                     caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date())) +
       ggplot2::scale_colour_manual(values = teamColoursList) +
       ggplot2::scale_x_continuous(breaks = seq(from=0, to=max(teamPerformance$GameNum), by = 5))+#, expand = ggplot2::expansion(mult = c(0, .1)))+
-      ggrepel::geom_label_repel(ggplot2::aes_string(label = "label"), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(max(teamPerformance$GameNum,12), max(teamPerformance$GameNum,12)+max(teamPerformance$GameNum,12)*.2))+
+      ggrepel::geom_label_repel(ggplot2::aes_string(label = "label"), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(max(teamPerformance$GameNum,12), max(teamPerformance$GameNum,12)+max(teamPerformance$GameNum,12)*.18))+
       ggplot2::theme_minimal() +
       ggplot2::theme(legend.position = "none",
                      plot.margin = ggplot2::unit(c(1,5,1,1), "lines"))
