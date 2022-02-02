@@ -257,7 +257,7 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
       ggrepel::geom_label_repel(ggplot2::aes_string(label = "label"), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(max(teamPerformance$GameNum,12), max(teamPerformance$GameNum,12)+max(teamPerformance$GameNum,12)*.18))+
       ggplot2::theme_minimal() +
       ggplot2::theme(legend.position = "none",
-                     plot.margin = ggplot2::unit(c(1,5,1,1), "lines"))
+                     plot.margin = ggplot2::unit(c(1,7,1,1), "lines"))
 
     grDevices::png(filename = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", division)), '_pace.png')), width = 11, height = 8.5, units = 'in', res = 300)
     print(plt)
