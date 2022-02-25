@@ -192,7 +192,47 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
       )) %>%
       dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
   }
+  scores_xg<-get_xg(gameIds = gameIDs)
+  scores<-dplyr::left_join(scores, scores_xg, by = "GameID")
   return(scores)
+}
+
+
+#' Get xG for one or many gameIds
+#'
+#' @param gameIds one or many game Ids
+#'
+#' @return a list with Game ID, HomexG and AwayxG if one game ID supplied, or a data frame with those columns
+#' @export
+get_xg<-function(gameIds){
+  gxg<-function(gid){
+    season<-substr(gid, 1, 4)
+
+    if(as.numeric(season) < 2011){
+      return(list("GameID" = gid, "HomexG" = NA, "AwayxG" = NA))
+    }
+
+    xG<-BulsinkBxG::get_game_xg(gid)
+
+    return(list("GameID" = gid, "HomexG" = xG$home_xg, "AwayxG" = xG$away_xg))
+  }
+
+  v_gxg<-Vectorize(gxg)
+  gameIds<-gameIds[BulsinkBxG:::is_valid_gameId(gameIds)]
+
+  if(length(gameIds) == 0){
+    return(NA)
+  } else if(length(gameIds) == 1){
+    return(gxg(gameIds))
+  } else {
+    gxgs<-v_gxg(gid = gameIds)
+    gxgs<-as.data.frame(t(gxgs))
+    gxgs$GameID<-as.integer(gxgs$GameID)
+    gxgs$HomexG<-as.numeric(gxgs$HomexG)
+    gxgs$AwayxG<-as.numeric(gxgs$AwayxG)
+
+    return(gxgs)
+  }
 }
 
 

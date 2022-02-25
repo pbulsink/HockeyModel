@@ -263,7 +263,7 @@ getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.0042
     Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi)),
     Team = as.factor(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))),
     Opponent = as.factor(c(as.character(scores$AwayTeam), as.character(scores$HomeTeam))),
-    Goals = c(scores$HomeGoals, scores$AwayGoals),
+    Goals = c(scores$HomexG, scores$AwayxG),
     Home = c(rep(1, nrow(scores)), rep(0, nrow(scores)))
   )
   #df.indep <- df.indep[df.indep$Weight > 1e-8,]

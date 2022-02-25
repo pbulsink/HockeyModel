@@ -11,8 +11,10 @@
 #'   \item{Date}{Date of the game}
 #'   \item{AwayTeam}{Name of visiting team}
 #'   \item{AwayGoals}{Number of goals for the visiting team}
+#'   \item{AwayxG}{Calculated xG for visiting team}
 #'   \item{HomeTeam}{Name of the home team}
 #'   \item{HomeGoals}{Number of goals for the home team}
+#'   \item{HomexG}{Calculated xG for the home team}
 #'   \item{OTStatus}{The OT status of the game (none, OT, SO, 2OT, 3OT, ...)}
 #'   \item{GameID}{Unique GameID for each game}
 #'   \item{GameType}{Game Type for each game}

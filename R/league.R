@@ -1338,9 +1338,9 @@ recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools:
     }
   } else {
     if(!draws){
-      preds<-preds[,c("Date", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Home_xG", "Away_xG")]
+      preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Home_xG", "Away_xG")]
     } else {
-      preds<-preds[,c("Date", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw", "Home_xG", "Away_xG")]
+      preds<-preds[,c("Date", "GameID", "HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw", "Home_xG", "Away_xG")]
     }
   }
 
