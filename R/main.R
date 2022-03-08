@@ -13,7 +13,8 @@ updateModel <- function(save_data=TRUE){
   schedule<-updateScheduleAPI(save_data = save_data)
   scores<-updateScoresAPI(schedule = schedule, save_data = save_data)
   params<-updateDC(scores = scores, save_data = save_data)
-  return(list("scores" = scores, "schedule" = schedule, "params" = params))
+  aws.s3::put_object(file.path(getOption("BulsinkBxG.data.path"), 'xG.csv'), object = "s3://xg-data/xG.csv")
+  invisible(list("scores" = scores, "schedule" = schedule, "params" = params))
 }
 
 #' Update predictions
