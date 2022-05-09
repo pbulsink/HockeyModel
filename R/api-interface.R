@@ -387,7 +387,11 @@ validateWins<-function(playoffSeries, seriesStatusShort){
                       ifelse(grepl(awayshort, seriesStatusShort), awayshort, NA))
   wins <- unlist(strsplit(seriesStatusShort, "-"))
   wins[1] <- unlist(strsplit(wins[1], " "))[length(unlist(strsplit(wins[1], " ")))]
-  if(statusteam == awayshort){
+  if(is.na(statusteam)){
+    #Tied
+    return(as.numeric(c(wins[1], wins[2])))
+  } else if(statusteam == awayshort){
+    #Away leading, invert (as response is homewins, awaywins)
     return(as.numeric(c(wins[2], wins[1])))
   } else {
     return(as.numeric(c(wins[1], wins[2])))
