@@ -376,10 +376,16 @@ getAPISeries <- function(season=getCurrentSeason8()){
     if('matchupTeams' %in% names(series[[1]]$rounds$series[[rnd]])){
       for(srs in 1:length(series[[1]]$rounds$series[[rnd]]$matchupTeams)){
         if(!is.null(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]])){
-          playoffSeries[nrow(playoffSeries)+1, ]<-c(rnd,srs,series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$team.name,
+          playoffSeries[nrow(playoffSeries)+1, ]<-c(rnd,
+                                                    srs,
+                                                    series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$team.name,
                                                     series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins,
                                                     series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seed.rank,
                                                     series[[1]]$rounds$format.numberOfWins[[rnd]])
+          if(sum(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins) != series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.gameNumber[[srs]]-1){
+            playoffSeries[nrow(playoffSeries), c("HomeWins", "AwayWins")] <- validateWins(playoffSeries[nrow(playoffSeries),],
+                                                                                        series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.seriesStatusShort[[srs]])
+          }
         }
       }
     }
@@ -407,6 +413,30 @@ getAPISeries <- function(season=getCurrentSeason8()){
       .data$Round == 4 ~ .data$Series + 14
     ))
   return(playoffSeries)
+}
+
+
+validateWins<-function(playoffSeries, seriesStatusShort){
+  hometeam <- playoffSeries$HomeTeam
+  awayteam <- playoffSeries$AwayTeam
+
+  homeshort <- getShortTeam(hometeam)
+  awayshort <- getShortTeam(awayteam)
+
+  statusteam <- ifelse(grepl(homeshort, seriesStatusShort), homeshort,
+                      ifelse(grepl(awayshort, seriesStatusShort), awayshort, NA))
+  wins <- unlist(strsplit(seriesStatusShort, "-"))
+  wins[1] <- unlist(strsplit(wins[1], " "))[length(unlist(strsplit(wins[1], " ")))]
+  if(is.na(statusteam)){
+    #Tied
+    return(as.numeric(c(wins[1], wins[2])))
+  } else if(statusteam == awayshort){
+    #Away leading, invert (as response is homewins, awaywins)
+    return(as.numeric(c(wins[2], wins[1])))
+  } else {
+    return(as.numeric(c(wins[1], wins[2])))
+  }
+
 }
 
 
