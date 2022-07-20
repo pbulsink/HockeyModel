@@ -66,48 +66,61 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">todayOdds</span><span class="op">(</span>
-  params <span class="op">=</span> <span class="cn">NULL</span>,
-  today <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>,
-  schedule <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="schedule.html">schedule</a></span>,
-  expected_mean <span class="op">=</span> <span class="cn">NULL</span>,
-  season_percent <span class="op">=</span> <span class="cn">NULL</span>,
-  include_xG <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">todayOdds</span><span class="op">(</span></span>
+<span>  params <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  today <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  schedule <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="schedule.html">schedule</a></span>,</span>
+<span>  expected_mean <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  season_percent <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  include_xG <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>params</dt>
 <dd><p>The named list containing m, rho, beta, eta, and k. See <a href="updateDC.html">updateDC</a> for information on the params list</p></dd>
+
+
 <dt>today</dt>
 <dd><p>The date for which you want game odds</p></dd>
+
+
 <dt>schedule</dt>
 <dd><p>The schedule, default to internal schedule</p></dd>
+
+
 <dt>expected_mean</dt>
 <dd><p>the mean lambda &amp; mu, used only for regression</p></dd>
+
+
 <dt>season_percent</dt>
 <dd><p>the percent complete of the season, used for regression</p></dd>
+
+
 <dt>include_xG</dt>
 <dd><p>Whether to include xG values in reported odds</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today</p>
+    
+
+<p>a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games today</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="fu">todayOdds</span><span class="op">(</span>today<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-11-01"</span><span class="op">)</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">todayOdds</span><span class="op">(</span>today<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-11-01"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              HomeTeam              AwayTeam   HomeWin   AwayWin      Draw</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   New Jersey Devils   Philadelphia Flyers 0.4708831 0.3166285 0.2124884</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  New York Islanders   Tampa Bay Lightning 0.3239438 0.4226657 0.2533906</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Washington Capitals        Buffalo Sabres 0.5690264 0.2323585 0.1986150</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Carolina Hurricanes     Detroit Red Wings 0.6734847 0.1471934 0.1793219</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     St. Louis Blues Columbus Blue Jackets 0.6046501 0.2191495 0.1762004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  Colorado Avalanche          Dallas Stars 0.5583264 0.2261532 0.2155204</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7       Anaheim Ducks     Vancouver Canucks 0.3019202 0.4584298 0.2396500</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8     San Jose Sharks         Winnipeg Jets 0.3235130 0.4322037 0.2442833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   New Jersey Devils   Philadelphia Flyers 0.4790779 0.3079983 0.2129238</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  New York Islanders   Tampa Bay Lightning 0.3096292 0.4360928 0.2542781</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Washington Capitals        Buffalo Sabres 0.5788408 0.2211605 0.1999986</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Carolina Hurricanes     Detroit Red Wings 0.6663987 0.1511837 0.1824176</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     St. Louis Blues Columbus Blue Jackets 0.6217133 0.2047835 0.1735032</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  Colorado Avalanche          Dallas Stars 0.5794699 0.2082924 0.2122377</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7       Anaheim Ducks     Vancouver Canucks 0.3050387 0.4534976 0.2414637</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     San Jose Sharks         Winnipeg Jets 0.3165151 0.4371579 0.2463270</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       GameID</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 2019020196</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 2019020197</span>
@@ -131,7 +144,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

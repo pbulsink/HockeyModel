@@ -66,34 +66,47 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">simulateSeasonParallel</span><span class="op">(</span>
-  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,
-  nsims <span class="op">=</span> <span class="fl">10000</span>,
-  schedule <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="schedule.html">schedule</a></span>,
-  cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,
-  progress <span class="op">=</span> <span class="cn">FALSE</span>,
-  params <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">simulateSeasonParallel</span><span class="op">(</span></span>
+<span>  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,</span>
+<span>  nsims <span class="op">=</span> <span class="fl">10000</span>,</span>
+<span>  schedule <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="schedule.html">schedule</a></span>,</span>
+<span>  cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>  progress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  params <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>scores</dt>
 <dd><p>Past (historical) season scores. Defaults to HockeyModel::Scores</p></dd>
+
+
 <dt>nsims</dt>
 <dd><p>number of simulations to run</p></dd>
+
+
 <dt>schedule</dt>
 <dd><p>Future unplayed games. Defaults to HockeyModel::schedule</p></dd>
+
+
 <dt>cores</dt>
 <dd><p>number of cores to use in parallel.</p></dd>
+
+
 <dt>progress</dt>
 <dd><p>whether to show a progress bar.</p></dd>
+
+
 <dt>params</dt>
 <dd><p>The named list containing m, rho, beta, eta, and k. See <a href="updateDC.html">updateDC</a> for information on the params list</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a data frame of results</p>
+    
+
+<p>a data frame of results</p>
     </div>
 
   </div>
@@ -108,7 +121,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

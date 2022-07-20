@@ -77,25 +77,32 @@ k is the multiplication factor used with the Weibull distribution to enhance tie
 </ul></div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">updateDC</span><span class="op">(</span>
-  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,
-  currentDate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>,
-  save_data <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">updateDC</span><span class="op">(</span></span>
+<span>  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,</span>
+<span>  currentDate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  save_data <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>scores</dt>
 <dd><p>scores, if not then HockeyModel::scores is used</p></dd>
+
+
 <dt>currentDate</dt>
 <dd><p>Current Date, usually today but useful to set a different date if back calculating results</p></dd>
+
+
 <dt>save_data</dt>
 <dd><p>Whether to save parameters to the package.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a named list containing m, rho, beta, eta and k values for the model.</p>
+    
+
+<p>a named list containing m, rho, beta, eta and k values for the model.</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
@@ -114,7 +121,7 @@ k is the multiplication factor used with the Weibull distribution to enhance tie
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

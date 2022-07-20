@@ -66,46 +66,63 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">dcSample</span><span class="op">(</span>
-  <span class="va">home</span>,
-  <span class="va">away</span>,
-  params <span class="op">=</span> <span class="cn">NULL</span>,
-  maxgoal <span class="op">=</span> <span class="fl">8</span>,
-  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,
-  expected_mean <span class="op">=</span> <span class="cn">NULL</span>,
-  season_percent <span class="op">=</span> <span class="cn">NULL</span>,
-  as_result <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dcSample</span><span class="op">(</span></span>
+<span>  <span class="va">home</span>,</span>
+<span>  <span class="va">away</span>,</span>
+<span>  params <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  maxgoal <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,</span>
+<span>  expected_mean <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  season_percent <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  as_result <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>home</dt>
 <dd><p>home team</p></dd>
+
+
 <dt>away</dt>
 <dd><p>away team</p></dd>
+
+
 <dt>params</dt>
 <dd><p>The named list containing m, rho, beta, eta, and k. See <a href="updateDC.html">updateDC</a> for information on the params list</p></dd>
+
+
 <dt>maxgoal</dt>
 <dd><p>max number of goals per team</p></dd>
+
+
 <dt>scores</dt>
 <dd><p>optional, if not supplying m &amp; rho, scores used to calculate them.</p></dd>
+
+
 <dt>expected_mean</dt>
 <dd><p>the mean lambda &amp; mu, used only for regression</p></dd>
+
+
 <dt>season_percent</dt>
 <dd><p>the percent complete of the season, used for regression</p></dd>
+
+
 <dt>as_result</dt>
 <dd><p>Whether to give a score or just flatten it to result type (see <a href="scores.html">scores</a> for score result)</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a random Home &amp; away goals &amp; OT/SO status if needed</p>
+    
+
+<p>a random Home &amp; away goals &amp; OT/SO status if needed</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="fu">dcSample</span><span class="op">(</span><span class="st">"Toronto Maple Leafs"</span>, <span class="st">"Montreal Canadiens"</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.75</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">dcSample</span><span class="op">(</span><span class="st">"Toronto Maple Leafs"</span>, <span class="st">"Montreal Canadiens"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 </code></pre></div>
     </div>
   </div>
@@ -120,7 +137,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

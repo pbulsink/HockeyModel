@@ -66,28 +66,37 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">simulatePlayoffs</span><span class="op">(</span>
-  summary_results <span class="op">=</span> <span class="cn">NULL</span>,
-  nsims <span class="op">=</span> <span class="fl">1e+05</span>,
-  cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,
-  params <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">simulatePlayoffs</span><span class="op">(</span></span>
+<span>  summary_results <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  nsims <span class="op">=</span> <span class="fl">1e+05</span>,</span>
+<span>  cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>  params <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>summary_results</dt>
 <dd><p>summary results</p></dd>
+
+
 <dt>nsims</dt>
 <dd><p>Number of playoff sims to run. Too many takes a long time.</p></dd>
+
+
 <dt>cores</dt>
 <dd><p>Number of processor cores to use</p></dd>
+
+
 <dt>params</dt>
 <dd><p>The named list containing m, rho, beta, eta, and k. See <a href="updateDC.html">updateDC</a> for information on the params list</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)</p>
+    
+
+<p>a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)</p>
     </div>
 
   </div>
@@ -102,7 +111,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

@@ -66,37 +66,52 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">loopless_sim</span><span class="op">(</span>
-  nsims <span class="op">=</span> <span class="fl">1e+05</span>,
-  cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,
-  schedule <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="schedule.html">schedule</a></span>,
-  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,
-  params <span class="op">=</span> <span class="cn">NULL</span>,
-  season_sofar <span class="op">=</span> <span class="cn">NULL</span>,
-  likelihood_graphic <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">loopless_sim</span><span class="op">(</span></span>
+<span>  nsims <span class="op">=</span> <span class="fl">1e+05</span>,</span>
+<span>  cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>  schedule <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="schedule.html">schedule</a></span>,</span>
+<span>  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,</span>
+<span>  params <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  season_sofar <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  likelihood_graphic <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>nsims</dt>
 <dd><p>number of simulations to run (approximate)</p></dd>
+
+
 <dt>cores</dt>
 <dd><p>number of cores in parallel to process</p></dd>
+
+
 <dt>schedule</dt>
 <dd><p>games to play</p></dd>
+
+
 <dt>scores</dt>
 <dd><p>Season to this point</p></dd>
+
+
 <dt>params</dt>
 <dd><p>The named list containing m, rho, beta, eta, and k. See <a href="updateDC.html">updateDC</a> for information on the params list</p></dd>
+
+
 <dt>season_sofar</dt>
 <dd><p>The results of the season to date</p></dd>
+
+
 <dt>likelihood_graphic</dt>
 <dd><p>whether to create a likelihood graphic</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a two member list, of all results and summary results</p>
+    
+
+<p>a two member list, of all results and summary results</p>
     </div>
 
   </div>
@@ -111,7 +126,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

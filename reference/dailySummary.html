@@ -66,24 +66,31 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">dailySummary</span><span class="op">(</span>
-  graphic_dir <span class="op">=</span> <span class="st">"./prediction_results/graphics/"</span>,
-  subdir <span class="op">=</span> <span class="st">"pace"</span>,
-  token <span class="op">=</span> <span class="fu">rtweet</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rtweet/man/get_tokens.html" class="external-link">get_token</a></span><span class="op">(</span><span class="op">)</span>,
-  delay <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1</span>, min <span class="op">=</span> <span class="fl">2</span>, max <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op">*</span> <span class="fl">60</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dailySummary</span><span class="op">(</span></span>
+<span>  graphic_dir <span class="op">=</span> <span class="st">"./prediction_results/graphics/"</span>,</span>
+<span>  subdir <span class="op">=</span> <span class="st">"pace"</span>,</span>
+<span>  token <span class="op">=</span> <span class="fu">rtweet</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rtweet/man/get_tokens.html" class="external-link">get_token</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  delay <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1</span>, min <span class="op">=</span> <span class="fl">2</span>, max <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op">*</span> <span class="fl">60</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>graphic_dir</dt>
 <dd><p>Directory for graphic files</p></dd>
+
+
 <dt>subdir</dt>
 <dd><p>subdirectory to <code>graphic_dir</code> for pace plots</p></dd>
+
+
 <dt>token</dt>
 <dd><p>token to pass to rtweet calls</p></dd>
+
+
 <dt>delay</dt>
 <dd><p>delay between tweet posts</p></dd>
+
 </dl></div>
 
   </div>
@@ -98,7 +105,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

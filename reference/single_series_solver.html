@@ -66,34 +66,47 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">single_series_solver</span><span class="op">(</span>
-  <span class="va">series_number</span>,
-  <span class="va">currentSeries</span>,
-  <span class="va">homeTeam</span>,
-  <span class="va">awayTeam</span>,
-  homeAwayOdds <span class="op">=</span> <span class="cn">NULL</span>,
-  params <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">single_series_solver</span><span class="op">(</span></span>
+<span>  <span class="va">series_number</span>,</span>
+<span>  <span class="va">currentSeries</span>,</span>
+<span>  <span class="va">homeTeam</span>,</span>
+<span>  <span class="va">awayTeam</span>,</span>
+<span>  homeAwayOdds <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  params <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>series_number</dt>
 <dd><p>Series number from 1:15</p></dd>
+
+
 <dt>currentSeries</dt>
 <dd><p>the full list of series returned from getAPISeries</p></dd>
+
+
 <dt>homeTeam</dt>
 <dd><p>Home Team extracted from summary_results</p></dd>
+
+
 <dt>awayTeam</dt>
 <dd><p>away Team extracted from summary_results</p></dd>
+
+
 <dt>homeAwayOdds</dt>
 <dd><p>if calculated, the odds of a home or away team win</p></dd>
+
+
 <dt>params</dt>
 <dd><p>The named list containing m, rho, beta, eta, and k. See <a href="updateDC.html">updateDC</a> for information on the params list</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a series winner (team name)</p>
+    
+
+<p>a series winner (team name)</p>
     </div>
 
   </div>
@@ -108,7 +121,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

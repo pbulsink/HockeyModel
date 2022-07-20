@@ -66,28 +66,37 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">format_playoff_odds</span><span class="op">(</span>
-  <span class="va">playoff_odds</span>,
-  caption_text <span class="op">=</span> <span class="st">""</span>,
-  trim <span class="op">=</span> <span class="cn">TRUE</span>,
-  trimcup <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">format_playoff_odds</span><span class="op">(</span></span>
+<span>  <span class="va">playoff_odds</span>,</span>
+<span>  caption_text <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  trim <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  trimcup <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>playoff_odds</dt>
 <dd><p>a playoff odds data frame with columns Team, Make_Playoffs, Win_First_Round, Win_Second_Round, Win_Conference, Win_Cup</p></dd>
+
+
 <dt>caption_text</dt>
 <dd><p>Additional text to prepend to " Playoff Odds" in table title. E.g. 'Eastern Conference' if only eastteams sent in.</p></dd>
+
+
 <dt>trim</dt>
 <dd><p>Whether to drop teams that have 0 chance of making playoffs. Default true</p></dd>
+
+
 <dt>trimcup</dt>
 <dd><p>Whether to drorp teams that have 0 chance of winning cup. Default false</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a gt table</p>
+    
+
+<p>a gt table</p>
     </div>
 
   </div>
@@ -102,7 +111,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

@@ -66,40 +66,57 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">remainderSeasonDC</span><span class="op">(</span>
-  nsims <span class="op">=</span> <span class="fl">10000</span>,
-  cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,
-  params <span class="op">=</span> <span class="cn">NULL</span>,
-  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,
-  schedule <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="schedule.html">schedule</a></span>,
-  odds <span class="op">=</span> <span class="cn">FALSE</span>,
-  regress <span class="op">=</span> <span class="cn">TRUE</span>,
-  mu_lambda <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">remainderSeasonDC</span><span class="op">(</span></span>
+<span>  nsims <span class="op">=</span> <span class="fl">10000</span>,</span>
+<span>  cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>  params <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scores <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="scores.html">scores</a></span>,</span>
+<span>  schedule <span class="op">=</span> <span class="fu">HockeyModel</span><span class="fu">::</span><span class="va"><a href="schedule.html">schedule</a></span>,</span>
+<span>  odds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  regress <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  mu_lambda <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>nsims</dt>
 <dd><p>Number of simulations</p></dd>
+
+
 <dt>cores</dt>
 <dd><p>The number of cores to use if using parallel processing</p></dd>
+
+
 <dt>params</dt>
 <dd><p>The named list containing m, rho, beta, eta, and k. See <a href="updateDC.html">updateDC</a> for information on the params list</p></dd>
+
+
 <dt>scores</dt>
 <dd><p>the historical scores</p></dd>
+
+
 <dt>schedule</dt>
 <dd><p>un-played future games</p></dd>
+
+
 <dt>odds</dt>
 <dd><p>whether to return odds table or simulate season</p></dd>
+
+
 <dt>regress</dt>
 <dd><p>whether to apply a regression to the mean for team strength on future predictions</p></dd>
+
+
 <dt>mu_lambda</dt>
 <dd><p>whether to return team xG values. Can't be set true if odds is true</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>data frame of Team, playoff odds.</p>
+    
+
+<p>data frame of Team, playoff odds.</p>
     </div>
 
   </div>
@@ -114,7 +131,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

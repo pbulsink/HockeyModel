@@ -66,37 +66,52 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">playoffSeriesOdds</span><span class="op">(</span>
-  <span class="va">home_odds</span>,
-  <span class="va">away_odds</span>,
-  home_win <span class="op">=</span> <span class="fl">0</span>,
-  away_win <span class="op">=</span> <span class="fl">0</span>,
-  ngames <span class="op">=</span> <span class="cn">NULL</span>,
-  game_home <span class="op">=</span> <span class="cn">NULL</span>,
-  predict_games_to_win <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">playoffSeriesOdds</span><span class="op">(</span></span>
+<span>  <span class="va">home_odds</span>,</span>
+<span>  <span class="va">away_odds</span>,</span>
+<span>  home_win <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  away_win <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  ngames <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  game_home <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  predict_games_to_win <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>home_odds</dt>
 <dd><p>Team odds with home-ice advantage at home</p></dd>
+
+
 <dt>away_odds</dt>
 <dd><p>Team odds with home-ice advantage at away (on the road)</p></dd>
+
+
 <dt>home_win</dt>
 <dd><p>Number of home ice advantage team wins thus far in the series. Default to 0 (prediction before series start)</p></dd>
+
+
 <dt>away_win</dt>
 <dd><p>Number of away team wins thus far in the series</p></dd>
+
+
 <dt>ngames</dt>
 <dd><p>Number of games in the series, defaults to 7</p></dd>
+
+
 <dt>game_home</dt>
 <dd><p>vector of T/F for 'home team' home games. Defaults for NHL best of 7 series: <code>c(T,T,F,F,T,F,T)</code></p></dd>
+
+
 <dt>predict_games_to_win</dt>
 <dd><p>(Defualt False) If TRUE, returns the table of ways the series could finish.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>numeric odds of home team win series (1-odds for away odds)</p>
+    
+
+<p>numeric odds of home team win series (1-odds for away odds)</p>
     </div>
     <div id="references">
     <h2>References</h2>
@@ -115,7 +130,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>
