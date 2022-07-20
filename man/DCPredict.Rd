@@ -8,7 +8,7 @@ DCPredict(
   home,
   away,
   params = NULL,
-  maxgoal = 8,
+  maxgoal = 10,
   scores = HockeyModel::scores,
   expected_mean = NULL,
   season_percent = NULL,

@@ -376,7 +376,7 @@ getWeibullParams <- function(m=HockeyModel::m, rho=HockeyModel::rho, scores=Hock
 #'
 #' @return a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
 #' @export
-DCPredict <- function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, draws=TRUE) {
+DCPredict <- function(home, away, params=NULL, maxgoal = 10, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, draws=TRUE) {
   params<-parse_dc_params(params=params)
   probability_matrix <- dcProbMatrix(home = home, away = away, params=params, maxgoal = maxgoal)
 
@@ -445,7 +445,7 @@ dcxG<-function(home, away, params=NULL, maxgoal=10){
 #' @param season_percent the percent complete of the season, used for regression
 #'
 #' @return a square matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
-dcProbMatrix<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
+dcProbMatrix<-function(home, away, params=NULL, maxgoal = 10, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
   params<-parse_dc_params(params=params)
 
   xg<-dcLambda(home = home, away = away, params=params)
@@ -520,7 +520,7 @@ prob_matrix<-function(lambda, mu, params, maxgoal){
 #' @export
 #'
 #' @examples dcSample("Toronto Maple Leafs", "Montreal Canadiens")
-dcSample<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, as_result=TRUE){
+dcSample<-function(home, away, params=NULL, maxgoal = 10, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, as_result=TRUE){
   params<-parse_dc_params(params)
   pm <- dcProbMatrix(home = home, away = away, params=params, maxgoal = maxgoal)
 
