@@ -263,6 +263,11 @@ getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.0042
     Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi)),
     Team = as.factor(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))),
     Opponent = as.factor(c(as.character(scores$AwayTeam), as.character(scores$HomeTeam))),
+    # This is what provides an xG base instead of goals basis for the model, and could be tweaked to improve performance maybe?
+    # How this could be done: our dataframe is Team a,b,c against opponent z, y, x
+    # All home teams are listed first, then all away teams
+    # Each game appears 2x in the dataframe.
+    # So, Teams could have their xG for and Goals against by Goals = $HomexG,
     Goals = c(scores$HomexG, scores$AwayxG),
     Home = c(rep(1, nrow(scores)), rep(0, nrow(scores)))
   )
@@ -376,7 +381,7 @@ getWeibullParams <- function(m=HockeyModel::m, rho=HockeyModel::rho, scores=Hock
 #'
 #' @return a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
 #' @export
-DCPredict <- function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, draws=TRUE) {
+DCPredict <- function(home, away, params=NULL, maxgoal = 10, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, draws=TRUE) {
   params<-parse_dc_params(params=params)
   probability_matrix <- dcProbMatrix(home = home, away = away, params=params, maxgoal = maxgoal)
 
@@ -445,7 +450,7 @@ dcxG<-function(home, away, params=NULL, maxgoal=10){
 #' @param season_percent the percent complete of the season, used for regression
 #'
 #' @return a square matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
-dcProbMatrix<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
+dcProbMatrix<-function(home, away, params=NULL, maxgoal = 10, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL){
   params<-parse_dc_params(params=params)
 
   xg<-dcLambda(home = home, away = away, params=params)
@@ -520,7 +525,7 @@ prob_matrix<-function(lambda, mu, params, maxgoal){
 #' @export
 #'
 #' @examples dcSample("Toronto Maple Leafs", "Montreal Canadiens")
-dcSample<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, as_result=TRUE){
+dcSample<-function(home, away, params=NULL, maxgoal = 10, scores = HockeyModel::scores, expected_mean=NULL, season_percent=NULL, as_result=TRUE){
   params<-parse_dc_params(params)
   pm <- dcProbMatrix(home = home, away = away, params=params, maxgoal = maxgoal)
 
@@ -566,7 +571,7 @@ dcSample<-function(home, away, params=NULL, maxgoal = 8, scores = HockeyModel::s
 #' @param nsim the number of simulations in each result
 #'
 #' @return a result from 0 to 1 corresponding to \link{scores} results
-dcResult<-function(lambda, mu, params=NULL, maxgoal=8, nsim=1){
+dcResult<-function(lambda, mu, params=NULL, maxgoal=10, nsim=1){
   params<-parse_dc_params(params)
 
   dcr<-function(lambda, mu, params, maxgoal, nsim){
@@ -608,7 +613,7 @@ sampleResult<-function(hw,hot,hso,aso,aot,aw,size=1){
 }
 
 
-dcExpandedOdds<-function(lambda, mu, params=NULL, maxgoal=8){
+dcExpandedOdds<-function(lambda, mu, params=NULL, maxgoal=10){
   params<-parse_dc_params(params)
 
   dceo<-function(lambda, mu, params, maxgoal, nsim){
