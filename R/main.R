@@ -29,7 +29,7 @@ updateModel <- function(save_data=TRUE){
 updatePredictions<- function(data_dir = file.path(devtools::package_file(), "prediction_results"), scores = HockeyModel::scores, schedule = HockeyModel::schedule, params=NULL){
   params<-parse_dc_params(params)
 
-  if(scores$Date[nrow(scores)] < (Sys.Date() - 7)){
+  if(scores$Date[nrow(scores)] < (Sys.Date())){
     updateScoresAPI(save_data = TRUE)
   }
   filelist<-list.files(path = data_dir)
@@ -103,11 +103,11 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   #   #don't try tweet todays' games if none exist
   #   rtweet::post_tweet(status = "Predicted odds table for today's #NHL games. #HockeyTwitter",
   #                     media = file.path(graphic_dir, "today_odds_table.png"), token = token)
-  #   my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+  #   my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
   #   reply_id<-my_timeline$status_id[1]
   #   rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
   #                      media = file.path(graphic_dir, "today_odds.png"), token = token)
-  #   my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+  #   my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
   #   reply_id<-my_timeline$status_id[1]
   #   rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
   #                     media = file.path(graphic_dir, "current_rating.png"),
@@ -126,7 +126,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
     rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                        media = file.path(graphic_dir, "point_predict.png"), token = token)
 
-    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+    my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
     reply_id<-my_timeline$status_id[1]
 
     #until Rtweet has scheduler
@@ -137,7 +137,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
                        media = file.path(graphic_dir, "playoff_odds.png"),
                        in_reply_to_status_id = reply_id, token = token)
 
-    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+    my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
     reply_id<-my_timeline$status_id[1]
 
     #until Rtweet has scheduler
@@ -337,7 +337,7 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.p
     #until Rtweet has scheduler
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(stats::runif(1,min=1,max=3)*60)
-    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+    my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
     reply_id<-my_timeline$status_id[1]
   }
   pacediff<-data.frame("Team" = current_preds$Team, "Initial" = preds$meanPoints, "Current" = current_preds$meanPoints, stringsAsFactors = FALSE)
@@ -370,7 +370,7 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.p
                        token = token)
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
-    my_timeline<-rtweet::get_timeline(user = 'BulsinkB', token = token)
+    my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
     reply_id<-my_timeline$status_id[1]
   }
 }

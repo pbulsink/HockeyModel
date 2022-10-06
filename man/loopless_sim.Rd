@@ -11,7 +11,8 @@ loopless_sim(
   scores = HockeyModel::scores,
   params = NULL,
   season_sofar = NULL,
-  likelihood_graphic = TRUE
+  likelihood_graphic = TRUE,
+  odds_table = NULL
 )
 }
 \arguments{
@@ -28,6 +29,9 @@ loopless_sim(
 \item{season_sofar}{The results of the season to date}
 
 \item{likelihood_graphic}{whether to create a likelihood graphic}
+
+\item{odds_table}{a table of odds for all games in schedule. Null, unless provided. Should be similar to the output of \code{remainderSeasonDC(odds=TRUE)},
+which is a data.frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID and Date}
 }
 \value{
 a two member list, of all results and summary results

@@ -24,18 +24,16 @@ test_that("Schedules are ok", {
 test_that("Scores are OK", {
   score<-getNHLScores(2020020001, progress = F)
   expect_true(is.data.frame(score))
-  expect_equal(ncol(score), 10)
+  expect_equal(ncol(score), 12)
   expect_equal(nrow(score), 1)
-  goodscore<-structure(list(Date = structure(18640, class = "Date"), HomeTeam = "Philadelphia Flyers",
-                            AwayTeam = "Pittsburgh Penguins", GameID = 2020020001, HomeGoals = 6L,
-                            AwayGoals = 3L, OTStatus = "", GameType = "R", GameStatus = "Final",
-                            Result = 1), row.names = c(NA, -1L), class = "data.frame")
-  expect_identical(score, goodscore)
+  #goodscore<-structure(list(Date = structure(18640, class = "Date"), HomeTeam = "Philadelphia Flyers",
+  #                          AwayTeam = "Pittsburgh Penguins", GameID = 2020020001, HomeGoals = 6L,
+  #                          AwayGoals = 3L, OTStatus = "", GameType = "R", GameStatus = "Final",
+  #                          Result = 1), row.names = c(NA, -1L), class = "data.frame")
+  #expect_identical(score, goodscore)
 
   today<-games_today(date=as.Date("2019-11-01"))
   expect_true(is.null(today)) #Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
-
-
 })
 
 test_that("Series is ok", {
@@ -74,17 +72,17 @@ test_that("Get Team Info is OK", {
   expect_equal(getShortTeam("Toronto Maple Leafs"), apiteams[apiteams$name == "Toronto Maple Leafs", ]$abbreviation)
   expect_equal(getShortTeam(c("Toronto Maple Leafs", "Ottawa Senators")),
                c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$abbreviation, apiteams[apiteams$name == "Ottawa Senators", ]$abbreviation))
-  expect_equal(getShortTeam("bob"), "")
+  expect_equal(getShortTeam("bob"), character(0))
 
   expect_equal(getTeamConferences("Toronto Maple Leafs"), apiteams[apiteams$name == "Toronto Maple Leafs", ]$conference.name)
   expect_equal(getTeamConferences(c("Toronto Maple Leafs", "Ottawa Senators")),
                c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$conference.name, apiteams[apiteams$name == "Ottawa Senators", ]$conference.name))
-  expect_equal(getTeamConferences("bob"), "")
+  expect_equal(getTeamConferences("bob"), character(0))
 
   expect_equal(getTeamDivisions("Toronto Maple Leafs"),apiteams[apiteams$name == "Toronto Maple Leafs", ]$division.name)
   expect_equal(getTeamDivisions(c("Toronto Maple Leafs", "Ottawa Senators")),
                c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$division.name, apiteams[apiteams$name == "Ottawa Senators", ]$division.name))
-  expect_equal(getTeamDivisions("bob"), "")
+  expect_equal(getTeamDivisions("bob"), character(0))
 
   expect_equal(getConferences(), unique(apiteams$conference.name))
   expect_equal(getDivisions(), unique(apiteams$division.name))
@@ -96,6 +94,6 @@ test_that("Other Utility Functions are OK", {
   expect_equal(getTeamConferences("Toronto Maple Leafs"), "Eastern")
   expect_equal(getTeamDivisions("Toronto Maple Leafs"), "Atlantic")
   expect_equal(getShortTeam("Toronto Maple Leafs"), "TOR")
-  expect_equal(getSeasonEndDate(season="20182019"), as.Date("2019-06-15"))
+  expect_equal(getSeasonEndDate(season="20182019"), as.Date("2019-06-12"))
   expect_equal(getNumGames("20202021"), 56)
 })

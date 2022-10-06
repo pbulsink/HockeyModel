@@ -18,6 +18,8 @@
 #'   \item{GameType}{Game Type for each game}
 #'   \item{GameStatus}{Game Status - 'Final'}
 #'   \item{Result}{A numerically coded result for Hoome Team. Win=1, OTWin = 0.75, SOWin = 0.6, Tie = 0.5, SOLoss = 0.4, OTLoss = 0.25, Loss = 0}
+#'   \item{HomexG}{Home Team's xG}
+#'   \item{AwayxG}{Away Team's xG}
 #' }
 #' @source \url{http://www.hockey-reference.com/}
 "scores"
@@ -80,6 +82,18 @@
 #' @format a data frame of colours & logos
 "teamColours"
 
+
+#' Iterative Parameters
+#' Parameters for iterative Dixon-Coles method
+#'
+#' @format a list of lists of parameters for win/loss and xG versions
+'iterativeParameters'
+
+#' Iterative Rankings
+#' Current rankings for iterative Dixon-Coles methods
+#'
+#' @format a list of data frames
+'iterativeRankings'
 
 #' Summary Results (Testing)
 #' A testing dataset from 2021 presesason. Not for regular use.

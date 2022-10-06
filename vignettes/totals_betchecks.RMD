@@ -1,0 +1,60 @@
+---
+title: "Totals Bet Checks"
+author: "Philip Bulsink"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(HockeyModel)
+library(dplyr)
+library(ggplot2)
+```
+
+# Totals/xG Model
+
+## Model performance
+
+```{r setup2, include = FALSE}
+predictions <- HockeyModel:::iterate_season(intercept = 1.37546,gamma = .00408,lambda = .59011,rho = -.38305,home_adv = .19031,attack_mix = 1,defend_mix = .623978)$test
+betdiff <- 0.05
+juice <- 0.02
+```
+
+This doesn't mean as much because we're looking for totals, but here's the model performance for win/loss. Naturally, a xG model would be expected to have reasonable W/L performance as a byproduct of being good at predicting goal performance.
+
+```{r performance, echo=FALSE}
+message("Log Loss: ", round(logLoss(predictions$HomeWin, predictions$Result), 5))
+message("Accuracy: ", round(accuracy(predictions$HomeWin, predictions$Result), 4)*100, "%")
+message("AUC: ", round(auc(predictions$HomeWin, predictions$Result), 4))
+```
+
+In addition, the model performance for total xG vs. G (this is the important part):
+
+```{r xg_performance, echo=FALSE}
+  predictions$TotalGoals <- predictions$HomeGoals + predictions$AwayGoals
+  r2<-round(rsquare(predictions$TotalxGPred, predictions$TotalGoals),4)
+  rmse<-round(rmse(predictions$TotalxGPred, predictions$TotalGoals),2)
+  
+  message("Test R2: ", r2)
+  message("Test RMSE: ", rmse)
+```
+
+*We trained the model using RMSE as the optimized metric.*
+
+## Bet Results
+
+Setting up bet results of over/under bets placed with a difference in `r betdiff` xG:
+
+```{r basictotals, echo=FALSE}
+bets<-HockeyModel:::compare_market_line_xg(predictions)
+
+data.frame("Name"=names(bets), "Values"=unname(unlist(bets))) %>%
+  kable(digits=2,col.names = NULL)
+```
+
+
+
+

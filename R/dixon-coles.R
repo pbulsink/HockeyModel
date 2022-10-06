@@ -22,6 +22,7 @@
 #' @export
 updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), save_data = TRUE){
   message('Calculating new model parameters...')
+  stopifnot(is.Date(currentDate))
   if (currentDate != Sys.Date()){
     currentDate <- as.Date(currentDate)
     scores<-scores[scores$Date < currentDate, ]
@@ -54,8 +55,9 @@ updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), sav
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
 todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL, include_xG = FALSE, draws=TRUE){
+  stopifnot(is.Date(today))
   params<-parse_dc_params(params)
-  games<-schedule[schedule$Date == today, ]
+  games<-schedule[schedule$Date == as.Date(today), ]
   if(nrow(games) == 0){
     return(NULL)
   }
@@ -662,21 +664,6 @@ DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
 }
 
 
-cleanModel <- function(cm) {
-  #from http://www.win-vector.com/blog/2014/05/trimming-the-fat-from-glm-models-in-r/
-  cm$y <- c()
-  cm$model <- c()
-
-  cm$residuals <- c()
-  cm$effects <- c()
-  cm$qr$qr <- c()
-  cm$linear.predictors <- c()
-  cm$weights <- c()
-  cm$prior.weights <- c()
-
-  return(cm)
-}
-
 DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyModel::m){
   teamlist<-unique(m$data$Team)
   opponentlist<-unique(m$data$Opponent)
@@ -735,7 +722,9 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
     dir.create(filedir, recursive = TRUE)
   }
 
-  predict_dates<-seq(from = end, to = start, by = -1)
+  stopifnot(is.Date(start))
+  stopifnot(is.Date(end))
+  predict_dates<-seq(from = as.Date(end), to = as.Date(start), by = -1) # do it backwards to get the most recent date done first
 
   schedule$Date<-as.Date(schedule$Date)
   schedule<-add_postponed_to_schedule_end(schedule)
@@ -749,6 +738,8 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
     sched<-schedule[schedule$Date >= day,]
     params<-updateDC(scores=score, currentDate = d)
     preds<-NULL
+
+    #preds <- loopless_sim(nsims = nsims, cores = cores, scores = score, schedule = sched, params = params, likelihood_graphic=likelihood_graphic)
     preds<-tryCatch(expr = {
       message("Predicting with Loopless Sim")
       loopless_sim(nsims = nsims, cores = cores, scores = score, schedule = sched, params = params, likelihood_graphic=likelihood_graphic)
@@ -758,6 +749,7 @@ dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Dat
       message(error)
       return(NULL)
     })
+
     if(!is.null(preds) & 'summary_results' %in% names(preds)){
       message('Saving Prediction file...')
       saveRDS(preds$summary_results, file = file.path(filedir, paste0(d, '-predictions.RDS')))

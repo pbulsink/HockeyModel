@@ -75,7 +75,7 @@ processNHLSchedule<-function(sched, progress = TRUE){
 #' @return Scheduled games (in the format of the schedule) for the requested date, or NULL if none
 #' @export
 games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games = FALSE){
-  stopifnot(methods::is(date, "Date"))
+  stopifnot(is.Date(date))
   todaygames<-processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
   if(!all_games){
     todaygames<-todaygames["Scheduled" %in% todaygames$GameState, ]
@@ -148,14 +148,14 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
     if(sc[[1]]$currentPeriod > 0){
       if(sc[[1]]$currentPeriodTimeRemaining == "Final"){
         dfs<-data.frame("Date" = schedule[schedule$GameID == g, ]$Date,
-                    "HomeTeam" = sc[[1]]$teams$home$team$name,
-                    "AwayTeam" = sc[[1]]$teams$away$team$name,
-                    "GameID" = g,
-                    "HomeGoals" = sc[[1]]$teams$home$goals,
-                    "AwayGoals" = sc[[1]]$teams$away$goals,
-                    "OTStatus" = sc[[1]]$currentPeriodOrdinal,
-                    "GameType" = schedule[schedule$GameID == g, ]$GameType,
-                    "GameStatus" = sc[[1]]$currentPeriodTimeRemaining)
+                        "HomeTeam" = sc[[1]]$teams$home$team$name,
+                        "AwayTeam" = sc[[1]]$teams$away$team$name,
+                        "GameID" = g,
+                        "HomeGoals" = sc[[1]]$teams$home$goals,
+                        "AwayGoals" = sc[[1]]$teams$away$goals,
+                        "OTStatus" = sc[[1]]$currentPeriodOrdinal,
+                        "GameType" = schedule[schedule$GameID == g, ]$GameType,
+                        "GameStatus" = sc[[1]]$currentPeriodTimeRemaining)
         scores<-rbind(scores, dfs)
       } else if (sc[[1]]$currentPeriodTimeRemaining == "20:00" & sc[[1]]$currentPeriod == 1){
         #MAYBE the game is cancelled?
@@ -182,17 +182,57 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
     scores[scores$OTStatus == "3rd", ]$OTStatus<-""
     scores<-scores %>%
       dplyr::mutate(Result = dplyr::case_when(
-                      (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "" ~ 1,
-                      (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "" ~ 0,
-                      (.data$HomeGoals == .data$AwayGoals) ~ 0.5,
-                      (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.75,
-                      (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.6,
-                      (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.4,
-                      (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.25,
+        (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "" ~ 1,
+        (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "" ~ 0,
+        (.data$HomeGoals == .data$AwayGoals) ~ 0.5,
+        (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.75,
+        (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.6,
+        (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.4,
+        (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.25,
       )) %>%
       dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
   }
+  scores_xg<-as.data.frame(get_xg(gameIds = gameIDs))
+  scores<-dplyr::left_join(scores, scores_xg, by = "GameID")
   return(scores)
+}
+
+
+#' Get xG for one or many gameIds
+#'
+#' @param gameIds one or many game Ids
+#'
+#' @return a list with Game ID, HomexG and AwayxG if one game ID supplied, or a data frame with those columns
+#' @export
+get_xg<-function(gameIds){
+  gxg<-function(gid){
+    season<-substr(gid, 1, 4)
+
+    if(as.numeric(season) < 2011){
+      return(list("GameID" = gid, "HomexG" = NA, "AwayxG" = NA))
+    }
+
+    xG<-BulsinkBxG::get_game_xg(gid)
+
+    return(list("GameID" = gid, "HomexG" = xG$home_xg, "AwayxG" = xG$away_xg))
+  }
+
+  v_gxg<-Vectorize(gxg)
+  gameIds<-gameIds[is_valid_gameId(gameIds)]
+
+  if(length(gameIds) == 0){
+    return(NA)
+  } else if(length(gameIds) == 1){
+    return(gxg(gameIds))
+  } else {
+    gxgs<-v_gxg(gid = gameIds)
+    gxgs<-as.data.frame(t(gxgs))
+    gxgs$GameID<-as.integer(gxgs$GameID)
+    gxgs$HomexG<-as.numeric(gxgs$HomexG)
+    gxgs$AwayxG<-as.numeric(gxgs$AwayxG)
+
+    return(gxgs)
+  }
 }
 
 
@@ -278,7 +318,7 @@ clean_names<-function(sc){
                       "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
                       "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
                       "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
-                      )
+        )
     }
     if('AwayTeam' %in% names(sc)){
       sc <- sc %>%
@@ -344,7 +384,7 @@ getAPISeries <- function(season=getCurrentSeason8()){
                                                     series[[1]]$rounds$format.numberOfWins[[rnd]])
           if(sum(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins) != series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.gameNumber[[srs]]-1){
             playoffSeries[nrow(playoffSeries), c("HomeWins", "AwayWins")] <- validateWins(playoffSeries[nrow(playoffSeries),],
-                                                                                        series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.seriesStatusShort[[srs]])
+                                                                                          series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.seriesStatusShort[[srs]])
           }
         }
       }
@@ -384,7 +424,7 @@ validateWins<-function(playoffSeries, seriesStatusShort){
   awayshort <- getShortTeam(awayteam)
 
   statusteam <- ifelse(grepl(homeshort, seriesStatusShort), homeshort,
-                      ifelse(grepl(awayshort, seriesStatusShort), awayshort, NA))
+                       ifelse(grepl(awayshort, seriesStatusShort), awayshort, NA))
   wins <- unlist(strsplit(seriesStatusShort, "-"))
   wins[1] <- unlist(strsplit(wins[1], " "))[length(unlist(strsplit(wins[1], " ")))]
   if(is.na(statusteam)){

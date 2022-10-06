@@ -17,6 +17,8 @@ A data frame with  variables:
 \item{GameType}{Game Type for each game}
 \item{GameStatus}{Game Status - 'Final'}
 \item{Result}{A numerically coded result for Hoome Team. Win=1, OTWin = 0.75, SOWin = 0.6, Tie = 0.5, SOLoss = 0.4, OTLoss = 0.25, Loss = 0}
+\item{HomexG}{Home Team's xG}
+\item{AwayxG}{Away Team's xG}
 }
 }
 \source{

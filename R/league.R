@@ -291,20 +291,24 @@ compile_predictions<-function(dir=file.path(devtools::package_file(), "predictio
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param season_sofar The results of the season to date
 #' @param likelihood_graphic whether to create a likelihood graphic
+#' @param odds_table a table of odds for all games in schedule. Null, unless provided. Should be similar to the output of `remainderSeasonDC(odds=TRUE)`,
+#' which is a data.frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID and Date
 #'
 #' @return a two member list, of all results and summary results
 #' @export
-loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, params=NULL, season_sofar=NULL, likelihood_graphic=TRUE){
+loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, params=NULL, season_sofar=NULL, likelihood_graphic=TRUE, odds_table=NULL){
 
   params<-parse_dc_params(params)
 
   nsims <- floor(nsims/cores)
 
-  schedule<-schedule[schedule$Date >= as.Date(getSeasonStartDate()), ]
+  schedule<-schedule[!(schedule$GameID %in% scores$GameID), ]
 
   schedule<-add_postponed_to_schedule_end(schedule)
 
-  odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, params=params, nsims = nsims, odds = T)
+  if(is.null(odds_table) | !(all(c("HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw", "GameID", "Date") %in% colnames(odds_table)))){
+    odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, params=params, nsims = nsims, odds = T)
+  }
 
   season_sofar<-scores[scores$Date >= as.Date(getSeasonStartDate(getSeason(schedule[,"Date"][1]))),]
 

@@ -10,7 +10,7 @@ This is a model to predict NHL game winners & their likely performance for the r
 
 Read more about the package at [https://pbulsink.github.io/HockeyModel](https://pbulsink.github.io/HockeyModel)
 
-Current predictions are below, and are always posted on twitter at [@BulsinkBot](https://www.twitter.com/BulsinkB).
+Current predictions are below, and are always posted on twitter at [@BulsinkBot](https://www.twitter.com/BulsinkBot).
 
 ## Team Ranking
 ![Team Rankings]("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png)

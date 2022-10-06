@@ -1,6 +1,6 @@
 Package: HockeyModel
 Title: NHL Hockey Model for 2018-2019
-Version: 0.1.2021
+Version: 0.1.2022
 Authors@R: person("Philip", "Bulsink", email = "bulsinkp@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-9668-2429"))
 Description: Using various techniques, predict the winners of upcoming NHL hockey games, the expected points for the season, and odds for playoffs & cup winning.
 Depends: R (>= 4.0.0)
@@ -21,7 +21,6 @@ Imports:
     doSNOW,
     foreach,
     usethis,
-    reshape2,
     rtweet,
     ggalt,
     ggridges,
@@ -30,12 +29,12 @@ Imports:
     gt,
     scales,
     rlang,
-    methods,
     tidyr,
-    dtplyr
+    dtplyr,
+    BulsinkBxG
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1
 Suggests: 
     knitr,
     rmarkdown,
@@ -44,5 +43,6 @@ Suggests:
     progress,
     markdown,
     covr,
-    plumber
+    plumber,
+    tictoc
 VignetteBuilder: knitr

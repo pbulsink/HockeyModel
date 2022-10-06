@@ -29,6 +29,8 @@ cleanModel <- function(cm) {
 #' @export
 normalizeOdds<-function(odds){
   odds<-unlist(odds)
+  odds[odds>1]<-1-1e-10
+  odds[odds<0]<-1e-10
   odds<-odds/sum(odds)
   return(odds)
 }
@@ -114,6 +116,59 @@ accuracy<-function(predicted, actual){
   accuracy <- sum(as.numeric(predicted == actual))/length(predicted)
 
   return(accuracy)
+}
+
+
+#'AUC
+#'@description calculate the AUC metrics. From MLMetrics
+#'
+#' @param predicted Predicted odds of an event occuring. needen't be of set {0,1}
+#' @param actual If the event occured (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0
+#'
+#' @return a single value for auc
+#' @export
+auc<-function(predicted, actual){
+  stopifnot(length(predicted) == length(actual))
+
+  actual <- as.numeric(actual > 0.5)
+
+  rank<- rank(predicted)
+  n_positive<- sum(actual > 0.5)
+  n_negative<- sum(actual < 0.5)
+
+  auc <- (sum(rank[actual > 0.5]) - n_positive * (n_positive + 1)/2)/(n_positive * n_negative)
+
+  return(auc)
+}
+
+
+#'RMSE
+#'@description calculate the RMSE metrics. From MLMetrics
+#'
+#' @param predicted Predicted numeric value
+#' @param actual Actual numeric value
+#'
+#' @return a single value for RMSE
+#' @export
+rmse<-function(predicted, actual){
+  stopifnot(length(predicted) == length(actual))
+
+  return(sqrt(mean((actual-predicted)^2)))
+}
+
+
+#'R Square
+#'@description calculate the R^2 metrics. From MLMetrics
+#'
+#' @param predicted Predicted numeric value
+#' @param actual Actual numeric value
+#'
+#' @return a single value for R^2
+#' @export
+rsquare<-function(predicted, actual){
+  stopifnot(length(predicted) == length(actual))
+
+  return(stats::cor(predicted, actual) ^ 2)
 }
 
 
@@ -280,3 +335,17 @@ add_postponed_to_schedule_end<-function(schedule = HockeyModel::schedule){
   return(schedule)
 
 }
+
+
+gId<-function(gameId){
+  if(!is.numeric(gameId)){
+    return(FALSE)
+  } else if (!nchar(gameId) == 10) {
+    return(FALSE)
+  } else if (!grepl(pattern = "20[1,2][0-9]0[2,3][0-9]{4}", gameId)) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+is_valid_gameId<-Vectorize(gId)

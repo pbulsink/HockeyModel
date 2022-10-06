@@ -41,7 +41,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
     ggplot2::labs(x = "Date",
                   y = "Points",
                   title = paste0("Predicted Points Over the Past ", past_days, " Days"),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+                  caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
@@ -100,7 +100,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
     ggplot2::labs(x = "Date",
                   y = "Playoff Odds",
                   title = paste0("Playoff Odds Over the Past ", past_days, " Days"),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+                  caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
     ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
@@ -153,7 +153,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
     ggplot2::labs(x = "Date",
                   y = "President's Trophy Odds",
                   title = paste0("President's Trophy Odds Over the Past ", past_days, " Days"),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()),
+                  caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()),
                   subtitle = paste0("Teams with < ", round(minimum*100, 2),"% odds hidden for simplicity"))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none") +
@@ -251,7 +251,7 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
                     subtitle = paste(division, "Division Teams"),
                     x = "Game Number",
                     y = "Points Above/Below Predicted",
-                    caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date())) +
+                    caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())) +
       ggplot2::scale_colour_manual(values = teamColoursList) +
       ggplot2::scale_x_continuous(breaks = seq(from=0, to=max(teamPerformance$GameNum), by = 5))+#, expand = ggplot2::expansion(mult = c(0, .1)))+
       ggrepel::geom_label_repel(ggplot2::aes_string(label = "label"), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(max(teamPerformance$GameNum,12), max(teamPerformance$GameNum,12)+max(teamPerformance$GameNum,12)*.18))+
@@ -327,7 +327,7 @@ plot_pace_by_team<-function(graphic_dir = file.path(devtools::package_file(), "p
                     y = "Points",
                     title = "Points Pace",
                     subtitle = paste0(team, ' Expected Points: ', format(round(qpoints, 1), nsmall = 1)),
-                    caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+                    caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
       ggplot2::theme_minimal() +
       ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = ppoints, alpha = 0.05, colour = 'grey')+
       ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = maxp, alpha = 0.05, colour = 'grey')+
@@ -369,7 +369,9 @@ plot_odds_today <- function(today = Sys.Date(), params=NULL, schedule = HockeyMo
   }
 
   #Melt data to work with ggplot
-  melted<-reshape2::melt(todayodds, id.vars = c('HomeTeam', 'AwayTeam'))
+  #melted<-reshape2::melt(todayodds, id.vars = c('HomeTeam', 'AwayTeam'))
+  melted<-tidyr::pivot_longer(todayodds, cols = c("HomeWin", "AwayWin", "HomeWinOT", "AwayWinOT", "Draw"),
+                              names_to = 'variable', values_to = 'value')
   melted$variable<-factor(x = melted$variable, levels = c("AwayWin", "AwayWinOT", "Draw", "HomeWinOT", "HomeWin"), ordered = TRUE)
   melted<-melted[melted$variable != "Draw",]
 
@@ -377,7 +379,7 @@ plot_odds_today <- function(today = Sys.Date(), params=NULL, schedule = HockeyMo
   melted$colour<-""
   for(i in 1:nrow(melted)){
     melted[i,]$alpha<-ifelse(melted[i,]$variable %in% c("HomeWin", "AwayWin"), yes=1, no=0.7)
-    tc <- getTeamColours(home = melted[i, 'HomeTeam'], away=melted[i, 'AwayTeam'])
+    tc <- getTeamColours(home = melted[i, ]$HomeTeam, away=melted[i, ]$AwayTeam)
     melted[i,]$colour<-ifelse(melted[i,]$variable %in% c("HomeWin", "HomeWinOT"),
                               yes=tc$home,
                               no =tc$away)
@@ -398,7 +400,7 @@ plot_odds_today <- function(today = Sys.Date(), params=NULL, schedule = HockeyMo
                   y = "Result Odds",
                   title = "Predictions for Today's Games",
                   subtitle = paste0("Games played on ", Sys.Date()),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+                  caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
     ggplot2::theme_bw() +
     ggplot2::theme(axis.text.y = ggplot2::element_blank(),
                    axis.ticks.y = ggplot2::element_blank(),
@@ -441,31 +443,31 @@ plot_playoff_series_odds <- function(series = getAPISeries(), params=NULL, teamC
 
 
   #Melt data to work with ggplot
-  melted<-reshape2::melt(series2, id.vars = c('HomeTeam', 'AwayTeam'))
+  #melted<-reshape2::melt(series2, id.vars = c('HomeTeam', 'AwayTeam'))
+  melted<-tidyr::pivot_longer(series2, cols = c("HomeOdds", "AwayOdds"), names_to = 'variable', values_to = 'value')
   melted$variable<-factor(x = melted$variable, levels = c("AwayOdds", "HomeOdds"), ordered = TRUE)
-  melted$HomeTeam <- factor(x = melted$HomeTeam, levels = melted$HomeTeam[1:(length(melted$HomeTeam)/2)], ordered = TRUE)
+  #melted$HomeTeam <- factor(x = melted$HomeTeam, levels = melted$HomeTeam[1:(length(melted$HomeTeam)/2)], ordered = TRUE)
   melted$colour = ""
 
   for(i in 1:nrow(melted)){
-    tc <- getTeamColours(home = melted[i, 'HomeTeam'], away= melted[i, 'AwayTeam'])
+    tc <- getTeamColours(home = melted[i, ]$HomeTeam, away= melted[i,]$AwayTeam)
     melted[i,]$colour<-ifelse(melted[i,]$variable == "HomeOdds",
                               yes=tc$home,
                               no=tc$away)
   }
 
   #Prepare instructions to read
-  text_home <- grid::textGrob("Home Win", gp = grid::gpar(fontsize = 10), hjust = 0)
-  text_away <- grid::textGrob("Away Win", gp = grid::gpar(fontsize = 10), hjust = 1)
+  #text_home <- grid::textGrob("Home Win", gp = grid::gpar(fontsize = 10), hjust = 0)
+  #text_away <- grid::textGrob("Away Win", gp = grid::gpar(fontsize = 10), hjust = 1)
 
   #build plot
-  p<-ggplot2::ggplot(melted[melted$variable %in% c('HomeOdds','AwayOdds'),],
-                     ggplot2::aes_(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
+  p<-ggplot2::ggplot(melted, ggplot2::aes_(y = quote(value), x = quote(HomeTeam), group = quote(variable))) +
     ggplot2::geom_bar(stat = "identity", position='fill', fill = melted$colour, colour = 'white') +
     ggplot2::labs(x = "",
                   y = "Series Odds",
                   title = "Predictions for Playoff Series",
                   subtitle = paste0("Before Games on ", Sys.Date(), ". Number of wins in brackets."),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+                  caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
     ggplot2::theme_bw() +
     ggplot2::theme(axis.text.y = ggplot2::element_blank(),
                    axis.ticks.y = ggplot2::element_blank(),
@@ -519,8 +521,8 @@ plot_game<-function(home, away, params=NULL, maxgoal = 10){
   goals$Away<-colSums(probability_matrix)*1/sum(colSums(probability_matrix))
   goals$Home<-rowSums(probability_matrix)*1/sum(rowSums(probability_matrix))
 
-  goals<-reshape2::melt(goals, id = "Goals", variable.name = "Team", value.name = "Density")
-
+  #goals<-reshape2::melt(goals, id = "Goals", variable.name = "Team", value.name = "Density")
+  goals<-tidyr::pivot_longer(goals, cols = c("Home", "Away"), names_to = "Team", values_to="Density")
   tc<-getTeamColours(home = home, away = away)
   plotcolors<-c(tc$home,tc$away)
 
@@ -541,7 +543,7 @@ plot_game<-function(home, away, params=NULL, maxgoal = 10){
                   y = "Odds",
                   title = "Predicted Goals",
                   subtitle =  paste0(away, " at ", home, " on ", Sys.Date(),"\nWin Odds - Away: ", format(round(odds[[3]], 3), nsmall = 3), " - Home: ", format(round(odds[[1]], 3), nsmall = 3), " - OT/SO: ", format(round(odds[[2]], 3), nsmall = 3)),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+                  caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.title = ggplot2::element_blank(),
                    legend.background = ggplot2::element_rect(fill = 'white', colour = 'white'),
@@ -606,7 +608,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = file.path(devtools::
       ggplot2::labs(x = 'Predicted Point Likelyhood',
                     y = '',
                     title = paste0("Point Likelyhoods for ", conf, " Conference - ", getCurrentSeason8()),
-                    caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+                    caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
       ggridges::theme_ridges(grid = TRUE) +
       ggplot2::theme(legend.position = "none",
                      panel.grid.major.y = ggplot2::element_line(size=.1, color="grey"))
@@ -666,7 +668,7 @@ plot_team_rating<-function(m = HockeyModel::m, teamlist = NULL){
                   y = "Defence",
                   title = "Current Team Offence & Defence Ratings",
                   subtitle = paste0("As of ", Sys.Date()),
-                  caption = paste0("P. Bulsink (@BulsinkB) | ", Sys.Date()))+
+                  caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
     ggplot2::coord_cartesian(xlim = c(-max(abs(team_params$Attack))+0.1,
                                       max(abs(team_params$Attack))+0.1),
@@ -791,7 +793,7 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
     tibble::add_column("image" = "", .after = 1) %>%
     dplyr::mutate("image" = .data$Team) %>%
     gt::gt() %>%
-    gt::tab_header(title = paste(caption_text, "Playoff Odds"), subtitle = paste0("Generated ", Sys.Date(), " | P. Bulsink (@BulsinkB)")) %>%
+    gt::tab_header(title = paste(caption_text, "Playoff Odds"), subtitle = paste0("Generated ", Sys.Date(), " | P. Bulsink (@BulsinkBot)")) %>%
     gt::cols_label("block" = " ",
                    "image" = " ",
                    "Make_Playoffs" = "Make Playoffs",
@@ -871,7 +873,7 @@ daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyM
     dplyr::mutate("homeimage" = .data$HomeTeam,
                   "awayimage" = .data$AwayTeam) %>%
     gt::gt() %>%
-    gt::tab_header(title = paste0("Game Odds"), subtitle = paste0("For games ", today, " | P. Bulsink (@BulsinkB)")) %>%
+    gt::tab_header(title = paste0("Game Odds"), subtitle = paste0("For games ", today, " | P. Bulsink (@BulsinkBot)")) %>%
     gt::tab_spanner(label = "Home", columns = c('HomeTeam', 'HomexG', 'HomeWin')) %>%
     gt::tab_spanner(label = "Away", columns = c('AwayWin', 'AwayxG', 'AwayTeam')) %>%
     gt::cols_label("homeblock" = " ",
