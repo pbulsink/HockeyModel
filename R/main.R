@@ -236,9 +236,9 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
     }
 
     #Make Pace Plots
-    plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, scores = modelparams$scores)
-    plot_pace_by_division(graphic_dir = graphic_dir, subdir = subdir, scores=modelparams$scores)
-    #plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
+    #plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, scores = modelparams$scores)
+    #plot_pace_by_division(graphic_dir = graphic_dir, subdir = subdir, scores=modelparams$scores)
+    plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
   }
 
   message("Posting Tweets...")
