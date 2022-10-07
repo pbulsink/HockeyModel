@@ -97,7 +97,7 @@ ratings <- function(m = HockeyModel::m) {
   return(plot_team_rating(m=m))
 }
 
-tweet <- function(games, graphic_dir = './prediction_results/graphics/', token = rtweet::get_token(), delay =stats::runif(1, min=2,max=6)*60, schedule=HockeyModel::schedule){
+tweet <- function(games, graphic_dir = './prediction_results/graphics', token = rtweet::auth_get(), delay =stats::runif(1, min=2,max=6)*60, schedule=HockeyModel::schedule){
 
   # if(!is.null(games_today)){
   #   #don't try tweet todays' games if none exist
@@ -114,7 +114,8 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
   #                     in_reply_to_status_id = reply_id, token = token)
   # } else {
   rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
-                       media = file.path(graphic_dir, "current_rating.png"))
+                     media = file.path(graphic_dir, "current_rating.png"),
+                     media_alt_text = paste0("Current team rating graphic for ", Sys.Date(), "."))
   #}
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
@@ -124,7 +125,8 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
     # Only runs if schedule has regular season games remaining
 
     rtweet::post_tweet(status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
-                       media = file.path(graphic_dir, "point_predict.png"), token = token)
+                       media = file.path(graphic_dir, "point_predict.png"), token = token,
+                       media_alt_text = paste0("Points predicted history for the last 14 days, as of ", Sys.Date(),""))
 
     my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
     reply_id<-my_timeline$status_id[1]
@@ -135,7 +137,8 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 
     rtweet::post_tweet(status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                        media = file.path(graphic_dir, "playoff_odds.png"),
-                       in_reply_to_status_id = reply_id, token = token)
+                       in_reply_to_status_id = reply_id, token = token,
+                       media_alt_text = paste0("Playoff Odds for each NHL team history and today's value as of ",Sys.Date(), ""))
 
     my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
     reply_id<-my_timeline$status_id[1]
@@ -146,7 +149,8 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 
     rtweet::post_tweet(status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                        media = file.path(graphic_dir, "president_odds.png"),
-                       in_reply_to_status_id = reply_id, token = token)
+                       in_reply_to_status_id = reply_id, token = token,
+                       media_alt_text = paste0("President's Trophy Odds for each NHL team history and today's value as of ",Sys.Date(), ""))
   }
 }
 
@@ -158,7 +162,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics/', token =
 #' @param delay delay between tweet posts
 #'
 #' @export
-dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir = "pace", token = rtweet::get_token(), delay =stats::runif(1, min=2,max=6)*60){
+dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir = "pace", token = rtweet::auth_get(), delay =stats::runif(1, min=2,max=6)*60){
 
   if(inOffSeason()){
     if(getSeasonStartDate()-Sys.Date() > 7 | getSeasonStartDate() - Sys.Date() < 0){
@@ -295,7 +299,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics/', subdir 
 #' @param scores HockeyModel::scores or a custom value
 #'
 #' @export
-tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", prediction_dir = file.path(devtools::package_file(), "prediction_results"), token = rtweet::get_token(), scores = HockeyModel::scores){
+tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", prediction_dir = file.path(devtools::package_file(), "prediction_results"), token = rtweet::auth_get(), scores = HockeyModel::scores){
   #make sure we're working with the most up-to-date info.
   scores<-updateScoresAPI(save_data = T)
 
@@ -332,7 +336,8 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.p
                                          subdir,
                                          paste0(tolower(gsub(" ", "_", team)), '.png')),
                        in_reply_to_status_id = reply_id,
-                       token = token)
+                       token = token,
+                       media_alt_text = paste0(team, "'s Performance against predicted pace as of ",Sys.Date(), ""))
 
     #until Rtweet has scheduler
     message("Delaying ", delay, " seconds to space tweets...")
@@ -367,7 +372,8 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.p
                                          subdir,
                                          paste0(division, '_pace.png')),
                        in_reply_to_status_id = reply_id,
-                       token = token)
+                       token = token,
+                       media_alt_text = paste0(division, " teams pace above/below expected as of ", Sys.Date(), "."))
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
     my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
@@ -384,7 +390,7 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.p
 #' @param scores updated scores
 #
 #' @export
-tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", token = rtweet::get_token(), scores = HockeyModel::scores) {
+tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", token = rtweet::auth_get(), scores = HockeyModel::scores) {
   #make likelihood plots
   #plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
 
@@ -396,7 +402,8 @@ tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir 
                          media = file.path(graphic_dir,
                                            subdir,
                                            paste0(tolower(conf), 'likelihood.png')),
-                         token = token)
+                         token = token,
+                         media_alt_text = paste0("Point likelihoods for teams in the ", conf, " conference."))
       #until Rtweet has scheduler
       message("Delaying ", delay/2, " seconds to space tweets...")
       Sys.sleep(delay/2)
@@ -413,7 +420,7 @@ tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir 
 #' @param token the token for rtweet
 #'
 #' @export
-tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), params=NULL, token = rtweet::get_token()){
+tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), params=NULL, token = rtweet::auth_get()){
   params<-parse_dc_params(params)
   #Tweet each game
   if(is.null(games)){
@@ -444,7 +451,8 @@ tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*6
     status<-paste0(teamColours[teamColours$Team == away, "Hashtag"], " at ", teamColours[teamColours$Team == home, "Hashtag"], " predicted goals. #", getShortTeam(away),"vs",getShortTeam(home)," #HockeyTwitter")
     rtweet::post_tweet(status = status,
                        media = file.path(graphic_dir, 'predicted_goals.png'),
-                       token = token)
+                       token = token,
+                       media_alt_text = "Odds of each goal for both ", away, " and ", home, " in their game.")
 
     file.remove(file.path(graphic_dir, 'predicted_goals.png'))
 
@@ -460,7 +468,7 @@ tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*6
 #'
 #' @return NULL
 #' @export
-tweetMetrics<-function(token = rtweet::get_token()){
+tweetMetrics<-function(token = rtweet::auth_get()){
   metrics<-getSeasonMetricsDC()
 
   status <- paste0("Metrics as of ", Sys.Date(),
@@ -480,7 +488,7 @@ tweetMetrics<-function(token = rtweet::get_token()){
 #'
 #' @return NULL
 #' @export
-tweetSeries<-function(token = rtweet::get_token(), params=NULL, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics")){
+tweetSeries<-function(token = rtweet::auth_get(), params=NULL, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics")){
   params<-parse_dc_params(params)
   while(grDevices::dev.cur()!=1){
     grDevices::dev.off()
@@ -502,7 +510,8 @@ tweetSeries<-function(token = rtweet::get_token(), params=NULL, graphic_dir = fi
 
   rtweet::post_tweet(status = status,
                      media = file.path(graphic_dir, 'series_odds.png'),
-                     token = token)
+                     token = token,
+                     media_alt_text = "Odds for each series' winner")
 }
 
 
@@ -518,7 +527,7 @@ tweetSeries<-function(token = rtweet::get_token(), params=NULL, graphic_dir = fi
 #'
 #' @return NULL
 #' @export
-tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::get_token(), graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), trimcup = FALSE){
+tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::auth_get(), graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), trimcup = FALSE){
   params<-parse_dc_params(params)
   playoffodds <- simulatePlayoffs(summary_results = summary_results, params=params)
 
@@ -533,6 +542,6 @@ tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::ge
   #Posting Tweet
   rtweet::post_tweet(status = status,
                      media = c(file.path(graphic_dir, "eastern_playoff_odds.png"), file.path(graphic_dir, "western_playoff_odds.png")),
-                     token = token)
+                     token = token, media_alt_text = c("Eastern Playoff Odds", "Western Playoff Odds"))
 
 }

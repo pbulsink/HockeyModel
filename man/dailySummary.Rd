@@ -5,9 +5,9 @@
 \title{Daily functions, rolled into one call}
 \usage{
 dailySummary(
-  graphic_dir = "./prediction_results/graphics/",
+  graphic_dir = "./prediction_results/graphics",
   subdir = "pace",
-  token = rtweet::get_token(),
+  token = rtweet::auth_get(),
   delay = stats::runif(1, min = 2, max = 6) * 60
 )
 }

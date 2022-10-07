@@ -4,7 +4,7 @@
 \alias{tweetMetrics}
 \title{Tweet Metrics}
 \usage{
-tweetMetrics(token = rtweet::get_token())
+tweetMetrics(token = rtweet::auth_get())
 }
 \arguments{
 \item{token}{rtweet token}

@@ -7,7 +7,7 @@
 tweetPlayoffOdds(
   summary_results = NULL,
   params = NULL,
-  token = rtweet::get_token(),
+  token = rtweet::auth_get(),
   graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
   trimcup = FALSE
 )

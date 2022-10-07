@@ -399,7 +399,7 @@ updateRankingsToToday <- function(rankings, params, scores=HockeyModel::scores){
 #'
 #' @return a data.frame with colums for GameID, Home & Away Teams, Home & Away win percentage, and TotalxG predicted
 #' @export
-getIterativePredictions<-function(date, schedule=HockeyModel::schedule,  scores=HockeyModel::scores, rankings=HockeyModel::iterativeRankings, params=HockeyModel::iterativeParameters){
+getIterativeTable<-function(date, schedule=HockeyModel::schedule,  scores=HockeyModel::scores, rankings=HockeyModel::iterativeRankings, params=HockeyModel::iterativeParameters){
   params_xg <- params$params_xg
   params_wl <- params$params_wl
 
@@ -421,7 +421,7 @@ getIterativePredictions<-function(date, schedule=HockeyModel::schedule,  scores=
 iterateiveDailyUpdate<-function(){
   scores<-updateScoresAPI()
   schedule<-updateScheduleAPI()
-  results<-getIterativeMixed(date=Sys.Date(), schedule=schedule, scores=scores)
+  results<-getIterativeTable(date=Sys.Date(), schedule=schedule, scores=scores)
   return(results)
 }
 
