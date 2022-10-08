@@ -102,13 +102,15 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics', token = 
   # if(!is.null(games_today)){
   #   #don't try tweet todays' games if none exist
   #   rtweet::post_tweet(status = "Predicted odds table for today's #NHL games. #HockeyTwitter",
-  #                     media = file.path(graphic_dir, "today_odds_table.png"), token = token)
+  #                     media = file.path(graphic_dir, "today_odds_table.png"), token = token,
+  #                     media_alt_text = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), "."))
   #   my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
-  #   reply_id<-my_timeline$status_id[1]
+  #   reply_id<-my_timeline$id[1]
   #   rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
-  #                      media = file.path(graphic_dir, "today_odds.png"), token = token)
+  #                      media = file.path(graphic_dir, "today_odds.png"), token = token,
+  #                      media_alt_text = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), "."))
   #   my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
-  #   reply_id<-my_timeline$status_id[1]
+  #   reply_id<-my_timeline$id[1]
   #   rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
   #                     media = file.path(graphic_dir, "current_rating.png"),
   #                     in_reply_to_status_id = reply_id, token = token)
@@ -129,7 +131,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics', token = 
                        media_alt_text = paste0("Points predicted history for the last 14 days, as of ", Sys.Date(),""))
 
     my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
-    reply_id<-my_timeline$status_id[1]
+    reply_id<-my_timeline$id[1]
 
     #until Rtweet has scheduler
     message("Delaying ", delay, " seconds to space tweets...")
@@ -141,7 +143,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics', token = 
                        media_alt_text = paste0("Playoff Odds for each NHL team history and today's value as of ",Sys.Date(), ""))
 
     my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
-    reply_id<-my_timeline$status_id[1]
+    reply_id<-my_timeline$id[1]
 
     #until Rtweet has scheduler
     message("Delaying ", delay, " seconds to space tweets...")
@@ -343,7 +345,7 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.p
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(stats::runif(1,min=1,max=3)*60)
     my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
-    reply_id<-my_timeline$status_id[1]
+    reply_id<-my_timeline$id[1]
   }
   pacediff<-data.frame("Team" = current_preds$Team, "Initial" = preds$meanPoints, "Current" = current_preds$meanPoints, stringsAsFactors = FALSE)
   pacediff$Diff <- pacediff$Current - pacediff$Initial
@@ -377,7 +379,7 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.p
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
     my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
-    reply_id<-my_timeline$status_id[1]
+    reply_id<-my_timeline$id[1]
   }
 }
 
