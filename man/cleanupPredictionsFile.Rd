@@ -5,7 +5,7 @@
 \title{Cleanup Predictions File}
 \usage{
 cleanupPredictionsFile(
-  filepath = file.path(devtools::package_file(), "data-raw", "dailyodds.csv")
+  filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv")
 )
 }
 \arguments{

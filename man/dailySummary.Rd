@@ -7,7 +7,7 @@
 dailySummary(
   graphic_dir = "./prediction_results/graphics",
   subdir = "pace",
-  token = rtweet::auth_get(),
+  token = NULL,
   delay = stats::runif(1, min = 2, max = 6) * 60
 )
 }

@@ -5,9 +5,9 @@
 \title{Tweet Series}
 \usage{
 tweetSeries(
-  token = rtweet::auth_get(),
+  token = NULL,
   params = NULL,
-  graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics")
+  graphic_dir = getOption("HockeyModel.graphics.path")
 )
 }
 \arguments{

@@ -7,8 +7,8 @@
 tweetPlayoffOdds(
   summary_results = NULL,
   params = NULL,
-  token = rtweet::auth_get(),
-  graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
+  token = NULL,
+  graphic_dir = getOption("HockeyModel.graphics.path"),
   trimcup = FALSE
 )
 }

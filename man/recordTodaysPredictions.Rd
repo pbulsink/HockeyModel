@@ -6,7 +6,7 @@
 \usage{
 recordTodaysPredictions(
   today = Sys.Date(),
-  filepath = file.path(devtools::package_file(), "data-raw", "dailyodds.csv"),
+  filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv"),
   schedule = HockeyModel::schedule,
   params = NULL,
   include_xG = FALSE,

@@ -7,7 +7,7 @@
 simulatePlayoffs(
   summary_results = NULL,
   nsims = 1e+05,
-  cores = Null,
+  cores = NULL,
   params = NULL
 )
 }

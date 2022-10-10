@@ -9,7 +9,7 @@ dcPredictMultipleDays(
   end = Sys.Date(),
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
-  filedir = file.path(devtools::package_file(), "prediction_results"),
+  filedir = getOption("HockeyModel.prediction.path"),
   nsims = 1e+05,
   cores = NULL,
   likelihood_graphic = TRUE
