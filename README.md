@@ -28,11 +28,7 @@ Current predictions are below, and are always posted on twitter at [@BulsinkBot]
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/president_odds.png" alt="President's Trophy Odds">
 
 # Recent Changes
-- Implemented Ridges plot for expected end-of-season points per team.
-- Lots of teams have blue or red primary colours. Implemented new algorithm to use an alternate colour for one or both teams if the primary colours are too similar.
-- Backend code changes for ease of editing/updating.
-- Added playoff changes for each round and winning the cup, including posting to Twitter daily in March and April. Odds are posted as a table image (such as the Eastern Conference below):
-<img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/east_playoff_odds.png" alt="Eastern Conference Playoff Progression Odds">
+Installation now doesn't automatically install documenting, testing, graphics and parallel processing requirements. You may wish to run `install.packages(c(knitr, rmarkdown, testthat, webshot, progress, markdown, covr, plumber, tictoc, parallel, ggrepel, gt, ggalt, ggridges, scales, ggplot2)).
 
 # To Do
 

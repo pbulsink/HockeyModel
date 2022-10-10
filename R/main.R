@@ -162,7 +162,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics', token = 
 #' @param delay delay between tweet posts
 #'
 #' @export
-dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir = "pace", token = rtweet::auth_get(), delay =stats::runif(1, min=2,max=6)*60){
+dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir = "pace", token = NULL, delay =stats::runif(1, min=2,max=6)*60){
 
   if(inOffSeason()){
     if(getSeasonStartDate()-Sys.Date() > 7 | getSeasonStartDate() - Sys.Date() < 0){
@@ -245,48 +245,52 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir =
     plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
   }
 
-  message("Posting Tweets...")
-  tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir)#, games_today = Sys.Date() %in% sc[sc$GameState != "Postponed", ]$Date)
-  #until Rtweet has scheduler
-  message("Delaying ", delay, " seconds to space tweets...")
-  Sys.sleep(delay)
-
-  # tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], params=params, graphic_dir = graphic_dir, token = token, delay=delay)
-
-  if(inRegularSeason()){
-    tweetPlayoffOdds(token = token, graphic_dir = graphic_dir, params=params)
-
+  if(requireNamespace('rtweet', quietly = TRUE)){
+    if(is.null(token)){
+      token<-rtweet::auth_get()
+    }
+    message("Posting Tweets...")
+    tweet(graphic_dir, token = token, delay = delay, graphic_dir = graphic_dir)#, games_today = Sys.Date() %in% sc[sc$GameState != "Postponed", ]$Date)
     #until Rtweet has scheduler
-    message("Delaying ", delay/2, " seconds to space tweets...")
-    Sys.sleep(delay/2)
-  } else if (inPlayoffs()){
-    tweetPlayoffOdds(token=token, graphic_dir = graphic_dir, trimcup = TRUE)
-  }
-
-  # if(as.numeric(format(Sys.Date(), "%w")) == 1 & inRegularSeason()){
-  #   #On monday post pace plots
-  #   tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
-  # }
-
-  if(as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason()) {
-    message("Tweeting Metrics")
-    #On Sunday post metrics
-    tweetMetrics(token = token)
-  }
-
-  if(as.numeric(format(Sys.Date(), "%w")) == 2 && inRegularSeason()) {
-    message("Tweeting Likelihoods")
-    #On Tuesday post expected points (likelihood)
-    tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
-  }
-
-  series<-getAPISeries()
-  if(!is.na(series) & nrow(series[series$Status == "Ongoing", ]) > 0){  # TODO: Watch next spring to see if this goes ok
-    message("Tweeting Series")
-    tweetSeries(graphic_dir = graphic_dir, token=token, params=params)
+    message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
-  }
 
+    # tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], params=params, graphic_dir = graphic_dir, token = token, delay=delay)
+
+    if(inRegularSeason()){
+      tweetPlayoffOdds(token = token, graphic_dir = graphic_dir, params=params)
+
+      #until Rtweet has scheduler
+      message("Delaying ", delay/2, " seconds to space tweets...")
+      Sys.sleep(delay/2)
+    } else if (inPlayoffs()){
+      tweetPlayoffOdds(token=token, graphic_dir = graphic_dir, trimcup = TRUE)
+    }
+
+    # if(as.numeric(format(Sys.Date(), "%w")) == 1 & inRegularSeason()){
+    #   #On monday post pace plots
+    #   tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
+    # }
+
+    if(as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason()) {
+      message("Tweeting Metrics")
+      #On Sunday post metrics
+      tweetMetrics(token = token)
+    }
+
+    if(as.numeric(format(Sys.Date(), "%w")) == 2 && inRegularSeason()) {
+      message("Tweeting Likelihoods")
+      #On Tuesday post expected points (likelihood)
+      tweetLikelihoods(delay = delay, graphic_dir = graphic_dir, token = token)
+    }
+
+    series<-getAPISeries()
+    if(!is.na(series) & nrow(series[series$Status == "Ongoing", ]) > 0){  # TODO: Watch next spring to see if this goes ok
+      message("Tweeting Series")
+      tweetSeries(graphic_dir = graphic_dir, token=token, params=params)
+      Sys.sleep(delay)
+    }
+  }
 }
 
 #' Tweet Pace Plots
