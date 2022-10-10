@@ -187,7 +187,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
 #'
 #' @return ggplot graphic of team pace vs. predicted
 #' @export
-plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file(), "prediction_results","graphics"), subdir = 'pace', prediction_dir = file.path(devtools::package_file(), "prediction_results"), scores=HockeyModel::scores){
+plot_pace_by_division<-function(graphic_dir = getOption("HockeyModel.graphics.path"), subdir = 'pace', prediction_dir = getOption("HockeyModel.prediction.path"), scores=HockeyModel::scores){
   stopifnot(requireNamespace('ggplot2', quietly = TRUE))
   sc<-scores[scores$Date >= as.Date(getSeasonStartDate()),]
   sc<-sc[sc$GameType == "R",]
@@ -295,7 +295,7 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
 #' @param scores The HockeyModel::scores object, or custom scores in the same format.
 #'
 #' @export
-plot_pace_by_team<-function(graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = 'pace', prediction_dir = file.path(devtools::package_file(), "prediction_results"), scores=HockeyModel::scores){
+plot_pace_by_team<-function(graphic_dir = getOption("HockeyModel.graphics.path"), subdir = 'pace', prediction_dir = getOption("HockeyModel.prediction.path"), scores=HockeyModel::scores){
   stopifnot(requireNamespace('ggplot2', quietly = TRUE))
   sc<-scores[scores$Date > as.Date(getSeasonStartDate()),]
 
@@ -594,7 +594,7 @@ plot_game<-function(home, away, params=NULL, maxgoal = 10){
 #'
 #' @return plot(s) in a list, named for conference(s) in use at the time.
 #' @export
-plot_point_likelihood <- function(preds=NULL, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = 'pace', savefiles = TRUE) {
+plot_point_likelihood <- function(preds=NULL, graphic_dir = getOption("HockeyModel.graphics.path"), subdir = 'pace', savefiles = TRUE) {
   stopifnot(all(requireNamespace('ggplot2', quietly=TRUE), requireNamespace('ggridges', quietly=TRUE)))
   if(is.null(preds)){
     #Try this:
@@ -843,9 +843,9 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
         locations = gt::cells_body(columns = "image", rows = i),
         fn = function(x) {
           gt::local_image(
-            filename = ifelse(file.exists(file.path(devtools::package_file(), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
-                              file.path(devtools::package_file(), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
-                              file.path(devtools::package_file(), "data-raw", "logos", "nhl.gif")),
+            filename = ifelse(file.exists(file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
+                              file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+                              file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", "nhl.gif")),
             height = "30px")
         }
       )
@@ -937,9 +937,9 @@ daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyM
         locations = gt::cells_body(columns = "homeimage", rows = i),
         fn = function(x) {
           gt::local_image(
-            filename = ifelse(file.exists(file.path(devtools::package_file(), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
-                              file.path(devtools::package_file(), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
-                              file.path(devtools::package_file(), "data-raw", "logos", "nhl.gif")),
+            filename = ifelse(file.exists(file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
+                              file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+                              file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", "nhl.gif")),
             height = "30px")
         }
       ) %>%
@@ -947,9 +947,9 @@ daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyM
       locations = gt::cells_body(columns = "awayimage", rows = i),
       fn = function(x) {
         gt::local_image(
-          filename = ifelse(file.exists(file.path(devtools::package_file(), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
-                            file.path(devtools::package_file(), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
-                            file.path(devtools::package_file(), "data-raw", "logos", "nhl.gif")),
+          filename = ifelse(file.exists(file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
+                            file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+                            file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", "nhl.gif")),
           height = "30px")
       }
     )

@@ -26,7 +26,7 @@ updateModel <- function(save_data=TRUE){
 #' @return NULL
 #'
 #' @export
-updatePredictions<- function(data_dir = file.path(devtools::package_file(), "prediction_results"), scores = HockeyModel::scores, schedule = HockeyModel::schedule, params=NULL){
+updatePredictions<- function(data_dir = getOption("HockeyModel.prediction.path"), scores = HockeyModel::scores, schedule = HockeyModel::schedule, params=NULL){
   params<-parse_dc_params(params)
 
   if(scores$Date[nrow(scores)] < (Sys.Date())){
@@ -303,7 +303,14 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir =
 #' @param scores HockeyModel::scores or a custom value
 #'
 #' @export
-tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", prediction_dir = file.path(devtools::package_file(), "prediction_results"), token = rtweet::auth_get(), scores = HockeyModel::scores){
+tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = getOption("HockeyModel.graphics.path"), subdir = "pace", prediction_dir = getOption("HockeyModel.prediction.path"), token = NULL, scores = HockeyModel::scores){
+
+  if(!requireNamespace('rtweet', quietly = TRUE)){
+    stop("Must install rtweet to send tweets")
+  } else if(is.null(token)){
+    token = rtweet::auth_get()
+  }
+
   #make sure we're working with the most up-to-date info.
   scores<-updateScoresAPI(save_data = T)
 
@@ -394,7 +401,13 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = file.p
 #' @param scores updated scores
 #
 #' @export
-tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = "pace", token = rtweet::auth_get(), scores = HockeyModel::scores) {
+tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir = getOption("HockeyModel.graphics.path"), subdir = "pace", token = NULL, scores = HockeyModel::scores) {
+  if(!requireNamespace('rtweet', quietly = TRUE)){
+    stop("Must install rtweet to send tweets")
+  } else if(is.null(token)){
+    token = rtweet::auth_get()
+  }
+
   #make likelihood plots
   #plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
 
@@ -424,7 +437,13 @@ tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir 
 #' @param token the token for rtweet
 #'
 #' @export
-tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*60, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), params=NULL, token = rtweet::auth_get()){
+tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*60, graphic_dir = getOption("HockeyModel.graphics.path"), params=NULL, token = NULL){
+  if(!requireNamespace('rtweet', quietly = TRUE)){
+    stop("Must install rtweet to send tweets")
+  } else if(is.null(token)){
+    token = rtweet::auth_get()
+  }
+
   params<-parse_dc_params(params)
   #Tweet each game
   if(is.null(games)){
@@ -472,7 +491,13 @@ tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*6
 #'
 #' @return NULL
 #' @export
-tweetMetrics<-function(token = rtweet::auth_get()){
+tweetMetrics<-function(token = NULL){
+  if(!requireNamespace('rtweet', quietly = TRUE)){
+    stop("Must install rtweet to send tweets")
+  } else if(is.null(token)){
+    token = rtweet::auth_get()
+  }
+
   metrics<-getSeasonMetricsDC()
 
   status <- paste0("Metrics as of ", Sys.Date(),
@@ -492,7 +517,13 @@ tweetMetrics<-function(token = rtweet::auth_get()){
 #'
 #' @return NULL
 #' @export
-tweetSeries<-function(token = rtweet::auth_get(), params=NULL, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics")){
+tweetSeries<-function(token = NULL, params=NULL, graphic_dir = getOption("HockeyModel.graphics.path")){
+  if(!requireNamespace('rtweet', quietly = TRUE)){
+    stop("Must install rtweet to send tweets")
+  } else if(is.null(token)){
+    token = rtweet::auth_get()
+  }
+
   params<-parse_dc_params(params)
   while(grDevices::dev.cur()!=1){
     grDevices::dev.off()
@@ -531,8 +562,14 @@ tweetSeries<-function(token = rtweet::auth_get(), params=NULL, graphic_dir = fil
 #'
 #' @return NULL
 #' @export
-tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::auth_get(), graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), trimcup = FALSE){
+tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = NULL, graphic_dir = getOption("HockeyModel.graphics.path"), trimcup = FALSE){
   stopifnot(requireNamespace("gt", quietly = TRUE))
+  if(!requireNamespace('rtweet', quietly = TRUE)){
+    stop("Must install rtweet to send tweets")
+  } else if(is.null(token)){
+    token = rtweet::auth_get()
+  }
+
   params<-parse_dc_params(params)
   playoffodds <- simulatePlayoffs(summary_results = summary_results, params=params)
 

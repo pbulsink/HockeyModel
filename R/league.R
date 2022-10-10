@@ -271,7 +271,7 @@ simulateSeasonParallel <- function(scores=HockeyModel::scores, nsims=10000, sche
 #'
 #' @return a data frame.
 #' @export
-compile_predictions<-function(dir=file.path(devtools::package_file(), "prediction_results")){
+compile_predictions<-function(dir=getOption("HockeyModel.prediction.path")){
   #Find the files
   filelist<-list.files(path = dir)
   pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
@@ -641,16 +641,16 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames
 #'
 #' @return a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)
 #' @export
-simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = Null, params=NULL){
+simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = NULL, params=NULL){
   params <- parse_dc_params(params)
   cores<-parseCores(cores)
   #TODO use compile_predictions for this?
   if(is.null(summary_results)){
-    filelist<-list.files(path = file.path(devtools::package_file(), "prediction_results"))
+    filelist<-list.files(path = getOption("HockeyModel.prediction.path"))
     pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
     pdates<-pdates[pdates != 'graphics']
     lastp<-as.Date(max(pdates))
-    summary_results<-readRDS(file.path(devtools::package_file(), "prediction_results", paste0(lastp,"-predictions.RDS")))
+    summary_results<-readRDS(file.path(getOption("HockeyModel.prediction.path"), paste0(lastp,"-predictions.RDS")))
   }
 
   summary_results<-summary_results %>%
@@ -1334,7 +1334,7 @@ getAllHomeAwayOdds<-function(teamlist, params=NULL){
 #'
 #' @return NULL
 #' @export
-recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv"), schedule=HockeyModel::schedule, params=NULL, include_xG=FALSE, draws=TRUE){
+recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(getOption("HockeyModel.data.path"),"dailyodds.csv"), schedule=HockeyModel::schedule, params=NULL, include_xG=FALSE, draws=TRUE){
   params<-parse_dc_params(params)
   stopifnot(is.Date(today))
   today<-as.Date(today)
@@ -1374,7 +1374,7 @@ recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools:
 #'
 #' @return NULL
 #' @export
-cleanupPredictionsFile<-function(filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv")){
+cleanupPredictionsFile<-function(filepath=file.path(getOption("HockeyModel.data.path"),"dailyodds.csv")){
   dailyodds<-utils::read.csv(filepath)
   dailyodds<-dailyodds %>%
     dplyr::mutate("Date" = as.Date(.data$Date)) %>%
@@ -1386,7 +1386,7 @@ cleanupPredictionsFile<-function(filepath=file.path(devtools::package_file(), "d
   return(TRUE)
 }
 
-build_past_predictions<-function(startDate, endDate, filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv"), include_xG=FALSE, draws=TRUE){
+build_past_predictions<-function(startDate, endDate, filepath=file.path(getOption("HockeyModel.data.path"),"dailyodds.csv"), include_xG=FALSE, draws=TRUE){
   stopifnot(is.Date(startDate))
   stopifnot(is.Date(endDate))
   startDate<-as.Date(startDate)

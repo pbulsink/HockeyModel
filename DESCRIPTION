@@ -15,14 +15,11 @@ Imports:
     magrittr,
     tibble,
     foreach,
-    usethis,
-    rtweet,
     nhlapi,
     stringi,
     rlang,
     tidyr,
     dtplyr,
-    devtools,
     BulsinkBxG
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
@@ -43,5 +40,8 @@ Suggests:
     ggalt,
     ggridges,
     scales,
-    ggplot2
+    rtweet,
+    ggplot2,
+    devtools,
+    usethis
 VignetteBuilder: knitr

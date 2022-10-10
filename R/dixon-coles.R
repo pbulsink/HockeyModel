@@ -36,7 +36,7 @@ updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), sav
   beta <- params$beta
   eta <- params$eta
   k <- params$k
-  if(save_data){
+  if(save_data & requireNamespace('usethis', quietly = TRUE)){
     suppressMessages(usethis::use_data(m, rho, beta, eta, k, overwrite = TRUE))
   }
   return(list("m" = m, "rho"=rho, "beta" = beta, "eta" = eta, "k" = k))
@@ -719,7 +719,7 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = file.path(devtools::package_file(), "prediction_results"), nsims = 1e5, cores = NULL, likelihood_graphic=TRUE){
+dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = getOption("HockeyModel.prediction.path"), nsims = 1e5, cores = NULL, likelihood_graphic=TRUE){
 
   if(!dir.exists(filedir)){
     dir.create(filedir, recursive = TRUE)
