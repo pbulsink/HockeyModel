@@ -528,6 +528,7 @@ tweetSeries<-function(token = rtweet::auth_get(), params=NULL, graphic_dir = fil
 #' @return NULL
 #' @export
 tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, token = rtweet::auth_get(), graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), trimcup = FALSE){
+  stopifnot(requireNamespace("gt", quietly = TRUE))
   params<-parse_dc_params(params)
   playoffodds <- simulatePlayoffs(summary_results = summary_results, params=params)
 

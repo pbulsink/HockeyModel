@@ -9,15 +9,12 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Imports:
-    devtools,
     utils,
     stats,
     ggplot2,
-    ggrepel,
     dplyr,
     magrittr,
     tibble,
-    parallel,
     doSNOW,
     foreach,
     usethis,
@@ -26,11 +23,11 @@ Imports:
     ggridges,
     nhlapi,
     stringi,
-    gt,
     scales,
     rlang,
     tidyr,
     dtplyr,
+    devtools,
     BulsinkBxG
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
@@ -44,5 +41,8 @@ Suggests:
     markdown,
     covr,
     plumber,
-    tictoc
+    tictoc,
+    parallel,
+    ggrepel,
+    gt
 VignetteBuilder: knitr

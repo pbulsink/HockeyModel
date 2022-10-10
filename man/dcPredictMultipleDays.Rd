@@ -11,7 +11,7 @@ dcPredictMultipleDays(
   schedule = HockeyModel::schedule,
   filedir = file.path(devtools::package_file(), "prediction_results"),
   nsims = 1e+05,
-  cores = parallel::detectCores() - 1,
+  cores = NULL,
   likelihood_graphic = TRUE
 )
 }

@@ -122,7 +122,7 @@ playoffDC <- function(home, away, params=NULL, home_wins = 0, away_wins = 0){
 #' @description Odds for each team to get to playoffs.
 #'
 #' @param nsims Number of simulations
-#' @param cores The number of cores to use if using parallel processing
+#' @param cores The number of cores to use if using parallel processing, or 1 for single-core, NULL defaults to all cores or 1 if `parallel` package not installed.
 #' @param scores the historical scores
 #' @param schedule un-played future games
 #' @param odds whether to return odds table or simulate season
@@ -132,13 +132,16 @@ playoffDC <- function(home, away, params=NULL, home_wins = 0, away_wins = 0){
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
-remainderSeasonDC <- function(nsims=1e4, cores = parallel::detectCores()-1, params=NULL, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, regress = TRUE, mu_lambda = FALSE){
+remainderSeasonDC <- function(nsims=1e4, cores = NULL, params=NULL, scores = HockeyModel::scores, schedule = HockeyModel::schedule, odds = FALSE, regress = TRUE, mu_lambda = FALSE){
 
   odds_table<-data.frame(HomeTeam = character(), AwayTeam=character(),
                     HomeWin=numeric(), AwayWin=numeric(), Draw=numeric(),
                     GameID=numeric(), stringsAsFactors = FALSE)
 
+  cores <- parseCores(cores)
+
   params<-parse_dc_params(params=params)
+
 
   last_game_date<-as.Date(max(scores$Date))
   schedule <- add_postponed_to_schedule_end(schedule)
@@ -716,11 +719,12 @@ DCPredictErrorRecover<-function(team, opponent, homeiceadv = FALSE, m = HockeyMo
 #'
 #' @return true, if successful
 #' @export
-dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = file.path(devtools::package_file(), "prediction_results"), nsims = 1e5, cores = parallel::detectCores() - 1, likelihood_graphic=TRUE){
+dcPredictMultipleDays<-function(start=as.Date(getSeasonStartDate()), end=Sys.Date(), scores=HockeyModel::scores, schedule=HockeyModel::schedule, filedir = file.path(devtools::package_file(), "prediction_results"), nsims = 1e5, cores = NULL, likelihood_graphic=TRUE){
 
   if(!dir.exists(filedir)){
     dir.create(filedir, recursive = TRUE)
   }
+  cores<-parseCores(cores)
 
   stopifnot(is.Date(start))
   stopifnot(is.Date(end))

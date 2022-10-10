@@ -43,8 +43,12 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
                   title = paste0("Predicted Points Over the Past ", past_days, " Days"),
                   caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
-    ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+    ggplot2::theme(legend.position = "none")
+
+  if(requireNamespace('ggrepel', quietly = TRUE)){
+    p <- p +
+      ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)),direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+  }
 
   return(p)
 }
@@ -102,8 +106,12 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
                   title = paste0("Playoff Odds Over the Past ", past_days, " Days"),
                   caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()))+
     ggplot2::theme_minimal() +
-    ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+    ggplot2::theme(legend.position = "none")
+
+  if(requireNamespace('ggrepel')){
+    p <- p +
+      ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+  }
 
   return(p)
 }
@@ -156,9 +164,12 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
                   caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()),
                   subtitle = paste0("Teams with < ", round(minimum*100, 2),"% odds hidden for simplicity"))+
     ggplot2::theme_minimal() +
-    ggplot2::theme(legend.position = "none") +
-    ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+    ggplot2::theme(legend.position = "none")
 
+  if(requireNamespace("ggrepel", quietly = TRUE)){
+    p <- p +
+      ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+  }
 
   return(p)
 }
@@ -254,10 +265,13 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
                     caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())) +
       ggplot2::scale_colour_manual(values = teamColoursList) +
       ggplot2::scale_x_continuous(breaks = seq(from=0, to=max(teamPerformance$GameNum), by = 5))+#, expand = ggplot2::expansion(mult = c(0, .1)))+
-      ggrepel::geom_label_repel(ggplot2::aes_string(label = "label"), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(max(teamPerformance$GameNum,12), max(teamPerformance$GameNum,12)+max(teamPerformance$GameNum,12)*.18))+
       ggplot2::theme_minimal() +
       ggplot2::theme(legend.position = "none",
                      plot.margin = ggplot2::unit(c(1,7,1,1), "lines"))
+    if(requireNamespace("ggrepel", quietly = TRUE)){
+      plt<-plt +
+        ggrepel::geom_label_repel(ggplot2::aes_string(label = "label"), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(max(teamPerformance$GameNum,12), max(teamPerformance$GameNum,12)+max(teamPerformance$GameNum,12)*.18))
+    }
 
     grDevices::png(filename = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", division)), '_pace.png')), width = 11, height = 8.5, units = 'in', res = 300)
     print(plt)
@@ -674,12 +688,17 @@ plot_team_rating<-function(m = HockeyModel::m, teamlist = NULL){
                                       max(abs(team_params$Attack))+0.1),
                              ylim = c(-max(abs(team_params$Defence))+0.1,
                                       max(abs(team_params$Defence))+0.1))+
-    ggrepel::geom_text_repel(force=2, max.iter=5000) +
     ggplot2::annotate("label", x = -max(abs(team_params$Attack)), y = -max(abs(team_params$Defence)), hjust = 0, vjust = 0, label = "Bad") +
     ggplot2::annotate("label", x = max(abs(team_params$Attack)), y = max(abs(team_params$Defence)), hjust = 1, vjust = 1, label = "Good") +
     ggplot2::annotate("label", x = -max(abs(team_params$Attack)), y = max(abs(team_params$Defence)), hjust = 0, vjust = 1, label = "Calm") +
     ggplot2::annotate("label", x = max(abs(team_params$Attack)), y = -max(abs(team_params$Defence)), hjust = 1, vjust = 0, label = "Frantic") +
     ggplot2::theme(legend.position="none")
+
+  if(requireNamespace("ggrepel", quietly = TRUE)){
+    p <- p +
+      ggrepel::geom_text_repel(force=2, max.iter=5000)
+  }
+
   return(p)
 }
 
@@ -775,6 +794,7 @@ getTeamColours<-function(home, away, delta = 0.15){
 #' @return a gt table
 #' @export
 format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcup = FALSE){
+  stopifnot(requireNamespace('gt', quietly = TRUE))
   teamColours <- HockeyModel::teamColours
   playoff_odds<-playoff_odds %>%
     dplyr::arrange(dplyr::desc(.data$Win_Cup), dplyr::desc(.data$Win_Conference), dplyr::desc(.data$Win_Second_Round), dplyr::desc(.data$Win_First_Round), dplyr::desc(.data$Make_Playoffs), .data$Team)
@@ -837,6 +857,7 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
 #' @return a gt table
 #' @export
 daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyModel::schedule, include_logo=FALSE){
+  stopifnot(requireNamespace('gt', quietly = TRUE))
   params<-parse_dc_params(params)
   todayodds<-todayDC(today = as.Date(today), params = params, schedule = schedule)
   todayodds$HomexG<-NA

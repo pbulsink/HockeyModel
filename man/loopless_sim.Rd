@@ -6,7 +6,7 @@
 \usage{
 loopless_sim(
   nsims = 1e+05,
-  cores = parallel::detectCores() - 1,
+  cores = NULL,
   schedule = HockeyModel::schedule,
   scores = HockeyModel::scores,
   params = NULL,
