@@ -9,6 +9,7 @@
 #' @return a ggplot object
 #' @export
 plot_prediction_points_by_team<-function(all_predictions = compile_predictions(), past_days = 14, teamColours = HockeyModel::teamColours){
+  stopifnot(all(requireNamespace('ggplot2', quietly=TRUE), requireNamespace('ggalt', quietly=TRUE)))
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -62,6 +63,7 @@ plot_prediction_points_by_team<-function(all_predictions = compile_predictions()
 #' @return a ggplot object
 #' @export
 plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictions(), past_days = 14, teamColours = HockeyModel::teamColours){
+  stopifnot(all(requireNamespace('ggplot2', quietly=TRUE), requireNamespace('ggalt', quietly=TRUE)))
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -126,6 +128,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
 #' @return a ggplot object
 #' @export
 plot_prediction_presidents_by_team <- function(all_predictions = compile_predictions(), past_days = 14, minimum = 0.01, teamColours = HockeyModel::teamColours){
+  stopifnot(all(requireNamespace('ggplot2', quietly=TRUE), requireNamespace('ggalt', quietly=TRUE)))
   #Trim predictions to fit plot
   all_predictions$predictionDate<-as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -185,6 +188,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
 #' @return ggplot graphic of team pace vs. predicted
 #' @export
 plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file(), "prediction_results","graphics"), subdir = 'pace', prediction_dir = file.path(devtools::package_file(), "prediction_results"), scores=HockeyModel::scores){
+  stopifnot(requireNamespace('ggplot2', quietly = TRUE))
   sc<-scores[scores$Date >= as.Date(getSeasonStartDate()),]
   sc<-sc[sc$GameType == "R",]
 
@@ -292,6 +296,7 @@ plot_pace_by_division<-function(graphic_dir = file.path(devtools::package_file()
 #'
 #' @export
 plot_pace_by_team<-function(graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = 'pace', prediction_dir = file.path(devtools::package_file(), "prediction_results"), scores=HockeyModel::scores){
+  stopifnot(requireNamespace('ggplot2', quietly = TRUE))
   sc<-scores[scores$Date > as.Date(getSeasonStartDate()),]
 
   teamlist<-unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
@@ -370,6 +375,7 @@ plot_pace_by_team<-function(graphic_dir = file.path(devtools::package_file(), "p
 #'
 #' @export
 plot_odds_today <- function(today = Sys.Date(), params=NULL, schedule = HockeyModel::schedule, teamColours=HockeyModel::teamColours) {
+  stopifnot(requireNamespace('ggplot2', quietly = TRUE))
   params<-parse_dc_params(params)
   todayodds<-todayDC(today = today, params, schedule = schedule)
   todayodds$GameID<-NULL
@@ -447,6 +453,7 @@ plot_odds_today <- function(today = Sys.Date(), params=NULL, schedule = HockeyMo
 #'
 #' @export
 plot_playoff_series_odds <- function(series = getAPISeries(), params=NULL, teamColours=HockeyModel::teamColours) {
+  stopifnot(requireNamespace('ggplot2', quietly = TRUE))
   params<-parse_dc_params(params)
   series<-series[,c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
   series$HomeOdds<-apply(series, MARGIN = 1, FUN = function(x) playoffWin(x[1], x[2], x[3], x[4], params=params))
@@ -512,6 +519,7 @@ plot_playoff_series_odds <- function(series = getAPISeries(), params=NULL, teamC
 #' @return a ggplot object
 #' @export
 plot_game<-function(home, away, params=NULL, maxgoal = 10){
+  stopifnot(requireNamespace('ggplot2', quietly = TRUE))
   params<-parse_dc_params(params)
   # Expected goals home
   lambda <- try(stats::predict(params$m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
@@ -587,6 +595,7 @@ plot_game<-function(home, away, params=NULL, maxgoal = 10){
 #' @return plot(s) in a list, named for conference(s) in use at the time.
 #' @export
 plot_point_likelihood <- function(preds=NULL, graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"), subdir = 'pace', savefiles = TRUE) {
+  stopifnot(all(requireNamespace('ggplot2', quietly=TRUE), requireNamespace('ggridges', quietly=TRUE)))
   if(is.null(preds)){
     #Try this:
     preds<-loopless_sim(nsims = 1e4)$raw_results
@@ -650,6 +659,7 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = file.path(devtools::
 #' @return a ggplot2 plot
 #' @export
 plot_team_rating<-function(m = HockeyModel::m, teamlist = NULL){
+  stopifnot(requireNamespace('ggplot2', quietly = TRUE))
   if(is.null(teamlist)){
     teamlist<-as.character(unique(m$data$Team))
   }
@@ -794,7 +804,7 @@ getTeamColours<-function(home, away, delta = 0.15){
 #' @return a gt table
 #' @export
 format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcup = FALSE){
-  stopifnot(requireNamespace('gt', quietly = TRUE))
+  stopifnot(all(requireNamespace('gt', quietly = TRUE), requireNamespace('scales', quietly = TRUE)))
   teamColours <- HockeyModel::teamColours
   playoff_odds<-playoff_odds %>%
     dplyr::arrange(dplyr::desc(.data$Win_Cup), dplyr::desc(.data$Win_Conference), dplyr::desc(.data$Win_Second_Round), dplyr::desc(.data$Win_First_Round), dplyr::desc(.data$Make_Playoffs), .data$Team)
@@ -857,7 +867,7 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
 #' @return a gt table
 #' @export
 daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyModel::schedule, include_logo=FALSE){
-  stopifnot(requireNamespace('gt', quietly = TRUE))
+  stopifnot(all(requireNamespace('gt', quietly = TRUE), requireNamespace('scales', quietly = TRUE)))
   params<-parse_dc_params(params)
   todayodds<-todayDC(today = as.Date(today), params = params, schedule = schedule)
   todayodds$HomexG<-NA

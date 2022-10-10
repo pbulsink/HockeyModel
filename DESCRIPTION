@@ -11,19 +11,14 @@ Roxygen: list(markdown = TRUE)
 Imports:
     utils,
     stats,
-    ggplot2,
     dplyr,
     magrittr,
     tibble,
-    doSNOW,
     foreach,
     usethis,
     rtweet,
-    ggalt,
-    ggridges,
     nhlapi,
     stringi,
-    scales,
     rlang,
     tidyr,
     dtplyr,
@@ -44,5 +39,9 @@ Suggests:
     tictoc,
     parallel,
     ggrepel,
-    gt
+    gt,
+    ggalt,
+    ggridges,
+    scales,
+    ggplot2
 VignetteBuilder: knitr
