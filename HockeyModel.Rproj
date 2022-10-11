@@ -20,3 +20,5 @@ PackageUseDevtools: Yes
 PackageInstallArgs: --with-keep.source
 PackageCheckArgs: --no-stop-on-test-error
 PackageRoxygenize: rd,collate,namespace,vignette
+
+QuitChildProcessesOnExit: Yes
