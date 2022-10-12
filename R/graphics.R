@@ -110,9 +110,9 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none")
 
-  if(requireNamespace('ggrepel')){
+  if(requireNamespace('ggrepel', quietly = TRUE)){
     p <- p +
-      ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA))
+      ggrepel::geom_label_repel(ggplot2::aes_(label = quote(label)), direction = 'y', na.rm = TRUE, segment.alpha = 0, hjust = 0.5, xlim = c(lastdate, NA), max.iter = 1000)
   }
 
   return(p)

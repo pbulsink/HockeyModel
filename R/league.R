@@ -301,9 +301,9 @@ loopless_sim<-function(nsims=1e5, cores = NULL, schedule = HockeyModel::schedule
 
   params<-parse_dc_params(params)
 
-  nsims <- floor(nsims/cores)
-
   cores<-parseCores(cores)
+
+  nsims <- floor(nsims/cores)
 
   schedule<-schedule[!(schedule$GameID %in% scores$GameID), ]
 
@@ -334,7 +334,7 @@ loopless_sim<-function(nsims=1e5, cores = NULL, schedule = HockeyModel::schedule
 
   if(cores == 1 | !requireNamespace('parallel', quietly = TRUE)){
     if(cores > 1){
-      warning("Multi-core processing requires teh parallel package.")
+      warning("Multi-core processing requires the parallel package.")
     }
     #for testing only, really.
     all_results<-sim_engine(all_season = all_season, nsims = nsims, params = params)
@@ -346,10 +346,8 @@ loopless_sim<-function(nsims=1e5, cores = NULL, schedule = HockeyModel::schedule
     cl<-parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
 
-
-
     #Ram management issues. Send smaller chunks more often, hopefully this helps.
-    all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
+    all_results <- foreach::foreach(i=seq_along(1:(cores*5)), .combine='rbind', .packages = "HockeyModel") %dopar% {
       all_results<-sim_engine(all_season = all_season, nsims = ceiling(nsims/5), params=params)
       return(all_results)
     }
