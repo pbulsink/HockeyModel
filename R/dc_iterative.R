@@ -447,3 +447,4 @@ iterativeOddsTable<-function(schedule=HockeyModel::schedule, rankings=HockeyMode
   return(odds_table)
 }
 
+# isxg<-HockeyModel:::iterateSeason(intercept = iterativeParameters$params_xg$intercept, gamma = iterativeParameters$params_xg$gamma, lambda = iterativeParameters$params_xg$lambda, rho = iterativeParameters$params_xg$rho, home_adv = iterativeParameters$params_xg$home_adv, attack_mix = iterativeParameters$params_xg$attack_mix, defend_mix = iterativeParams$params_xg$defend_mix)
