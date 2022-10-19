@@ -447,4 +447,20 @@ iterativeOddsTable<-function(schedule=HockeyModel::schedule, rankings=HockeyMode
   return(odds_table)
 }
 
-# isxg<-HockeyModel:::iterateSeason(intercept = iterativeParameters$params_xg$intercept, gamma = iterativeParameters$params_xg$gamma, lambda = iterativeParameters$params_xg$lambda, rho = iterativeParameters$params_xg$rho, home_adv = iterativeParameters$params_xg$home_adv, attack_mix = iterativeParameters$params_xg$attack_mix, defend_mix = iterativeParams$params_xg$defend_mix)
+getNewIterativeRankings<-function(target_model = "wl", params = HockeyModel::iterativeParameters){
+  stopifnot(target_model %in% c('wl', 'WL', 'xG', 'xg', 'XG'))
+
+  if(target_model %in% c('wl', 'WL')){
+    params<-params$params_wl
+  } else {
+    params<-params$params_xg
+  }
+
+  return(iterateSeason(intercept = params$intercept, gamma = params$gamma, lambda = params$lambda, rho = params$rho, home_adv = params$home_adv, attack_mix = params$attack_mix, defend_mix = params$defend_mix)$rankings)
+}
+
+getReplacementRankings<-function(params = HockeyModel::iterativeParameters){
+  rankings_wl<-getNewIterativeRankings('wl', params = params)
+  rankings_xg<-getNewIterativeRankings('xg', params = params)
+  return(list('rankings_wl' = rankings_wl, 'rankings_xg' = rankings_xg))
+}
