@@ -138,7 +138,7 @@ todayOdds <- function(params=NULL, today=Sys.Date(), schedule=HockeyModel::sched
 #'
 #' @return a data frame of results
 #' @export
-simulateSeasonParallel <- function(scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, cores = parallel::detectCores() - 1, progress = FALSE, params=NULL){
+simulateSeasonParallel <- function(scores=HockeyModel::scores, nsims=10000, schedule=HockeyModel::schedule, cores = NULL, progress = FALSE, params=NULL){
   teamlist<-c()
   if(!is.null(scores)){
     season_sofar<-scores[scores$Date > as.Date(getSeasonStartDate()),]
@@ -149,16 +149,14 @@ simulateSeasonParallel <- function(scores=HockeyModel::scores, nsims=10000, sche
 
   teamlist<-c(teamlist, sort(unique(c(as.character(schedule$Home), as.character(schedule$Away)))))
 
-  if(!is.finite(cores)) {
-    cores <- 2
-  }
+  cores<-parseCores(cores)
 
   odds_table<-remainderSeasonDC(scores = scores, schedule = schedule, params=params, odds = T)
 
   odds_table$HOT<-extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,2]
   odds_table$AOT<-extraTimeSolver(odds_table$HomeWin, odds_table$AwayWin, odds_table$Draw)[,3]
 
-  if(cores > 1){
+  if(cores > 1 & requireNamespace('parallel', quietly = TRUE)){
     `%dopar%` <- foreach::`%dopar%`  # This hack passes R CMD CHK
     cl<-parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
@@ -203,6 +201,9 @@ simulateSeasonParallel <- function(scores=HockeyModel::scores, nsims=10000, sche
     gc(verbose = FALSE)
 
   } else {
+    if(cores > 1 & !requireNamespace('parallel', quietly = TRUE)){
+      warning("Parallel processing is only available if the parallels package is installed.")
+    }
     all_results<-list()
     for(i in 1:nsims){
       tmp<-odds_table
@@ -270,7 +271,7 @@ simulateSeasonParallel <- function(scores=HockeyModel::scores, nsims=10000, sche
 #'
 #' @return a data frame.
 #' @export
-compile_predictions<-function(dir=file.path(devtools::package_file(), "prediction_results")){
+compile_predictions<-function(dir=getOption("HockeyModel.prediction.path")){
   #Find the files
   filelist<-list.files(path = dir)
   pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
@@ -296,9 +297,11 @@ compile_predictions<-function(dir=file.path(devtools::package_file(), "predictio
 #'
 #' @return a two member list, of all results and summary results
 #' @export
-loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule = HockeyModel::schedule, scores=HockeyModel::scores, params=NULL, season_sofar=NULL, likelihood_graphic=TRUE, odds_table=NULL){
+loopless_sim<-function(nsims=1e5, cores = NULL, schedule = HockeyModel::schedule, scores=HockeyModel::scores, params=NULL, season_sofar=NULL, likelihood_graphic=TRUE, odds_table=NULL){
 
   params<-parse_dc_params(params)
+
+  cores<-parseCores(cores)
 
   nsims <- floor(nsims/cores)
 
@@ -329,7 +332,10 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
 
   rm(oddsseason, season_sofar, odds_table)
 
-  if(cores == 1){
+  if(cores == 1 | !requireNamespace('parallel', quietly = TRUE)){
+    if(cores > 1){
+      warning("Multi-core processing requires the parallel package.")
+    }
     #for testing only, really.
     all_results<-sim_engine(all_season = all_season, nsims = nsims, params = params)
   } else {
@@ -340,10 +346,8 @@ loopless_sim<-function(nsims=1e5, cores = parallel::detectCores() - 1, schedule 
     cl<-parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
 
-
-
     #Ram management issues. Send smaller chunks more often, hopefully this helps.
-    all_results <- foreach::foreach(i=1:(cores*5), .combine='rbind', .packages = "HockeyModel") %dopar% {
+    all_results <- foreach::foreach(i=seq_along(1:(cores*5)), .combine='rbind', .packages = "HockeyModel") %dopar% {
       all_results<-sim_engine(all_season = all_season, nsims = ceiling(nsims/5), params=params)
       return(all_results)
     }
@@ -635,15 +639,16 @@ playoffSeriesOdds<-function(home_odds, away_odds, home_win=0, away_win=0, ngames
 #'
 #' @return a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)
 #' @export
-simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::detectCores() - 1, params=NULL){
+simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = NULL, params=NULL){
   params <- parse_dc_params(params)
+  cores<-parseCores(cores)
   #TODO use compile_predictions for this?
   if(is.null(summary_results)){
-    filelist<-list.files(path = file.path(devtools::package_file(), "prediction_results"))
+    filelist<-list.files(path = getOption("HockeyModel.prediction.path"))
     pdates<-substr(filelist, 1, 10)  # gets the dates list of prediction
     pdates<-pdates[pdates != 'graphics']
     lastp<-as.Date(max(pdates))
-    summary_results<-readRDS(file.path(devtools::package_file(), "prediction_results", paste0(lastp,"-predictions.RDS")))
+    summary_results<-readRDS(file.path(getOption("HockeyModel.prediction.path"), paste0(lastp,"-predictions.RDS")))
   }
 
   summary_results<-summary_results %>%
@@ -706,7 +711,7 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::de
     }
   }
 
-  if(cores > 1){
+  if(cores > 1 | !requireNamespace("parallel", quietly = TRUE)){
     cl<-parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
 
@@ -722,6 +727,9 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = parallel::de
     gc(verbose = FALSE)
 
   } else{
+    if(cores > 1){
+      warning("Multi-core processing requires the parallel package to be installed.")
+    }
     #Single cores is easier for testing
     simresults<-playoffSolverEngine(nsims = nsims, completedSeries = completedSeries, east_results = east_results, west_results = west_results, currentSeries=currentSeries, summary_results = summary_results, homeAwayOdds=homeAwayOdds)
 
@@ -1324,7 +1332,7 @@ getAllHomeAwayOdds<-function(teamlist, params=NULL){
 #'
 #' @return NULL
 #' @export
-recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv"), schedule=HockeyModel::schedule, params=NULL, include_xG=FALSE, draws=TRUE){
+recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(getOption("HockeyModel.data.path"),"dailyodds.csv"), schedule=HockeyModel::schedule, params=NULL, include_xG=FALSE, draws=TRUE){
   params<-parse_dc_params(params)
   stopifnot(is.Date(today))
   today<-as.Date(today)
@@ -1364,7 +1372,7 @@ recordTodaysPredictions<-function(today=Sys.Date(), filepath=file.path(devtools:
 #'
 #' @return NULL
 #' @export
-cleanupPredictionsFile<-function(filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv")){
+cleanupPredictionsFile<-function(filepath=file.path(getOption("HockeyModel.data.path"),"dailyodds.csv")){
   dailyodds<-utils::read.csv(filepath)
   dailyodds<-dailyodds %>%
     dplyr::mutate("Date" = as.Date(.data$Date)) %>%
@@ -1376,7 +1384,7 @@ cleanupPredictionsFile<-function(filepath=file.path(devtools::package_file(), "d
   return(TRUE)
 }
 
-build_past_predictions<-function(startDate, endDate, filepath=file.path(devtools::package_file(), "data-raw","dailyodds.csv"), include_xG=FALSE, draws=TRUE){
+build_past_predictions<-function(startDate, endDate, filepath=file.path(getOption("HockeyModel.data.path"),"dailyodds.csv"), include_xG=FALSE, draws=TRUE){
   stopifnot(is.Date(startDate))
   stopifnot(is.Date(endDate))
   startDate<-as.Date(startDate)

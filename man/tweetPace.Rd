@@ -6,10 +6,10 @@
 \usage{
 tweetPace(
   delay = stats::runif(1, min = 1, max = 3) * 60,
-  graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
+  graphic_dir = getOption("HockeyModel.graphics.path"),
   subdir = "pace",
-  prediction_dir = file.path(devtools::package_file(), "prediction_results"),
-  token = rtweet::auth_get(),
+  prediction_dir = getOption("HockeyModel.prediction.path"),
+  token = NULL,
   scores = HockeyModel::scores
 )
 }

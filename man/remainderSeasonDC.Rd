@@ -6,7 +6,7 @@
 \usage{
 remainderSeasonDC(
   nsims = 10000,
-  cores = parallel::detectCores() - 1,
+  cores = NULL,
   params = NULL,
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
@@ -18,7 +18,7 @@ remainderSeasonDC(
 \arguments{
 \item{nsims}{Number of simulations}
 
-\item{cores}{The number of cores to use if using parallel processing}
+\item{cores}{The number of cores to use if using parallel processing, or 1 for single-core, NULL defaults to all cores or 1 if \code{parallel} package not installed.}
 
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 

@@ -110,7 +110,7 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE)
 
   schedule<-removeUnscheduledGames(schedule = schedule)
 
-  if(save_data){
+  if(save_data & requireNamespace('usethis', quietly = TRUE)){
     suppressMessages(usethis::use_data(schedule, overwrite=TRUE))
   }
   return(schedule)
@@ -262,8 +262,8 @@ removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE
 
   schedule<-schedule[!(schedule$GameID %in% removedGames), ]
 
-  if(save_data){
-    usethis::use_data(schedule, overwrite = TRUE)
+  if(save_data & requireNamespace('usethis', quietly = TRUE)){
+    suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
   }
 
   return(schedule)
@@ -292,7 +292,7 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
         dplyr::filter(!(.data$GameID %in% neededGames)) %>%
         dplyr::bind_rows(updatedSc) %>%
         dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
-      if (save_data){
+      if (save_data & requireNamespace('usethis', quietly = TRUE)){
         suppressMessages(usethis::use_data(scores, overwrite=TRUE))
       }
     }

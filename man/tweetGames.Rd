@@ -7,9 +7,9 @@
 tweetGames(
   games = games_today(),
   delay = stats::runif(1, min = 4, max = 8) * 60,
-  graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
+  graphic_dir = getOption("HockeyModel.graphics.path"),
   params = NULL,
-  token = rtweet::auth_get()
+  token = NULL
 )
 }
 \arguments{

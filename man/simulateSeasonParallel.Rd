@@ -8,7 +8,7 @@ simulateSeasonParallel(
   scores = HockeyModel::scores,
   nsims = 10000,
   schedule = HockeyModel::schedule,
-  cores = parallel::detectCores() - 1,
+  cores = NULL,
   progress = FALSE,
   params = NULL
 )

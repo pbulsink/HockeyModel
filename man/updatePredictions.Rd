@@ -5,7 +5,7 @@
 \title{Update predictions}
 \usage{
 updatePredictions(
-  data_dir = file.path(devtools::package_file(), "prediction_results"),
+  data_dir = getOption("HockeyModel.prediction.path"),
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
   params = NULL

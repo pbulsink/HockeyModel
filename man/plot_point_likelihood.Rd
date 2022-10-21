@@ -6,7 +6,7 @@
 \usage{
 plot_point_likelihood(
   preds = NULL,
-  graphic_dir = file.path(devtools::package_file(), "prediction_results", "graphics"),
+  graphic_dir = getOption("HockeyModel.graphics.path"),
   subdir = "pace",
   savefiles = TRUE
 )

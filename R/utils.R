@@ -349,3 +349,47 @@ gId<-function(gameId){
   }
 }
 is_valid_gameId<-Vectorize(gId)
+
+parseCores<-function(cores){
+  if(is.null(cores)){
+    if (!requireNamespace('parallel', quietly = TRUE)){
+      warning("Parallel package must be installed to use multi-core processing.")
+      cores<-1
+    } else {
+      cores<-parallel::detectCores()
+    }
+  } else {
+    if(!is.integer(cores) | cores <= 0 | !requireNamespace('parallel', quietly = TRUE)){
+      warning("Parallel package must be installed to use multi-core processing.")
+      cores <- 1
+    } else if (cores > parallel::detectCores()){
+      cores <- parallel::detectCores()
+    }
+  }
+  return(cores)
+}
+
+.onLoad <- function(libname, pkgname) {
+  op <- options()
+  if(requireNamespace('devtools', quietly = TRUE)){
+    op.HockeyModel <- list(HockeyModel.prediction.path = file.path(devtools::package_file(), "prediction_results"),
+                           HockeyModel.graphics.path = file.path(devtools::package_file(), "prediction_results", "graphics"),
+                           HockeyModel.data.path = file.path(devtools::package_file(), 'data-raw'))
+  } else {
+    op.HockeyModel <- list(HockeyModel.prediction.path = file.path(path.expand("~"), "HockeyModel","prediction_results"),
+                           HockeyModel.graphics.path = file.path(path.expand("~"), "HockeyModel","prediction_results","graphics"),
+                           HockeyModel.data.path = file.path(path.expand("~"), "HockeyModel", "data-raw"))
+  }
+
+  toset <- !(names(op.HockeyModel) %in% names(op))
+  if(any(toset)) options(op.HockeyModel[toset])
+
+  invisible()
+}
+
+.onAttach <- function(libname, pkgname) {
+  msgtext <- paste0('HockeyModel package loaded.\nUsing ', getOption("HockeyModel.prediction.path"),
+                    ' as prediction path.\nTo change path, set option("HockeyModel.prediction.path" = [new path]).\n',
+                    'This can be done interactively or using .RProfile to save your preference.')
+  packageStartupMessage(msgtext)
+}
