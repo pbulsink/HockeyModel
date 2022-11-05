@@ -4,10 +4,15 @@
 \alias{optimizeIterative}
 \title{Optimize Iterative Dixon-Coles}
 \usage{
-optimizeIterative(target_model = "wl")
+optimizeIterative(
+  target_model = "wl",
+  params = HockeyModel::iterativeParameters
+)
 }
 \arguments{
 \item{target_model}{Default 'wl' for targeting optimization of the win/loss model. Also accepts 'xG'}
+
+\item{params}{The starting point for Parameter optimization}
 }
 \value{
 the results of \code{optim} including parameters

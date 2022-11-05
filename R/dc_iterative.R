@@ -109,9 +109,9 @@ iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973,
   scores$TotalGoals<-scores$HomeGoals + scores$AwayGoals
 
   #Split scores to warm-up phase and predictive phase.
-  warm_ups<-scores[scores$Date < as.Date("2017-08-01") & scores$Date > as.Date("2011-08-01"), ]
-  train <-scores[scores$Date < as.Date("2021-08-01") & scores$Date > as.Date("2017-08-01"), ]
-  test <- scores[scores$Date > as.Date("2021-08-01"),]
+  warm_ups<-scores[scores$Date <= as.Date(Sys.Date()-365*3) & scores$Date > as.Date("2011-08-01"), ]
+  train <-scores[scores$Date < as.Date(Sys.Date()-365) & scores$Date > as.Date(Sys.Date()-365*3), ]
+  test <- scores[scores$Date >= as.Date(Sys.Date()-365),]
 
   train$HomeWin <- train$HomexGPred <- train$AwayxGPred <- train$TotalxGPred <- NA_real_
   test$HomeWin <- test$HomexGPred <- test$AwayxGPred <- test$TotalxGPred <- NA_real_
@@ -179,18 +179,19 @@ iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973,
 #' @description Call this to optimize the iterative dixon-coles method.
 #'
 #' @param target_model Default 'wl' for targeting optimization of the win/loss model. Also accepts 'xG'
+#' @param params The starting point for Parameter optimization
 #'
 #' @return the results of `optim` including parameters
-optimizeIterative<-function(target_model = "wl"){
+optimizeIterative<-function(target_model = "wl", params=HockeyModel::iterativeParameters){
   if(!(target_model %in% c('wl', 'WL', 'Wl', 'wL', 'xg', 'xG', 'XG', 'Xg'))){
     stop("HockeyModel:::optimizeIterative: Target model must be either 'wl' or 'xG'")
   }
   if(target_model %in% c('wl','Wl', 'wL','WL')){
-    params <- HockeyModel::iterativeParameters$params_wl
+    params <- params$params_wl
     optfunc<-optimizeIterative_WL_Internal
     fnscale<-1
   } else {
-    params <- HockeyModel::iterativeParameters$params_xg
+    params <- params$params_xg
     optfunc<-optimizeIterative_XG_Internal
     fnscale<-1
   }
@@ -459,8 +460,38 @@ getNewIterativeRankings<-function(target_model = "wl", params = HockeyModel::ite
   return(iterateSeason(intercept = params$intercept, gamma = params$gamma, lambda = params$lambda, rho = params$rho, home_adv = params$home_adv, attack_mix = params$attack_mix, defend_mix = params$defend_mix)$rankings)
 }
 
-getReplacementRankings<-function(params = HockeyModel::iterativeParameters){
+#' Get (and optionally save to package) iterative rankings
+#'
+#' @param params input parameters to use for retraining
+#' @param save_data whether to save the new parameters to package
+#'
+#' @return invisibly, a new set of rankings
+#' @export
+getReplacementRankings<-function(params = HockeyModel::iterativeParameters, save_data=FALSE){
   rankings_wl<-getNewIterativeRankings('wl', params = params)
   rankings_xg<-getNewIterativeRankings('xg', params = params)
-  return(list('rankings_wl' = rankings_wl, 'rankings_xg' = rankings_xg))
+  iterativeRankings <- list('rankings_wl' = rankings_wl, 'rankings_xg' = rankings_xg)
+  if(save_data & requireNamespace('usethis', quietly = TRUE)){
+    usethis::use_data(iterativeRankings, overwrite = T)
+  }
+  invisible(iterativeRankings)
+}
+
+#' Get replacement/new iterative parameters
+#'
+#' @param params parameters to start with.
+#' @param save_data whether to save data to the package. Default false
+#'
+#' @return invisibly, new parameters
+#' @export
+getReplacementIterativeParameters <- function(params = HockeyModel::iterativeParameters, save_data=FALSE){
+  optim_wl<-optimizeIterative('wl', params = params)
+  optim_xg<-optimizeIterative('xg', params = params)
+  params_wl <- list(intercept = optim_wl$params[1], gamma = optim_wl$par[2], lambda = optim_wl$par[3], rho = optim_wl$par[4], home_adv = optim_wl$par[5], attack_mix = optim_wl$par[6], defend_mix = optim_wl$par[7])
+  params_xg <- list(intercept = optim_xg$params[1], gamma = optim_xg$par[2], lambda = optim_xg$par[3], rho = optim_xg$par[4], home_adv = optim_xg$par[5], attack_mix = optim_xg$par[6], defend_mix = optim_xg$par[7])
+  iterativeParameters <- list('params_wl' = params_wl, 'params_xg' = params_xg)
+  if(save_data & requireNamespace('usethis', quietly = TRUE)){
+    usethis::use_data(iterativeParameters, overwrite = T)
+  }
+  invisible(iterativeParameters)
 }
