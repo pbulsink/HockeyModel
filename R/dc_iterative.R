@@ -373,8 +373,8 @@ getIterativePredictions<-function(rankings, params, date = Sys.Date(), schedule=
 }
 
 
-updateRankingsToToday <- function(rankings, params, scores=HockeyModel::scores){
-  scores<-scores[scores$Date >= getSeasonStartDate(), ]
+updateRankingsToToday <- function(rankings, params, scores=HockeyModel::scores, rankings_date = getSeasonStartDate()){
+  scores<-scores[scores$Date >= rankings_date, ]
 
   if (nrow(scores) > 0){
     for (g in 1:nrow(scores)){
@@ -404,8 +404,8 @@ getIterativeTable<-function(date, schedule=HockeyModel::schedule,  scores=Hockey
   params_xg <- params$params_xg
   params_wl <- params$params_wl
 
-  rankings_xg <- updateRankingsToToday(rankings=rankings$rankings_xg, params=params_xg, scores=scores)
-  rankings_wl <- updateRankingsToToday(rankings=rankings$rankings_wl, params=params_wl, scores=scores)
+  rankings_xg <- updateRankingsToToday(rankings=rankings$rankings_xg, params=params_xg, scores=scores, rankings_date=rankings$date)
+  rankings_wl <- updateRankingsToToday(rankings=rankings$rankings_wl, params=params_wl, scores=scores, rankings_date=rankings$date)
 
   results_xg<-getIterativePredictions(rankings = rankings_xg, params = params_xg, date = date, schedule=schedule)$results
   results_wl<-getIterativePredictions(rankings = rankings_wl, params = params_wl, date = date, schedule=schedule)$results
@@ -470,7 +470,7 @@ getNewIterativeRankings<-function(target_model = "wl", params = HockeyModel::ite
 getReplacementRankings<-function(params = HockeyModel::iterativeParameters, save_data=FALSE){
   rankings_wl<-getNewIterativeRankings('wl', params = params)
   rankings_xg<-getNewIterativeRankings('xg', params = params)
-  iterativeRankings <- list('rankings_wl' = rankings_wl, 'rankings_xg' = rankings_xg)
+  iterativeRankings <- list('rankings_wl' = rankings_wl, 'rankings_xg' = rankings_xg, 'rankings_date' = Sys.Date())
   if(save_data & requireNamespace('usethis', quietly = TRUE)){
     usethis::use_data(iterativeRankings, overwrite = T)
   }

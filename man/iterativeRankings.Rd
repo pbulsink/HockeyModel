@@ -6,7 +6,7 @@
 \title{Iterative Rankings
 Current rankings for iterative Dixon-Coles methods}
 \format{
-a list of data frames
+a list of data frames and a date value of the last rankings update
 }
 \usage{
 iterativeRankings
