@@ -103,15 +103,16 @@ iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973,
 
   scores <- scores[,c("Date", "HomeTeam" ,"AwayTeam", "GameID", "HomeGoals", "AwayGoals", "HomexG", "AwayxG", "OTStatus", "Result")]
 
-  if(!requireNamespace('tictoc')) {
+  if(!requireNamespace('tictoc', quietly=TRUE)) {
     verbose <- FALSE
   }
   scores$TotalGoals<-scores$HomeGoals + scores$AwayGoals
 
   #Split scores to warm-up phase and predictive phase.
-  warm_ups<-scores[scores$Date <= as.Date(Sys.Date()-365*3) & scores$Date > as.Date("2011-08-01"), ]
-  train <-scores[scores$Date < as.Date(Sys.Date()-365) & scores$Date > as.Date(Sys.Date()-365*3), ]
-  test <- scores[scores$Date >= as.Date(Sys.Date()-365),]
+  warm_ups<-scores[scores$Date <= as.Date("2021-10-01") & scores$Date > as.Date("2011-08-01"), ]
+  test_train <-scores[scores$Date > as.Date("2021-10-01"), ]
+  train <- test_train[1:as.integer(nrow(test_train)*.8),]
+  test <- test_train[as.integer(nrow(test_train)*.8):nrow(test_train),]
 
   train$HomeWin <- train$HomexGPred <- train$AwayxGPred <- train$TotalxGPred <- NA_real_
   test$HomeWin <- test$HomexGPred <- test$AwayxGPred <- test$TotalxGPred <- NA_real_
@@ -168,6 +169,7 @@ iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973,
     message("Test AUC: ", auc(test$HomeWin, test$Result))
     message("Test xG R2: ", rsquare(test$TotalxGPred, test$TotalGoals))
     message("Test xG RMSE: ", rmse(test$TotalxGPred, test$TotalGoals))
+    message("Test avg xG/game and G/game: ", round(mean(test$TotalxGPred),3), ", ", round(mean(test$TotalGoals), 3))
   }
 
   return(list(rankings=rankings, test=test, train=train))
@@ -468,7 +470,9 @@ getNewIterativeRankings<-function(target_model = "wl", params = HockeyModel::ite
 #' @return invisibly, a new set of rankings
 #' @export
 getReplacementRankings<-function(params = HockeyModel::iterativeParameters, save_data=FALSE){
+  message("Getting Win/Loss model rankings:")
   rankings_wl<-getNewIterativeRankings('wl', params = params)
+  message("Getting xG model rankings:")
   rankings_xg<-getNewIterativeRankings('xg', params = params)
   iterativeRankings <- list('rankings_wl' = rankings_wl, 'rankings_xg' = rankings_xg, 'rankings_date' = Sys.Date())
   if(save_data & requireNamespace('usethis', quietly = TRUE)){
@@ -487,8 +491,8 @@ getReplacementRankings<-function(params = HockeyModel::iterativeParameters, save
 getReplacementIterativeParameters <- function(params = HockeyModel::iterativeParameters, save_data=FALSE){
   optim_wl<-optimizeIterative('wl', params = params)
   optim_xg<-optimizeIterative('xg', params = params)
-  params_wl <- list(intercept = optim_wl$params[1], gamma = optim_wl$par[2], lambda = optim_wl$par[3], rho = optim_wl$par[4], home_adv = optim_wl$par[5], attack_mix = optim_wl$par[6], defend_mix = optim_wl$par[7])
-  params_xg <- list(intercept = optim_xg$params[1], gamma = optim_xg$par[2], lambda = optim_xg$par[3], rho = optim_xg$par[4], home_adv = optim_xg$par[5], attack_mix = optim_xg$par[6], defend_mix = optim_xg$par[7])
+  params_wl <- list(intercept = optim_wl$par[1], gamma = optim_wl$par[2], lambda = optim_wl$par[3], rho = optim_wl$par[4], home_adv = optim_wl$par[5], attack_mix = optim_wl$par[6], defend_mix = optim_wl$par[7])
+  params_xg <- list(intercept = optim_xg$par[1], gamma = optim_xg$par[2], lambda = optim_xg$par[3], rho = optim_xg$par[4], home_adv = optim_xg$par[5], attack_mix = optim_xg$par[6], defend_mix = optim_xg$par[7])
   iterativeParameters <- list('params_wl' = params_wl, 'params_xg' = params_xg)
   if(save_data & requireNamespace('usethis', quietly = TRUE)){
     usethis::use_data(iterativeParameters, overwrite = T)
