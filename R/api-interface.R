@@ -273,7 +273,7 @@ removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE
   }
 
   schedule<-schedule %>%
-    dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
+    dplyr::arrange(.data$Date, .data$GameState, .data$GameID)
 
   if(save_data & requireNamespace('usethis', quietly = TRUE)){
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
