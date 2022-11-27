@@ -248,6 +248,7 @@ get_xg<-function(gameIds){
 removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE){
   unsched<-schedule[schedule$GameState != "Final" & schedule$Date < Sys.Date(),]
   removedGames<-c()
+  notRescheduled<-c()
   for(g in unsched$GameID){
     d<-unsched[unsched$GameID == g, ]$Date
 
@@ -257,10 +258,19 @@ removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE
     if(!(g %in% checksched$GameID)){
       #Game is removed
       removedGames <- c(removedGames, g)
+    } else {
+      notRescheduled<-c(notRescheduled, g)
     }
   }
 
   schedule<-schedule[!(schedule$GameID %in% removedGames), ]
+
+  if(length(notRescheduled)>0){
+    regEndDate <- schedule[nrow(schedule),]$Date
+    for(g in notRescheduled){
+      schedule[schedule$GameID == g, ]$Date <- regEndDate + 1
+    }
+  }
 
   if(save_data & requireNamespace('usethis', quietly = TRUE)){
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
