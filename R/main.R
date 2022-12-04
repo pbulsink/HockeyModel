@@ -401,6 +401,10 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = getOpt
                        in_reply_to_status_id = reply_id,
                        token = twitter_token,
                        media_alt_text = paste0(division, " teams pace above/below expected as of ", Sys.Date(), "."))
+    status <- paste("Current Points compared to predicted (at season start) for #NHL teams in the", division, "division.\nPositive values are exceeding expectation, negative are performing below predicted.")
+    rtoot::post_toot(status = status,
+                     media = file.path(graphic_dir, subdir, paste0(division, '_pace.png')),
+                     alt_text = paste0(division, " teams pace above/below expected as of ", Sys.Date(), "."))
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
     my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = twitter_token)
@@ -437,6 +441,9 @@ tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir 
                                            paste0(tolower(conf), 'likelihood.png')),
                          token = twitter_token,
                          media_alt_text = paste0("Point likelihoods for teams in the ", conf, " conference."))
+      rtoot::post_toot(status = paste0("#NHL ", conf, " Conference Team final point likelihoods:"),
+                       media = file.path(graphic_dir, subdir, paste0(tolower(conf), 'likelihood.png')),
+                       alt_text = paste0("Point likelihoods for teams in the ", conf, " conference."))
       #until Rtweet has scheduler
       message("Delaying ", delay/2, " seconds to space tweets...")
       Sys.sleep(delay/2)
@@ -518,10 +525,11 @@ tweetMetrics<-function(twitter_token = NULL){
 
   status <- paste0("Metrics as of ", Sys.Date(),
                    "\nLog Loss: ", round(metrics$LogLoss, 4),
-                   "\nAccuracy: ", round(metrics$Accuracy * 100, 2), " %\n#HockeyTwitter")
+                   "\nAccuracy: ", round(metrics$Accuracy * 100, 2), " %")
   message(status)
 
   rtweet::post_tweet(status = status, token = twitter_token)
+  rtoot::post_toot(status = status)
 }
 
 #' Tweet Series
@@ -563,6 +571,10 @@ tweetSeries<-function(twitter_token = NULL, params=NULL, graphic_dir = getOption
                      media = file.path(graphic_dir, 'series_odds.png'),
                      token = twitter_token,
                      media_alt_text = "Odds for each series' winner")
+  status <- paste0("#NHL #StanleyCup Playoff Series Odds before games on ", Sys.Date())
+  rtoot::post_toot(status = status,
+                   media = file.path(graphic_dir, 'series_odds.png'),
+                   alt_text = "Odds for each series' winner")
 }
 
 
@@ -601,5 +613,12 @@ tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, twitter_token = NU
   rtweet::post_tweet(status = status,
                      media = c(file.path(graphic_dir, "eastern_playoff_odds.png"), file.path(graphic_dir, "western_playoff_odds.png")),
                      token = twitter_token, media_alt_text = c("Eastern Playoff Odds", "Western Playoff Odds"))
+
+  rtoot::post_toot(status = paste0("#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+                   media =  cfile.path(graphic_dir, "eastern_playoff_odds.png"),
+                   alt_text = 'Eastern Playoff Odds')
+  rtoot::post_toot(status = paste0("#NHL Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+                   media =  file.path(graphic_dir, "western_playoff_odds.png"),
+                   alt_text = 'Western Playoff Odds')
 
 }
