@@ -7,7 +7,7 @@
 tweetPlayoffOdds(
   summary_results = NULL,
   params = NULL,
-  token = NULL,
+  twitter_token = NULL,
   graphic_dir = getOption("HockeyModel.graphics.path"),
   trimcup = FALSE
 )
@@ -17,11 +17,11 @@ tweetPlayoffOdds(
 
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
-\item{token}{token for twitter}
-
 \item{graphic_dir}{graphic dir}
 
 \item{trimcup}{trim to just cup winners}
+
+\item{token}{token for twitter}
 }
 \description{
 Tweet a graphic of the playoff odds

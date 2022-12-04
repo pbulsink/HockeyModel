@@ -8,7 +8,7 @@ tweetLikelihoods(
   delay = stats::runif(1, min = 3, max = 6) * 60,
   graphic_dir = getOption("HockeyModel.graphics.path"),
   subdir = "pace",
-  token = NULL,
+  twitter_token = NULL,
   scores = HockeyModel::scores
 )
 }
@@ -19,9 +19,9 @@ tweetLikelihoods(
 
 \item{subdir}{subdirectory - usually 'preds'}
 
-\item{token}{rtweeet token}
-
 \item{scores}{updated scores}
+
+\item{token}{rtweeet token}
 }
 \description{
 Tweet Likelihood plots (ggridges)

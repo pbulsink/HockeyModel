@@ -9,7 +9,7 @@ tweetGames(
   delay = stats::runif(1, min = 4, max = 8) * 60,
   graphic_dir = getOption("HockeyModel.graphics.path"),
   params = NULL,
-  token = NULL
+  twitter_token = NULL
 )
 }
 \arguments{
