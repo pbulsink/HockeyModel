@@ -7,7 +7,7 @@
 dailySummary(
   graphic_dir = "./prediction_results/graphics",
   subdir = "pace",
-  token = NULL,
+  twitter_token = NULL,
   delay = stats::runif(1, min = 2, max = 6) * 60
 )
 }
@@ -16,7 +16,7 @@ dailySummary(
 
 \item{subdir}{subdirectory to \code{graphic_dir} for pace plots}
 
-\item{token}{token to pass to rtweet calls}
+\item{twitter_token}{token to pass to rtweet calls}
 
 \item{delay}{delay between tweet posts}
 }

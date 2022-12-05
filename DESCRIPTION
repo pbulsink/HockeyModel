@@ -44,5 +44,6 @@ Suggests:
     ggplot2,
     devtools,
     usethis,
-    doSNOW
+    doSNOW,
+    rtoot
 VignetteBuilder: knitr

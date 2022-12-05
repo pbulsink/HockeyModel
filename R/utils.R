@@ -371,11 +371,19 @@ parseCores<-function(cores){
 
 .onLoad <- function(libname, pkgname) {
   op <- options()
+  op.HockeyModel <- NULL
   if(requireNamespace('devtools', quietly = TRUE)){
-    op.HockeyModel <- list(HockeyModel.prediction.path = file.path(devtools::package_file(), "prediction_results"),
-                           HockeyModel.graphics.path = file.path(devtools::package_file(), "prediction_results", "graphics"),
-                           HockeyModel.data.path = file.path(devtools::package_file(), 'data-raw'))
-  } else {
+    packagefile<-NULL
+    packagefile<-tryCatch(devtools::package_file(), error = function(e) return(NULL))
+    if(is.null(packagefile)){
+      op.HockeyModel <- NULL
+    } else {
+      op.HockeyModel <- list(HockeyModel.prediction.path = file.path(devtools::package_file(), "prediction_results"),
+                             HockeyModel.graphics.path = file.path(devtools::package_file(), "prediction_results", "graphics"),
+                             HockeyModel.data.path = file.path(devtools::package_file(), 'data-raw'))
+    }
+  }
+  if(is.null(op.HockeyModel)){
     op.HockeyModel <- list(HockeyModel.prediction.path = file.path(path.expand("~"), "HockeyModel","prediction_results"),
                            HockeyModel.graphics.path = file.path(path.expand("~"), "HockeyModel","prediction_results","graphics"),
                            HockeyModel.data.path = file.path(path.expand("~"), "HockeyModel", "data-raw"))
