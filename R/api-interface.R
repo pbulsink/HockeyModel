@@ -59,6 +59,7 @@ processNHLSchedule<-function(sched, progress = TRUE){
     dplyr::arrange(.data$Date, dplyr::desc(.data$GameState), .data$GameID)
 
   schedule$GameState[is.na(schedule$GameState)] <- "Final"
+  schedule<-removeUnscheduledGames(schedule)
 
   return(schedule)
 }

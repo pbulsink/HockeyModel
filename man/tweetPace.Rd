@@ -22,9 +22,9 @@ tweetPace(
 
 \item{prediction_dir}{The predictions directory}
 
-\item{scores}{HockeyModel::scores or a custom value}
+\item{twitter_token}{rtweet token}
 
-\item{token}{rtweet token}
+\item{scores}{HockeyModel::scores or a custom value}
 }
 \description{
 Tweet Pace Plots

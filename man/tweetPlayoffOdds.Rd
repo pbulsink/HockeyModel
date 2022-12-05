@@ -17,11 +17,11 @@ tweetPlayoffOdds(
 
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
+\item{twitter_token}{token for twitter}
+
 \item{graphic_dir}{graphic dir}
 
 \item{trimcup}{trim to just cup winners}
-
-\item{token}{token for twitter}
 }
 \description{
 Tweet a graphic of the playoff odds

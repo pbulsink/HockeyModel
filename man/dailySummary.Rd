@@ -16,9 +16,9 @@ dailySummary(
 
 \item{subdir}{subdirectory to \code{graphic_dir} for pace plots}
 
-\item{delay}{delay between tweet posts}
+\item{twitter_token}{token to pass to rtweet calls}
 
-\item{token}{token to pass to rtweet calls}
+\item{delay}{delay between tweet posts}
 }
 \description{
 Daily functions, rolled into one call

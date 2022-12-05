@@ -11,11 +11,11 @@ tweetSeries(
 )
 }
 \arguments{
+\item{twitter_token}{rtweet token}
+
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{graphic_dir}{directory to save the image}
-
-\item{token}{rtweet token}
 }
 \description{
 Tweet the series odds graphics

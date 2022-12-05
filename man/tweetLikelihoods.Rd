@@ -19,9 +19,9 @@ tweetLikelihoods(
 
 \item{subdir}{subdirectory - usually 'preds'}
 
-\item{scores}{updated scores}
+\item{twitter_token}{rtweeet token}
 
-\item{token}{rtweeet token}
+\item{scores}{updated scores}
 }
 \description{
 Tweet Likelihood plots (ggridges)

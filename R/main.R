@@ -149,7 +149,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics', twitter_
                        media_alt_text = paste0("Playoff Odds for each NHL team history and today's value as of ",Sys.Date(), ""))
     rtoot::post_toot(status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                      media = file.path(graphic_dir, "playoff_odds.png"),
-                     in_reply_to_status_id = toot_reply_id, #token = token,
+                     #in_reply_to_status_id = toot_reply_id, #token = token,
                      alt_text = paste0("Playoff Odds for each NHL team history and today's value as of ",Sys.Date(), ""))
 
     my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = twitter_token)
@@ -165,7 +165,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics', twitter_
                        media_alt_text = paste0("President's Trophy Odds for each NHL team history and today's value as of ",Sys.Date(), ""))
     rtoot::post_toot(status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
                      media = file.path(graphic_dir, "president_odds.png"),
-                     in_reply_to_status_id = toot_reply_id, #token = token,
+                     #in_reply_to_status_id = toot_reply_id, #token = token,
                      alt_text = paste0("President's Trophy Odds for each NHL team history and today's value as of ",Sys.Date(), ""))
   }
 }
@@ -174,7 +174,7 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics', twitter_
 #'
 #' @param graphic_dir Directory for graphic files
 #' @param subdir subdirectory to `graphic_dir` for pace plots
-#' @param token token to pass to rtweet calls
+#' @param twitter_token token to pass to rtweet calls
 #' @param delay delay between tweet posts
 #'
 #' @export
@@ -285,7 +285,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir =
 
     if(as.numeric(format(Sys.Date(), "%w")) == 1 & inRegularSeason()){
       #On monday post pace plots
-      tweetPace(token = token, delay = delay, graphic_dir = graphic_dir)
+      tweetPace(twitter_token = twitter_token, delay = delay, graphic_dir = graphic_dir)
     }
 
     if(as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason()) {
@@ -315,7 +315,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir =
 #' @param graphic_dir The graphics directory
 #' @param subdir The pace subdirectory in graphics
 #' @param prediction_dir The predictions directory
-#' @param token rtweet token
+#' @param twitter_token rtweet token
 #' @param scores HockeyModel::scores or a custom value
 #'
 #' @export
@@ -417,7 +417,7 @@ tweetPace<-function(delay = stats::runif(1,min=1,max=3)*60, graphic_dir = getOpt
 #' @param delay time to delay. Default 5 min
 #' @param graphic_dir graphics directory
 #' @param subdir subdirectory - usually 'preds'
-#' @param token rtweeet token
+#' @param twitter_token rtweeet token
 #' @param scores updated scores
 #
 #' @export
@@ -457,7 +457,7 @@ tweetLikelihoods <- function(delay =stats::runif(1,min=3,max=6)*60, graphic_dir 
 #' @param delay Delay between tweets
 #' @param graphic_dir the graphics directory
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
-#' @param token the token for rtweet
+#' @param twitter_token the token for rtweet
 #'
 #' @export
 tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*60, graphic_dir = getOption("HockeyModel.graphics.path"), params=NULL, twitter_token = NULL){
@@ -510,7 +510,7 @@ tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*6
 
 #' Tweet Metrics
 #' @description Tweet the metrics (Log Loss and Accuracy)
-#' @param token rtweet token
+#' @param twitter_token rtweet token
 #'
 #' @return NULL
 #' @export
@@ -536,7 +536,7 @@ tweetMetrics<-function(twitter_token = NULL){
 #' @description Tweet the series odds graphics
 #'
 #' @param graphic_dir directory to save the image
-#' @param token rtweet token
+#' @param twitter_token rtweet token
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return NULL
@@ -583,7 +583,7 @@ tweetSeries<-function(twitter_token = NULL, params=NULL, graphic_dir = getOption
 #' @description Tweet a graphic of the playoff odds
 #'
 #' @param summary_results the summary results file, otherwise the msot recent will be loaded
-#' @param token token for twitter
+#' @param twitter_token token for twitter
 #' @param graphic_dir graphic dir
 #' @param trimcup trim to just cup winners
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
@@ -615,7 +615,7 @@ tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, twitter_token = NU
                      token = twitter_token, media_alt_text = c("Eastern Playoff Odds", "Western Playoff Odds"))
 
   rtoot::post_toot(status = paste0("#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
-                   media =  cfile.path(graphic_dir, "eastern_playoff_odds.png"),
+                   media =  file.path(graphic_dir, "eastern_playoff_odds.png"),
                    alt_text = 'Eastern Playoff Odds')
   rtoot::post_toot(status = paste0("#NHL Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
                    media =  file.path(graphic_dir, "western_playoff_odds.png"),
