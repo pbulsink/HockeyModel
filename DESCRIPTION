@@ -21,6 +21,7 @@ Imports:
     tidyr,
     dtplyr,
     BulsinkBxG
+Remotes: pbulsink/BulsinkBxG
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
 RoxygenNote: 7.2.1
@@ -45,5 +46,6 @@ Suggests:
     devtools,
     usethis,
     doSNOW,
-    rtoot
+    rtoot,
+    withr
 VignetteBuilder: knitr
