@@ -202,7 +202,7 @@ simulateSeasonParallel <- function(scores=HockeyModel::scores, nsims=10000, sche
 
   } else {
     if(cores > 1 & !requireNamespace('parallel', quietly = TRUE)){
-      warning("Parallel processing is only available if the parallels package is installed.")
+      message("Parallel processing is only available if the parallels package is installed.")
     }
     all_results<-list()
     for(i in 1:nsims){
@@ -334,7 +334,7 @@ loopless_sim<-function(nsims=1e5, cores = NULL, schedule = HockeyModel::schedule
 
   if(cores == 1 | !requireNamespace('parallel', quietly = TRUE)){
     if(cores > 1){
-      warning("Multi-core processing requires the parallel package.")
+      message("Multi-core processing requires the parallel package.")
     }
     #for testing only, really.
     all_results<-sim_engine(all_season = all_season, nsims = nsims, params = params)
@@ -728,7 +728,7 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = NULL, params
 
   } else{
     if(cores > 1){
-      warning("Multi-core processing requires the parallel package to be installed.")
+      message("Multi-core processing requires the parallel package to be installed.")
     }
     #Single cores is easier for testing
     simresults<-playoffSolverEngine(nsims = nsims, completedSeries = completedSeries, east_results = east_results, west_results = west_results, currentSeries=currentSeries, summary_results = summary_results, homeAwayOdds=homeAwayOdds)

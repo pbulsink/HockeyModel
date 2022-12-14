@@ -353,14 +353,14 @@ is_valid_gameId<-Vectorize(gId)
 parseCores<-function(cores){
   if(is.null(cores)){
     if (!requireNamespace('parallel', quietly = TRUE)){
-      warning("Parallel package must be installed to use multi-core processing.")
+      message("Parallel package must be installed to use multi-core processing.")
       cores<-1
     } else {
       cores<-parallel::detectCores()
     }
   } else {
     if(!is.integer(cores) | cores <= 0 | !requireNamespace('parallel', quietly = TRUE)){
-      warning("Parallel package must be installed to use multi-core processing.")
+      message("Parallel package must be installed to use multi-core processing.")
       cores <- 1
     } else if (cores > parallel::detectCores()){
       cores <- parallel::detectCores()

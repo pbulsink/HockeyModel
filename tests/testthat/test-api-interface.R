@@ -2,8 +2,8 @@ context("test-api-interface")
 
 test_that("Schedules are ok", {
   tmpdir<-withr::local_tempdir()
-  withr::local_envvar("HockeyModel.prediction.path" = tmpdir)
-  withr::local_envvar("BulsinkBxG.data.path" = tmpdir)
+  withr::local_options("HockeyModel.prediction.path" = tmpdir)
+  withr::local_options("BulsinkBxG.data.path" = tmpdir)
 
   sched<-getNHLSchedule()
   expect_true(is.data.frame(sched))
@@ -51,8 +51,8 @@ test_that("Scores are OK", {
 test_that("Series is ok", {
   #tough to test as it's a moving target
   tmpdir<-withr::local_tempdir()
-  withr::local_envvar("HockeyModel.prediction.path" = tmpdir)
-  withr::local_envvar("BulsinkBxG.data.path" = tmpdir)
+  withr::local_options("HockeyModel.prediction.path" = tmpdir)
+  withr::local_options("BulsinkBxG.data.path" = tmpdir)
 
   series<-getAPISeries()
   if(inPlayoffs()){
@@ -69,8 +69,8 @@ test_that("Series is ok", {
 
 test_that("Season Dates & Binaries work", {
   tmpdir<-withr::local_tempdir()
-  withr::local_envvar("HockeyModel.prediction.path" = tmpdir)
-  withr::local_envvar("BulsinkBxG.data.path" = tmpdir)
+  withr::local_options("HockeyModel.prediction.path" = tmpdir)
+  withr::local_options("BulsinkBxG.data.path" = tmpdir)
 
   expect_visible(inRegularSeason())
   expect_visible(inPlayoffs())
@@ -83,8 +83,8 @@ test_that("Season Dates & Binaries work", {
 
 test_that("SeasonID gets seasons ok", {
   tmpdir<-withr::local_tempdir()
-  withr::local_envvar("HockeyModel.prediction.path" = tmpdir)
-  withr::local_envvar("BulsinkBxG.data.path" = tmpdir)
+  withr::local_options("HockeyModel.prediction.path" = tmpdir)
+  withr::local_options("BulsinkBxG.data.path" = tmpdir)
 
   expect_match(getCurrentSeason8(), regexp = "\\d{8}")
   expect_equal(getSeason("2018-12-02"), "20182019")
@@ -93,8 +93,8 @@ test_that("SeasonID gets seasons ok", {
 
 test_that("Get Team Info is OK", {
   tmpdir<-withr::local_tempdir()
-  withr::local_envvar("HockeyModel.prediction.path" = tmpdir)
-  withr::local_envvar("BulsinkBxG.data.path" = tmpdir)
+  withr::local_options("HockeyModel.prediction.path" = tmpdir)
+  withr::local_options("BulsinkBxG.data.path" = tmpdir)
 
   apiteams<-nhlapi::nhl_teams()
   expect_equal(getShortTeam("Toronto Maple Leafs"), apiteams[apiteams$name == "Toronto Maple Leafs", ]$abbreviation)
@@ -118,8 +118,8 @@ test_that("Get Team Info is OK", {
 
 test_that("Other Utility Functions are OK", {
   tmpdir<-withr::local_tempdir()
-  withr::local_envvar("HockeyModel.prediction.path" = tmpdir)
-  withr::local_envvar("BulsinkBxG.data.path" = tmpdir)
+  withr::local_options("HockeyModel.prediction.path" = tmpdir)
+  withr::local_options("BulsinkBxG.data.path" = tmpdir)
 
   expect_equal(clean_names(c("Chicago Blackhawks", "Toronto Maple Leafs")), c("Chicago Blackhawks", "Toronto Maple Leafs"))
   expect_equal(getTeamConferences("Chicago Blackhawks"), "Western")
