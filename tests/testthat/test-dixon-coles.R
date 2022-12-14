@@ -2,8 +2,8 @@ context("test-dixon-coles")
 
 test_that("Model Creates OK", {
   tmpdir<-withr::local_tempdir()
-  withr::local_envvar("HockeyModel.prediction.path" = tempdir)
-  withr::local_envvar("BulsinkBxG.data.path" = tempdir)
+  withr::local_envvar("HockeyModel.prediction.path" = tmpdir)
+  withr::local_envvar("BulsinkBxG.data.path" = temtmpdirpdir)
 
   params<-suppressWarnings(updateDC(save_data = FALSE))
 
@@ -48,8 +48,8 @@ test_that("DC Convenience functions are ok", {
 
 test_that("Predictions Run", {
   tmpdir<-withr::local_tempdir()
-  withr::local_envvar("HockeyModel.prediction.path" = tempdir)
-  withr::local_envvar("BulsinkBxG.data.path" = tempdir)
+  withr::local_envvar("HockeyModel.prediction.path" = tmpdir)
+  withr::local_envvar("BulsinkBxG.data.path" = tmpdir)
 
   sched<-schedule[schedule$Date > as.Date("2018-09-01") & schedule$Date <= as.Date("2019-04-06"),]
   scor<-scores[scores$Date < as.Date("2018-09-01"),]
@@ -85,8 +85,8 @@ test_that("DC Playoffs functions", {
 
 test_that("DC Today is good", {
   tmpdir<-withr::local_tempdir()
-  withr::local_envvar("HockeyModel.prediction.path" = tempdir)
-  withr::local_envvar("BulsinkBxG.data.path" = tempdir)
+  withr::local_envvar("HockeyModel.prediction.path" = tmpdir)
+  withr::local_envvar("BulsinkBxG.data.path" = tmpdir)
 
   today_odds<-todayDC(today=as.Date("2019-11-01"))
   expect_equal(nrow(today_odds), 8)
