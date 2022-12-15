@@ -23,6 +23,11 @@ test_that("Past points are calculated correctly", {
 })
 
 test_that("Metrics are correctly calculated", {
+  expect_equal(rmse(c(0.1, 0.2), c(0.15, 0.25)), 0.05)
+
+  expect_equal(auc(c(0,0,1,1), c(0.1, 0.2, 0.6, 0.7)),1)
+  expect_equal(auc(c(0,0,1,1), c(0.1, 0.6, 0.4, 0.7)), 0.5)
+
   expect_equal(logLoss(0,0), 0)
   expect_equal(logLoss(1,1), 0)
   expect_equal(logLoss(0.5, 1), -log(0.5))
@@ -33,6 +38,11 @@ test_that("Metrics are correctly calculated", {
   expect_equal(accuracy(0.4, 0), 1)
   expect_equal(accuracy(0.4, 1), 0)
   expect_equal(accuracy(c(0.4, 0.6), c(1,1)), 0.5)
+
+  expect_error(rmse(c(1,2,3), c(1,2)))
+  expect_error(auc(c(1,2,3), c(1,2)))
+  expect_error(logLoss(c(1,2,3), c(1,2)))
+  expect_error(accuracy(c(1,2,3), c(1,2)))
 })
 
 test_that("Colours are correctly compared", {

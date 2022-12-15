@@ -75,6 +75,10 @@ test_that("Predictions Run", {
   remainderseason<-remainderSeasonDC(nsims=10, cores=2, scores=scor, schedule = sched, regress = TRUE)
   expect_equal(names(remainderseason), c("summary_results", "raw_results"))
   expect_equal(nrow(remainderseason$summary_results)*10, nrow(remainderseason$raw_results))
+
+  #Get Mu/Lambdas:
+  rs3<-remainderSeasonDC(nsims=10, cores=1, scores=scor, schedule = sched, regress = TRUE, mu_lambda = TRUE)
+  expect_equal(colnames(rs3), c("HomeTeam", "AwayTeam", "GameID", "Date", "mu", "lambda"))
 })
 
 test_that("DC Playoffs functions", {
