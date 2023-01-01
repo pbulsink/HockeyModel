@@ -22,16 +22,8 @@ getNHLSchedule<-function(season=getSeason()){
   }
 }
 
-processNHLSchedule<-function(sched, progress = TRUE){
+processNHLSchedule<-function(sched, clean=TRUE){
   schedule<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameState" = character())
-  if(progress){
-    if(!requireNamespace('progress', quietly = TRUE)){ progress<-FALSE }
-  }
-  if(progress){
-    pb<-progress::progress_bar$new(
-      format = "  getting schedule [:bar] :percent eta: :eta",
-      total = length(sched), show_after = 5)
-  }
   for (y in 1:length(sched)){
     if(!(length(sched[[y]]$dates)>0)){
       next
@@ -49,9 +41,6 @@ processNHLSchedule<-function(sched, progress = TRUE){
       }
       schedule<-rbind(schedule, df)
     }
-    if(progress){
-      pb$tick()
-    }
   }
   schedule <- clean_names(schedule)
   schedule <- schedule %>%
@@ -59,7 +48,9 @@ processNHLSchedule<-function(sched, progress = TRUE){
     dplyr::arrange(.data$Date, dplyr::desc(.data$GameState), .data$GameID)
 
   schedule$GameState[is.na(schedule$GameState)] <- "Final"
-  schedule<-removeUnscheduledGames(schedule)
+  if(clean){
+    schedule<-removeUnscheduledGames(schedule)
+  }
 
   return(schedule)
 }
@@ -255,7 +246,7 @@ removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE
 
     sched<-nhlapi::nhl_schedule_date_range(startDate = d, endDate = d)
 
-    checksched<-processNHLSchedule(sched)
+    checksched<-processNHLSchedule(sched, clean=FALSE)
     if(!(g %in% checksched$GameID)){
       #Game is removed
       removedGames <- c(removedGames, g)
