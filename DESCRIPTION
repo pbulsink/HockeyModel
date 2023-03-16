@@ -20,7 +20,8 @@ Imports:
     rlang,
     tidyr,
     dtplyr,
-    BulsinkBxG
+    BulsinkBxG,
+    webshot2
 Remotes: pbulsink/BulsinkBxG
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues

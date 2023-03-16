@@ -843,9 +843,9 @@ format_playoff_odds<-function(playoff_odds, caption_text = "", trim=TRUE, trimcu
         locations = gt::cells_body(columns = "image", rows = i),
         fn = function(x) {
           gt::local_image(
-            filename = ifelse(file.exists(file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
-                              file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
-                              file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", "nhl.gif")),
+            filename = ifelse(file.exists(file.path(getOption("HockeyModel.data.path"), "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
+                              file.path(getOption("HockeyModel.data.path"), "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+                              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")),
             height = "30px")
         }
       )
@@ -937,9 +937,9 @@ daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyM
         locations = gt::cells_body(columns = "homeimage", rows = i),
         fn = function(x) {
           gt::local_image(
-            filename = ifelse(file.exists(file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
-                              file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
-                              file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", "nhl.gif")),
+            filename = ifelse(file.exists(file.path(getOption("HockeyModel.data.path"), "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
+                              file.path(getOption("HockeyModel.data.path"), "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+                              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")),
             height = "30px")
         }
       ) %>%
@@ -947,9 +947,9 @@ daily_odds_table <- function(today = Sys.Date(), params=NULL, schedule = HockeyM
       locations = gt::cells_body(columns = "awayimage", rows = i),
       fn = function(x) {
         gt::local_image(
-          filename = ifelse(file.exists(file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
-                            file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
-                            file.path(getOption("HockeyModel.data.path"), "data-raw", "logos", "nhl.gif")),
+          filename = ifelse(file.exists(file.path(getOption("HockeyModel.data.path"), "logos", paste0(tolower(gsub(" ", "_", x)), ".gif"))),
+                            file.path(getOption("HockeyModel.data.path"), "logos", paste0(tolower(gsub(" ", "_", x)), ".gif")),
+                            file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")),
           height = "30px")
       }
     )
