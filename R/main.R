@@ -501,6 +501,9 @@ tweetGames<-function(games = games_today(), delay =stats::runif(1,min=4,max=8)*6
     #                    token = twitter_token,
     #                    media_alt_text = "Odds of each goal for both ", away, " and ", home, " in their game.")
     # TODO: Toot this
+    rtoot::post_toot(status = status,
+                     media = file.path(graphic_dir, 'predicted_goals.png'),
+                     alt_text = paste0("Odds of each goal for both ", away, " and ", home, " in their game."))
     file.remove(file.path(graphic_dir, 'predicted_goals.png'))
 
     #until Rtweet has scheduler
@@ -603,23 +606,39 @@ tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, twitter_token = NU
   playoffodds <- simulatePlayoffs(summary_results = summary_results, params=params)
 
   playoffodds$Conference <- getTeamConferences(playoffodds$Team)
+  if (trimcup){
 
-  for(conf in unique(playoffodds$Conference)){
-    plt<-format_playoff_odds(playoff_odds = playoffodds[playoffodds$Conference == conf, which(names(playoffodds) != "Conference")], caption_text = paste(conf, "Conference"), trim=FALSE, trimcup=trimcup)
-    gt::gtsave(plt, filename = file.path(graphic_dir, paste0(tolower(conf), "_playoff_odds.png")))
+    plt<-format_playoff_odds(playoff_odds = playoffodds, caption_text = "NHL Playoffs" , trim=FALSE, trimcup=trimcup)
+    gt::gtsave(plt, filename = file.path(graphic_dir, paste0(tolower(conf), "playoff_odds.png")))
+
+    # status<- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
+
+    #Posting Tweet
+    # rtweet::post_tweet(status = status,
+    #                    media = c(file.path(graphic_dir, "eastern_playoff_odds.png"), file.path(graphic_dir, "western_playoff_odds.png")),
+    #                    token = twitter_token, media_alt_text = c("Eastern Playoff Odds", "Western Playoff Odds"))
+
+    rtoot::post_toot(status = paste0("#NHL Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+                     media =  file.path(graphic_dir, "playoff_odds.png"),
+                     alt_text = 'Playoff Odds')
+  } else {
+    for(conf in unique(playoffodds$Conference)){
+      plt<-format_playoff_odds(playoff_odds = playoffodds[playoffodds$Conference == conf, which(names(playoffodds) != "Conference")], caption_text = paste(conf, "Conference"), trim=FALSE, trimcup=trimcup)
+      gt::gtsave(plt, filename = file.path(graphic_dir, paste0(tolower(conf), "_playoff_odds.png")))
+    }
+    status<- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
+
+    #Posting Tweet
+    # rtweet::post_tweet(status = status,
+    #                    media = c(file.path(graphic_dir, "eastern_playoff_odds.png"), file.path(graphic_dir, "western_playoff_odds.png")),
+    #                    token = twitter_token, media_alt_text = c("Eastern Playoff Odds", "Western Playoff Odds"))
+
+    rtoot::post_toot(status = paste0("#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+                     media =  file.path(graphic_dir, "eastern_playoff_odds.png"),
+                     alt_text = 'Eastern Playoff Odds')
+    rtoot::post_toot(status = paste0("#NHL Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+                     media =  file.path(graphic_dir, "western_playoff_odds.png"),
+                     alt_text = 'Western Playoff Odds')
   }
-  status<- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
-
-  #Posting Tweet
-  # rtweet::post_tweet(status = status,
-  #                    media = c(file.path(graphic_dir, "eastern_playoff_odds.png"), file.path(graphic_dir, "western_playoff_odds.png")),
-  #                    token = twitter_token, media_alt_text = c("Eastern Playoff Odds", "Western Playoff Odds"))
-
-  rtoot::post_toot(status = paste0("#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
-                   media =  file.path(graphic_dir, "eastern_playoff_odds.png"),
-                   alt_text = 'Eastern Playoff Odds')
-  rtoot::post_toot(status = paste0("#NHL Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
-                   media =  file.path(graphic_dir, "western_playoff_odds.png"),
-                   alt_text = 'Western Playoff Odds')
 
 }

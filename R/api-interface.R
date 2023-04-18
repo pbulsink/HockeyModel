@@ -396,7 +396,7 @@ getAPISeries <- function(season=getCurrentSeason8()){
     }
   }
   if(nrow(playoffSeries) == 0){
-    return(NA)
+    return(data.frame())
     #stop('No Series Data Available')
   }
 

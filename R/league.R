@@ -692,7 +692,7 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = NULL, params
 
   currentSeries<-getAPISeries()
 
-  if(is.na(currentSeries)){
+  if(nrow(currentSeries) == 0){
     message("too early to mix in real-life series")
     completedSeries<-data.frame("Series" = character(), "Winner" = character(), "Loser" = character())
     currentSeries<-data.frame("Round" = integer(), "Series" = integer(), "HomeTeam" = character(), "AwayTeam" = character(),
