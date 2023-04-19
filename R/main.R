@@ -609,7 +609,7 @@ tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, twitter_token = NU
   if (trimcup){
 
     plt<-format_playoff_odds(playoff_odds = playoffodds, caption_text = "NHL Playoffs" , trim=FALSE, trimcup=trimcup)
-    gt::gtsave(plt, filename = file.path(graphic_dir, paste0(tolower(conf), "playoff_odds.png")))
+    gt::gtsave(plt, filename = file.path(graphic_dir, "playoff_odds.png"))
 
     # status<- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
 
