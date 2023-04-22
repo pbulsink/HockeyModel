@@ -154,7 +154,7 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
         #get the schedule's date for this game:
         d<-schedule[schedule$GameID == g, ]$Date
         #Check the NHL API for this game on that date
-        newsched<-processNHLSchedule(nhlapi::nhl_schedule_date_range(startDate = d, endDate = d), progress = FALSE)
+        newsched<-processNHLSchedule(nhlapi::nhl_schedule_date_range(startDate = d, endDate = d))
         if(!(g %in% newsched$GameID)){
           #This game isn't in the schedule anymore. Schedule is out of date.
           warning("Game ", g, " no longer scheduled.")
