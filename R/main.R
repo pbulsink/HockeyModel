@@ -56,7 +56,7 @@ todayOddsPlot <- function(date = Sys.Date(), params=NULL, schedule = HockeyModel
   if(scores$Date[nrow(scores)] < (date - 7)){
     message('Scores may be out of date. This can affect predictions. Please update if midseason.')
   }
-  if(nrow(schedule[schedule$Date == date && schedule$GameState != "Postponed", ]) == 0){
+  if(nrow(schedule[schedule$Date == date & schedule$GameState != "Postponed", ]) == 0){
     message("No games today.")
     return()
   }
@@ -198,19 +198,19 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir =
   message("Creating graphics...")
 
   #generate plots
-  # if(Sys.Date() %in% sc$Date){
-  #   today <- todayOddsPlot(params=params, schedule = modelparams$schedule, scores = modelparams$scores)
-  #   #save to files.
-  #   grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
-  #   print(today)
-  #   Sys.sleep(5)
-  #   while(grDevices::dev.cur()!=1){
-  #     grDevices::dev.off()
-  #   }
-  #
-  #   today_table <- daily_odds_table(params=params, schedule = modelparams$schedule)
-  #   gt::gtsave(today_table, filename = file.path(graphic_dir, 'today_odds_table.png'))
-  # }
+  if(Sys.Date() %in% sc$Date){
+    today <- todayOddsPlot(params=params, schedule = modelparams$schedule, scores = modelparams$scores)
+    #save to files.
+    grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
+    print(today)
+    Sys.sleep(5)
+    while(grDevices::dev.cur()!=1){
+      grDevices::dev.off()
+    }
+
+    today_table <- daily_odds_table(params=params, schedule = modelparams$schedule)
+    gt::gtsave(today_table, filename = file.path(graphic_dir, 'today_odds_table.png'))
+  }
 
   if(inRegularSeason()){
     updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule, params=params)
