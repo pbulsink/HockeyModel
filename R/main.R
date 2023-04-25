@@ -104,22 +104,32 @@ tweet <- function(games, graphic_dir = './prediction_results/graphics', twitter_
     rtweet::post_tweet(status = "Predicted odds table for today's #NHL games. #HockeyTwitter",
                       media = file.path(graphic_dir, "today_odds_table.png"), token = twitter_token,
                       media_alt_text = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), "."))
+    rtoot::post_toot(status = "Predicted odds table for today's #NHL games.",
+                     media = file.path(graphic_dir, "today_odds_table.png"),
+                     alt_text = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), "."))
   #   my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
   #   reply_id<-my_timeline$id[1]
     rtweet::post_tweet(status = "Predicted odds for today's #NHL games. #HockeyTwitter",
                        media = file.path(graphic_dir, "today_odds.png"), token = twitter_token,
                        media_alt_text = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), "."))
+    rtoot::post_toot(status = "Predicted odds for today's #NHL games.",
+                     media = file.path(graphic_dir, "today_odds.png"),
+                     alt_text = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), "."))
   #   my_timeline<-rtweet::get_timeline(user = 'BulsinkBot', token = token)
   #   reply_id<-my_timeline$id[1]
     rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
-                      media = file.path(graphic_dir, "current_rating.png"), token = twitter_token)
+                      media = file.path(graphic_dir, "current_rating.png"),
+                      media_alt_text = paste0("Team Ratings as of ", Sys.Date(), "."), token = twitter_token)
+    rtoot::post_toot(status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
+                     media = file.path(graphic_dir, "current_rating.png"),
+                     alt_text = paste0("Current team rating graphic for ", Sys.Date(), "."))
   } else {
-  rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
-                     media = file.path(graphic_dir, "current_rating.png"), token=twitter_token,
-                     media_alt_text = paste0("Current team rating graphic for ", Sys.Date(), "."))
-  rtoot::post_toot(status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
-                   media = file.path(graphic_dir, "current_rating.png"),
-                   alt_text = paste0("Current team rating graphic for ", Sys.Date(), "."))
+    rtweet::post_tweet(status = paste0("Current team ratings (as of ", Sys.Date(), "). #HockeyTwitter"),
+                       media = file.path(graphic_dir, "current_rating.png"), token=twitter_token,
+                       media_alt_text = paste0("Current team rating graphic for ", Sys.Date(), "."))
+    rtoot::post_toot(status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
+                     media = file.path(graphic_dir, "current_rating.png"),
+                     alt_text = paste0("Current team rating graphic for ", Sys.Date(), "."))
   }
   #until Rtweet has scheduler
   message("Delaying ", delay, " seconds to space tweets...")
@@ -278,6 +288,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir =
       message("Delaying ", delay/2, " seconds to space tweets...")
       Sys.sleep(delay/2)
     } else if (inPlayoffs()){
+      message("Calculating Playoff Odds")
       tweetPlayoffOdds(twitter_token=twitter_token, graphic_dir = graphic_dir, trimcup = TRUE)
     }
 
