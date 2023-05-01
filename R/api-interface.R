@@ -238,7 +238,7 @@ get_xg<-function(gameIds){
 #' @return a schedule with unscheduled games removed
 #' @export
 removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE){
-  unsched<-schedule[schedule$GameState != "Final" & schedule$Date < Sys.Date(),]
+  unsched<-schedule[schedule$GameState != "Final" & schedule$Date <= Sys.Date(),]
   removedGames<-c()
   notRescheduled<-c()
   for(g in unsched$GameID){

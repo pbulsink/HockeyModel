@@ -620,7 +620,7 @@ tweetPlayoffOdds<-function(summary_results=NULL, params=NULL, twitter_token = NU
 
     #Posting Tweet
     rtweet::post_tweet(status = status,
-                       media = c(file.path(graphic_dir, "eastern_playoff_odds.png"), file.path(graphic_dir, "western_playoff_odds.png")),
+                       media = cfile.path(graphic_dir, "playoff_odds.png"),
                        token = twitter_token, media_alt_text = c("Eastern Playoff Odds", "Western Playoff Odds"))
 
     rtoot::post_toot(status = paste0("#NHL Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
