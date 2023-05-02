@@ -95,7 +95,7 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE)
   sched<-getNHLSchedule(currentSeason)
   stopifnot(!is.null(sched))
   gameIDs<-sched$GameID
-  schedule<-schedule %>%
+  schedule<-sched %>%
     dplyr::filter(!(.data$GameID %in% gameIDs)) %>%
     dplyr::bind_rows(sched) %>%
     dplyr::arrange(.data$Date, dplyr::desc(.data$GameState), .data$GameID)
