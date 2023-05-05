@@ -123,7 +123,7 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE)
 #' @seealso See [nhlapi::nhl_games()] for more information on gameIDs
 getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRUE){
   scores<-NULL
-  gameIDs <- gameIDs[gameIDs %in% schedule[schedule$Date <= Sys.Date(), "GameID"]]
+  gameIDs <- gameIDs[gameIDs %in% schedule[schedule$Date < Sys.Date(), "GameID"]]
   if(progress){
     if(!requireNamespace('progress', quietly = TRUE)){ progress<-FALSE }
   }

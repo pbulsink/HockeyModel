@@ -56,7 +56,7 @@ todayOddsPlot <- function(date = Sys.Date(), params=NULL, schedule = HockeyModel
   if(scores$Date[nrow(scores)] < (date - 7)){
     message('Scores may be out of date. This can affect predictions. Please update if midseason.')
   }
-  if(nrow(schedule[schedule$Date == date & schedule$GameState != "Postponed", ]) == 0){
+  if(nrow(games_today()) == 0){
     message("No games today.")
     return()
   }

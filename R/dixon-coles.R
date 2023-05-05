@@ -57,7 +57,7 @@ updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), sav
 todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL, include_xG = FALSE, draws=TRUE){
   stopifnot(is.Date(today))
   params<-parse_dc_params(params)
-  games<-schedule[schedule$Date == as.Date(today), ]
+  games<-games_today()
   if(nrow(games) == 0){
     return(NULL)
   }
