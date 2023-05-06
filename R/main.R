@@ -208,7 +208,7 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir =
   message("Creating graphics...")
 
   #generate plots
-  if(Sys.Date() %in% sc$Date){
+  if(!is.null(games_today())){
     today <- todayOddsPlot(params=params, schedule = modelparams$schedule, scores = modelparams$scores)
     #save to files.
     grDevices::png(filename = file.path(graphic_dir, 'today_odds.png'), width = 11, height = 8.5, units = 'in', res = 300)
