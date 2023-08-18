@@ -43,7 +43,7 @@ jobs:
         with:
           extra-packages: |
             any::rcmdcheck
-            github::pbulsink/BulsinkBxG
+            github::pbulsink/naturalstattrick
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2

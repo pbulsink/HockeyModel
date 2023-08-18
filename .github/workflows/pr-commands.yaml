@@ -28,7 +28,7 @@ jobs:
         with:
           extra-packages: |
             any::roxygen2
-            github::pbulsink/BulsinkBxG
+            github::pbulsink/naturalstattrick
           needs: pr-document
 
       - name: Document

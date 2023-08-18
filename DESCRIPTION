@@ -20,9 +20,9 @@ Imports:
     rlang,
     tidyr,
     dtplyr,
-    BulsinkBxG,
+    naturalstattrick,
     webshot2
-Remotes: pbulsink/BulsinkBxG
+Remotes: pbulsink/naturalstattrick
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
 RoxygenNote: 7.2.1

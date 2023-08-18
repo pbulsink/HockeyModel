@@ -198,15 +198,37 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
 #' @export
 get_xg<-function(gameIds){
   gxg<-function(gid){
-    season<-substr(gid, 1, 4)
+    season<-as.numeric(substr(gid, 1, 4))
+    game_id <- as.numeric(substr(gid, 5, 9))
 
-    if(as.numeric(season) < 2011){
+    if(season < 2011){
       return(list("GameID" = gid, "HomexG" = NA, "AwayxG" = NA))
     }
 
-    xG<-BulsinkBxG::get_game_xg(gid)
+    #xG<-BulsinkBxG::get_game_xg(gid)
+    nst_report <- naturalstattrick::nst_short_report(season = paste0(season, season+1),
+                                                     game_id = game_id)
 
-    return(list("GameID" = gid, "HomexG" = xG$home_xg, "AwayxG" = xG$away_xg))
+    return(list("GameID" = as.integer(gid),
+                "HomexG" = as.numeric(nst_report[nst_report$h_a == "home",]$xgf_all),
+                "AwayxG" = as.numeric(nst_report[nst_report$h_a == "away",]$xgf_all),
+                "HomeG" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_all),
+                "AwayG" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_all),
+                "HomeCF" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_all),
+                "AwayCF" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_all),
+                "HomexGpk" = as.numeric(nst_report[nst_report$h_a == "home",]$xgf_pk),
+                "AwayxGpk" = as.numeric(nst_report[nst_report$h_a == "away",]$xgf_pk),
+                "HomeGpk" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_pk),
+                "AwayGpk" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_pk),
+                "HomeCFpk" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_pk),
+                "AwayCFpk" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_pk),
+                "HomexGpp" = as.numeric(nst_report[nst_report$h_a == "home",]$xgf_pp),
+                "AwayxGpp" = as.numeric(nst_report[nst_report$h_a == "away",]$xgf_pp),
+                "HomeGpp" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_pp),
+                "AwayGpp" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_pp),
+                "HomeCFpp" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_pp),
+                "AwayCFpp" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_pp))
+          )
   }
 
   v_gxg<-Vectorize(gxg)
@@ -219,9 +241,6 @@ get_xg<-function(gameIds){
   } else {
     gxgs<-v_gxg(gid = gameIds)
     gxgs<-as.data.frame(t(gxgs))
-    gxgs$GameID<-as.integer(gxgs$GameID)
-    gxgs$HomexG<-as.numeric(gxgs$HomexG)
-    gxgs$AwayxG<-as.numeric(gxgs$AwayxG)
 
     return(gxgs)
   }

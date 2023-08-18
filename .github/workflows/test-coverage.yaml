@@ -25,7 +25,7 @@ jobs:
         with:
           extra-packages: |
             any::covr
-            github::pbulsink/BulsinkBxG
+            github::pbulsink/naturalstattrick
           needs: coverage
 
       - name: Test coverage
