@@ -7,19 +7,19 @@ test_that("Schedules are ok", {
   sched<-getNHLSchedule()
   expect_true(is.data.frame(sched))
   expect_equal(ncol(sched), 6)
-  expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameState"))
+  expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus"))
   expect_true(all(sched$GameType %in% c("R", "P")))
 
   sched2<-updateScheduleAPI(schedule=sched)
   expect_true(is.data.frame(sched2))
   expect_equal(ncol(sched), 6)
-  expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameState"))
+  expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus"))
   expect_true(all(sched$GameType %in% c("R", "P")))
   expect_equal(sched, sched2)
 
   #add a dummy game to sched2
   sched2<-rbind(sched2, data.frame("Date" = as.Date("2019-10-31"), "HomeTeam" = "New Jersey Devils", "AwayTeam" = "Philadelphia Flyers",
-                                   "GameID" = 2019020196, "GameType" = "R", "GameState" = "Scheduled"))
+                                   "GameID" = 2019020196, "GameType" = "R", "GameStatus" = "Scheduled"))
   sched2 <- removeUnscheduledGames(schedule = sched2)
   expect_equal(sched, sched2)
 })

@@ -279,10 +279,7 @@ is.Date<-function(date){
 
 seasonValidator<-function(season){
   #TODO: Currently 19272099 would pass - make sure the two years are sequential
-  if(!is.character(season)){
-    return(FALSE)
-  }
-  return(grepl("(19|20)\\d{2}(19|20)\\d{2}", season))
+  return(grepl("(19|20)\\d{2}(19|20)\\d{2}", as.character(season)))
 }
 
 
@@ -317,15 +314,15 @@ extraTimeSolver<-function(home_win, away_win, draw){
 #'
 #' @return a schedule with postponed games moved to the end of the schedule - helps to not drop games that are otherwise in the past but weren't played.
 add_postponed_to_schedule_end<-function(schedule = HockeyModel::schedule){
-  if(!any(schedule$GameState == "Postponed")){
+  if(!any(schedule$GameStatus == "Postponed")){
     #no postponed games
     return(schedule)
-  } else if(all(schedule[schedule$GameState == "Postponed", "Date"] > Sys.Date())){
+  } else if(all(schedule[schedule$GameStatus == "Postponed", "Date"] > Sys.Date())){
     #all game postponements are in future games - just play them.
     return(schedule)
   }
 
-  for(g in schedule[schedule$GameState == "Postponed" & schedule$Date < Sys.Date(), ]$GameID){
+  for(g in schedule[schedule$GameStatus == "Postponed" & schedule$Date < Sys.Date(), ]$GameID){
     #The model doesn't (currently) account for what games are back to back or anything - so they can all be played on the same (last) date of the schedule
     #Using the last date of the regualr sseason to not interfere with playoffs
     schedule[schedule$GameID == g, ]$Date <- max(schedule[schedule$GameType == "R",]$Date, Sys.Date())

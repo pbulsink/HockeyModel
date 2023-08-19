@@ -274,12 +274,12 @@ dailySummary <- function(graphic_dir = './prediction_results/graphics', subdir =
       twitter_token<-rtweet::auth_get()
     }
     message("Posting Tweets...")
-    tweet(graphic_dir, twitter_token = twitter_token, delay = delay, graphic_dir = graphic_dir)#, games_today = Sys.Date() %in% sc[sc$GameState != "Postponed", ]$Date)
+    tweet(graphic_dir, twitter_token = twitter_token, delay = delay, graphic_dir = graphic_dir)#, games_today = Sys.Date() %in% sc[sc$GameStatus != "Postponed", ]$Date)
     #until Rtweet has scheduler
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
 
-    # tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameState != 'Posponed', ], params=params, graphic_dir = graphic_dir, token = token, delay=delay)
+    # tweetGames(games = sc[sc$Date == Sys.Date() && sc$GameStatus != 'Posponed', ], params=params, graphic_dir = graphic_dir, token = token, delay=delay)
 
     if(inRegularSeason()){
       tweetPlayoffOdds(twitter_token = twitter_token, graphic_dir = graphic_dir, params=params)

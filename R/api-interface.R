@@ -23,20 +23,20 @@ getNHLSchedule<-function(season=getSeason()){
 }
 
 processNHLSchedule<-function(sched, clean=TRUE){
-  schedule<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameState" = character())
+  schedule<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameStatus" = character())
   for (y in 1:length(sched)){
     if(!(length(sched[[y]]$dates)>0)){
       next
     }
     for(d in 1:nrow(sched[[y]]$dates)){
-      df<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameState" = character())
+      df<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameStatus" = character())
       for (g in 1:sched[[y]]$dates$totalGames[[d]]){
         dfg<-data.frame("Date" = sched[[y]]$dates$date[[d]],
                         "HomeTeam" = sched[[y]]$dates$games[[d]]$teams.home.team.name[[g]],
                         "AwayTeam" = sched[[y]]$dates$games[[d]]$teams.away.team.name[[g]],
                         "GameID" = sched[[y]]$dates$games[[d]]$gamePk[[g]],
                         "GameType" = sched[[y]]$dates$games[[d]]$gameType[[g]],
-                        "GameState" = sched[[y]]$dates$games[[d]]$status.detailedState[[g]])
+                        "GameStatus" = sched[[y]]$dates$games[[d]]$status.detailedState[[g]])
         df<-rbind(df, dfg)
       }
       schedule<-rbind(schedule, df)
@@ -45,9 +45,9 @@ processNHLSchedule<-function(sched, clean=TRUE){
   schedule <- clean_names(schedule)
   schedule <- schedule %>%
     dplyr::filter(.data$GameType %in% c("P", "R")) %>%
-    dplyr::arrange(.data$Date, dplyr::desc(.data$GameState), .data$GameID)
+    dplyr::arrange(.data$Date, dplyr::desc(.data$GameStatus), .data$GameID)
 
-  schedule$GameState[is.na(schedule$GameState)] <- "Final"
+  schedule$GameStatus[is.na(schedule$GameStatus)] <- "Final"
   if(clean){
     schedule<-removeUnscheduledGames(schedule)
   }
@@ -70,7 +70,7 @@ games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games
   stopifnot(is.Date(date))
   todaygames<-processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
   if(!all_games){
-    todaygames<-todaygames["Scheduled" %in% todaygames$GameState, ]
+    todaygames<-todaygames["Scheduled" %in% todaygames$GameStatus, ]
   }
   if (nrow(todaygames) > 0){
     return(todaygames)
@@ -98,7 +98,7 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE)
   schedule<-sched %>%
     dplyr::filter(!(.data$GameID %in% gameIDs)) %>%
     dplyr::bind_rows(sched) %>%
-    dplyr::arrange(.data$Date, dplyr::desc(.data$GameState), .data$GameID)
+    dplyr::arrange(.data$Date, dplyr::desc(.data$GameStatus), .data$GameID)
 
   schedule<-removeUnscheduledGames(schedule = schedule)
 
@@ -199,17 +199,17 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
 get_xg<-function(gameIds){
   gxg<-function(gid){
     season<-as.numeric(substr(gid, 1, 4))
-    game_id <- as.numeric(substr(gid, 5, 9))
+    game_id <- as.numeric(substr(gid, 5, 10))
 
     if(season < 2011){
       return(list("GameID" = gid, "HomexG" = NA, "AwayxG" = NA))
     }
 
     #xG<-BulsinkBxG::get_game_xg(gid)
-    nst_report <- naturalstattrick::nst_short_report(season = paste0(season, season+1),
+    nst_report <- naturalstattrick::nst_report_df(season = paste0(season, season+1),
                                                      game_id = game_id)
 
-    return(list("GameID" = as.integer(gid),
+    return(data.frame("GameID" = as.integer(gid),
                 "HomexG" = as.numeric(nst_report[nst_report$h_a == "home",]$xgf_all),
                 "AwayxG" = as.numeric(nst_report[nst_report$h_a == "away",]$xgf_all),
                 "HomeG" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_all),
@@ -231,7 +231,7 @@ get_xg<-function(gameIds){
           )
   }
 
-  v_gxg<-Vectorize(gxg)
+  v_gxg<-Vectorize(gxg, SIMPLIFY = FALSE)
   gameIds<-gameIds[is_valid_gameId(gameIds)]
 
   if(length(gameIds) == 0){
@@ -240,7 +240,7 @@ get_xg<-function(gameIds){
     return(gxg(gameIds))
   } else {
     gxgs<-v_gxg(gid = gameIds)
-    gxgs<-as.data.frame(t(gxgs))
+    gxgs<-dplyr::bind_rows(gxgs)
 
     return(gxgs)
   }
@@ -257,7 +257,7 @@ get_xg<-function(gameIds){
 #' @return a schedule with unscheduled games removed
 #' @export
 removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE){
-  unsched<-schedule[schedule$GameState != "Final" & schedule$Date < Sys.Date(),]
+  unsched<-schedule[schedule$GameStatus != "Final" & schedule$Date < Sys.Date(),]
   removedGames<-c()
   notRescheduled<-c()
   for(g in unsched$GameID){
@@ -284,7 +284,7 @@ removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE
   }
 
   schedule<-schedule %>%
-    dplyr::arrange(.data$Date, .data$GameState, .data$GameID)
+    dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
 
   if(save_data & requireNamespace('usethis', quietly = TRUE)){
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))

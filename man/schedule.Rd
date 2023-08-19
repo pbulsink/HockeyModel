@@ -11,7 +11,7 @@ A data frame with  variables:
 \item{AwayTeam}{Name of the visiting team}
 \item{HomeTeam}{Name of the home team}
 \item{GameID}{Unique GameID for each game}
-\item{GameState}{Game Status}
+\item{GameStatus}{Game Status}
 \item{GameType}{Game Type for each game}
 }
 }
