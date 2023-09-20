@@ -8,12 +8,12 @@
 #' @export
 #'
 #' @seealso See [nhlapi::nhl_schedule_seasons()] for alternative schedule requests, and [nhlapi::nhl_games()] for more information on GameID
-getNHLSchedule<-function(season=getSeason()){
-  if(is.null(season)){
-    season<-utils::tail(nhlapi::nhl_seasons()$seasonId, 1)
+getNHLSchedule <- function(season = getSeason()) {
+  if (is.null(season)) {
+    season <- utils::tail(nhlapi::nhl_seasons()$seasonId, 1)
   }
-  sched<-nhlapi::nhl_schedule_seasons(season)
-  if(length(sched) == 0){
+  sched <- nhlapi::nhl_schedule_seasons(season)
+  if (length(sched) == 0) {
     # there was an error
     warning("There was an error getting the ", season, " schedule from the NHL", call. = FALSE)
     return(NULL)
@@ -22,24 +22,28 @@ getNHLSchedule<-function(season=getSeason()){
   }
 }
 
-processNHLSchedule<-function(sched, clean=TRUE){
-  schedule<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameStatus" = character())
-  for (y in 1:length(sched)){
-    if(!(length(sched[[y]]$dates)>0)){
+processNHLSchedule <- function(sched, clean = TRUE) {
+  schedule <- data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(),
+                         "GameID" = integer(), "GameType" = character(), "GameStatus" = character())
+  for (y in seq_along(length(sched))) {
+    if (!(length(sched[[y]]$dates) > 0)) {
       next
     }
-    for(d in 1:nrow(sched[[y]]$dates)){
-      df<-data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(), "GameID" = integer(), "GameType" = character(), "GameStatus" = character())
-      for (g in 1:sched[[y]]$dates$totalGames[[d]]){
-        dfg<-data.frame("Date" = sched[[y]]$dates$date[[d]],
-                        "HomeTeam" = sched[[y]]$dates$games[[d]]$teams.home.team.name[[g]],
-                        "AwayTeam" = sched[[y]]$dates$games[[d]]$teams.away.team.name[[g]],
-                        "GameID" = sched[[y]]$dates$games[[d]]$gamePk[[g]],
-                        "GameType" = sched[[y]]$dates$games[[d]]$gameType[[g]],
-                        "GameStatus" = sched[[y]]$dates$games[[d]]$status.detailedState[[g]])
-        df<-rbind(df, dfg)
+    for (d in seq_along(nrow(sched[[y]]$dates))) {
+      df <- data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(),
+                       "GameID" = integer(), "GameType" = character(), "GameStatus" = character())
+      for (g in 1:sched[[y]]$dates$totalGames[[d]]) {
+        dfg <- data.frame(
+          "Date" = sched[[y]]$dates$date[[d]],
+          "HomeTeam" = sched[[y]]$dates$games[[d]]$teams.home.team.name[[g]],
+          "AwayTeam" = sched[[y]]$dates$games[[d]]$teams.away.team.name[[g]],
+          "GameID" = sched[[y]]$dates$games[[d]]$gamePk[[g]],
+          "GameType" = sched[[y]]$dates$games[[d]]$gameType[[g]],
+          "GameStatus" = sched[[y]]$dates$games[[d]]$status.detailedState[[g]]
+        )
+        df <- rbind(df, dfg)
       }
-      schedule<-rbind(schedule, df)
+      schedule <- rbind(schedule, df)
     }
   }
   schedule <- clean_names(schedule)
@@ -48,8 +52,8 @@ processNHLSchedule<-function(sched, clean=TRUE){
     dplyr::arrange(.data$Date, dplyr::desc(.data$GameStatus), .data$GameID)
 
   schedule$GameStatus[is.na(schedule$GameStatus)] <- "Final"
-  if(clean){
-    schedule<-removeUnscheduledGames(schedule)
+  if (clean) {
+    schedule <- removeUnscheduledGames(schedule)
   }
 
   return(schedule)
@@ -58,21 +62,23 @@ processNHLSchedule<-function(sched, clean=TRUE){
 
 #' Games Today
 #'
-#' @description given a schedule, it returns todays (or another date's) scheduled games (excluding postponements), or NULL if there are none
+#' @description given a schedule, it returns todays (or another date's) scheduled games (excluding postponements),
+#' or NULL if there are none
 #'
 #' @param schedule the schedule within which to look for games
 #' @param date the date to look for games, as a date
-#' @param all_games whether to return all games scheduled for a date (True) or exclude postponed, rescheduled, in-progress, or completed games (False, default)
+#' @param all_games whether to return all games scheduled for a date (True) or exclude postponed, rescheduled,
+#' in-progress, or completed games (False, default)
 #'
 #' @return Scheduled games (in the format of the schedule) for the requested date, or NULL if none
 #' @export
-games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games = FALSE){
+games_today <- function(schedule = HockeyModel::schedule, date = Sys.Date(), all_games = FALSE) {
   stopifnot(is.Date(date))
-  todaygames<-processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
-  if(!all_games){
-    todaygames<-todaygames["Scheduled" %in% todaygames$GameStatus, ]
+  todaygames <- processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
+  if (!all_games) {
+    todaygames <- todaygames["Scheduled" %in% todaygames$GameStatus, ]
   }
-  if (nrow(todaygames) > 0){
+  if (nrow(todaygames) > 0) {
     return(todaygames)
   } else {
     return(NULL)
@@ -87,23 +93,23 @@ games_today<-function(schedule=HockeyModel::schedule, date=Sys.Date(), all_games
 #'
 #' @return data frame of schedule, after optionally writing to package data
 #' @export
-updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE){
-  currentSeason<-getSeason()
-  if(is.null(currentSeason)){
-    currentSeason<-utils::tail(nhlapi::nhl_seasons()$seasonId, 1)
+updateScheduleAPI <- function(schedule = HockeyModel::schedule, save_data = FALSE) {
+  currentSeason <- getSeason()
+  if (is.null(currentSeason)) {
+    currentSeason <- utils::tail(nhlapi::nhl_seasons()$seasonId, 1)
   }
-  sched<-getNHLSchedule(currentSeason)
+  sched <- getNHLSchedule(currentSeason)
   stopifnot(!is.null(sched))
-  gameIDs<-sched$GameID
-  schedule<-sched %>%
+  gameIDs <- sched$GameID
+  schedule <- sched %>%
     dplyr::filter(!(.data$GameID %in% gameIDs)) %>%
     dplyr::bind_rows(sched) %>%
     dplyr::arrange(.data$Date, dplyr::desc(.data$GameStatus), .data$GameID)
 
-  schedule<-removeUnscheduledGames(schedule = schedule)
+  schedule <- removeUnscheduledGames(schedule = schedule)
 
-  if(save_data & requireNamespace('usethis', quietly = TRUE)){
-    suppressMessages(usethis::use_data(schedule, overwrite=TRUE))
+  if (save_data && requireNamespace("usethis", quietly = TRUE)) {
+    suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
   }
   return(schedule)
 }
@@ -111,7 +117,8 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE)
 
 #' Get NHL Scores
 #'
-#' @description Get the NHL game scores from the NHL API for any game(s) with a final score. Returns data formatted for future use. Requires gameID(s) be provided.This can be slow if requesting many games due to the API rate limit.
+#' @description Get the NHL game scores from the NHL API for any game(s) with a final score. Returns data formatted
+#' for future use. Requires gameID(s) be provided.This can be slow if requesting many games due to the API rate limit.
 #'
 #' @param gameIDs Game IDs (10 digit number). See [nhlapi::nhl_games()] for more information
 #' @param schedule optional, provide a schedule if not using the HockeyModel::schedule
@@ -121,42 +128,49 @@ updateScheduleAPI<-function(schedule = HockeyModel::schedule, save_data = FALSE)
 #' @export
 #'
 #' @seealso See [nhlapi::nhl_games()] for more information on gameIDs
-getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRUE){
-  scores<-NULL
-  gameIDs <- gameIDs[gameIDs %in% schedule[schedule$Date < Sys.Date(), "GameID"]]
-  if(progress){
-    if(!requireNamespace('progress', quietly = TRUE)){ progress<-FALSE }
+getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progress = TRUE) {
+  scores <- NULL
+  if (is.null(gameIDs)) {
+    gameIDs <- gameIDs[gameIDs %in% schedule[schedule$Date < Sys.Date(), "GameID"]]
   }
-  if(progress){
-    pb<-progress::progress_bar$new(
+  if (progress) {
+    if (!requireNamespace("progress", quietly = TRUE)) {
+      progress <- FALSE
+    }
+  }
+  if (progress) {
+    pb <- progress::progress_bar$new(
       format = "  getting scores [:bar] :percent eta: :eta",
-      total = length(gameIDs), show_after = 5)
+      total = length(gameIDs), show_after = 5
+    )
   }
-  for(g in gameIDs){
-    sc<-nhlapi::nhl_games_linescore(g)
-    if('nhl_get_data_error' %in% class(sc[[1]])){
+  for (g in gameIDs) {
+    sc <- nhlapi::nhl_games_linescore(g)
+    if ("nhl_get_data_error" %in% class(sc[[1]])) {
       next
     }
-    if(sc[[1]]$currentPeriod > 0){
-      if(sc[[1]]$currentPeriodTimeRemaining == "Final"){
-        dfs<-data.frame("Date" = schedule[schedule$GameID == g, ]$Date,
-                        "HomeTeam" = sc[[1]]$teams$home$team$name,
-                        "AwayTeam" = sc[[1]]$teams$away$team$name,
-                        "GameID" = g,
-                        "HomeGoals" = sc[[1]]$teams$home$goals,
-                        "AwayGoals" = sc[[1]]$teams$away$goals,
-                        "OTStatus" = sc[[1]]$currentPeriodOrdinal,
-                        "GameType" = schedule[schedule$GameID == g, ]$GameType,
-                        "GameStatus" = sc[[1]]$currentPeriodTimeRemaining)
-        scores<-rbind(scores, dfs)
-      } else if (sc[[1]]$currentPeriodTimeRemaining == "20:00" & sc[[1]]$currentPeriod == 1){
-        #MAYBE the game is cancelled?
-        #get the schedule's date for this game:
-        d<-schedule[schedule$GameID == g, ]$Date
-        #Check the NHL API for this game on that date
-        newsched<-processNHLSchedule(nhlapi::nhl_schedule_date_range(startDate = d, endDate = d))
-        if(!(g %in% newsched$GameID)){
-          #This game isn't in the schedule anymore. Schedule is out of date.
+    if (sc[[1]]$currentPeriod > 0) {
+      if (sc[[1]]$currentPeriodTimeRemaining == "Final") {
+        dfs <- data.frame(
+          "Date" = schedule[schedule$GameID == g, ]$Date,
+          "HomeTeam" = sc[[1]]$teams$home$team$name,
+          "AwayTeam" = sc[[1]]$teams$away$team$name,
+          "GameID" = g,
+          "HomeGoals" = sc[[1]]$teams$home$goals,
+          "AwayGoals" = sc[[1]]$teams$away$goals,
+          "OTStatus" = sc[[1]]$currentPeriodOrdinal,
+          "GameType" = ifelse(substr(g, 6, 6) == 2, "R", "P"),
+          "GameStatus" = sc[[1]]$currentPeriodTimeRemaining
+        )
+        scores <- rbind(scores, dfs)
+      } else if (sc[[1]]$currentPeriodTimeRemaining == "20:00" && sc[[1]]$currentPeriod == 1) {
+        # MAYBE the game is cancelled?
+        # get the schedule's date for this game:
+        d <- schedule[schedule$GameID == g, ]$Date
+        # Check the NHL API for this game on that date
+        newsched <- processNHLSchedule(nhlapi::nhl_schedule_date_range(startDate = d, endDate = d))
+        if (!(g %in% newsched$GameID)) {
+          # This game isn't in the schedule anymore. Schedule is out of date.
           warning("Game ", g, " no longer scheduled.")
           next
         }
@@ -165,82 +179,104 @@ getNHLScores<-function(gameIDs, schedule = HockeyModel::schedule, progress = TRU
         next
       }
     }
-    if(progress){
+    if (progress) {
       pb$tick()
     }
   }
-  if(!is.null(scores)){
-    scores<-clean_names(scores)
-    scores[scores$OTStatus == "3rd", ]$OTStatus<-""
-    scores<-scores %>%
+  if (!is.null(scores)) {
+    scores <- clean_names(scores)
+    scores[scores$OTStatus == "3rd", ]$OTStatus <- ""
+    scores <- scores %>%
       dplyr::mutate(Result = dplyr::case_when(
-        (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "" ~ 1,
-        (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "" ~ 0,
+        (.data$HomeGoals > .data$AwayGoals) & .data$OTStatus == "" ~ 1,
+        (.data$HomeGoals < .data$AwayGoals) & .data$OTStatus == "" ~ 0,
         (.data$HomeGoals == .data$AwayGoals) ~ 0.5,
-        (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.75,
-        (.data$HomeGoals >  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.6,
-        (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.4,
-        (.data$HomeGoals <  .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.25,
+        (.data$HomeGoals > .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.75,
+        (.data$HomeGoals > .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.6,
+        (.data$HomeGoals < .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.4,
+        (.data$HomeGoals < .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.25,
       )) %>%
       dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
   }
-  scores_xg<-as.data.frame(get_xg(gameIds = gameIDs))
-  scores<-dplyr::left_join(scores, scores_xg, by = "GameID")
+  scores_xg <- get_xg(gameIds = gameIDs)
+  scores <- dplyr::left_join(scores, scores_xg, by = "GameID")
   return(scores)
 }
 
+
+load_or_get_nst <- function(gid) {
+  season <- as.numeric(substr(gid, 1, 4))
+  game_id <- as.numeric(substr(gid, 5, 10))
+
+  season <- paste0(season, season + 1)
+
+  if (system2("grep", paste0('-l "', gid, '" ', "~/Documents/natstattrick.csv"), stdout = FALSE) == 0) {
+    nstall <- utils::read.csv("~/Documents/natstattrick.csv")
+    nstdf <- nstall %>%
+      dplyr::filter(.data$game_id == gid)
+  } else {
+    nstdf <- naturalstattrick::nst_report_df(
+      season = paste0(season, season + 1),
+      game_id = game_id
+    )
+    utils::write.table(nstdf, file = "~/Documents/natstattrick.csv", append = TRUE,
+                       row.names = FALSE, col.names = FALSE, sep = ",")
+  }
+  closeAllConnections()
+
+  return(nstdf)
+}
 
 #' Get xG for one or many gameIds
 #'
 #' @param gameIds one or many game Ids
 #'
-#' @return a list with Game ID, HomexG and AwayxG if one game ID supplied, or a data frame with those columns
+#' @return a list with Game ID, HomexG and AwayxG, (plus home and away G, CF, pk G, pk CF, pk xG, pp G, pp CF, pp xG,)
+#' if one game ID supplied, or a data frame with those columns
 #' @export
-get_xg<-function(gameIds){
-  gxg<-function(gid){
-    season<-as.numeric(substr(gid, 1, 4))
-    game_id <- as.numeric(substr(gid, 5, 10))
+get_xg <- function(gameIds) {
+  gxg <- function(gid) {
+    season <- as.numeric(substr(gid, 1, 4))
 
-    if(season < 2011){
+    if (season < 2007) {
       return(list("GameID" = gid, "HomexG" = NA, "AwayxG" = NA))
     }
 
-    #xG<-BulsinkBxG::get_game_xg(gid)
-    nst_report <- naturalstattrick::nst_report_df(season = paste0(season, season+1),
-                                                     game_id = game_id)
+    # xG<-BulsinkBxG::get_game_xg(gid)
+    nst_report <- load_or_get_nst(gid)
 
-    return(data.frame("GameID" = as.integer(gid),
-                "HomexG" = as.numeric(nst_report[nst_report$h_a == "home",]$xgf_all),
-                "AwayxG" = as.numeric(nst_report[nst_report$h_a == "away",]$xgf_all),
-                "HomeG" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_all),
-                "AwayG" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_all),
-                "HomeCF" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_all),
-                "AwayCF" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_all),
-                "HomexGpk" = as.numeric(nst_report[nst_report$h_a == "home",]$xgf_pk),
-                "AwayxGpk" = as.numeric(nst_report[nst_report$h_a == "away",]$xgf_pk),
-                "HomeGpk" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_pk),
-                "AwayGpk" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_pk),
-                "HomeCFpk" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_pk),
-                "AwayCFpk" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_pk),
-                "HomexGpp" = as.numeric(nst_report[nst_report$h_a == "home",]$xgf_pp),
-                "AwayxGpp" = as.numeric(nst_report[nst_report$h_a == "away",]$xgf_pp),
-                "HomeGpp" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_pp),
-                "AwayGpp" = as.numeric(nst_report[nst_report$h_a == "away",]$gf_pp),
-                "HomeCFpp" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_pp),
-                "AwayCFpp" = as.numeric(nst_report[nst_report$h_a == "away",]$cf_pp))
-          )
+    return(list(
+      "GameID" = as.integer(gid),
+      "HomexG" = as.numeric(nst_report[nst_report$h_a == "home", ]$xgf_all),
+      "AwayxG" = as.numeric(nst_report[nst_report$h_a == "away", ]$xgf_all),
+      "HomeG" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_all),
+      "AwayG" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_all),
+      "HomeCF" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_all),
+      "AwayCF" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_all),
+      "HomexGpk" = as.numeric(nst_report[nst_report$h_a == "home", ]$xgf_pk),
+      "AwayxGpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$xgf_pk),
+      "HomeGpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pk),
+      "AwayGpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pk),
+      "HomeCFpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pk),
+      "AwayCFpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pk),
+      "HomexGpp" = as.numeric(nst_report[nst_report$h_a == "home", ]$xgf_pp),
+      "AwayxGpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$xgf_pp),
+      "HomeGpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pp),
+      "AwayGpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pp),
+      "HomeCFpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pp),
+      "AwayCFpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pp)
+    ))
   }
 
-  v_gxg<-Vectorize(gxg, SIMPLIFY = FALSE)
-  gameIds<-gameIds[is_valid_gameId(gameIds)]
+  v_gxg <- Vectorize(gxg, SIMPLIFY = FALSE)
 
-  if(length(gameIds) == 0){
+  if (length(gameIds) == 0) {
     return(NA)
-  } else if(length(gameIds) == 1){
+  } else if (length(gameIds) == 1) {
     return(gxg(gameIds))
   } else {
-    gxgs<-v_gxg(gid = gameIds)
-    gxgs<-dplyr::bind_rows(gxgs)
+    gxgs <- v_gxg(gid = gameIds)
+    gxgs <- dplyr::bind_rows(gxgs)
 
     return(gxgs)
   }
@@ -256,37 +292,37 @@ get_xg<-function(gameIds){
 #'
 #' @return a schedule with unscheduled games removed
 #' @export
-removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE){
-  unsched<-schedule[schedule$GameStatus != "Final" & schedule$Date < Sys.Date(),]
-  removedGames<-c()
-  notRescheduled<-c()
-  for(g in unsched$GameID){
-    d<-unsched[unsched$GameID == g, ]$Date
+removeUnscheduledGames <- function(schedule = HockeyModel::schedule, save_data = FALSE) {
+  unsched <- schedule[schedule$GameStatus != "Final" & schedule$Date < Sys.Date(), ]
+  removedGames <- c()
+  notRescheduled <- c()
+  for (g in unsched$GameID) {
+    d <- unsched[unsched$GameID == g, ]$Date
 
-    sched<-nhlapi::nhl_schedule_date_range(startDate = d, endDate = d)
+    sched <- nhlapi::nhl_schedule_date_range(startDate = d, endDate = d)
 
-    checksched<-processNHLSchedule(sched, clean=FALSE)
-    if(!(g %in% checksched$GameID)){
-      #Game is removed
+    checksched <- processNHLSchedule(sched, clean = FALSE)
+    if (!(g %in% checksched$GameID)) {
+      # Game is removed
       removedGames <- c(removedGames, g)
     } else {
-      notRescheduled<-c(notRescheduled, g)
+      notRescheduled <- c(notRescheduled, g)
     }
   }
 
-  schedule<-schedule[!(schedule$GameID %in% removedGames), ]
+  schedule <- schedule[!(schedule$GameID %in% removedGames), ]
 
-  if(length(notRescheduled)>0){
-    regEndDate <- schedule[nrow(schedule),]$Date
-    for(g in notRescheduled){
+  if (length(notRescheduled) > 0) {
+    regEndDate <- schedule[nrow(schedule), ]$Date
+    for (g in notRescheduled) {
       schedule[schedule$GameID == g, ]$Date <- regEndDate + 1
     }
   }
 
-  schedule<-schedule %>%
+  schedule <- schedule %>%
     dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
 
-  if(save_data & requireNamespace('usethis', quietly = TRUE)){
+  if (save_data && requireNamespace("usethis", quietly = TRUE)) {
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
   }
 
@@ -302,22 +338,23 @@ removeUnscheduledGames<-function(schedule=HockeyModel::schedule, save_data=FALSE
 #'
 #' @return data frame of scores, after optionally writing to package data
 #' @export
-updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::schedule, full_season = FALSE, save_data=FALSE){
-  if(full_season){
-    neededGames<-schedule[schedule$Date > getSeasonStartDate(), ]$GameID
+updateScoresAPI <- function(scores = HockeyModel::scores, schedule = HockeyModel::schedule,
+                            full_season = FALSE, save_data = FALSE) {
+  if (full_season) {
+    neededGames <- schedule[schedule$Date > getSeasonStartDate(), ]$GameID
   } else {
-    neededGames<-schedule[schedule$Date < Sys.Date(), ]$GameID
-    neededGames<-neededGames[!neededGames %in% scores[scores$GameStatus == 'Final', ]$GameID]
+    neededGames <- schedule[schedule$Date < Sys.Date(), ]$GameID
+    neededGames <- neededGames[!neededGames %in% scores[scores$GameStatus == "Final", ]$GameID]
   }
-  if(length(neededGames)>0){
-    updatedSc<-getNHLScores(neededGames)
-    if(!is.null(updatedSc)){
-      scores<-scores %>%
+  if (length(neededGames) > 0) {
+    updatedSc <- getNHLScores(neededGames)
+    if (!is.null(updatedSc)) {
+      scores <- scores %>%
         dplyr::filter(!(.data$GameID %in% neededGames)) %>%
         dplyr::bind_rows(updatedSc) %>%
         dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
-      if (save_data & requireNamespace('usethis', quietly = TRUE)){
-        suppressMessages(usethis::use_data(scores, overwrite=TRUE))
+      if (save_data && requireNamespace("usethis", quietly = TRUE)) {
+        suppressMessages(usethis::use_data(scores, overwrite = TRUE))
       }
     }
   } else {
@@ -326,58 +363,75 @@ updateScoresAPI<-function(scores=HockeyModel::scores, schedule=HockeyModel::sche
   return(scores)
 }
 
+updateScoresAPI_byGameID <- function(gameids, save_data = FALSE) {
+  updatedSc <- getNHLScores(gameids, schedule = dplyr::bind_rows(HockeyModel::scores, HockeyModel::schedule))
+  if (!is.null(updatedSc)) {
+    scores <- scores %>%
+      dplyr::filter(!(.data$GameID %in% gameids)) %>%
+      dplyr::bind_rows(updatedSc) %>%
+      dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
+    if (save_data && requireNamespace("usethis", quietly = TRUE)) {
+      suppressMessages(usethis::use_data(scores, overwrite = TRUE))
+    }
+  }
+  invisible(scores)
+}
 
-clean_names<-function(sc){
-  if(is.vector(sc)){
-    sc<-stringi::stri_trans_general(str=sc, 'latin-ascii')
-    sc<-replace(sc, sc == "Phoenix Coyotes", "Arizona Coyotes")
-    sc<-replace(sc, sc == "Atlanta Thrashers", "Winnipeg Jets")
-    sc<-replace(sc, sc == "Minnesota North Stars", "Dallas Stars")
-    sc<-replace(sc, sc == "Quebec Nordiques", "Colorado Avalanche")
-  } else if (is.data.frame(sc)){
-    if('HomeTeam' %in% names(sc)){
+clean_names <- function(sc) {
+  if (is.vector(sc)) {
+    sc <- stringi::stri_trans_general(str = sc, "latin-ascii")
+    sc <- replace(sc, sc == "Phoenix Coyotes", "Arizona Coyotes")
+    sc <- replace(sc, sc == "Atlanta Thrashers", "Winnipeg Jets")
+    sc <- replace(sc, sc == "Minnesota North Stars", "Dallas Stars")
+    sc <- replace(sc, sc == "Quebec Nordiques", "Colorado Avalanche")
+  } else if (is.data.frame(sc)) {
+    if ("HomeTeam" %in% names(sc)) {
       sc <- sc %>%
-        dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str=.data$HomeTeam, 'latin-ascii')) %>%
-        dplyr::mutate("HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
-                      "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
-                      "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
-                      "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
+        dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str = .data$HomeTeam, "latin-ascii")) %>%
+        dplyr::mutate(
+          "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+          "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
+          "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
+          "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
         )
     }
-    if('AwayTeam' %in% names(sc)){
+    if ("AwayTeam" %in% names(sc)) {
       sc <- sc %>%
-        dplyr::mutate("AwayTeam" = stringi::stri_trans_general(str=.data$AwayTeam, 'latin-ascii')) %>%
-        dplyr::mutate("AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
-                      "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
-                      "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
-                      "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
+        dplyr::mutate("AwayTeam" = stringi::stri_trans_general(str = .data$AwayTeam, "latin-ascii")) %>%
+        dplyr::mutate(
+          "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+          "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
+          "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
+          "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
         )
     }
-    if('Team' %in% names(sc)) {
+    if ("Team" %in% names(sc)) {
       sc <- sc %>%
-        dplyr::mutate("Team" = stringi::stri_trans_general(str=.data$Team, 'latin-ascii')) %>%
-        dplyr::mutate("Team" = replace(.data$Team, .data$Team == "Phoenix Coyotes", "Arizona Coyotes"),
-                      "Team" = replace(.data$Team, .data$Team == "Atlanta Thrashers", "Winnipeg Jets"),
-                      "Team" = replace(.data$Team, .data$Team == "Minnesota North Stars", "Dallas Stars"),
-                      "Team" = replace(.data$Team, .data$Team == "Quebec Nordiques", "Colorado Avalanche"),
+        dplyr::mutate("Team" = stringi::stri_trans_general(str = .data$Team, "latin-ascii")) %>%
+        dplyr::mutate(
+          "Team" = replace(.data$Team, .data$Team == "Phoenix Coyotes", "Arizona Coyotes"),
+          "Team" = replace(.data$Team, .data$Team == "Atlanta Thrashers", "Winnipeg Jets"),
+          "Team" = replace(.data$Team, .data$Team == "Minnesota North Stars", "Dallas Stars"),
+          "Team" = replace(.data$Team, .data$Team == "Quebec Nordiques", "Colorado Avalanche"),
         )
     }
-    if('name' %in% names(sc)) {
+    if ("name" %in% names(sc)) {
       sc <- sc %>%
-        dplyr::mutate("name" = stringi::stri_trans_general(str=.data$name, 'latin-ascii')) %>%
-        dplyr::mutate("name" = replace(.data$name, .data$name == "Phoenix Coyotes", "Arizona Coyotes"),
-                      "name" = replace(.data$name, .data$name == "Atlanta Thrashers", "Winnipeg Jets"),
-                      "name" = replace(.data$name, .data$name == "Minnesota North Stars", "Dallas Stars"),
-                      "name" = replace(.data$name, .data$name == "Quebec Nordiques", "Colorado Avalanche"),
+        dplyr::mutate("name" = stringi::stri_trans_general(str = .data$name, "latin-ascii")) %>%
+        dplyr::mutate(
+          "name" = replace(.data$name, .data$name == "Phoenix Coyotes", "Arizona Coyotes"),
+          "name" = replace(.data$name, .data$name == "Atlanta Thrashers", "Winnipeg Jets"),
+          "name" = replace(.data$name, .data$name == "Minnesota North Stars", "Dallas Stars"),
+          "name" = replace(.data$name, .data$name == "Quebec Nordiques", "Colorado Avalanche"),
         )
     }
-    if('Date' %in% names(sc)){
+    if ("Date" %in% names(sc)) {
       sc <- sc %>%
         dplyr::mutate("Date" = as.Date(.data$Date))
     }
-    if('OTStatus' %in% names(sc)){
-      if(any(sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"))){
-        sc[sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"),]$OTStatus <- "OT"
+    if ("OTStatus" %in% names(sc)) {
+      if (any(sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"))) {
+        sc[sc$OTStatus %in% c("2OT", "3OT", "4OT", "5OT", "6OT", "7OT", "8OT"), ]$OTStatus <- "OT"
       }
     }
   }
@@ -390,46 +444,56 @@ clean_names<-function(sc){
 #'
 #' @param season Optional, the season's playoff series to retrieve
 #'
-#' @return a data frame with Round, Series, Home and Away Teams, number of wins each, playoff ranking/seed and whether the series is complete
+#' @return a data frame with Round, Series, Home and Away Teams, number of wins each, playoff ranking/seed and
+#' whether the series is complete
 #' @export
-getAPISeries <- function(season=getCurrentSeason8()){
-  series<-nhlapi::nhl_tournaments_playoffs(expand = 'round.series', seasons = as.character(season))
-  playoffSeries<-data.frame("Round"=integer(), "Series"=integer(), "HomeTeam"=character(), "AwayTeam"=character(),
-                            "HomeWins"=integer(), "AwayWins"=integer(), "HomeSeed"=integer(), "AwaySeed"=integer(), "requiredWins"=integer())
-  for(rnd in 1:length(series[[1]]$rounds$series)){
-    if('matchupTeams' %in% names(series[[1]]$rounds$series[[rnd]])){
-      for(srs in 1:length(series[[1]]$rounds$series[[rnd]]$matchupTeams)){
-        if(!is.null(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]])){
-          playoffSeries[nrow(playoffSeries)+1, ]<-c(rnd,
-                                                    srs,
-                                                    series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$team.name,
-                                                    series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins,
-                                                    series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seed.rank,
-                                                    series[[1]]$rounds$format.numberOfWins[[rnd]])
-          if(sum(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins) != series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.gameNumber[[srs]]-1){
-            playoffSeries[nrow(playoffSeries), c("HomeWins", "AwayWins")] <- validateWins(playoffSeries[nrow(playoffSeries),],
-                                                                                          series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.seriesStatusShort[[srs]])
+getAPISeries <- function(season = getCurrentSeason8()) {
+  series <- nhlapi::nhl_tournaments_playoffs(expand = "round.series", seasons = as.character(season))
+  playoffSeries <- data.frame(
+    "Round" = integer(), "Series" = integer(), "HomeTeam" = character(), "AwayTeam" = character(),
+    "HomeWins" = integer(), "AwayWins" = integer(), "HomeSeed" = integer(), "AwaySeed" = integer(),
+    "requiredWins" = integer()
+  )
+  for (rnd in seq_along(length(series[[1]]$rounds$series))) {
+    if ("matchupTeams" %in% names(series[[1]]$rounds$series[[rnd]])) {
+      for (srs in seq_along(length(series[[1]]$rounds$series[[rnd]]$matchupTeams))) {
+        if (!is.null(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]])) {
+          playoffSeries[nrow(playoffSeries) + 1, ] <- c(
+            rnd,
+            srs,
+            series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$team.name,
+            series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins,
+            series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seed.rank,
+            series[[1]]$rounds$format.numberOfWins[[rnd]]
+          )
+          if (sum(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins) != series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.gameNumber[[srs]] - 1) {
+            playoffSeries[nrow(playoffSeries), c("HomeWins", "AwayWins")] <- validateWins(
+              playoffSeries[nrow(playoffSeries), ],
+              series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.seriesStatusShort[[srs]]
+            )
           }
         }
       }
     }
   }
-  if(nrow(playoffSeries) == 0){
+  if (nrow(playoffSeries) == 0) {
     return(data.frame())
-    #stop('No Series Data Available')
+    # stop('No Series Data Available')
   }
 
-  playoffSeries<-clean_names(playoffSeries)
+  playoffSeries <- clean_names(playoffSeries)
 
-  playoffSeries$Status <- ifelse(playoffSeries$HomeWins == playoffSeries$requiredWins | playoffSeries$AwayWins == playoffSeries$requiredWins, 'Complete', 'Ongoing')
+  playoffSeries$Status <- ifelse(playoffSeries$HomeWins == playoffSeries$requiredWins | playoffSeries$AwayWins == playoffSeries$requiredWins, "Complete", "Ongoing")
   playoffSeries$requiredWins <- NULL
   playoffSeries <- playoffSeries %>%
-    dplyr::mutate("Round" = as.integer(.data$Round),
-                  "Series" = as.integer(.data$Series),
-                  "HomeWins" = as.integer(.data$HomeWins),
-                  "AwayWins" = as.integer(.data$AwayWins),
-                  "HomeSeed" = as.integer(.data$HomeSeed),
-                  "AwaySeed" = as.integer(.data$AwaySeed)) %>%
+    dplyr::mutate(
+      "Round" = as.integer(.data$Round),
+      "Series" = as.integer(.data$Series),
+      "HomeWins" = as.integer(.data$HomeWins),
+      "AwayWins" = as.integer(.data$AwayWins),
+      "HomeSeed" = as.integer(.data$HomeSeed),
+      "AwaySeed" = as.integer(.data$AwaySeed)
+    ) %>%
     dplyr::mutate("SeriesID" = dplyr::case_when(
       .data$Round == 1 ~ .data$Series + 0, ## + 0 recasts to numeric, avoids issue, see https://github.com/tidyverse/dplyr/issues/5876
       .data$Round == 2 ~ .data$Series + 8,
@@ -440,7 +504,7 @@ getAPISeries <- function(season=getCurrentSeason8()){
 }
 
 
-validateWins<-function(playoffSeries, seriesStatusShort){
+validateWins <- function(playoffSeries, seriesStatusShort) {
   hometeam <- playoffSeries$HomeTeam
   awayteam <- playoffSeries$AwayTeam
 
@@ -448,19 +512,19 @@ validateWins<-function(playoffSeries, seriesStatusShort){
   awayshort <- getShortTeam(awayteam)
 
   statusteam <- ifelse(grepl(homeshort, seriesStatusShort), homeshort,
-                       ifelse(grepl(awayshort, seriesStatusShort), awayshort, NA))
+    ifelse(grepl(awayshort, seriesStatusShort), awayshort, NA)
+  )
   wins <- unlist(strsplit(seriesStatusShort, "-"))
   wins[1] <- unlist(strsplit(wins[1], " "))[length(unlist(strsplit(wins[1], " ")))]
-  if(is.na(statusteam)){
-    #Tied
+  if (is.na(statusteam)) {
+    # Tied
     return(as.numeric(c(wins[1], wins[2])))
-  } else if(statusteam == awayshort){
-    #Away leading, invert (as response is homewins, awaywins)
+  } else if (statusteam == awayshort) {
+    # Away leading, invert (as response is homewins, awaywins)
     return(as.numeric(c(wins[2], wins[1])))
   } else {
     return(as.numeric(c(wins[1], wins[2])))
   }
-
 }
 
 
@@ -470,10 +534,10 @@ validateWins<-function(playoffSeries, seriesStatusShort){
 #'
 #' @return Season start date as date
 #' @export
-getSeasonStartDate<-function(season=NULL){
-  seasons<-nhlapi::nhl_seasons()
-  if(!is.null(season)){
-    if(season %in% seasons$seasonId){
+getSeasonStartDate <- function(season = NULL) {
+  seasons <- nhlapi::nhl_seasons()
+  if (!is.null(season)) {
+    if (season %in% seasons$seasonId) {
       return(as.Date(seasons[seasons$seasonId == season, ]$regularSeasonStartDate))
     } else {
       stop("Season not found: ", season)
@@ -488,8 +552,8 @@ getSeasonStartDate<-function(season=NULL){
 #'
 #' @return current season (as 20172018 format) based on today's date.
 #' @export
-getCurrentSeason8 <- function(){
-  seasons<-nhlapi::nhl_seasons()
+getCurrentSeason8 <- function() {
+  seasons <- nhlapi::nhl_seasons()
   return(utils::tail(seasons$seasonId, 1))
 }
 
@@ -500,10 +564,10 @@ getCurrentSeason8 <- function(){
 #'
 #' @return Season end date (as date)
 #' @export
-getSeasonEndDate<-function(season=NULL){
-  seasons<-nhlapi::nhl_seasons()
-  if(!is.null(season)){
-    if(season %in% seasons$seasonId){
+getSeasonEndDate <- function(season = NULL) {
+  seasons <- nhlapi::nhl_seasons()
+  if (!is.null(season)) {
+    if (season %in% seasons$seasonId) {
       return(as.Date(seasons[seasons$seasonId == season, ]$seasonEndDate))
     } else {
       stop("Season not found: ", season)
@@ -520,15 +584,15 @@ getSeasonEndDate<-function(season=NULL){
 #'
 #' @return Either TRUE/FALSE or a seasonID/FALSE
 #' @export
-inRegularSeason <- function(date = Sys.Date(), boolean = TRUE){
+inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
   stopifnot(is.Date(date))
-  date<-as.Date(date)
-  seasons<-nhlapi::nhl_seasons()
-  seasons_list<-seasons[seasons$regularSeasonStartDate <= date & seasons$regularSeasonEndDate >= date, ]
-  if(boolean){
-    return(ifelse(nrow(seasons_list)>0, TRUE, FALSE))
+  date <- as.Date(date)
+  seasons <- nhlapi::nhl_seasons()
+  seasons_list <- seasons[seasons$regularSeasonStartDate <= date & seasons$regularSeasonEndDate >= date, ]
+  if (boolean) {
+    return(ifelse(nrow(seasons_list) > 0, TRUE, FALSE))
   } else {
-    if(nrow(seasons_list)>0){
+    if (nrow(seasons_list) > 0) {
       return(seasons_list$seasonId)
     } else {
       return(FALSE)
@@ -544,32 +608,33 @@ inRegularSeason <- function(date = Sys.Date(), boolean = TRUE){
 #'
 #' @return TRUE if we're in off-season, else FALSE
 #' @export
-inOffSeason <- function(date=Sys.Date()){
+inOffSeason <- function(date = Sys.Date()) {
   stopifnot(is.Date(date))
-  date<-as.Date(date)
-  seasons<-nhlapi::nhl_seasons()
-  seasons_list<-seasons[seasons$seasonEndDate > date & seasons$regularSeasonStartDate < date, ]
-  return(ifelse(nrow(seasons_list)>0, FALSE, TRUE))
+  date <- as.Date(date)
+  seasons <- nhlapi::nhl_seasons()
+  seasons_list <- seasons[seasons$seasonEndDate > date & seasons$regularSeasonStartDate < date, ]
+  return(ifelse(nrow(seasons_list) > 0, FALSE, TRUE))
 }
 
 #' In Playoffs
 #'
-#' @description check if the date is in a playoff period. Note: playoffs are considered from the day after the regular season ends.
+#' @description check if the date is in a playoff period. Note: playoffs are considered from the day after the regular
+#' season ends.
 #'
 #' @param date Date to check if it's in a playoffs period
 #' @param boolean Whether to return a result as TRUE/FALSE (True) or to return the seasonID if the date is in a playoffs
 #'
 #' @return Either TRUE/FALSE or a seasonID/FALSE
 #' @export
-inPlayoffs <- function(date = Sys.Date(), boolean = TRUE){
+inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
   stopifnot(is.Date(date))
-  date<-as.Date(date)
-  seasons<-nhlapi::nhl_seasons()
-  seasons_list<-seasons[as.Date(seasons$regularSeasonEndDate) <= date & as.Date(seasons$seasonEndDate) >= date, ]
-  if(boolean){
-    return(ifelse(nrow(seasons_list)>0, TRUE, FALSE))
+  date <- as.Date(date)
+  seasons <- nhlapi::nhl_seasons()
+  seasons_list <- seasons[as.Date(seasons$regularSeasonEndDate) <= date & as.Date(seasons$seasonEndDate) >= date, ]
+  if (boolean) {
+    return(ifelse(nrow(seasons_list) > 0, TRUE, FALSE))
   } else {
-    if(nrow(seasons_list)>0){
+    if (nrow(seasons_list) > 0) {
       return(seasons_list$seasonId)
     } else {
       return(FALSE)
@@ -583,22 +648,22 @@ inPlayoffs <- function(date = Sys.Date(), boolean = TRUE){
 #'
 #' @return a character season id (e.g. 20172018)
 #' @export
-getSeason <- function(gamedate=Sys.Date()){
+getSeason <- function(gamedate = Sys.Date()) {
   stopifnot(is.Date(gamedate))
-  seasons<-nhlapi::nhl_seasons()
-  gs<-function(gd, seasons){
-    gd<-as.Date(gd)
-    season_list<-seasons[seasons$regularSeasonStartDate<=gd & seasons$seasonEndDate >= gd, ]
-    if(nrow(season_list) == 1){
+  seasons <- nhlapi::nhl_seasons()
+  gs <- function(gd, seasons) {
+    gd <- as.Date(gd)
+    season_list <- seasons[seasons$regularSeasonStartDate <= gd & seasons$seasonEndDate >= gd, ]
+    if (nrow(season_list) == 1) {
       return(season_list$seasonId)
     } else {
       return(NULL)
     }
   }
-  vgs<-Vectorize(FUN = gs, vectorize.args = c('gd'))
+  vgs <- Vectorize(FUN = gs, vectorize.args = c("gd"))
 
 
-  if(length(gamedate) == 1){
+  if (length(gamedate) == 1) {
     return(gs(gd = gamedate, seasons = seasons))
   } else if (length(gamedate) > 1) {
     return(unname(vgs(gd = gamedate, seasons = seasons)))
@@ -606,63 +671,63 @@ getSeason <- function(gamedate=Sys.Date()){
 }
 
 
-getConferences <- function(apiteams=nhlapi::nhl_teams()){
+getConferences <- function(apiteams = nhlapi::nhl_teams()) {
   return(unique(apiteams$conference.name))
 }
 
-getDivisions <- function(apiteams=nhlapi::nhl_teams()){
+getDivisions <- function(apiteams = nhlapi::nhl_teams()) {
   return(unique(apiteams$division.name))
 }
 
-getTeamConferences <- function(teams, apiteams=nhlapi::nhl_teams()){
-  apiteams<-clean_names(apiteams)
-  getteamconf<-function(t, apiteams){
+getTeamConferences <- function(teams, apiteams = nhlapi::nhl_teams()) {
+  apiteams <- clean_names(apiteams)
+  getteamconf <- function(t, apiteams) {
     return(apiteams[apiteams$name == t, ]$conference.name)
   }
 
-  v_getteamconf<-Vectorize(getteamconf, "t")
-  teams<-clean_names(teams)
-  if(length(teams) == 1){
+  v_getteamconf <- Vectorize(getteamconf, "t")
+  teams <- clean_names(teams)
+  if (length(teams) == 1) {
     return(getteamconf(t = teams, apiteams = apiteams))
   } else {
-    return(unname(v_getteamconf(t=teams, apiteams = apiteams)))
+    return(unname(v_getteamconf(t = teams, apiteams = apiteams)))
   }
 }
 
-getTeamDivisions <- function(teams, apiteams=nhlapi::nhl_teams()){
-  apiteams<-clean_names(apiteams)
-  getteamdiv<-function(t, apiteams){
+getTeamDivisions <- function(teams, apiteams = nhlapi::nhl_teams()) {
+  apiteams <- clean_names(apiteams)
+  getteamdiv <- function(t, apiteams) {
     return(apiteams[apiteams$name == t, ]$division.name)
   }
 
-  v_getteamdiv<-Vectorize(getteamdiv, "t")
-  teams<-clean_names(teams)
-  if(length(teams) == 1){
+  v_getteamdiv <- Vectorize(getteamdiv, "t")
+  teams <- clean_names(teams)
+  if (length(teams) == 1) {
     return(getteamdiv(t = teams, apiteams = apiteams))
   } else {
-    return(unname(v_getteamdiv(t=teams, apiteams = apiteams)))
+    return(unname(v_getteamdiv(t = teams, apiteams = apiteams)))
   }
 }
 
-getShortTeam<-function(teams, apiteams=nhlapi::nhl_teams()){
-  apiteams<-clean_names(apiteams)
-  getteamshort<-function(t, apiteams){
+getShortTeam <- function(teams, apiteams = nhlapi::nhl_teams()) {
+  apiteams <- clean_names(apiteams)
+  getteamshort <- function(t, apiteams) {
     return(apiteams[apiteams$name == t, ]$abbreviation)
   }
 
-  v_getteamshort<-Vectorize(getteamshort, "t")
-  teams<-clean_names(teams)
-  if(length(teams) == 1){
+  v_getteamshort <- Vectorize(getteamshort, "t")
+  teams <- clean_names(teams)
+  if (length(teams) == 1) {
     return(getteamshort(t = teams, apiteams = apiteams))
   } else {
-    return(unname(v_getteamshort(t=teams, apiteams = apiteams)))
+    return(unname(v_getteamshort(t = teams, apiteams = apiteams)))
   }
 }
 
-getNumGames<-function(season=NULL){
-  if(!is.null(season)){
+getNumGames <- function(season = NULL) {
+  if (!is.null(season)) {
     stopifnot(seasonValidator(season))
   }
-  apiseasons<-nhlapi::nhl_seasons(season)
+  apiseasons <- nhlapi::nhl_seasons(season)
   return(apiseasons$numberOfGames[nrow(apiseasons)])
 }
