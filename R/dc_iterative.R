@@ -109,8 +109,8 @@ iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973,
   scores$TotalGoals<-scores$HomeGoals + scores$AwayGoals
 
   #Split scores to warm-up phase and predictive phase.
-  warm_ups<-scores[scores$Date <= as.Date("2021-10-01") & scores$Date > as.Date("2011-08-01"), ]
-  test_train <-scores[scores$Date > as.Date("2021-10-01"), ]
+  warm_ups<-scores[scores$Date <= as.Date("2022-10-01") & scores$Date > as.Date("2007-08-01"), ]
+  test_train <-scores[scores$Date > as.Date("2022-10-01"), ]
   train <- test_train[1:as.integer(nrow(test_train)*.8),]
   test <- test_train[as.integer(nrow(test_train)*.8):nrow(test_train),]
 
