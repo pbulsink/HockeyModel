@@ -57,7 +57,7 @@ updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), sav
 todayDC <- function(params=NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL, include_xG = FALSE, draws=TRUE){
   stopifnot(is.Date(today))
   params<-parse_dc_params(params)
-  games<-games_today()
+  games<-games_today(date = today)
   if(nrow(games) == 0){
     return(NULL)
   }
@@ -257,7 +257,7 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 #'
 #' @export
 #' @return a model 'm' of Dixon-Coles' type parameters.
-getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.00426) {
+getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.00426, beta = 365) {
   stopifnot(is.Date(currentDate))
   currentDate<-as.Date(currentDate)
 
@@ -265,7 +265,7 @@ getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.0042
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
     GameID = c(scores$GameID, scores$GameID),
-    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi)),
+    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi, beta = beta), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi, beta = beta)),
     Team = as.factor(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))),
     Opponent = as.factor(c(as.character(scores$AwayTeam), as.character(scores$HomeTeam))),
     Goals = c(scores$HomeGoals, scores$AwayGoals),
@@ -646,7 +646,7 @@ dcExpandedOdds<-function(lambda, mu, params=NULL, maxgoal=8){
 #'
 #' @return list of weights coresponding to dates
 #' @keywords internal
-DCweights <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
+DCweights_old <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
   datediffs <- dates - as.Date(currentDate)
   datediffs <- as.numeric(datediffs * -1)
   w <- exp(-1 * xi * datediffs)
@@ -654,6 +654,13 @@ DCweights <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
   return(w)
 }
 
+DCweights <- function(dates, currentDate = Sys.Date(), xi = .01, beta = 365.25) {
+  datediffs <- dates - as.Date(currentDate)
+  datediffs <- as.numeric(datediffs * -1)
+  w <- 1-1/(1+exp(-xi * (datediffs - beta)))
+  w[datediffs <= 0] <- 0  #Future dates should have zero weights
+  return(w)
+}
 
 DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
   # rho=0, independence y1 home goals y2 away goals mu:expected Home, lambda: expected Away
