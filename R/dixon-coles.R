@@ -257,15 +257,15 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 #'
 #' @export
 #' @return a model 'm' of Dixon-Coles' type parameters.
-getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.00426, beta = 365) {
-  stopifnot(is.Date(currentDate))
+getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.00426, upsilon = 365) {
+  #stopifnot(is.Date(currentDate))
   currentDate<-as.Date(currentDate)
 
   scores<-scores[scores$Date>=(currentDate-4000),] #auto-trim to ~11 years of data, past then the model doesn't get better, just bigger
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
     GameID = c(scores$GameID, scores$GameID),
-    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi, beta = beta), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi, beta = beta)),
+    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi, upsilon = upsilon), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi, upsilon = upsilon)),
     Team = as.factor(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))),
     Opponent = as.factor(c(as.character(scores$AwayTeam), as.character(scores$HomeTeam))),
     Goals = c(scores$HomeGoals, scores$AwayGoals),
@@ -414,10 +414,10 @@ dcLambda<-function(home, away, params=NULL){
   xg<-list("home"=NA, "away"=NA)
 
   # Expected goals home
-  xg$home <- try(stats::predict(params$m, data.frame(Home = 1, Team = home, Opponent = away), type = "response"), TRUE)
+  xg$home <- try(stats::predict(params$m, data.frame(Home = 1, Team = home, Opponent = away), type = "response")[1], TRUE)
 
   # Expected goals away
-  xg$away <- try(stats::predict(params$m, data.frame(Home = 0, Team = away, Opponent = home), type = "response"), TRUE)
+  xg$away <- try(stats::predict(params$m, data.frame(Home = 0, Team = away, Opponent = home), type = "response")[1], TRUE)
 
   if(!is.numeric(xg$home)){
     xg$home<-DCPredictErrorRecover(team = home, opponent = away, homeiceadv = TRUE)
@@ -455,10 +455,10 @@ dcProbMatrix<-function(home, away, params=NULL, maxgoal = 10, scores = HockeyMod
 
   xg<-dcLambda(home = home, away = away, params=params)
   # Expected goals home
-  lambda <- xg$home
+  lambda <- as.numeric(xg$home)
 
   # Expected goals away
-  mu <- xg$away
+  mu <- as.numeric(xg$away)
 
   if(!is.null(expected_mean) & ! is.null(season_percent)) {
     lambda <- lambda * (1-1/3 * season_percent) + expected_mean * (1/3 * season_percent)
@@ -654,10 +654,10 @@ DCweights_old <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
   return(w)
 }
 
-DCweights <- function(dates, currentDate = Sys.Date(), xi = .01, beta = 365.25) {
+DCweights <- function(dates, currentDate = Sys.Date(), xi = .01, upsilon = 365.25) {
   datediffs <- dates - as.Date(currentDate)
   datediffs <- as.numeric(datediffs * -1)
-  w <- 1-1/(1+exp(-xi * (datediffs - beta)))
+  w <- 1-1/(1+exp(-xi * (datediffs - upsilon)))
   w[datediffs <= 0] <- 0  #Future dates should have zero weights
   return(w)
 }
