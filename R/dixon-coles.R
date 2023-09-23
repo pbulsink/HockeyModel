@@ -257,7 +257,7 @@ tau <- Vectorize(tau_singular, c('xx', 'yy', 'lambda', 'mu'))
 #'
 #' @export
 #' @return a model 'm' of Dixon-Coles' type parameters.
-getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.00426, upsilon = 365) {
+getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.00426) {
   #stopifnot(is.Date(currentDate))
   currentDate<-as.Date(currentDate)
 
@@ -265,7 +265,7 @@ getM <- function(scores=HockeyModel::scores, currentDate = Sys.Date(), xi=0.0042
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
     GameID = c(scores$GameID, scores$GameID),
-    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi, upsilon = upsilon), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi, upsilon = upsilon)),
+    Weight = c(DCweights(dates = scores$Date, currentDate = currentDate, xi = xi), DCweights(dates = scores$Date, currentDate = currentDate, xi = xi)),
     Team = as.factor(c(as.character(scores$HomeTeam), as.character(scores$AwayTeam))),
     Opponent = as.factor(c(as.character(scores$AwayTeam), as.character(scores$HomeTeam))),
     Goals = c(scores$HomeGoals, scores$AwayGoals),
@@ -646,7 +646,7 @@ dcExpandedOdds<-function(lambda, mu, params=NULL, maxgoal=8){
 #'
 #' @return list of weights coresponding to dates
 #' @keywords internal
-DCweights_old <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
+DCweights <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
   datediffs <- dates - as.Date(currentDate)
   datediffs <- as.numeric(datediffs * -1)
   w <- exp(-1 * xi * datediffs)
@@ -654,7 +654,7 @@ DCweights_old <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
   return(w)
 }
 
-DCweights <- function(dates, currentDate = Sys.Date(), xi = .01, upsilon = 365.25) {
+DCweights_new <- function(dates, currentDate = Sys.Date(), xi = .01, upsilon = 365.25) {
   datediffs <- dates - as.Date(currentDate)
   datediffs <- as.numeric(datediffs * -1)
   w <- 1-1/(1+exp(-xi * (datediffs - upsilon)))
