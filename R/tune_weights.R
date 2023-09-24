@@ -1,5 +1,7 @@
-tune_dc_weight <- function(xi = 0.00426) {
-  message("Determining performance with xi = ", xi)
+tune_dc_weight <- function(par = c(1,1)) {
+  xi <- par[1]/100
+  upsilon <- par[2]*365
+  message("Determining performance with xi = ", xi, " and upsilon = ", upsilon)
   scores <- HockeyModel::scores
   scores <- unique(scores[scores$Date > as.Date("2010-08-01"), ])
   truth <- scores[scores$Date > as.Date("2022-10-01"), ]
@@ -7,8 +9,8 @@ tune_dc_weight <- function(xi = 0.00426) {
   schedule$GameStatus <- "Scheduled"
   #schedule$HomeWin <- schedule$AwayWin <- NA
 
-  get_game_odds <- function(d, schedule, scores, xi) {
-    current_m <- getM(scores = scores[scores$Date < d,], currentDate = d, xi = xi)
+  get_game_odds <- function(d, schedule, scores, xi, upsilon) {
+    current_m <- getM(scores = scores[scores$Date < d,], currentDate = d, xi = xi, upsilon = upsilon)
     current_rho <- HockeyModel::rho #getRho(m = current_m, scores = scores[scores$Date< d, ])
     #params <- getWeibullParams(m = current_m, rho = current_rho, scores = scores[scores$Date < d,])
     beta <- HockeyModel::beta #params$beta
@@ -31,7 +33,7 @@ tune_dc_weight <- function(xi = 0.00426) {
   `%dopar%` <- foreach::`%dopar%`  # This hack passes R CMD CHK
   `%do%` <- foreach::`%do%`
   r <- foreach::foreach(i = 1:length(unique(schedule$Date)), .combine = 'rbind', .packages = c('HockeyModel')) %dopar% (
-    get_game_odds(unique(schedule$Date)[i], schedule, scores, xi)
+    get_game_odds(unique(schedule$Date)[i], schedule, scores, xi, upsilon)
   )
   parallel::stopCluster(cl)
   schedule<-dplyr::left_join(schedule, r, by = "GameID")
@@ -44,4 +46,5 @@ tune_dc_weight <- function(xi = 0.00426) {
 #Determining performance with xi = 0.00426
 #Accuracy = 0.6007, LogLoss = 0.6669.
 
-#optim(par = 0.00426, fn = tune_dc_weight, control = list(fnscale = -1), method = "L-BFGS-B", lower = 0.001, upper = 0.1)
+optim(par = c(1,1), fn = tune_dc_weight, control = list(fnscale = -1),
+      method = "L-BFGS-B", lower = c(0.01, 0.1), upper = c(99, 4))
