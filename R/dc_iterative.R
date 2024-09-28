@@ -5,11 +5,15 @@
 # default ranking for unknown teams is attack, defence = 0
 # Regular: mix=1 = fully xG, mix=0 = fully goals
 
+# rank_change = gamma*(update[n] - lambda * (home_attack - rho*home_defence))
+# where update[n] is a weighted mean of expected goals/expected xg vs actual goals/xg
+# lambda is the amount of influence of the ratings, and gamma the amount of change of the
 
-updateIterativeRankings <- function(home_goals, away_goals, home_xg=NULL, away_xg=NULL,
+
+updateIterativeRankings <- function(home_goals, away_goals, season_progress, home_xg=NULL, away_xg=NULL,
                             home_attack = 0, home_defence = 0, away_attack = 0, away_defence = 0,
                             home_adv = 0.075073, intercept = 1.71418, gamma = 0.005142, lambda = 0.01973,
-                            rho=1, attack_mix=1, defend_mix=0) {
+                            rho=1, sigma = -0.00001, attack_mix=1, defend_mix=0) {
 
   # Calculate poisson expected goals
   mu_h <- exp(intercept + home_attack - away_defence + home_adv)
@@ -27,10 +31,10 @@ updateIterativeRankings <- function(home_goals, away_goals, home_xg=NULL, away_x
     update <- c( home_a - mu_h, -(home_d-mu_a), away_a-mu_a, -(away_d-mu_h))
   }
 
-  va_h <- gamma*(update[1] - lambda * (home_attack - rho*home_defence))
-  vd_h <- gamma*(update[2] - lambda * (home_defence - rho*home_attack))
-  va_a <- gamma*(update[3] - lambda * (away_attack - rho*away_defence))
-  vd_a <- gamma*(update[4] - lambda * (away_defence - rho*away_attack))
+  va_h <- (gamma+sigma*season_progress)*(update[1] - lambda * (home_attack - rho*home_defence))
+  vd_h <- (gamma+sigma*season_progress)*(update[2] - lambda * (home_defence - rho*home_attack))
+  va_a <- (gamma+sigma*season_progress)*(update[3] - lambda * (away_attack - rho*away_defence))
+  vd_a <- (gamma+sigma*season_progress)*(update[4] - lambda * (away_defence - rho*away_attack))
 
   return(c(home_attack+va_h, home_defence+vd_h, away_attack+va_a, away_defence+vd_a))
 }
@@ -59,7 +63,7 @@ getTeamRankings <- function(team, rankings){
 }
 
 
-iterateGame <- function(game, rankings, make_predictions=FALSE, intercept=0.02, gamma = 0.0036, lambda = .000099, rho=0, home_adv = 0.0707, attack_mix=0, defend_mix=1){
+iterateGame <- function(game, rankings, make_predictions=FALSE, intercept=0.02, gamma = 0.0036, lambda = .000099, rho=0, sigma = -0.00001, home_adv = 0.0707, attack_mix=0, defend_mix=1){
   home_team <- game$HomeTeam
   away_team <- game$AwayTeam
 
@@ -84,24 +88,28 @@ iterateGame <- function(game, rankings, make_predictions=FALSE, intercept=0.02, 
     probs<-home_xg<-away_xg<-NA
   }
 
-  new_ranks <- updateIterativeRankings(home_goals = game$HomeGoals, away_goals = game$AwayGoals,
+  new_ranks <- updateIterativeRankings(home_goals = game$HomeGoals, away_goals = game$AwayGoals, season_progress = game$SeasonProgress,
                                home_xg = game$HomexG, away_xg = game$AwayxG,
                                home_attack = home_attack, home_defence = home_defence, away_attack = away_attack,
                                away_defence = away_defence, home_adv = home_adv,intercept = intercept, gamma = gamma,
-                               lambda = lambda, rho=rho, attack_mix = attack_mix, defend_mix = defend_mix)
+                               lambda = lambda, rho=rho, sigma = sigma, attack_mix = attack_mix, defend_mix = defend_mix)
 
   rankings[rankings$Team == home_team, ]$Attack <- new_ranks[1]
   rankings[rankings$Team == home_team, ]$Defence <- new_ranks[2]
   rankings[rankings$Team == away_team, ]$Attack <- new_ranks[3]
   rankings[rankings$Team == away_team, ]$Defence <- new_ranks[4]
 
-  #TODO RETURN Rankings
   return(list('Rankings' = rankings, 'HomeWin' = probs, 'HomexGPred' = home_xg, 'AwayxGPred' = away_xg))
 }
 
-iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973, rho=0, home_adv = 0.075073, attack_mix=0, defend_mix=1, scores = HockeyModel::scores, verbose = TRUE){
+iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973, rho=0, home_adv = 0.075073, sigma = -0.00001, attack_mix=0, defend_mix=1, scores = HockeyModel::scores, verbose = TRUE){
 
   scores <- scores[,c("Date", "HomeTeam" ,"AwayTeam", "GameID", "HomeGoals", "AwayGoals", "HomexG", "AwayxG", "OTStatus", "Result")]
+
+  # add a season progress column 0..1
+  # playoffs == 1
+  # then use to modify gamma a bit - i.e. gamma = gamma base + (1-progress)*adj.
+  scores$SeasonProgress <- iterative_season_progress(scores$GameID)
 
   if(!requireNamespace('tictoc', quietly=TRUE)) {
     verbose <- FALSE
@@ -109,10 +117,12 @@ iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973,
   scores$TotalGoals<-scores$HomeGoals + scores$AwayGoals
 
   #Split scores to warm-up phase and predictive phase.
-  warm_ups<-scores[scores$Date <= as.Date("2022-10-01") & scores$Date > as.Date("2007-08-01"), ]
-  test_train <-scores[scores$Date > as.Date("2022-10-01"), ]
-  train <- test_train[1:as.integer(nrow(test_train)*.8),]
-  test <- test_train[as.integer(nrow(test_train)*.8):nrow(test_train),]
+  warm_ups<-scores[scores$Date <= as.Date("2021-10-01") & scores$Date > as.Date("2007-08-01"), ]
+  test_train <- scores[scores$Date > as.Date("2021-10-01"), ]
+  # train <- test_train[1:as.integer(nrow(test_train)*.8),]
+  # test <- test_train[as.integer(nrow(test_train)*.8):nrow(test_train),]
+  test <- test_train[test_train$Date > as.Date("2022-10-01"), ]
+  train <- test_train[test_train$Date < as.Date("2022-10-01"), ]
 
   train$HomeWin <- train$HomexGPred <- train$AwayxGPred <- train$TotalxGPred <- NA_real_
   test$HomeWin <- test$HomexGPred <- test$AwayxGPred <- test$TotalxGPred <- NA_real_
@@ -122,8 +132,7 @@ iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973,
   if(verbose) tictoc::tic("Warmup")
   for (g in 1:nrow(warm_ups)){
     iters<-iterateGame(game = warm_ups[g,], rankings = rankings, make_predictions = FALSE, intercept = intercept, gamma = gamma,
-                       lambda = lambda, rho = rho, home_adv = home_adv, attack_mix = attack_mix, defend_mix = defend_mix)
-
+                       lambda = lambda, rho = rho, sigma = sigma, home_adv = home_adv, attack_mix = attack_mix, defend_mix = defend_mix)
     rankings<-iters$Rankings
   }
   if(verbose) tictoc::toc()
@@ -133,7 +142,7 @@ iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973,
   if(verbose) tictoc::tic("Train")
   for (g in 1:nrow(train)){
     iters<-iterateGame(game = train[g,], rankings = rankings, make_predictions = TRUE, intercept = intercept, gamma = gamma,
-                       lambda = lambda, rho = rho, home_adv = home_adv, attack_mix = attack_mix, defend_mix = defend_mix)
+                       lambda = lambda, rho = rho, sigma = sigma, home_adv = home_adv, attack_mix = attack_mix, defend_mix = defend_mix)
 
     rankings<-iters$Rankings
     train[g,]$HomeWin <- iters$HomeWin
@@ -147,7 +156,7 @@ iterateSeason <- function(intercept=1.71418, gamma = 0.005142, lambda = 0.01973,
   if(verbose) tictoc::tic("Test")
   for (g in 1:nrow(test)){
     iters<-iterateGame(game = test[g,], rankings = rankings, make_predictions = TRUE, intercept = intercept, gamma = gamma,
-                       lambda = lambda, rho = rho, home_adv = home_adv, attack_mix = attack_mix, defend_mix = defend_mix)
+                       lambda = lambda, rho = rho, sigma = sigma, home_adv = home_adv, attack_mix = attack_mix, defend_mix = defend_mix)
 
     rankings<-iters$Rankings
     test[g,]$HomeWin <- iters$HomeWin
@@ -191,14 +200,14 @@ optimizeIterative<-function(target_model = "wl", params=HockeyModel::iterativePa
   if(target_model %in% c('wl','Wl', 'wL','WL')){
     params <- params$params_wl
     optfunc<-optimizeIterative_WL_Internal
-    fnscale<-1
+    fnscale<- 1
   } else {
     params <- params$params_xg
     optfunc<-optimizeIterative_XG_Internal
-    fnscale<-1
+    fnscale<- 1
   }
 
-  optimized<-stats::optim(c(params$intercept,params$gamma,params$lambda,params$rho,params$home_adv,params$attack_mix,params$defend_mix), optfunc, control=list('fnscale'=fnscale))
+  optimized<-stats::optim(c(params$intercept,params$gamma,params$lambda,params$rho,params$home_adv,params$attack_mix,params$defend_mix,params$sigma), optfunc, control=list('fnscale'=fnscale), method = "BFGS")
 
   return(optimized)
 }
@@ -213,6 +222,7 @@ optimizeIterative_WL_Internal<-function(params){
   home_adv<-params[5]
   attack_mix<-params[6]
   defend_mix<-params[7]
+  sigma <- params[8]
   if(intercept < 0){
     return(0)
   }
@@ -235,11 +245,16 @@ optimizeIterative_WL_Internal<-function(params){
     return(1e5)
   }
 
-  out<-iterateSeason(intercept=intercept, gamma = gamma, lambda = lambda, rho=rho, home_adv = home_adv, attack_mix=attack_mix, defend_mix=defend_mix)
+  out<-iterateSeason(intercept=intercept, gamma = gamma, lambda = lambda, rho=rho, sigma = sigma, home_adv = home_adv, attack_mix=attack_mix, defend_mix=defend_mix)
   pre<-out$train
-  ll<-logLoss(pre$HomeWin, pre$Result)
-  acc<-accuracy(pre$HomeWin, pre$Result)
-  return(ll/acc)
+  if(any(is.na(pre$HomeWin))){
+    return(1e5)
+  }
+  ll<-logLoss(pre$HomeWin, ifelse(pre$Result>0.5, 1, 0))
+  acc<-accuracy(pre$HomeWin, ifelse(pre$Result>0.5, 1, 0))
+  rocauc <- auc(pre$HomeWin, ifelse(pre$Result>0.5, 1, 0))
+  # ----- CHOOSE EVALUATOR
+  return(rocauc)
 }
 
 optimizeIterative_XG_Internal<-function(params){
@@ -250,6 +265,7 @@ optimizeIterative_XG_Internal<-function(params){
   home_adv<-params[5]
   attack_mix<-params[6]
   defend_mix<-params[7]
+  sigma<-params[8]
   if(intercept < 0){
     return(0)
   }
@@ -272,9 +288,15 @@ optimizeIterative_XG_Internal<-function(params){
     return(1e5)
   }
 
-  out<-iterateSeason(intercept=intercept, gamma = gamma, lambda = lambda, rho=rho, home_adv = home_adv, attack_mix=attack_mix, defend_mix=defend_mix)
+  out<-iterateSeason(intercept=intercept, gamma = gamma, lambda = lambda, rho=rho, sigma = sigma, home_adv = home_adv, attack_mix=attack_mix, defend_mix=defend_mix)
   pre<-out$train
-  rmse<-rmse(pre$TotalxGPred, pre$TotalGoals)
+  if(any(is.na(pre$TotalxGPred))){
+    return(1e5)
+  }
+  rmse <- rmse(pre$TotalxGPred, pre$TotalGoals)
+  r2 <- rsquare(pre$TotalxGPred, pre$TotalGoals)
+  mse <- mse(pre$TotalxGPred, pre$TotalGoals)
+  # ----- CHOOSE Evaluator
   return(rmse)
 }
 
@@ -358,6 +380,8 @@ getIterativePredictions<-function(rankings, params, date = Sys.Date(), schedule=
   if(nrow(games) == 0){
     return(NULL)
   }
+  games$Season_Progress <- iterative_season_progress(games$GameID)
+
   results<-data.frame("GameID" = integer(), "HomeTeam" = character(), "AwayTeam" = character(),
                       "HomeWin" = numeric(), "AwayWin" = numeric(), "TotalxG" = numeric())
   for(g in 1:nrow(games)){
@@ -379,6 +403,8 @@ updateRankingsToToday <- function(rankings, params, scores=HockeyModel::scores, 
   scores<-scores[scores$Date >= rankings_date, ]
 
   if (nrow(scores) > 0){
+    scores$Season_Progress <- iterative_season_progress(scores$GameID)
+
     for (g in 1:nrow(scores)){
       iters<-iterateGame(game = scores[g,], rankings = rankings, make_predictions = FALSE, intercept = params$intercept, gamma = params$gamma,
                          lambda = params$lambda, rho = params$rho, home_adv = params$home_adv, attack_mix = params$attack_mix, defend_mix = params$defend_mix)
@@ -459,7 +485,7 @@ getNewIterativeRankings<-function(target_model = "wl", params = HockeyModel::ite
     params<-params$params_xg
   }
 
-  return(iterateSeason(intercept = params$intercept, gamma = params$gamma, lambda = params$lambda, rho = params$rho, home_adv = params$home_adv, attack_mix = params$attack_mix, defend_mix = params$defend_mix)$rankings)
+  return(iterateSeason(intercept = params$intercept, gamma = params$gamma, lambda = params$lambda, rho = params$rho, sigma = params$sigma, home_adv = params$home_adv, attack_mix = params$attack_mix, defend_mix = params$defend_mix)$rankings)
 }
 
 #' Get (and optionally save to package) iterative rankings
@@ -491,11 +517,30 @@ getReplacementRankings<-function(params = HockeyModel::iterativeParameters, save
 getReplacementIterativeParameters <- function(params = HockeyModel::iterativeParameters, save_data=FALSE){
   optim_wl<-optimizeIterative('wl', params = params)
   optim_xg<-optimizeIterative('xg', params = params)
-  params_wl <- list(intercept = optim_wl$par[1], gamma = optim_wl$par[2], lambda = optim_wl$par[3], rho = optim_wl$par[4], home_adv = optim_wl$par[5], attack_mix = optim_wl$par[6], defend_mix = optim_wl$par[7])
-  params_xg <- list(intercept = optim_xg$par[1], gamma = optim_xg$par[2], lambda = optim_xg$par[3], rho = optim_xg$par[4], home_adv = optim_xg$par[5], attack_mix = optim_xg$par[6], defend_mix = optim_xg$par[7])
+  params_wl <- list(intercept = optim_wl$par[1], gamma = optim_wl$par[2], lambda = optim_wl$par[3], rho = optim_wl$par[4], home_adv = optim_wl$par[5], attack_mix = optim_wl$par[6], defend_mix = optim_wl$par[7], sigma = optim_wl$par[8])
+  params_xg <- list(intercept = optim_xg$par[1], gamma = optim_xg$par[2], lambda = optim_xg$par[3], rho = optim_xg$par[4], home_adv = optim_xg$par[5], attack_mix = optim_xg$par[6], defend_mix = optim_xg$par[7], sigma = optim_xg$par[8])
   iterativeParameters <- list('params_wl' = params_wl, 'params_xg' = params_xg)
   if(save_data & requireNamespace('usethis', quietly = TRUE)){
     usethis::use_data(iterativeParameters, overwrite = T)
   }
   invisible(iterativeParameters)
+}
+
+iterative_season_progress <- function(gameids) {
+  isp <- function(gid) {
+    if(!HockeyModel::gameIDValidator(gid)){
+      return(NA)
+    }
+    pr <- substr(gid, 6, 6)
+    if(pr == 2) {
+      prog <- as.numeric(substr(gid, 7, 10))
+      return(min(1, prog/1000))
+    } else {
+      return(1)
+    }
+  }
+
+  isp_v<-Vectorize(isp)
+
+  return(isp_v(gameids))
 }

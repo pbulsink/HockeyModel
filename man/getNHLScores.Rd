@@ -4,7 +4,7 @@
 \alias{getNHLScores}
 \title{Get NHL Scores}
 \usage{
-getNHLScores(gameIDs, schedule = HockeyModel::schedule, progress = TRUE)
+getNHLScores(gameIDs = NULL, schedule = HockeyModel::schedule, progress = TRUE)
 }
 \arguments{
 \item{gameIDs}{Game IDs (10 digit number). See \code{\link[nhlapi:nhl_games]{nhlapi::nhl_games()}} for more information}
@@ -17,7 +17,8 @@ getNHLScores(gameIDs, schedule = HockeyModel::schedule, progress = TRUE)
 a data frame with Date, HomeTeam, AwayTeam, GameID, HomeGoals, AwayGoals, OTStatus and GameType
 }
 \description{
-Get the NHL game scores from the NHL API for any game(s) with a final score. Returns data formatted for future use. Requires gameID(s) be provided.This can be slow if requesting many games due to the API rate limit.
+Get the NHL game scores from the NHL API for any game(s) with a final score. Returns data formatted
+for future use. Requires gameID(s) be provided.This can be slow if requesting many games due to the API rate limit.
 }
 \seealso{
 See \code{\link[nhlapi:nhl_games]{nhlapi::nhl_games()}} for more information on gameIDs

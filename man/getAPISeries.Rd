@@ -10,7 +10,8 @@ getAPISeries(season = getCurrentSeason8())
 \item{season}{Optional, the season's playoff series to retrieve}
 }
 \value{
-a data frame with Round, Series, Home and Away Teams, number of wins each, playoff ranking/seed and whether the series is complete
+a data frame with Round, Series, Home and Away Teams, number of wins each, playoff ranking/seed and
+whether the series is complete
 }
 \description{
 Gets the current season (or previous seasons') playoff series information using the NHL API

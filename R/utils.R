@@ -171,6 +171,19 @@ rsquare<-function(predicted, actual){
   return(stats::cor(predicted, actual) ^ 2)
 }
 
+#'MSE
+#'@description calculate the MSE metrics. From MLMetrics
+#'
+#' @param predicted Predicted numeric value
+#' @param actual Actual numeric value
+#'
+#' @return a single value for MSE
+#' @export
+mse <- function(predicted, actual){
+  stopifnot(length(predicted) == length(actual))
+
+  return(mean((actual-predicted)^2))
+}
 
 #' Check Colour Delta
 #'

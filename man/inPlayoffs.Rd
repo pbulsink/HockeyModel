@@ -15,5 +15,6 @@ inPlayoffs(date = Sys.Date(), boolean = TRUE)
 Either TRUE/FALSE or a seasonID/FALSE
 }
 \description{
-check if the date is in a playoff period. Note: playoffs are considered from the day after the regular season ends.
+check if the date is in a playoff period. Note: playoffs are considered from the day after the regular
+season ends.
 }

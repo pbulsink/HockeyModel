@@ -145,7 +145,9 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
     )
   }
   for (g in gameIDs) {
-    sc <- nhlapi::nhl_games_linescore(g)
+    sc <- nhl_boxscore(g)
+
+
     if ("nhl_get_data_error" %in% class(sc[[1]])) {
       next
     }
@@ -183,6 +185,8 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
       pb$tick()
     }
   }
+
+  scores_xg <- get_xg(gameIds = gameIDs)
   if (!is.null(scores)) {
     scores <- clean_names(scores)
     scores[scores$OTStatus == "3rd", ]$OTStatus <- ""
@@ -198,7 +202,6 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
       )) %>%
       dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
   }
-  scores_xg <- get_xg(gameIds = gameIDs)
   scores <- dplyr::left_join(scores, scores_xg, by = "GameID")
   return(scores)
 }
@@ -730,4 +733,10 @@ getNumGames <- function(season = NULL) {
   }
   apiseasons <- nhlapi::nhl_seasons(season)
   return(apiseasons$numberOfGames[nrow(apiseasons)])
+}
+
+nhl_boxscore <- function(gid) {
+  url <- paste0("https://api-web.nhle.com/v1/gamecenter/", gid, "/boxscore")
+  req <- jsonlite::fromJSON(url)
+  return(req)
 }

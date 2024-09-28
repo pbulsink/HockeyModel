@@ -10,7 +10,8 @@ get_xg(gameIds)
 \item{gameIds}{one or many game Ids}
 }
 \value{
-a list with Game ID, HomexG and AwayxG if one game ID supplied, or a data frame with those columns
+a list with Game ID, HomexG and AwayxG, (plus home and away G, CF, pk G, pk CF, pk xG, pp G, pp CF, pp xG,)
+if one game ID supplied, or a data frame with those columns
 }
 \description{
 Get xG for one or many gameIds

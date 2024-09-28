@@ -10,7 +10,7 @@
 #'
 #' @export
 updateModel <- function(save_data=TRUE){
-  schedule<-updateScheduleAPI(save_data = save_data)
+  #schedule<-updateScheduleAPI(save_data = save_data)
   scores<-updateScoresAPI(schedule = schedule, save_data = save_data)
   params<-updateDC(scores = scores, save_data = save_data)
   return(list("scores" = scores, "schedule" = schedule, "params" = params))

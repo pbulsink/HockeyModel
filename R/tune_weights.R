@@ -1,6 +1,4 @@
-tune_dc_weight <- function(par = c(1,1)) {
-  xi <- par[1]/100
-  upsilon <- par[2]*365
+tune_dc_weight <- function(xi = 0.003, upsilon = 150) {
   message("Determining performance with xi = ", xi, " and upsilon = ", upsilon)
   scores <- HockeyModel::scores
   scores <- unique(scores[scores$Date > as.Date("2010-08-01"), ])
@@ -40,11 +38,11 @@ tune_dc_weight <- function(par = c(1,1)) {
   acc <- accuracy(schedule$HomeWin > 0.5, actual = truth$Result>.5)
   ll <- logLoss(schedule$HomeWin, truth$Result > 0.5)
   message("Accuracy = ", round(acc, 4), ", LogLoss = ", round(ll, 4), ".")
-  return(acc)
+  return(schedule)
 }
 
 #Determining performance with xi = 0.00426
 #Accuracy = 0.6007, LogLoss = 0.6669.
 
-optim(par = c(1,1), fn = tune_dc_weight, control = list(fnscale = -1),
-      method = "L-BFGS-B", lower = c(0.01, 0.1), upper = c(99, 4))
+#optim(par = c(1,1), fn = tune_dc_weight, control = list(fnscale = -1),
+#      method = "L-BFGS-B", lower = c(0.01, 0.1), upper = c(99, 4))
