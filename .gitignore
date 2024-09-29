@@ -39,3 +39,5 @@ dailyupdate.R
 docs
 prediction_results/graphics
 prediction_results
+
+.DS_Store
