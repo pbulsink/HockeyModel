@@ -21,7 +21,8 @@ Imports:
     tidyr,
     dtplyr,
     naturalstattrick,
-    webshot2
+    webshot2,
+    httr2
 Remotes: pbulsink/naturalstattrick
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues

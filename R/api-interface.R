@@ -20,6 +20,32 @@ getNHLSchedule <- function(season = getSeason()) {
   } else {
     return(processNHLSchedule(sched = sched))
   }
+
+  #Similar to how Dan Morse did it in hockeyR
+  game_id_list <- NULL
+  for(i in unique(team_info$team_abbr)){
+    url <- glue::glue("https://api-web.nhle.com/v1/club-schedule-season/{i}/{season-1}{season}")
+
+    site <- tryCatch(
+      jsonlite::read_json(url),
+      warning = function(cond){
+        message(paste0("There was a problem fetching games:\n\n",cond))
+        return(NULL)
+      },
+      error = function(cond){
+        message(paste0("There was a problem fetching games:\n\n",cond))
+        return(NULL)
+      }
+    )
+
+    if(!is.null(site)){
+      team_game_list <- site$games %>%
+        dplyr::tibble()
+      game_id_list <- dplyr::bind_rows(game_id_list, team_game_list)
+    } else {
+      next()
+    }
+  }
 }
 
 processNHLSchedule <- function(sched, clean = TRUE) {
@@ -74,7 +100,8 @@ processNHLSchedule <- function(sched, clean = TRUE) {
 #' @export
 games_today <- function(schedule = HockeyModel::schedule, date = Sys.Date(), all_games = FALSE) {
   stopifnot(is.Date(date))
-  todaygames <- processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
+  #todaygames <- processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
+  todaygames <- schedule[schedule$Date == as.Date(date), ]
   if (!all_games) {
     todaygames <- todaygames["Scheduled" %in% todaygames$GameStatus, ]
   }
@@ -151,35 +178,22 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
     if ("nhl_get_data_error" %in% class(sc[[1]])) {
       next
     }
-    if (sc[[1]]$currentPeriod > 0) {
-      if (sc[[1]]$currentPeriodTimeRemaining == "Final") {
-        dfs <- data.frame(
-          "Date" = schedule[schedule$GameID == g, ]$Date,
-          "HomeTeam" = sc[[1]]$teams$home$team$name,
-          "AwayTeam" = sc[[1]]$teams$away$team$name,
-          "GameID" = g,
-          "HomeGoals" = sc[[1]]$teams$home$goals,
-          "AwayGoals" = sc[[1]]$teams$away$goals,
-          "OTStatus" = sc[[1]]$currentPeriodOrdinal,
-          "GameType" = ifelse(substr(g, 6, 6) == 2, "R", "P"),
-          "GameStatus" = sc[[1]]$currentPeriodTimeRemaining
-        )
-        scores <- rbind(scores, dfs)
-      } else if (sc[[1]]$currentPeriodTimeRemaining == "20:00" && sc[[1]]$currentPeriod == 1) {
-        # MAYBE the game is cancelled?
-        # get the schedule's date for this game:
-        d <- schedule[schedule$GameID == g, ]$Date
-        # Check the NHL API for this game on that date
-        newsched <- processNHLSchedule(nhlapi::nhl_schedule_date_range(startDate = d, endDate = d))
-        if (!(g %in% newsched$GameID)) {
-          # This game isn't in the schedule anymore. Schedule is out of date.
-          warning("Game ", g, " no longer scheduled.")
-          next
-        }
-      } else {
-        warning("Game ", g, " not in final state, instead showing ", sc[[1]]$currentPeriodTimeRemaining)
-        next
-      }
+    if (sc$gameState == "OFF") {
+      dfs <- data.frame(
+        "Date" = as.Date(sc$gameDate),
+        "HomeTeam" = paste(sc$homeTeam$placeName[[1]], sc$homeTeam$name[[1]]),
+        "AwayTeam" = paste(sc$awayTeam$placeName[[1]], sc$awayTeam$name[[1]]),
+        "GameID" = sc$id,
+        "HomeGoals" = sc$homeTeam$score,
+        "AwayGoals" = sc$awayTeam$score,
+        "OTStatus" = ifelse(sc$periodDescriptor$number == 3, "", sc$periodDescriptor$number),
+        "GameType" = ifelse(substr(g, 6, 6) == 2, "R", "P"),
+        "GameStatus" = "Final"
+      )
+      scores <- rbind(scores, dfs)
+    } else {
+      warning("Game ", g, " not in final state, instead showing ", sc$gameState, "\nGame schedule state is ", sc$gameScheduleState)
+      next
     }
     if (progress) {
       pb$tick()
@@ -189,8 +203,15 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
   scores_xg <- get_xg(gameIds = gameIDs)
   if (!is.null(scores)) {
     scores <- clean_names(scores)
-    scores[scores$OTStatus == "3rd", ]$OTStatus <- ""
+    if(nrow(scores[scores$OTStatus == "3rd", ]) > 0){
+      scores[scores$OTStatus == "3rd", ]$OTStatus <- ""
+    }
     scores <- scores %>%
+      dplyr::mutate(OTStatus = dplyr::case_when(
+        .data$OTStatus <= 3 ~ "",
+        .data$OTStatus > 3 ~ "OT",
+        .data$OTStatus == 5 & .data$GameType == "R" ~ "SO",
+      )) %>%
       dplyr::mutate(Result = dplyr::case_when(
         (.data$HomeGoals > .data$AwayGoals) & .data$OTStatus == "" ~ 1,
         (.data$HomeGoals < .data$AwayGoals) & .data$OTStatus == "" ~ 0,
@@ -271,15 +292,19 @@ get_xg <- function(gameIds) {
     ))
   }
 
-  v_gxg <- Vectorize(gxg, SIMPLIFY = FALSE)
+  #v_gxg <- Vectorize(gxg, SIMPLIFY = FALSE)
 
   if (length(gameIds) == 0) {
     return(NA)
   } else if (length(gameIds) == 1) {
     return(gxg(gameIds))
   } else {
-    gxgs <- v_gxg(gid = gameIds)
-    gxgs <- dplyr::bind_rows(gxgs)
+    gxgs <- data.frame()
+    for (i in seq_along(gameIds)){
+      gxgs <- dplyr::bind_rows(gxgs, gxg(gameIds[i]))
+    }
+    # gxgs <- v_gxg(gid = gameIds)
+    # gxgs <- dplyr::bind_rows(gxgs)
 
     return(gxgs)
   }
@@ -344,7 +369,7 @@ removeUnscheduledGames <- function(schedule = HockeyModel::schedule, save_data =
 updateScoresAPI <- function(scores = HockeyModel::scores, schedule = HockeyModel::schedule,
                             full_season = FALSE, save_data = FALSE) {
   if (full_season) {
-    neededGames <- schedule[schedule$Date > getSeasonStartDate(), ]$GameID
+    neededGames <- schedule[schedule$Date >= getSeasonStartDate(), ]$GameID
   } else {
     neededGames <- schedule[schedule$Date < Sys.Date(), ]$GameID
     neededGames <- neededGames[!neededGames %in% scores[scores$GameStatus == "Final", ]$GameID]
@@ -538,6 +563,9 @@ validateWins <- function(playoffSeries, seriesStatusShort) {
 #' @return Season start date as date
 #' @export
 getSeasonStartDate <- function(season = NULL) {
+  return(as.Date("2024-10-04"))
+
+  #TODO Reimplement API schedule start
   seasons <- nhlapi::nhl_seasons()
   if (!is.null(season)) {
     if (season %in% seasons$seasonId) {
@@ -556,6 +584,9 @@ getSeasonStartDate <- function(season = NULL) {
 #' @return current season (as 20172018 format) based on today's date.
 #' @export
 getCurrentSeason8 <- function() {
+  return(20242025)
+
+  #TODO Reimplement API season code
   seasons <- nhlapi::nhl_seasons()
   return(utils::tail(seasons$seasonId, 1))
 }
@@ -568,6 +599,9 @@ getCurrentSeason8 <- function() {
 #' @return Season end date (as date)
 #' @export
 getSeasonEndDate <- function(season = NULL) {
+  return(as.Date("2025-04-17"))
+
+  #TODO Reimplement API schedule end
   seasons <- nhlapi::nhl_seasons()
   if (!is.null(season)) {
     if (season %in% seasons$seasonId) {
@@ -590,6 +624,9 @@ getSeasonEndDate <- function(season = NULL) {
 inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
   stopifnot(is.Date(date))
   date <- as.Date(date)
+  return(all(date >= getSeasonStartDate(), date <= getSeasonEndDate()))
+
+  #TODO Reimplement API date check
   seasons <- nhlapi::nhl_seasons()
   seasons_list <- seasons[seasons$regularSeasonStartDate <= date & seasons$regularSeasonEndDate >= date, ]
   if (boolean) {
@@ -612,6 +649,12 @@ inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
 #' @return TRUE if we're in off-season, else FALSE
 #' @export
 inOffSeason <- function(date = Sys.Date()) {
+
+  stopifnot(is.Date(date))
+  date <- as.Date(date)
+  return(any(date <= getSeasonStartDate(), date >= getSeasonEndDate()))
+
+  #TODO: Reimplement API date check
   stopifnot(is.Date(date))
   date <- as.Date(date)
   seasons <- nhlapi::nhl_seasons()
@@ -632,6 +675,8 @@ inOffSeason <- function(date = Sys.Date()) {
 inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
   stopifnot(is.Date(date))
   date <- as.Date(date)
+
+  return(all(date > getSeasonEndDate(), date < as.Date("2025-07-05")))
   seasons <- nhlapi::nhl_seasons()
   seasons_list <- seasons[as.Date(seasons$regularSeasonEndDate) <= date & as.Date(seasons$seasonEndDate) >= date, ]
   if (boolean) {
@@ -737,6 +782,10 @@ getNumGames <- function(season = NULL) {
 
 nhl_boxscore <- function(gid) {
   url <- paste0("https://api-web.nhle.com/v1/gamecenter/", gid, "/boxscore")
-  req <- jsonlite::fromJSON(url)
+  req <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_cache(path = "./cache/") %>%
+    httr2::req_perform()
+  req <- jsonlite::fromJSON(httr2::resp_body_string(req))
   return(req)
 }
