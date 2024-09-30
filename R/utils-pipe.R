@@ -19,5 +19,5 @@ NULL
 #' @importFrom foreach %dopar%
 NULL
 
-#dptlyr helper
-.datatable.aware = TRUE
+# dptlyr helper
+.datatable.aware <- TRUE

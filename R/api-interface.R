@@ -21,24 +21,24 @@ getNHLSchedule <- function(season = getSeason()) {
     return(processNHLSchedule(sched = sched))
   }
 
-  #Similar to how Dan Morse did it in hockeyR
+  # Similar to how Dan Morse did it in hockeyR
   game_id_list <- NULL
-  for(i in unique(team_info$team_abbr)){
+  for (i in unique(team_info$team_abbr)) {
     url <- glue::glue("https://api-web.nhle.com/v1/club-schedule-season/{i}/{season-1}{season}")
 
     site <- tryCatch(
       jsonlite::read_json(url),
-      warning = function(cond){
-        message(paste0("There was a problem fetching games:\n\n",cond))
+      warning = function(cond) {
+        message(paste0("There was a problem fetching games:\n\n", cond))
         return(NULL)
       },
-      error = function(cond){
-        message(paste0("There was a problem fetching games:\n\n",cond))
+      error = function(cond) {
+        message(paste0("There was a problem fetching games:\n\n", cond))
         return(NULL)
       }
     )
 
-    if(!is.null(site)){
+    if (!is.null(site)) {
       team_game_list <- site$games %>%
         dplyr::tibble()
       game_id_list <- dplyr::bind_rows(game_id_list, team_game_list)
@@ -49,15 +49,19 @@ getNHLSchedule <- function(season = getSeason()) {
 }
 
 processNHLSchedule <- function(sched, clean = TRUE) {
-  schedule <- data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(),
-                         "GameID" = integer(), "GameType" = character(), "GameStatus" = character())
+  schedule <- data.frame(
+    "Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(),
+    "GameID" = integer(), "GameType" = character(), "GameStatus" = character()
+  )
   for (y in seq_along(length(sched))) {
     if (!(length(sched[[y]]$dates) > 0)) {
       next
     }
     for (d in seq_along(nrow(sched[[y]]$dates))) {
-      df <- data.frame("Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(),
-                       "GameID" = integer(), "GameType" = character(), "GameStatus" = character())
+      df <- data.frame(
+        "Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(),
+        "GameID" = integer(), "GameType" = character(), "GameStatus" = character()
+      )
       for (g in 1:sched[[y]]$dates$totalGames[[d]]) {
         dfg <- data.frame(
           "Date" = sched[[y]]$dates$date[[d]],
@@ -100,7 +104,7 @@ processNHLSchedule <- function(sched, clean = TRUE) {
 #' @export
 games_today <- function(schedule = HockeyModel::schedule, date = Sys.Date(), all_games = FALSE) {
   stopifnot(is.Date(date))
-  #todaygames <- processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
+  # todaygames <- processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
   todaygames <- schedule[schedule$Date == as.Date(date), ]
   if (!all_games) {
     todaygames <- todaygames["Scheduled" %in% todaygames$GameStatus, ]
@@ -203,7 +207,7 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
   scores_xg <- get_xg(gameIds = gameIDs)
   if (!is.null(scores)) {
     scores <- clean_names(scores)
-    if(nrow(scores[scores$OTStatus == "3rd", ]) > 0){
+    if (nrow(scores[scores$OTStatus == "3rd", ]) > 0) {
       scores[scores$OTStatus == "3rd", ]$OTStatus <- ""
     }
     scores <- scores %>%
@@ -243,8 +247,10 @@ load_or_get_nst <- function(gid) {
       season = paste0(season, season + 1),
       game_id = game_id
     )
-    utils::write.table(nstdf, file = "~/Documents/natstattrick.csv", append = TRUE,
-                       row.names = FALSE, col.names = FALSE, sep = ",")
+    utils::write.table(nstdf,
+      file = "~/Documents/natstattrick.csv", append = TRUE,
+      row.names = FALSE, col.names = FALSE, sep = ","
+    )
   }
   closeAllConnections()
 
@@ -292,7 +298,7 @@ get_xg <- function(gameIds) {
     ))
   }
 
-  #v_gxg <- Vectorize(gxg, SIMPLIFY = FALSE)
+  # v_gxg <- Vectorize(gxg, SIMPLIFY = FALSE)
 
   if (length(gameIds) == 0) {
     return(NA)
@@ -300,7 +306,7 @@ get_xg <- function(gameIds) {
     return(gxg(gameIds))
   } else {
     gxgs <- data.frame()
-    for (i in seq_along(gameIds)){
+    for (i in seq_along(gameIds)) {
       gxgs <- dplyr::bind_rows(gxgs, gxg(gameIds[i]))
     }
     # gxgs <- v_gxg(gid = gameIds)
@@ -815,8 +821,7 @@ getNumGames <- function(season = NULL) {
     jsonlite::fromJSON()
   seasons <- seasons$data
 
-  return(seasons[seasons$id == season,]$numberOfGames)
-
+  return(seasons[seasons$id == season, ]$numberOfGames)
 }
 
 nhl_boxscore <- function(gid) {

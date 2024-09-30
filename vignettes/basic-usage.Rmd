@@ -33,11 +33,11 @@ We can call this directly because the package has historical data already saved 
 Having performed the model update and retrieved the parameters by calling `model <- updateModel()` above, we can generate predictions for today's game(s).
 
 ```{r today_odds, eval=FALSE}
-todayOdds(params=model$params, schedule = model$schedule)
+todayOdds(params = model$params, schedule = model$schedule)
 ```
 
 ```{r echo = FALSE, fig.align='center', out.width="679px", out.height="525px"}
-knitr::include_graphics('https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png')
+knitr::include_graphics("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/today_odds.png")
 ```
 
 Playoff odds, president trophy odds, expected points, etc. can all be generated as well. Start by updating the predictions, then generate the images. Depending on how long it has been since predictions were generated, this may take some time. 
@@ -48,15 +48,15 @@ playoffOdds()
 ```
 
 ```{r echo = FALSE, fig.align='center', out.width="679px", out.height="525px"}
-knitr::include_graphics('https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/playoff_odds.png')
+knitr::include_graphics("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/playoff_odds.png")
 ```
 
 There's a playoff solver placed in the package. It works only before the playoffs start through the end of the first round, and returns a tibble of likely playoff position and progression for each team as a `tidyverse::tibble`. The results aren't guaranteed to be accurate. We'll look at what these playoff odds looked like as of the start of the 2021-2022 season. We'll download the predictions file from that date so we don't have to generate it ourselves.
 
 ```{r playoff_solver_example, eval=FALSE}
-simulatePlayoffs(summary_results = readRDS(url("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2021-08-12-predictions.RDS","rb")))
+simulatePlayoffs(summary_results = readRDS(url("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2021-08-12-predictions.RDS", "rb")))
 ```
 ```{r playoff_solver, echo=FALSE}
-po<-simulatePlayoffs(summary_results = HockeyModel::summary_results_testing, nsims = 10, cores = 2)
+po <- simulatePlayoffs(summary_results = HockeyModel::summary_results_testing, nsims = 10, cores = 2)
 knitr::kable(po, caption = "Playoff Simulation from the start of the 2021-2022 season")
 ```

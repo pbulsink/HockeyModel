@@ -1,7 +1,7 @@
 #* Daily Game Odds
 #* @get /odds
 function() {
-todayDC(include_xG = TRUE)
+  todayDC(include_xG = TRUE)
 }
 
 
@@ -24,7 +24,7 @@ function() {
 #* Get an image of playoff odds
 #* @serializer png
 #* @get /playoff-graphic
-function(){
+function() {
   HockeyModel::playoffOdds()
 }
 
@@ -77,6 +77,6 @@ function() {
 #* @serializer png
 #* @get /ratings
 function() {
-  params<-parse_dc_params(NULL)
-  ratings(m=params$m)
+  params <- parse_dc_params(NULL)
+  ratings(m = params$m)
 }

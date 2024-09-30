@@ -1,63 +1,68 @@
 context("test-api-interface")
 
 test_that("Schedules are ok", {
-  tmpdir<-withr::local_tempdir()
+  tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
-  sched<-getNHLSchedule()
+  sched <- getNHLSchedule()
   expect_true(is.data.frame(sched))
   expect_equal(ncol(sched), 6)
   expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus"))
   expect_true(all(sched$GameType %in% c("R", "P")))
 
-  sched2<-updateScheduleAPI(schedule=sched)
+  sched2 <- updateScheduleAPI(schedule = sched)
   expect_true(is.data.frame(sched2))
   expect_equal(ncol(sched), 6)
   expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus"))
   expect_true(all(sched$GameType %in% c("R", "P")))
   expect_equal(sched, sched2)
 
-  #add a dummy game to sched2
-  sched2<-rbind(sched2, data.frame("Date" = as.Date("2019-10-31"), "HomeTeam" = "New Jersey Devils", "AwayTeam" = "Philadelphia Flyers",
-                                   "GameID" = 2019020196, "GameType" = "R", "GameStatus" = "Scheduled"))
+  # add a dummy game to sched2
+  sched2 <- rbind(sched2, data.frame(
+    "Date" = as.Date("2019-10-31"), "HomeTeam" = "New Jersey Devils", "AwayTeam" = "Philadelphia Flyers",
+    "GameID" = 2019020196, "GameType" = "R", "GameStatus" = "Scheduled"
+  ))
   sched2 <- removeUnscheduledGames(schedule = sched2)
   expect_equal(sched, sched2)
 })
 
 test_that("Scores are OK", {
-  tmpdir<-withr::local_tempdir()
+  tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
   withr::local_file(file.path(tmpdir, "xG.csv"))
-  write.table(data.frame("GameId"=2020020001,"home_xg" = 4.3,"away_xg" = 3.1),
-              file=file.path(tmpdir, 'xG.csv'),
-              row.names = FALSE, col.names = TRUE, sep = ",")
+  write.table(data.frame("GameId" = 2020020001, "home_xg" = 4.3, "away_xg" = 3.1),
+    file = file.path(tmpdir, "xG.csv"),
+    row.names = FALSE, col.names = TRUE, sep = ","
+  )
 
-  score<-getNHLScores(2020020001, progress = F)
+  score <- getNHLScores(2020020001, progress = F)
   expect_true(is.data.frame(score))
   expect_equal(ncol(score), 12)
   expect_equal(nrow(score), 1)
-  goodscore<-structure(list(Date = structure(18640, class = "Date"), HomeTeam = "Philadelphia Flyers",
-                            AwayTeam = "Pittsburgh Penguins", GameID = 2020020001, HomeGoals = 6L,
-                            AwayGoals = 3L, OTStatus = "", GameType = "R", GameStatus = "Final",
-                            Result = 1, HomexG = 4.3, AwayxG = 3.1), row.names = c(NA, -1L), class = "data.frame")
+  goodscore <- structure(list(
+    Date = structure(18640, class = "Date"), HomeTeam = "Philadelphia Flyers",
+    AwayTeam = "Pittsburgh Penguins", GameID = 2020020001, HomeGoals = 6L,
+    AwayGoals = 3L, OTStatus = "", GameType = "R", GameStatus = "Final",
+    Result = 1, HomexG = 4.3, AwayxG = 3.1
+  ), row.names = c(NA, -1L), class = "data.frame")
   expect_identical(score, goodscore)
 
-  today<-games_today(date=as.Date("2019-11-01"))
-  expect_true(is.null(today)) #Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
+  today <- games_today(date = as.Date("2019-11-01"))
+  expect_true(is.null(today)) # Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
 })
 
 test_that("Series is ok", {
-  #tough to test as it's a moving target
-  tmpdir<-withr::local_tempdir()
+  # tough to test as it's a moving target
+  tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
-  series<-getAPISeries()
-  if(inPlayoffs()){
-    #now there should be a series
+  series <- getAPISeries()
+  if (inPlayoffs()) {
+    # now there should be a series
     expect_gt(nrow(series), 0)
     expect_true(is.data.frame(series))
   }
-  series<-getAPISeries("20182019")
+  series <- getAPISeries("20182019")
   expect_true(is.data.frame(series))
   expect_equal(nrow(series), 15)
   expect_equal(ncol(series), 10)
@@ -65,7 +70,7 @@ test_that("Series is ok", {
 })
 
 test_that("Season Dates & Binaries work", {
-  tmpdir<-withr::local_tempdir()
+  tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
   expect_visible(inRegularSeason())
@@ -78,7 +83,7 @@ test_that("Season Dates & Binaries work", {
 })
 
 test_that("SeasonID gets seasons ok", {
-  tmpdir<-withr::local_tempdir()
+  tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
   expect_match(getCurrentSeason8(), regexp = "\\d{8}")
@@ -87,23 +92,29 @@ test_that("SeasonID gets seasons ok", {
 })
 
 test_that("Get Team Info is OK", {
-  tmpdir<-withr::local_tempdir()
+  tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
-  apiteams<-nhlapi::nhl_teams()
+  apiteams <- nhlapi::nhl_teams()
   expect_equal(getShortTeam("Toronto Maple Leafs"), apiteams[apiteams$name == "Toronto Maple Leafs", ]$abbreviation)
-  expect_equal(getShortTeam(c("Toronto Maple Leafs", "Ottawa Senators")),
-               c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$abbreviation, apiteams[apiteams$name == "Ottawa Senators", ]$abbreviation))
+  expect_equal(
+    getShortTeam(c("Toronto Maple Leafs", "Ottawa Senators")),
+    c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$abbreviation, apiteams[apiteams$name == "Ottawa Senators", ]$abbreviation)
+  )
   expect_equal(getShortTeam("bob"), character(0))
 
   expect_equal(getTeamConferences("Toronto Maple Leafs"), apiteams[apiteams$name == "Toronto Maple Leafs", ]$conference.name)
-  expect_equal(getTeamConferences(c("Toronto Maple Leafs", "Ottawa Senators")),
-               c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$conference.name, apiteams[apiteams$name == "Ottawa Senators", ]$conference.name))
+  expect_equal(
+    getTeamConferences(c("Toronto Maple Leafs", "Ottawa Senators")),
+    c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$conference.name, apiteams[apiteams$name == "Ottawa Senators", ]$conference.name)
+  )
   expect_equal(getTeamConferences("bob"), character(0))
 
-  expect_equal(getTeamDivisions("Toronto Maple Leafs"),apiteams[apiteams$name == "Toronto Maple Leafs", ]$division.name)
-  expect_equal(getTeamDivisions(c("Toronto Maple Leafs", "Ottawa Senators")),
-               c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$division.name, apiteams[apiteams$name == "Ottawa Senators", ]$division.name))
+  expect_equal(getTeamDivisions("Toronto Maple Leafs"), apiteams[apiteams$name == "Toronto Maple Leafs", ]$division.name)
+  expect_equal(
+    getTeamDivisions(c("Toronto Maple Leafs", "Ottawa Senators")),
+    c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$division.name, apiteams[apiteams$name == "Ottawa Senators", ]$division.name)
+  )
   expect_equal(getTeamDivisions("bob"), character(0))
 
   expect_equal(getConferences(), unique(apiteams$conference.name))
@@ -111,7 +122,7 @@ test_that("Get Team Info is OK", {
 })
 
 test_that("Other Utility Functions are OK", {
-  tmpdir<-withr::local_tempdir()
+  tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
   expect_equal(clean_names(c("Chicago Blackhawks", "Toronto Maple Leafs")), c("Chicago Blackhawks", "Toronto Maple Leafs"))
@@ -119,6 +130,6 @@ test_that("Other Utility Functions are OK", {
   expect_equal(getTeamConferences("Toronto Maple Leafs"), "Eastern")
   expect_equal(getTeamDivisions("Toronto Maple Leafs"), "Atlantic")
   expect_equal(getShortTeam("Toronto Maple Leafs"), "TOR")
-  expect_equal(getSeasonEndDate(season="20182019"), as.Date("2019-06-12"))
+  expect_equal(getSeasonEndDate(season = "20182019"), as.Date("2019-06-12"))
   expect_equal(getNumGames("20202021"), 56)
 })

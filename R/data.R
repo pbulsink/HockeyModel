@@ -87,13 +87,13 @@
 #' Parameters for iterative Dixon-Coles method
 #'
 #' @format a list of lists of parameters for win/loss and xG versions
-'iterativeParameters'
+"iterativeParameters"
 
 #' Iterative Rankings
 #' Current rankings for iterative Dixon-Coles methods
 #'
 #' @format a list of data frames and a date value of the last rankings update
-'iterativeRankings'
+"iterativeRankings"
 
 #' Summary Results (Testing)
 #' A testing dataset from 2021 presesason. Not for regular use.
@@ -113,11 +113,11 @@
 #' @format a tibble
 "example_raw_predictions"
 
-buildTeamColours <- function(){
+buildTeamColours <- function() {
   teamColours <- utils::read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
-  teamlist<-unique(teamColours$Team)
+  teamlist <- unique(teamColours$Team)
   teamColours$Logo <- file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", teamlist)), ".gif"))
-  if(requireNamespace('usethis')){
+  if (requireNamespace("usethis")) {
     usethis::use_data(teamColours, overwrite = TRUE)
   } else {
     warning("Can't write teamcolours to file, usethis package must be installed.")

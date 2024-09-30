@@ -31,45 +31,50 @@ The most significant part of the improvements for 2021 are enhancements to the m
 Let's demonstrate. I'll select for games that are only included in the most recent model parameters. Then for all games that were ties (i.e. went to OT or SO for resolution) pulling the goals at which they were tied at the end of regulation time.
 
 ```{r adjust_scores}
-scores<-scores %>%
-    dplyr::filter(.data$GameID %in% unique(m$data$GameID)) %>%
-    dplyr::mutate('Goals' = dplyr::case_when(.data$Result == 0.25 ~ .data$HomeGoals,
-                                             .data$Result == 0.4  ~ .data$HomeGoals,
-                                             .data$Result == 0.5  ~ .data$HomeGoals,
-                                             .data$Result == 0.6  ~ .data$AwayGoals,
-                                             .data$Result == 0.75 ~ .data$AwayGoals,
-                                             TRUE ~ NA_integer_))
+scores <- scores %>%
+  dplyr::filter(.data$GameID %in% unique(m$data$GameID)) %>%
+  dplyr::mutate("Goals" = dplyr::case_when(
+    .data$Result == 0.25 ~ .data$HomeGoals,
+    .data$Result == 0.4 ~ .data$HomeGoals,
+    .data$Result == 0.5 ~ .data$HomeGoals,
+    .data$Result == 0.6 ~ .data$AwayGoals,
+    .data$Result == 0.75 ~ .data$AwayGoals,
+    TRUE ~ NA_integer_
+  ))
 ```
 
 From then, we can calculate the ratio of goals in regular games compared to goals in tied games. The `*2` adjusts because each tie game has two teams at that goal count.
 
 ```{r goalratios}
-goalratios<-sapply(0:max(scores$Goals, na.rm = TRUE), 
-                   FUN = function(x) (nrow(scores[scores$Goals == x & !is.na(scores$Goals),])/nrow(scores[!is.na(scores$Goals),]))/
-                     (nrow(scores[(scores$HomeGoals == x | scores$AwayGoals == x) & is.na(scores$Goals),])/nrow(scores[is.na(scores$Goals),])) ) * 2
+goalratios <- sapply(0:max(scores$Goals, na.rm = TRUE),
+  FUN = function(x) {
+    (nrow(scores[scores$Goals == x & !is.na(scores$Goals), ]) / nrow(scores[!is.na(scores$Goals), ])) /
+      (nrow(scores[(scores$HomeGoals == x | scores$AwayGoals == x) & is.na(scores$Goals), ]) / nrow(scores[is.na(scores$Goals), ]))
+  }
+) * 2
 ```
 
 If we plot the goal ratios vs. score (in blue) we can see that they're the same shape as a Weibull curve!
 
 ```{r plot_goalratios}
-goalratios<-data.frame("Goals" = 0:max(scores$Goals, na.rm=T), "GoalRatio" = goalratios)
+goalratios <- data.frame("Goals" = 0:max(scores$Goals, na.rm = T), "GoalRatio" = goalratios)
 
-ggplot(data = goalratios) + 
-  geom_point(aes_string(x="Goals", y="GoalRatio"), colour="Blue") + 
-  labs(x="Goals", y="Goal Ratio", title="Goal Ratios")
+ggplot(data = goalratios) +
+  geom_point(aes_string(x = "Goals", y = "GoalRatio"), colour = "Blue") +
+  labs(x = "Goals", y = "Goal Ratio", title = "Goal Ratios")
 ```
 
 The new `eta`,`beta` and `k` factors produce a similarly shaped curve by developing a Weibull curve with shape and sacale values (distribution) equal to `eta` and `beta` respectively, and then multiplied the distribution by `k` to match the goal ratios. Plotted here (in red) you can see they match fairly well.
 
 ```{r theta}
-#goalratios$DistP<-dpois(goalratios$Goals, lambda=HockeyModel::theta) * HockeyModel::gamma
-goalratios$DistW<-dweibull(goalratios$Goals, shape=beta, scale = eta) * k
+# goalratios$DistP<-dpois(goalratios$Goals, lambda=HockeyModel::theta) * HockeyModel::gamma
+goalratios$DistW <- dweibull(goalratios$Goals, shape = beta, scale = eta) * k
 
 
-ggplot(data = goalratios) + 
-  geom_point(aes_string(x="Goals", y="GoalRatio"), colour="Blue") + 
-  geom_point(aes_string(x="Goals", y="DistW"), colour = "Green") +
-  labs(x="Goals", y="Goal Ratio", title="Model and Goal Ratios")
+ggplot(data = goalratios) +
+  geom_point(aes_string(x = "Goals", y = "GoalRatio"), colour = "Blue") +
+  geom_point(aes_string(x = "Goals", y = "DistW"), colour = "Green") +
+  labs(x = "Goals", y = "Goal Ratio", title = "Model and Goal Ratios")
 ```
 
 

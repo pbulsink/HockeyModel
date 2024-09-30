@@ -13,9 +13,9 @@ test_that("Season from Game Date works", {
 })
 
 test_that("Past points are calculated correctly", {
-  sc<-scores[scores$Date > as.Date("2015-08-01"), ]
-  sc<-sc[sc$Date < as.Date("2018-09-01"), ]
-  p<-historicalPoints(sc = sc)
+  sc <- scores[scores$Date > as.Date("2015-08-01"), ]
+  sc <- sc[sc$Date < as.Date("2018-09-01"), ]
+  p <- historicalPoints(sc = sc)
   expect_equal(as.numeric(p[p$Team == "Anaheim Ducks" & p$Season == "20152016", "Points"]), 103)
   expect_equal(as.numeric(p[p$Team == "Ottawa Senators" & p$Season == "20162017", "Points"]), 98)
   expect_equal(as.numeric(p[p$Team == "Toronto Maple Leafs" & p$Season == "20172018", "Points"]), 105)
@@ -25,35 +25,35 @@ test_that("Past points are calculated correctly", {
 test_that("Metrics are correctly calculated", {
   expect_equal(rmse(c(0.1, 0.2), c(0.15, 0.25)), 0.05)
 
-  expect_equal(auc(c(0,0,1,1), c(0.1, 0.2, 0.6, 0.7)),1)
-  expect_equal(auc(c(0,0,1,1), c(0.1, 0.6, 0.4, 0.7)), 0.5)
+  expect_equal(auc(c(0, 0, 1, 1), c(0.1, 0.2, 0.6, 0.7)), 1)
+  expect_equal(auc(c(0, 0, 1, 1), c(0.1, 0.6, 0.4, 0.7)), 0.5)
 
-  expect_equal(logLoss(0,0), 0)
-  expect_equal(logLoss(1,1), 0)
+  expect_equal(logLoss(0, 0), 0)
+  expect_equal(logLoss(1, 1), 0)
   expect_equal(logLoss(0.5, 1), -log(0.5))
   expect_equal(logLoss(0.5, 1), logLoss(0.5, 0))
-  expect_equal(logLoss(c(0,1), c(0,1)), 0)
-  expect_equal(logLoss(c(0.5,0), c(0, 0)), mean(c(0, -log(0.5))))
+  expect_equal(logLoss(c(0, 1), c(0, 1)), 0)
+  expect_equal(logLoss(c(0.5, 0), c(0, 0)), mean(c(0, -log(0.5))))
 
   expect_equal(accuracy(0.4, 0), 1)
   expect_equal(accuracy(0.4, 1), 0)
-  expect_equal(accuracy(c(0.4, 0.6), c(1,1)), 0.5)
+  expect_equal(accuracy(c(0.4, 0.6), c(1, 1)), 0.5)
 
-  expect_error(rmse(c(1,2,3), c(1,2)))
-  expect_error(auc(c(1,2,3), c(1,2)))
-  expect_error(logLoss(c(1,2,3), c(1,2)))
-  expect_error(accuracy(c(1,2,3), c(1,2)))
+  expect_error(rmse(c(1, 2, 3), c(1, 2)))
+  expect_error(auc(c(1, 2, 3), c(1, 2)))
+  expect_error(logLoss(c(1, 2, 3), c(1, 2)))
+  expect_error(accuracy(c(1, 2, 3), c(1, 2)))
 })
 
 test_that("Colours are correctly compared", {
-  expect_equal(hexToRGB("#000000"), c(0,0,0))
+  expect_equal(hexToRGB("#000000"), c(0, 0, 0))
   expect_equal(hexToRGB("#FFFFFF"), c(255, 255, 255))
-  expect_equal(hexToRGB("#101010"), c(16,16,16))
+  expect_equal(hexToRGB("#101010"), c(16, 16, 16))
 
   expect_equal(colourDelta("#000000", "#000000"), 0)
   expect_equal(colourDelta("#000000", "#FFFFFF"), 1)
 
-  expect_equal(colourDelta("#0000FF", "#000000"), 1/3)
+  expect_equal(colourDelta("#0000FF", "#000000"), 1 / 3)
 })
 
 test_that("Date Checks are OK", {
@@ -72,11 +72,11 @@ test_that("GameIDs are validated", {
 })
 
 test_that("IneffectiveMath HockeyVis Contest output is a string", {
-  preds<-HockeyModel::example_predictions
-  preds<-preds[preds$predictionDate == max(preds$predictionDate), ]
-  im<-formatPredsForHockeyVisContest(predictions=preds)
+  preds <- HockeyModel::example_predictions
+  preds <- preds[preds$predictionDate == max(preds$predictionDate), ]
+  im <- formatPredsForHockeyVisContest(predictions = preds)
   expect_true(is.character(im))
-  expect_true(grepl("pbulsink", x=im))
+  expect_true(grepl("pbulsink", x = im))
 })
 
 test_that("Season Validates", {
