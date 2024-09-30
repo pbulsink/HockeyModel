@@ -750,12 +750,12 @@ getSeason <- function(gamedate = Sys.Date()) {
 }
 
 
-getConferences <- function(apiteams = nhlapi::nhl_teams()) {
-  return(unique(apiteams$conference.name))
+getConferences <- function() {
+  return(unique(teamColours$Conference))
 }
 
-getDivisions <- function(apiteams = nhlapi::nhl_teams()) {
-  return(unique(apiteams$division.name))
+getDivisions <- function() {
+  return(unique(teamColours$Division))
 }
 
 getTeamConferences <- function(teams) {

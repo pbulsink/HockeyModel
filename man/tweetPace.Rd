@@ -9,7 +9,6 @@ tweetPace(
   graphic_dir = getOption("HockeyModel.graphics.path"),
   subdir = "pace",
   prediction_dir = getOption("HockeyModel.prediction.path"),
-  twitter_token = NULL,
   scores = HockeyModel::scores
 )
 }
@@ -21,8 +20,6 @@ tweetPace(
 \item{subdir}{The pace subdirectory in graphics}
 
 \item{prediction_dir}{The predictions directory}
-
-\item{twitter_token}{rtweet token}
 
 \item{scores}{HockeyModel::scores or a custom value}
 }

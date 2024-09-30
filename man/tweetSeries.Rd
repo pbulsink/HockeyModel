@@ -5,14 +5,11 @@
 \title{Tweet Series}
 \usage{
 tweetSeries(
-  twitter_token = NULL,
   params = NULL,
   graphic_dir = getOption("HockeyModel.graphics.path")
 )
 }
 \arguments{
-\item{twitter_token}{rtweet token}
-
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{graphic_dir}{directory to save the image}

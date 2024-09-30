@@ -22,7 +22,9 @@ Imports:
     dtplyr,
     naturalstattrick,
     webshot2,
-    httr2
+    httr2,
+    bskyr,
+    rtoot
 Remotes: pbulsink/naturalstattrick
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
@@ -43,11 +45,9 @@ Suggests:
     ggalt,
     ggridges,
     scales,
-    rtweet,
     ggplot2,
     devtools,
     usethis,
     doSNOW,
-    rtoot,
     withr
 VignetteBuilder: knitr

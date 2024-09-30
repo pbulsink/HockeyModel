@@ -4,10 +4,7 @@
 \alias{tweetMetrics}
 \title{Tweet Metrics}
 \usage{
-tweetMetrics(twitter_token = NULL)
-}
-\arguments{
-\item{twitter_token}{rtweet token}
+tweetMetrics()
 }
 \description{
 Tweet the metrics (Log Loss and Accuracy)

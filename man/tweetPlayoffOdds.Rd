@@ -7,17 +7,14 @@
 tweetPlayoffOdds(
   summary_results = NULL,
   params = NULL,
-  twitter_token = NULL,
   graphic_dir = getOption("HockeyModel.graphics.path"),
   trimcup = FALSE
 )
 }
 \arguments{
-\item{summary_results}{the summary results file, otherwise the msot recent will be loaded}
+\item{summary_results}{the summary results file, otherwise the most recent will be loaded}
 
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
-
-\item{twitter_token}{token for twitter}
 
 \item{graphic_dir}{graphic dir}
 

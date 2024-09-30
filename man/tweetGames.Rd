@@ -8,8 +8,7 @@ tweetGames(
   games = games_today(),
   delay = stats::runif(1, min = 4, max = 8) * 60,
   graphic_dir = getOption("HockeyModel.graphics.path"),
-  params = NULL,
-  twitter_token = NULL
+  params = NULL
 )
 }
 \arguments{
@@ -20,8 +19,6 @@ tweetGames(
 \item{graphic_dir}{the graphics directory}
 
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
-
-\item{twitter_token}{the token for rtweet}
 }
 \description{
 Tweet Game Plots
