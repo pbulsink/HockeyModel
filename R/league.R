@@ -415,6 +415,7 @@ sim_engine<-function(all_season, nsims, params=NULL){
 
   resultslist<-list()
 
+  #TODO: This can be vectorized or delooped by doing Result prediction on long_season?
   for(g in all_season$GameID){
     if(is.na(all_season[all_season$GameID == g,]$Result)) {
       odds<-as.vector(all_season[all_season$GameID == g, c('HomeWin', 'HomeOT', 'HomeSO', 'AwaySO', 'AwayOT', 'AwayWin')])
@@ -690,7 +691,11 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = NULL, params
                          "series14" = character(),
                          "series15" = character())
 
-  currentSeries<-getAPISeries()
+  #currentSeries<-getAPISeries()
+
+  currentSeries<-data.frame("Round" = integer(), "Series" = integer(), "HomeTeam" = character(), "AwayTeam" = character(),
+                            "HomeWins" = integer(), "AwayWins" = integer(), "HomeSeed" = integer(), "AwaySeed" = integer(),
+                            "Statsu" = character(), "SeriesID" = integer())
 
   if(nrow(currentSeries) == 0){
     message("too early to mix in real-life series")
@@ -711,7 +716,7 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = NULL, params
     }
   }
 
-  if(cores > 1 | !requireNamespace("parallel", quietly = TRUE)){
+  if(cores > 1){
     cl<-parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
 
@@ -727,12 +732,8 @@ simulatePlayoffs<-function(summary_results=NULL, nsims=1e5, cores = NULL, params
     gc(verbose = FALSE)
 
   } else{
-    if(cores > 1){
-      message("Multi-core processing requires the parallel package to be installed.")
-    }
     #Single cores is easier for testing
     simresults<-playoffSolverEngine(nsims = nsims, completedSeries = completedSeries, east_results = east_results, west_results = west_results, currentSeries=currentSeries, summary_results = summary_results, homeAwayOdds=homeAwayOdds)
-
   }
 
   simodds<-data.frame("Team" = summary_results$Team)

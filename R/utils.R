@@ -223,14 +223,13 @@ hexToRGB <- function(hex){
   return(c(r,g,b))
 }
 
-formatPredsForHockeyVisContest<-function(predictions, candyType = 'Fuzzy Peaches', handle='pbulsink'){
+formatPredsForHockeyVisContest<-function(predictions, candyType = 'Fuzzy Peaches', handle='@bot.bulsink.ca'){
   #IneffectiveMath's (Micah's) contest
   #format = {'handle':'???','preferredSourCandyType':'???', 'Predictions':{ 'ANA':(m,u), 'ARI':(m,u), 'BOS':(m,u), 'BUF':(m,u), 'CAR':(m,u), 'CBJ':(m,u), 'CGY':(m,u), 'CHI':(m,u), 'COL':(m,u), 'DAL':(m,u), 'DET':(m,u), 'EDM':(m,u), 'FLA':(m,u), 'L.A':(m,u), 'MIN':(m,u), 'MTL':(m,u), 'N.J':(m,u), 'NSH':(m,u), 'NYI':(m,u), 'NYR':(m,u), 'OTT':(m,u), 'PHI':(m,u), 'PIT':(m,u), 'S.J':(m,u), 'STL':(m,u), 'T.B':(m,u), 'TOR':(m,u), 'VAN':(m,u), 'VGK':(m,u), 'WPG':(m,u), 'WSH':(m,u), } }
   output = paste0("{'handle':'", handle,
                   "', 'preferredSourCandyType':'", candyType,
                   "', 'Predictions':{ ",
                   "'ANA':(", round(predictions[predictions$Team == "Anaheim Ducks",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Anaheim Ducks",]$sdPoints, 2), "), ",
-                  "'ARI':(", round(predictions[predictions$Team == "Arizona Coyotes",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Arizona Coyotes",]$sdPoints,  2), "), ",
                   "'BOS':(", round(predictions[predictions$Team == "Boston Bruins",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Boston Bruins",]$sdPoints,  2), "), ",
                   "'BUF':(", round(predictions[predictions$Team == "Buffalo Sabres",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Buffalo Sabres",]$sdPoints, 2), "), ",
                   "'CAR':(", round(predictions[predictions$Team == "Carolina Hurricanes",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Carolina Hurricanes",]$sdPoints, 2), "), ",
@@ -257,6 +256,7 @@ formatPredsForHockeyVisContest<-function(predictions, candyType = 'Fuzzy Peaches
                   "'STL':(", round(predictions[predictions$Team == "St. Louis Blues",]$meanPoints, 1), ",", round(predictions[predictions$Team == "St. Louis Blues",]$sdPoints, 2), "), ",
                   "'T.B':(", round(predictions[predictions$Team == "Tampa Bay Lightning",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Tampa Bay Lightning",]$sdPoints, 2), "), ",
                   "'TOR':(", round(predictions[predictions$Team == "Toronto Maple Leafs",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Toronto Maple Leafs",]$sdPoints, 2), "), ",
+                  "'UTA':(", round(predictions[predictions$Team == "Utah Hockey Club",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Utah Hockey Club",]$sdPoints,  2), "), ",
                   "'VAN':(", round(predictions[predictions$Team == "Vancouver Canucks",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Vancouver Canucks",]$sdPoints, 2), "), ",
                   "'VGK':(", round(predictions[predictions$Team == "Vegas Golden Knights",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Vegas Golden Knights",]$sdPoints, 2), "), ",
                   "'WPG':(", round(predictions[predictions$Team == "Winnipeg Jets",]$meanPoints, 1), ",", round(predictions[predictions$Team == "Winnipeg Jets",]$sdPoints, 2), "), ",
@@ -361,6 +361,7 @@ gId<-function(gameId){
 is_valid_gameId<-Vectorize(gId)
 
 parseCores<-function(cores){
+  cores <- cores
   if(is.null(cores)){
     if (!requireNamespace('parallel', quietly = TRUE)){
       message("Parallel package must be installed to use multi-core processing.")
@@ -369,8 +370,11 @@ parseCores<-function(cores){
       cores<-parallel::detectCores()
     }
   } else {
-    if(!is.integer(cores) | cores <= 0 | !requireNamespace('parallel', quietly = TRUE)){
+    if(!requireNamespace('parallel', quietly = TRUE)){
       message("Parallel package must be installed to use multi-core processing.")
+      cores <- 1
+    } else if (!is.numeric(cores) | cores%%1 != 0 | cores <= 0) {
+      message("Cores must be a integer number")
       cores <- 1
     } else if (cores > parallel::detectCores()){
       cores <- parallel::detectCores()

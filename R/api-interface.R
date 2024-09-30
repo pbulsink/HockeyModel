@@ -409,6 +409,7 @@ clean_names <- function(sc) {
   if (is.vector(sc)) {
     sc <- stringi::stri_trans_general(str = sc, "latin-ascii")
     sc <- replace(sc, sc == "Phoenix Coyotes", "Arizona Coyotes")
+    sc <- replace(sc, sc == "Arizona Coyotes", "Utah Hockey Club")
     sc <- replace(sc, sc == "Atlanta Thrashers", "Winnipeg Jets")
     sc <- replace(sc, sc == "Minnesota North Stars", "Dallas Stars")
     sc <- replace(sc, sc == "Quebec Nordiques", "Colorado Avalanche")
@@ -418,6 +419,7 @@ clean_names <- function(sc) {
         dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str = .data$HomeTeam, "latin-ascii")) %>%
         dplyr::mutate(
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+          "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Arizona Coyotes", "Utah Hockey Club"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
@@ -428,6 +430,7 @@ clean_names <- function(sc) {
         dplyr::mutate("AwayTeam" = stringi::stri_trans_general(str = .data$AwayTeam, "latin-ascii")) %>%
         dplyr::mutate(
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
+          "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Arizona Coyotes", "Utah Hockey Club"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
@@ -438,6 +441,7 @@ clean_names <- function(sc) {
         dplyr::mutate("Team" = stringi::stri_trans_general(str = .data$Team, "latin-ascii")) %>%
         dplyr::mutate(
           "Team" = replace(.data$Team, .data$Team == "Phoenix Coyotes", "Arizona Coyotes"),
+          "Team" = replace(.data$Team, .data$Team == "Arizona Coyotes", "Utah Hockey Club"),
           "Team" = replace(.data$Team, .data$Team == "Atlanta Thrashers", "Winnipeg Jets"),
           "Team" = replace(.data$Team, .data$Team == "Minnesota North Stars", "Dallas Stars"),
           "Team" = replace(.data$Team, .data$Team == "Quebec Nordiques", "Colorado Avalanche"),
@@ -448,6 +452,7 @@ clean_names <- function(sc) {
         dplyr::mutate("name" = stringi::stri_trans_general(str = .data$name, "latin-ascii")) %>%
         dplyr::mutate(
           "name" = replace(.data$name, .data$name == "Phoenix Coyotes", "Arizona Coyotes"),
+          "name" = replace(.data$name, .data$name == "Arizona Coyotes", "Utah Hockey Club"),
           "name" = replace(.data$name, .data$name == "Atlanta Thrashers", "Winnipeg Jets"),
           "name" = replace(.data$name, .data$name == "Minnesota North Stars", "Dallas Stars"),
           "name" = replace(.data$name, .data$name == "Quebec Nordiques", "Colorado Avalanche"),
@@ -563,18 +568,22 @@ validateWins <- function(playoffSeries, seriesStatusShort) {
 #' @return Season start date as date
 #' @export
 getSeasonStartDate <- function(season = NULL) {
-  return(as.Date("2024-10-04"))
+  url <- "https://api.nhle.com/stats/rest/en/season"
+  seasons <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON()
+  seasons <- seasons$data
 
-  #TODO Reimplement API schedule start
-  seasons <- nhlapi::nhl_seasons()
   if (!is.null(season)) {
-    if (season %in% seasons$seasonId) {
-      return(as.Date(seasons[seasons$seasonId == season, ]$regularSeasonStartDate))
+    if (season %in% seasons$id) {
+      return(as.Date(seasons[seasons$id == season, ]$startDate))
     } else {
       stop("Season not found: ", season)
     }
   } else {
-    return(as.Date(utils::tail(seasons$regularSeasonStartDate, 1)))
+    return(as.Date(utils::tail(seasons$startDate, 1)))
   }
 }
 
@@ -584,11 +593,15 @@ getSeasonStartDate <- function(season = NULL) {
 #' @return current season (as 20172018 format) based on today's date.
 #' @export
 getCurrentSeason8 <- function() {
-  return(20242025)
+  url <- "https://api.nhle.com/stats/rest/en/season"
+  seasons <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON()
+  seasons <- seasons$data
 
-  #TODO Reimplement API season code
-  seasons <- nhlapi::nhl_seasons()
-  return(utils::tail(seasons$seasonId, 1))
+  return(utils::tail(seasons$id, 1))
 }
 
 
@@ -599,18 +612,22 @@ getCurrentSeason8 <- function() {
 #' @return Season end date (as date)
 #' @export
 getSeasonEndDate <- function(season = NULL) {
-  return(as.Date("2025-04-17"))
+  url <- "https://api.nhle.com/stats/rest/en/season"
+  seasons <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON()
+  seasons <- seasons$data
 
-  #TODO Reimplement API schedule end
-  seasons <- nhlapi::nhl_seasons()
   if (!is.null(season)) {
-    if (season %in% seasons$seasonId) {
-      return(as.Date(seasons[seasons$seasonId == season, ]$seasonEndDate))
+    if (season %in% seasons$id) {
+      return(as.Date(seasons[seasons$id == season, ]$endDate))
     } else {
       stop("Season not found: ", season)
     }
   } else {
-    return(as.Date(utils::tail(seasons$seasonEndDate, 1)))
+    return(as.Date(utils::tail(seasons$endDate, 1)))
   }
 }
 
@@ -622,18 +639,19 @@ getSeasonEndDate <- function(season = NULL) {
 #' @return Either TRUE/FALSE or a seasonID/FALSE
 #' @export
 inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
-  stopifnot(is.Date(date))
-  date <- as.Date(date)
-  return(all(date >= getSeasonStartDate(), date <= getSeasonEndDate()))
-
-  #TODO Reimplement API date check
-  seasons <- nhlapi::nhl_seasons()
-  seasons_list <- seasons[seasons$regularSeasonStartDate <= date & seasons$regularSeasonEndDate >= date, ]
+  url <- "https://api.nhle.com/stats/rest/en/season"
+  seasons <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON()
+  seasons <- seasons$data
+  seasons_list <- seasons[seasons$startDate <= date & seasons$regularSeasonEndDate >= date, ]
   if (boolean) {
     return(ifelse(nrow(seasons_list) > 0, TRUE, FALSE))
   } else {
     if (nrow(seasons_list) > 0) {
-      return(seasons_list$seasonId)
+      return(seasons_list$id)
     } else {
       return(FALSE)
     }
@@ -649,16 +667,17 @@ inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
 #' @return TRUE if we're in off-season, else FALSE
 #' @export
 inOffSeason <- function(date = Sys.Date()) {
-
   stopifnot(is.Date(date))
   date <- as.Date(date)
-  return(any(date <= getSeasonStartDate(), date >= getSeasonEndDate()))
+  url <- "https://api.nhle.com/stats/rest/en/season"
+  seasons <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON()
+  seasons <- seasons$data
 
-  #TODO: Reimplement API date check
-  stopifnot(is.Date(date))
-  date <- as.Date(date)
-  seasons <- nhlapi::nhl_seasons()
-  seasons_list <- seasons[seasons$seasonEndDate > date & seasons$regularSeasonStartDate < date, ]
+  seasons_list <- seasons[seasons$endDate > date & seasons$startDate < date, ]
   return(ifelse(nrow(seasons_list) > 0, FALSE, TRUE))
 }
 
@@ -677,8 +696,14 @@ inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
   date <- as.Date(date)
 
   return(all(date > getSeasonEndDate(), date < as.Date("2025-07-05")))
-  seasons <- nhlapi::nhl_seasons()
-  seasons_list <- seasons[as.Date(seasons$regularSeasonEndDate) <= date & as.Date(seasons$seasonEndDate) >= date, ]
+  url <- "https://api.nhle.com/stats/rest/en/season"
+  seasons <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON()
+  seasons <- seasons$data
+  seasons_list <- seasons[as.Date(seasons$regularSeasonEndDate) <= date & as.Date(seasons$endDate) >= date, ]
   if (boolean) {
     return(ifelse(nrow(seasons_list) > 0, TRUE, FALSE))
   } else {
@@ -698,12 +723,18 @@ inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
 #' @export
 getSeason <- function(gamedate = Sys.Date()) {
   stopifnot(is.Date(gamedate))
-  seasons <- nhlapi::nhl_seasons()
+  url <- "https://api.nhle.com/stats/rest/en/season"
+  seasons <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON()
+  seasons <- seasons$data
   gs <- function(gd, seasons) {
     gd <- as.Date(gd)
-    season_list <- seasons[seasons$regularSeasonStartDate <= gd & seasons$seasonEndDate >= gd, ]
+    season_list <- seasons[seasons$startDate <= gd & seasons$endDate >= gd, ]
     if (nrow(season_list) == 1) {
-      return(season_list$seasonId)
+      return(season_list$id)
     } else {
       return(NULL)
     }
@@ -727,57 +758,65 @@ getDivisions <- function(apiteams = nhlapi::nhl_teams()) {
   return(unique(apiteams$division.name))
 }
 
-getTeamConferences <- function(teams, apiteams = nhlapi::nhl_teams()) {
-  apiteams <- clean_names(apiteams)
-  getteamconf <- function(t, apiteams) {
-    return(apiteams[apiteams$name == t, ]$conference.name)
+getTeamConferences <- function(teams) {
+  getteamconf <- function(t) {
+    return(teamColours[teamColours$Team == t, ]$Conference)
   }
 
   v_getteamconf <- Vectorize(getteamconf, "t")
   teams <- clean_names(teams)
   if (length(teams) == 1) {
-    return(getteamconf(t = teams, apiteams = apiteams))
+    return(getteamconf(t = teams))
   } else {
-    return(unname(v_getteamconf(t = teams, apiteams = apiteams)))
+    return(unname(v_getteamconf(t = teams)))
   }
 }
 
 getTeamDivisions <- function(teams, apiteams = nhlapi::nhl_teams()) {
-  apiteams <- clean_names(apiteams)
   getteamdiv <- function(t, apiteams) {
-    return(apiteams[apiteams$name == t, ]$division.name)
+    return(teamColours[teamColours$Team == t, ]$Division)
   }
 
   v_getteamdiv <- Vectorize(getteamdiv, "t")
   teams <- clean_names(teams)
   if (length(teams) == 1) {
-    return(getteamdiv(t = teams, apiteams = apiteams))
+    return(getteamdiv(t = teams))
   } else {
-    return(unname(v_getteamdiv(t = teams, apiteams = apiteams)))
+    return(unname(v_getteamdiv(t = teams)))
   }
 }
 
-getShortTeam <- function(teams, apiteams = nhlapi::nhl_teams()) {
-  apiteams <- clean_names(apiteams)
+getShortTeam <- function(teams) {
   getteamshort <- function(t, apiteams) {
-    return(apiteams[apiteams$name == t, ]$abbreviation)
+    return(teamColours[teamColours$Team == t, ]$ShortCode)
   }
 
   v_getteamshort <- Vectorize(getteamshort, "t")
   teams <- clean_names(teams)
   if (length(teams) == 1) {
-    return(getteamshort(t = teams, apiteams = apiteams))
+    return(getteamshort(t = teams))
   } else {
-    return(unname(v_getteamshort(t = teams, apiteams = apiteams)))
+    return(unname(v_getteamshort(t = teams)))
   }
 }
 
 getNumGames <- function(season = NULL) {
   if (!is.null(season)) {
     stopifnot(seasonValidator(season))
+  } else {
+    stop("Season must be supplied")
   }
-  apiseasons <- nhlapi::nhl_seasons(season)
-  return(apiseasons$numberOfGames[nrow(apiseasons)])
+
+  url <- "https://api.nhle.com/stats/rest/en/season"
+  seasons <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON()
+  seasons <- seasons$data
+
+  return(seasons[seasons$id == season,]$numberOfGames)
+
 }
 
 nhl_boxscore <- function(gid) {

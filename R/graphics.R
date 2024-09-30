@@ -601,9 +601,9 @@ plot_point_likelihood <- function(preds=NULL, graphic_dir = getOption("HockeyMod
     preds<-loopless_sim(nsims = 1e4)$raw_results
   }
 
-  conferences<-getConferences()
-
   preds$Conf<-getTeamConferences(preds$Team)
+
+  conferences <- unique(preds$Conf)
 
   teamColours <- HockeyModel::teamColours
   teamColoursList<-as.vector(teamColours$Hex)
