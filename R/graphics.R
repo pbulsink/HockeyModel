@@ -392,7 +392,6 @@ plot_odds_today <- function(today = Sys.Date(), params = NULL, schedule = Hockey
   stopifnot(requireNamespace("ggplot2", quietly = TRUE))
   params <- parse_dc_params(params)
   todayodds <- todayDC(today = today, params, schedule = schedule)
-  todayodds$GameID <- NULL
   todayodds$HomeWinOT <- todayodds$AwayWinOT <- 0
 
   # add odds for each team in OT/SO
@@ -401,6 +400,11 @@ plot_odds_today <- function(today = Sys.Date(), params = NULL, schedule = Hockey
     todayodds$AwayWinOT[g] <- extraTimeSolver(home_win = todayodds$HomeWin[g], away_win = todayodds$AwayWin[g], draw = todayodds$Draw[g])[3]
   }
 
+  if(nrow(todayodds) > 0){
+    todayodds$GameID <- as.numeric(todayodds$GameID)
+    write.csv(todayodds, file = paste0("./", getCurrentSeason8(), ".csv"), row.names = FALSE, append = TRUE)
+  }
+  todayodds$GameID <- NULL
   # Melt data to work with ggplot
   # melted<-reshape2::melt(todayodds, id.vars = c('HomeTeam', 'AwayTeam'))
   melted <- tidyr::pivot_longer(todayodds,
