@@ -7,9 +7,9 @@
 auc(predicted, actual)
 }
 \arguments{
-\item{predicted}{Predicted odds of an event occuring. needen't be of set {0,1}}
+\item{predicted}{Predicted odds of an event occurring. needen't be of set (0,1)}
 
-\item{actual}{If the event occured (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0}
+\item{actual}{If the event occurred (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0}
 }
 \value{
 a single value for auc

@@ -6,87 +6,49 @@
 #'
 #' @return a data frame of all scheduled games for the season(s) requested, with Date, HomeTeam, AwayTeam, GameID, and GameType.
 #' @export
-#'
-#' @seealso See [nhlapi::nhl_schedule_seasons()] for alternative schedule requests, and [nhlapi::nhl_games()] for more information on GameID
-getNHLSchedule <- function(season = getSeason()) {
-  if (is.null(season)) {
-    season <- utils::tail(nhlapi::nhl_seasons()$seasonId, 1)
-  }
-  sched <- nhlapi::nhl_schedule_seasons(season)
-  if (length(sched) == 0) {
-    # there was an error
-    warning("There was an error getting the ", season, " schedule from the NHL", call. = FALSE)
-    return(NULL)
-  } else {
-    return(processNHLSchedule(sched = sched))
-  }
+getNHLSchedule <- function(season = getCurrentSeason8()) {
+  stopifnot(seasonValidator(season))
 
-  # Similar to how Dan Morse did it in hockeyR
-  game_id_list <- NULL
-  for (i in unique(team_info$team_abbr)) {
-    url <- glue::glue("https://api-web.nhle.com/v1/club-schedule-season/{i}/{season-1}{season}")
+  # This is imilar to how Dan Morse did it in hockeyR
+  sched <- NULL
+  for (i in unique(teamColours$ShortCode)) {
+    url <- paste0("https://api-web.nhle.com/v1/club-schedule-season/", i, "/", season)
 
     site <- tryCatch(
-      jsonlite::read_json(url),
-      warning = function(cond) {
-        message(paste0("There was a problem fetching games:\n\n", cond))
-        return(NULL)
-      },
+      httr2::request(url) %>%
+        httr2::req_retry(max_seconds = 120) %>%
+        httr2::req_perform() %>%
+        httr2::resp_body_string() %>%
+        jsonlite::fromJSON(),
       error = function(cond) {
-        message(paste0("There was a problem fetching games:\n\n", cond))
+        message(paste0("There was a problem fetching ",i,"'s games: ", cond))
         return(NULL)
       }
     )
 
-    if (!is.null(site)) {
-      team_game_list <- site$games %>%
-        dplyr::tibble()
-      game_id_list <- dplyr::bind_rows(game_id_list, team_game_list)
+    if (!is.null(site) & !is.null(site$games) & length(site$games) > 0) {
+      sg <- site$games %>%
+        dplyr::filter(.data$gameType > 1)
+
+      games <- data.frame(Date = sg$gameDate,
+                             HomeTeam = getLongTeam(sg$homeTeam$abbrev),
+                             AwayTeam = getLongTeam(sg$awayTeam$abbrev),
+                             GameID = sg$id,
+                             GameType = ifelse(sg$gameType == 2, "R", ifelse(sg$gameType == 3, "P", "NA")),
+                             GameStatus = sg$gameState) %>%
+        dplyr::filter(.data$GameType %in% c("R", "P"))
+
+      sched <- dplyr::bind_rows(sched, games)
     } else {
       next()
     }
   }
-}
 
-processNHLSchedule <- function(sched, clean = TRUE) {
-  schedule <- data.frame(
-    "Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(),
-    "GameID" = integer(), "GameType" = character(), "GameStatus" = character()
-  )
-  for (y in seq_along(length(sched))) {
-    if (!(length(sched[[y]]$dates) > 0)) {
-      next
-    }
-    for (d in seq_along(nrow(sched[[y]]$dates))) {
-      df <- data.frame(
-        "Date" = character(), "HomeTeam" = character(), "AwayTeam" = character(),
-        "GameID" = integer(), "GameType" = character(), "GameStatus" = character()
-      )
-      for (g in 1:sched[[y]]$dates$totalGames[[d]]) {
-        dfg <- data.frame(
-          "Date" = sched[[y]]$dates$date[[d]],
-          "HomeTeam" = sched[[y]]$dates$games[[d]]$teams.home.team.name[[g]],
-          "AwayTeam" = sched[[y]]$dates$games[[d]]$teams.away.team.name[[g]],
-          "GameID" = sched[[y]]$dates$games[[d]]$gamePk[[g]],
-          "GameType" = sched[[y]]$dates$games[[d]]$gameType[[g]],
-          "GameStatus" = sched[[y]]$dates$games[[d]]$status.detailedState[[g]]
-        )
-        df <- rbind(df, dfg)
-      }
-      schedule <- rbind(schedule, df)
-    }
-  }
-  schedule <- clean_names(schedule)
-  schedule <- schedule %>%
-    dplyr::filter(.data$GameType %in% c("P", "R")) %>%
-    dplyr::arrange(.data$Date, dplyr::desc(.data$GameStatus), .data$GameID)
+  sched <- sched %>%
+    unique() %>%
+    dplyr::arrange(.data$Date, .data$GameID)
 
-  schedule$GameStatus[is.na(schedule$GameStatus)] <- "Final"
-  if (clean) {
-    schedule <- removeUnscheduledGames(schedule)
-  }
-
-  return(schedule)
+  return(sched)
 }
 
 
@@ -104,16 +66,26 @@ processNHLSchedule <- function(sched, clean = TRUE) {
 #' @export
 games_today <- function(schedule = HockeyModel::schedule, date = Sys.Date(), all_games = FALSE) {
   stopifnot(is.Date(date))
-  # todaygames <- processNHLSchedule(nhlapi::nhl_schedule_date_range(date, date))
-  todaygames <- schedule[schedule$Date == as.Date(date), ]
-  if (!all_games) {
-    todaygames <- todaygames["Scheduled" %in% todaygames$GameStatus, ]
-  }
-  if (nrow(todaygames) > 0) {
-    return(todaygames)
-  } else {
+  url <- paste0("https://api-web.nhle.com/v1/schedule/", as.Date(date, "%Y-%m-%d"))
+
+  sched <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON()
+  gameWeek <- sched$gameWeek
+
+  if(gameWeek[gameWeek$date == as.Date(date, "%Y-%m-%d", ),]$numberOfGames == 0){
     return(NULL)
   }
+
+  gids <- gameWeek[gameWeek$date == as.Date(date, "%Y-%m-%d"), ]$games[[1]]$id
+  todaygames <- schedule[schedule$GameID %in% gids, ]
+  if (nrow(todaygames) == 0){
+    message("Games on today aren't present in Schedule. Be sure schedule is updated!!")
+    return(NULL)
+  }
+  return(todaygames)
 }
 
 
@@ -127,17 +99,10 @@ games_today <- function(schedule = HockeyModel::schedule, date = Sys.Date(), all
 updateScheduleAPI <- function(schedule = HockeyModel::schedule, save_data = FALSE) {
   currentSeason <- getSeason()
   if (is.null(currentSeason)) {
-    currentSeason <- utils::tail(nhlapi::nhl_seasons()$seasonId, 1)
+    currentSeason <- getCurrentSeason8()
   }
   sched <- getNHLSchedule(currentSeason)
   stopifnot(!is.null(sched))
-  gameIDs <- sched$GameID
-  schedule <- sched %>%
-    dplyr::filter(!(.data$GameID %in% gameIDs)) %>%
-    dplyr::bind_rows(sched) %>%
-    dplyr::arrange(.data$Date, dplyr::desc(.data$GameStatus), .data$GameID)
-
-  schedule <- removeUnscheduledGames(schedule = schedule)
 
   if (save_data && requireNamespace("usethis", quietly = TRUE)) {
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
@@ -151,14 +116,12 @@ updateScheduleAPI <- function(schedule = HockeyModel::schedule, save_data = FALS
 #' @description Get the NHL game scores from the NHL API for any game(s) with a final score. Returns data formatted
 #' for future use. Requires gameID(s) be provided.This can be slow if requesting many games due to the API rate limit.
 #'
-#' @param gameIDs Game IDs (10 digit number). See [nhlapi::nhl_games()] for more information
+#' @param gameIDs Game IDs (10 digit number).
 #' @param schedule optional, provide a schedule if not using the HockeyModel::schedule
 #' @param progress whether to show a progress bar. Requires the 'progress' package installed
 #'
 #' @return a data frame with Date, HomeTeam, AwayTeam, GameID, HomeGoals, AwayGoals, OTStatus and GameType
 #' @export
-#'
-#' @seealso See [nhlapi::nhl_games()] for more information on gameIDs
 getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progress = TRUE) {
   scores <- NULL
   if (is.null(gameIDs)) {
@@ -317,52 +280,6 @@ get_xg <- function(gameIds) {
 }
 
 
-#' Remove Unscheduled Games
-#'
-#' @description Sometimes games are scheduled then not played (e.g. unneeded games in playoff series, etc.)
-#'
-#' @param schedule the schedule to check for unscheduled games
-#' @param save_data whether to save the cleaned schedule to package or not. Default False
-#'
-#' @return a schedule with unscheduled games removed
-#' @export
-removeUnscheduledGames <- function(schedule = HockeyModel::schedule, save_data = FALSE) {
-  unsched <- schedule[schedule$GameStatus != "Final" & schedule$Date < Sys.Date(), ]
-  removedGames <- c()
-  notRescheduled <- c()
-  for (g in unsched$GameID) {
-    d <- unsched[unsched$GameID == g, ]$Date
-
-    sched <- nhlapi::nhl_schedule_date_range(startDate = d, endDate = d)
-
-    checksched <- processNHLSchedule(sched, clean = FALSE)
-    if (!(g %in% checksched$GameID)) {
-      # Game is removed
-      removedGames <- c(removedGames, g)
-    } else {
-      notRescheduled <- c(notRescheduled, g)
-    }
-  }
-
-  schedule <- schedule[!(schedule$GameID %in% removedGames), ]
-
-  if (length(notRescheduled) > 0) {
-    regEndDate <- schedule[nrow(schedule), ]$Date
-    for (g in notRescheduled) {
-      schedule[schedule$GameID == g, ]$Date <- regEndDate + 1
-    }
-  }
-
-  schedule <- schedule %>%
-    dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
-
-  if (save_data && requireNamespace("usethis", quietly = TRUE)) {
-    suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
-  }
-
-  return(schedule)
-}
-
 #' Update past scores using the NHL API
 #'
 #' @param scores old scores
@@ -487,7 +404,9 @@ clean_names <- function(sc) {
 #' whether the series is complete
 #' @export
 getAPISeries <- function(season = getCurrentSeason8()) {
-  series <- nhlapi::nhl_tournaments_playoffs(expand = "round.series", seasons = as.character(season))
+
+
+#  series <- nhlapi::nhl_tournaments_playoffs(expand = "round.series", seasons = as.character(season))
   playoffSeries <- data.frame(
     "Round" = integer(), "Series" = integer(), "HomeTeam" = character(), "AwayTeam" = character(),
     "HomeWins" = integer(), "AwayWins" = integer(), "HomeSeed" = integer(), "AwaySeed" = integer(),
@@ -778,8 +697,8 @@ getTeamConferences <- function(teams) {
   }
 }
 
-getTeamDivisions <- function(teams, apiteams = nhlapi::nhl_teams()) {
-  getteamdiv <- function(t, apiteams) {
+getTeamDivisions <- function(teams) {
+  getteamdiv <- function(t) {
     return(teamColours[teamColours$Team == t, ]$Division)
   }
 
@@ -793,7 +712,7 @@ getTeamDivisions <- function(teams, apiteams = nhlapi::nhl_teams()) {
 }
 
 getShortTeam <- function(teams) {
-  getteamshort <- function(t, apiteams) {
+  getteamshort <- function(t) {
     return(teamColours[teamColours$Team == t, ]$ShortCode)
   }
 
@@ -801,6 +720,20 @@ getShortTeam <- function(teams) {
   teams <- clean_names(teams)
   if (length(teams) == 1) {
     return(getteamshort(t = teams))
+  } else {
+    return(unname(v_getteamshort(t = teams)))
+  }
+}
+
+getLongTeam <- function(teams) {
+  getteamlong <- function(t) {
+    return(teamColours[teamColours$ShortCode == t, ]$Team)
+  }
+
+  v_getteamshort <- Vectorize(getteamlong, "t")
+  teams <- clean_names(teams)
+  if (length(teams) == 1) {
+    return(getteamlong(t = teams))
   } else {
     return(unname(v_getteamshort(t = teams)))
   }

@@ -257,6 +257,7 @@ tau <- Vectorize(tau_singular, c("xx", "yy", "lambda", "mu"))
 #' @param scores the historical scores to evaluate
 #' @param currentDate (for date weight adjustment)
 #' @param xi aggressiveness of date weighting
+#' @param upsilon date weight cliff
 #'
 #' @export
 #' @return a model 'm' of Dixon-Coles' type parameters.

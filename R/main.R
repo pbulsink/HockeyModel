@@ -10,10 +10,10 @@
 #'
 #' @export
 updateModel <- function(save_data = TRUE) {
-  # schedule<-updateScheduleAPI(save_data = save_data)
+  schedule<-updateScheduleAPI(save_data = save_data)
   scores <- updateScoresAPI(schedule = schedule, save_data = save_data)
   params <- updateDC(scores = scores, save_data = save_data)
-  return(list("scores" = scores, "schedule" = schedule, "params" = params))
+  return(list("scores" = scores, "schedule" = HockeyModel::schedule, "params" = params))
 }
 
 #' Update predictions
@@ -56,7 +56,7 @@ todayOddsPlot <- function(date = Sys.Date(), params = NULL, schedule = HockeyMod
   if (scores$Date[nrow(scores)] < (date - 7)) {
     message("Scores may be out of date. This can affect predictions. Please update if midseason.")
   }
-  if (nrow(games_today()) == 0) {
+  if (nrow(games_today(date = date)) == 0) {
     message("No games today.")
     return()
   }

@@ -33,5 +33,5 @@ a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, or NULL if no games 
 Determine today's games' odds (if today has games), or a specified date's odds
 }
 \examples{
-todayOdds(today=as.Date("2019-11-01"))
+todayOdds(today = as.Date("2019-11-01"))
 }

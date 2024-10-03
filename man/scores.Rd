@@ -19,6 +19,23 @@ A data frame with  variables:
 \item{Result}{A numerically coded result for Hoome Team. Win=1, OTWin = 0.75, SOWin = 0.6, Tie = 0.5, SOLoss = 0.4, OTLoss = 0.25, Loss = 0}
 \item{HomexG}{Home Team's xG}
 \item{AwayxG}{Away Team's xG}
+\item{AwayCF}{Advanced Stats Properties}
+\item{AwayCFpk}{Advanced Stats Properties}
+\item{AwayCFpp}{Advanced Stats Properties}
+\item{AwayG}{Advanced Stats Properties}
+\item{AwayGpk}{Advanced Stats Properties}
+\item{AwayGpp}{Advanced Stats Properties}
+\item{AwayxG}{Advanced Stats Properties}
+\item{AwayxGpk}{Advanced Stats Properties}
+\item{AwayxGpp}{Advanced Stats Properties}
+\item{HomeCF}{Advanced Stats Properties}
+\item{HomeCFpk}{Advanced Stats Properties}
+\item{HomeCFpp}{Advanced Stats Properties}
+\item{HomeG}{Advanced Stats Properties}
+\item{HomeGpk}{Advanced Stats Properties}
+\item{HomeGpp}{Advanced Stats Properties}
+\item{HomexGpk}{Advanced Stats Properties}
+\item{HomexGpp}{Advanced Stats Properties}
 }
 }
 \source{

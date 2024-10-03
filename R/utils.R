@@ -101,7 +101,7 @@ logLoss <- function(predicted, actual) {
 
 #' Accuracy Calculator
 #'
-#' @param predicted Predicted odds of an event occuring. needen't be of set {0,1}
+#' @param predicted Predicted odds of an event occuring. needen't be of set (0,1)
 #' @param actual If the event occured (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0
 #'
 #' @return a percentage of correct predictions
@@ -121,8 +121,8 @@ accuracy <- function(predicted, actual) {
 #' AUC
 #' @description calculate the AUC metrics. From MLMetrics
 #'
-#' @param predicted Predicted odds of an event occuring. needen't be of set {0,1}
-#' @param actual If the event occured (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0
+#' @param predicted Predicted odds of an event occurring. needen't be of set (0,1)
+#' @param actual If the event occurred (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0
 #'
 #' @return a single value for auc
 #' @export

@@ -18,6 +18,6 @@ a value from 0 (identical) to 1 (completely opposite, black & white)
 Check the similarity of two colours by hex code. 0 = identical, 1 = opposite (black & white)
 }
 \examples{
-#colour similarity between FLA and TBL primary colours
-colourDelta("#041E42","#002868")
+# colour similarity between FLA and TBL primary colours
+colourDelta("#041E42", "#002868")
 }

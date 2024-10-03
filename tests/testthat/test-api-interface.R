@@ -95,30 +95,7 @@ test_that("Get Team Info is OK", {
   tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
-  apiteams <- nhlapi::nhl_teams()
-  expect_equal(getShortTeam("Toronto Maple Leafs"), apiteams[apiteams$name == "Toronto Maple Leafs", ]$abbreviation)
-  expect_equal(
-    getShortTeam(c("Toronto Maple Leafs", "Ottawa Senators")),
-    c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$abbreviation, apiteams[apiteams$name == "Ottawa Senators", ]$abbreviation)
-  )
-  expect_equal(getShortTeam("bob"), character(0))
-
-  expect_equal(getTeamConferences("Toronto Maple Leafs"), apiteams[apiteams$name == "Toronto Maple Leafs", ]$conference.name)
-  expect_equal(
-    getTeamConferences(c("Toronto Maple Leafs", "Ottawa Senators")),
-    c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$conference.name, apiteams[apiteams$name == "Ottawa Senators", ]$conference.name)
-  )
-  expect_equal(getTeamConferences("bob"), character(0))
-
-  expect_equal(getTeamDivisions("Toronto Maple Leafs"), apiteams[apiteams$name == "Toronto Maple Leafs", ]$division.name)
-  expect_equal(
-    getTeamDivisions(c("Toronto Maple Leafs", "Ottawa Senators")),
-    c(apiteams[apiteams$name == "Toronto Maple Leafs", ]$division.name, apiteams[apiteams$name == "Ottawa Senators", ]$division.name)
-  )
   expect_equal(getTeamDivisions("bob"), character(0))
-
-  expect_equal(getConferences(), unique(apiteams$conference.name))
-  expect_equal(getDivisions(), unique(apiteams$division.name))
 })
 
 test_that("Other Utility Functions are OK", {

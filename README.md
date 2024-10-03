@@ -10,7 +10,7 @@ This is a model to predict NHL game winners & their likely performance for the r
 
 Read more about the package at [https://pbulsink.github.io/HockeyModel](https://pbulsink.github.io/HockeyModel)
 
-Current predictions are below, and are always posted on twitter at [@BulsinkBot](https://www.twitter.com/BulsinkBot).
+Current predictions are below, and are always posted on Bluesky at [@bot.bulsink.ca](https://bsky.app/profile/bot.bulsink.ca).
 
 ## Team Ranking
 ![Team Rankings]("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/current_rating.png)
@@ -28,7 +28,7 @@ Current predictions are below, and are always posted on twitter at [@BulsinkBot]
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/president_odds.png" alt="President's Trophy Odds">
 
 # Recent Changes
-Installation now doesn't automatically install documenting, testing, tweeting, graphics and parallel processing requirements. You may wish to run `install.packages(c('knitr', 'rmarkdown', 'testthat', 'webshot', 'progress', 'markdown', 'covr', 'plumber', 'tictoc', 'parallel', 'ggrepel', 'gt', 'ggalt', 'ggridges', 'scales', 'ggplot2', 'rtweet', 'devtools', 'usethis'))`.
+Installation now doesn't automatically install documenting, testing, tweeting, graphics and parallel processing requirements. You may wish to run `install.packages(c('knitr', 'rmarkdown', 'testthat', 'webshot', 'progress', 'markdown', 'covr', 'tictoc', 'parallel', 'ggrepel', 'gt', 'ggalt', 'ggridges', 'scales', 'ggplot2', 'rtweet', 'devtools', 'usethis'))`.
 
 # To Do
 

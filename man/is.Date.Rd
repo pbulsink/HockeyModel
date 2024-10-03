@@ -16,5 +16,6 @@ is it a date?
 Is this a date?
 }
 \examples{
-is.Date("2020-12-13"); is.Date("bob")
+is.Date("2020-12-13")
+is.Date("bob")
 }

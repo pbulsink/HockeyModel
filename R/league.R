@@ -349,8 +349,8 @@ loopless_sim <- function(nsims = 1e5, cores = NULL, schedule = HockeyModel::sche
     doSNOW::registerDoSNOW(cl)
 
     # Ram management issues. Send smaller chunks more often, hopefully this helps.
-    all_results <- foreach::foreach(i = seq_along(1:(cores * 5)), .combine = "rbind", .packages = "HockeyModel") %dopar% {
-      all_results <- sim_engine(all_season = all_season, nsims = ceiling(nsims / 5), params = params)
+    all_results <- foreach::foreach(i = seq_along(1:(cores * 100)), .combine = "rbind", .packages = "HockeyModel") %dopar% {
+      all_results <- sim_engine(all_season = all_season, nsims = ceiling(nsims / 100), params = params)
       return(all_results)
     }
 
@@ -745,8 +745,8 @@ simulatePlayoffs <- function(summary_results = NULL, nsims = 1e5, cores = NULL, 
 
     `%dopar%` <- foreach::`%dopar%`
 
-    simresults <- foreach::foreach(i = 1:(cores * 5), .combine = "rbind", .packages = "HockeyModel") %dopar% {
-      simresults <- playoffSolverEngine(nsims = ceiling(nsims / (cores * 5)), completedSeries = completedSeries, east_results = east_results, west_results = west_results, currentSeries = currentSeries, summary_results = summary_results, homeAwayOdds = homeAwayOdds)
+    simresults <- foreach::foreach(i = 1:(cores * 100), .combine = "rbind", .packages = "HockeyModel") %dopar% {
+      simresults <- playoffSolverEngine(nsims = ceiling(nsims / (cores * 100)), completedSeries = completedSeries, east_results = east_results, west_results = west_results, currentSeries = currentSeries, summary_results = summary_results, homeAwayOdds = homeAwayOdds)
       return(simresults)
     }
 
@@ -900,7 +900,6 @@ playoffSolverEngine <- function(nsims, completedSeries, east_results, west_resul
     "series15" = character()
   )
   srvec <- c()
-  apiteams <- nhlapi::nhl_teams()
 
   east_results <- as.data.frame(east_results)
   west_results <- as.data.frame(west_results)
@@ -946,9 +945,9 @@ playoffSolverEngine <- function(nsims, completedSeries, east_results, west_resul
       if (!("p1" %in% names(eastseries))) {
         eastseries["p1"] <- er[sample(1:nrow(er), size = 1, prob = er$p_rank1), ]$Team
         er <- er[er$Team != eastseries["p1"], ]
-        p1div <- getTeamDivisions(eastseries["p1"], apiteams = apiteams)
+        p1div <- getTeamDivisions(eastseries["p1"])
       } else {
-        p1div <- getTeamDivisions(eastseries["p1"], apiteams = apiteams)
+        p1div <- getTeamDivisions(eastseries["p1"])
       }
       if (!("p2" %in% names(eastseries))) {
         eastseries["p2"] <- er[er$Div == p1div, ]$Team[sample(1:nrow(er[er$Div == p1div, ]), size = 1, prob = er[er$Div == p1div, ]$p_rank_34)]
@@ -1029,9 +1028,9 @@ playoffSolverEngine <- function(nsims, completedSeries, east_results, west_resul
       if (!("p1" %in% names(westseries))) {
         westseries["p1"] <- wr[sample(1:nrow(wr), size = 1, prob = wr$p_rank1), ]$Team
         wr <- wr[wr$Team != westseries["p1"], ]
-        p1div <- getTeamDivisions(westseries["p1"], apiteams = apiteams)
+        p1div <- getTeamDivisions(westseries["p1"])
       } else {
-        p1div <- getTeamDivisions(westseries["p1"], apiteams = apiteams)
+        p1div <- getTeamDivisions(westseries["p1"])
       }
       if (!("p2" %in% names(westseries))) {
         westseries["p2"] <- wr[wr$Div == p1div, ]$Team[sample(1:nrow(wr[wr$Div == p1div, ]), size = 1, prob = wr[wr$Div == p1div, ]$p_rank_34)]
@@ -1113,7 +1112,7 @@ playoffSolverEngine <- function(nsims, completedSeries, east_results, west_resul
       #   series1 <- single_series_solver(series_number = 1, currentSeries = currentSeries, homeTeam = e1.1, awayTeam = ewc2, homeAwayOdds = homeAwayOdds)
       #   l1 <- ifelse(series1 == e1.1, ewc2, e1.1) #If winner = a, then b, else a
       # }
-      # p1div<-getTeamDivisions(e1.1, apiteams=apiteams)
+      # p1div<-getTeamDivisions(e1.1)
       #
       # if('series2' %in% completedSeries$Series){
       #   series2 <- completedSeries[completedSeries$Series == 'series2', ]$Winner
@@ -1208,7 +1207,7 @@ playoffSolverEngine <- function(nsims, completedSeries, east_results, west_resul
       #   series5 <- single_series_solver(series_number = 5, currentSeries = currentSeries, homeTeam = w1.1, awayTeam = wwc2, homeAwayOdds = homeAwayOdds)
       #   l5 <- ifelse(series5 == w1.1, wwc2, w1.1) #If winner = a, then b, else a
       # }
-      # p1div<-getTeamDivisions(w1.1, apiteams=apiteams)
+      # p1div<-getTeamDivisions(w1.1)
       #
       # if('series6' %in% completedSeries$Series){
       #   series6 <- completedSeries[completedSeries$Series == 'series6', ]$Winner

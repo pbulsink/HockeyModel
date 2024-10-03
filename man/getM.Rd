@@ -17,6 +17,8 @@ getM(
 \item{currentDate}{(for date weight adjustment)}
 
 \item{xi}{aggressiveness of date weighting}
+
+\item{upsilon}{date weight cliff}
 }
 \value{
 a model 'm' of Dixon-Coles' type parameters.

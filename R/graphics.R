@@ -44,7 +44,7 @@ plot_prediction_points_by_team <- function(all_predictions = compile_predictions
       x = "Date",
       y = "Points",
       title = paste0("Predicted Points Over the Past ", past_days, " Days"),
-      caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())
+      caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
     ) +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none")
@@ -110,7 +110,7 @@ plot_prediction_playoffs_by_team <- function(all_predictions = compile_predictio
       x = "Date",
       y = "Playoff Odds",
       title = paste0("Playoff Odds Over the Past ", past_days, " Days"),
-      caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())
+      caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
     ) +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none")
@@ -171,7 +171,7 @@ plot_prediction_presidents_by_team <- function(all_predictions = compile_predict
       x = "Date",
       y = "President's Trophy Odds",
       title = paste0("President's Trophy Odds Over the Past ", past_days, " Days"),
-      caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date()),
+      caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date()),
       subtitle = paste0("Teams with < ", round(minimum * 100, 2), "% odds hidden for simplicity")
     ) +
     ggplot2::theme_minimal() +
@@ -275,7 +275,7 @@ plot_pace_by_division <- function(graphic_dir = getOption("HockeyModel.graphics.
         subtitle = paste(division, "Division Teams"),
         x = "Game Number",
         y = "Points Above/Below Predicted",
-        caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())
+        caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
       ) +
       ggplot2::scale_colour_manual(values = teamColoursList) +
       ggplot2::scale_x_continuous(breaks = seq(from = 0, to = max(teamPerformance$GameNum), by = 5)) + # , expand = ggplot2::expansion(mult = c(0, .1)))+
@@ -359,7 +359,7 @@ plot_pace_by_team <- function(graphic_dir = getOption("HockeyModel.graphics.path
         y = "Points",
         title = "Points Pace",
         subtitle = paste0(team, " Expected Points: ", format(round(qpoints, 1), nsmall = 1)),
-        caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())
+        caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
       ) +
       ggplot2::theme_minimal() +
       ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = ppoints, alpha = 0.05, colour = "grey") +
@@ -439,7 +439,7 @@ plot_odds_today <- function(today = Sys.Date(), params = NULL, schedule = Hockey
       y = "Result Odds",
       title = "Predictions for Today's Games",
       subtitle = paste0("Games played on ", Sys.Date()),
-      caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())
+      caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
     ) +
     ggplot2::theme_bw() +
     ggplot2::theme(
@@ -513,7 +513,7 @@ plot_playoff_series_odds <- function(series = getAPISeries(), params = NULL, tea
       y = "Series Odds",
       title = "Predictions for Playoff Series",
       subtitle = paste0("Before Games on ", Sys.Date(), ". Number of wins in brackets."),
-      caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())
+      caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
     ) +
     ggplot2::theme_bw() +
     ggplot2::theme(
@@ -595,7 +595,7 @@ plot_game <- function(home, away, params = NULL, maxgoal = 10) {
       y = "Odds",
       title = "Predicted Goals",
       subtitle = paste0(away, " at ", home, " on ", Sys.Date(), "\nWin Odds - Away: ", format(round(odds[[3]], 3), nsmall = 3), " - Home: ", format(round(odds[[1]], 3), nsmall = 3), " - OT/SO: ", format(round(odds[[2]], 3), nsmall = 3)),
-      caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())
+      caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
     ) +
     ggplot2::theme_minimal() +
     ggplot2::theme(
@@ -665,7 +665,7 @@ plot_point_likelihood <- function(preds = NULL, graphic_dir = getOption("HockeyM
         x = "Predicted Point Likelyhood",
         y = "",
         title = paste0("Point Likelyhoods for ", conf, " Conference - ", getCurrentSeason8()),
-        caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())
+        caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
       ) +
       ggridges::theme_ridges(grid = TRUE) +
       ggplot2::theme(
@@ -734,7 +734,7 @@ plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
       y = "Defence",
       title = "Current Team Offence & Defence Ratings",
       subtitle = paste0("As of ", Sys.Date()),
-      caption = paste0("P. Bulsink (@BulsinkBot) | ", Sys.Date())
+      caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
     ) +
     ggplot2::theme_minimal() +
     ggplot2::coord_cartesian(
@@ -872,7 +872,7 @@ format_playoff_odds <- function(playoff_odds, caption_text = "", trim = TRUE, tr
     tibble::add_column("image" = "", .after = 1) %>%
     dplyr::mutate("image" = .data$Team) %>%
     gt::gt() %>%
-    gt::tab_header(title = paste(caption_text, "Playoff Odds"), subtitle = paste0("Generated ", Sys.Date(), " | P. Bulsink (@BulsinkBot)")) %>%
+    gt::tab_header(title = paste(caption_text, "Playoff Odds"), subtitle = paste0("Generated ", Sys.Date(), " | P. Bulsink (@bot.bulsink.ca)")) %>%
     gt::cols_label(
       "block" = " ",
       "image" = " ",
@@ -961,7 +961,7 @@ daily_odds_table <- function(today = Sys.Date(), params = NULL, schedule = Hocke
       "awayimage" = .data$AwayTeam
     ) %>%
     gt::gt() %>%
-    gt::tab_header(title = paste0("Game Odds"), subtitle = paste0("For games ", today, " | P. Bulsink (@BulsinkBot)")) %>%
+    gt::tab_header(title = paste0("Game Odds"), subtitle = paste0("For games ", today, " | P. Bulsink (@bot.bulsink.ca)")) %>%
     gt::tab_spanner(label = "Home", columns = c("HomeTeam", "HomexG", "HomeWin")) %>%
     gt::tab_spanner(label = "Away", columns = c("AwayWin", "AwayxG", "AwayTeam")) %>%
     gt::cols_label(

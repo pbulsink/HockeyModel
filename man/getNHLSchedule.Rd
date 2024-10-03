@@ -4,7 +4,7 @@
 \alias{getNHLSchedule}
 \title{Get NHL Schedule}
 \usage{
-getNHLSchedule(season = getSeason())
+getNHLSchedule(season = getCurrentSeason8())
 }
 \arguments{
 \item{season}{Season(s) for which the schedule is requested, as YYYY format. Defaults to current season. Accepts single years, ranges e.g.c(2010:2015) or complex ranges e.g. c(2010:2015, 2018).}
@@ -14,7 +14,4 @@ a data frame of all scheduled games for the season(s) requested, with Date, Home
 }
 \description{
 Gets the NHL schedule from the NHL API for the season(s) requested. Returns data formatted for further use. This can be slow if requesting many seasons due to the API rate limit.
-}
-\seealso{
-See \code{\link[nhlapi:nhl_schedule]{nhlapi::nhl_schedule_seasons()}} for alternative schedule requests, and \code{\link[nhlapi:nhl_games]{nhlapi::nhl_games()}} for more information on GameID
 }
