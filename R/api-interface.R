@@ -139,10 +139,16 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
     )
   }
   for (g in gameIDs) {
-    sc <- nhl_boxscore(g)
+
+    sc <- NA
+    tryCatch(
+      sc <- nhl_boxscore(g),
+      error = function(e) message("Error in GameID", g, ": ", e)
+    )
 
 
-    if ("nhl_get_data_error" %in% class(sc[[1]])) {
+
+    if (all(is.na(sc)) || "nhl_get_data_error" %in% class(sc[[1]])) {
       next
     }
     if (sc$gameState == "OFF") {
@@ -207,7 +213,7 @@ load_or_get_nst <- function(gid) {
       dplyr::filter(.data$game_id == gid)
   } else {
     nstdf <- naturalstattrick::nst_report_df(
-      season = paste0(season, season + 1),
+      season = season,
       game_id = game_id
     )
     utils::write.table(nstdf,
@@ -242,21 +248,21 @@ get_xg <- function(gameIds) {
       "GameID" = as.integer(gid),
       "HomexG" = as.numeric(nst_report[nst_report$h_a == "home", ]$xgf_all),
       "AwayxG" = as.numeric(nst_report[nst_report$h_a == "away", ]$xgf_all),
-      "HomeG" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_all),
+      "HomeG" = as.numeric(nst_report[nst_report$h_a == "home", ]$gf_all),
       "AwayG" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_all),
-      "HomeCF" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_all),
+      "HomeCF" = as.numeric(nst_report[nst_report$h_a == "home", ]$cf_all),
       "AwayCF" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_all),
       "HomexGpk" = as.numeric(nst_report[nst_report$h_a == "home", ]$xgf_pk),
       "AwayxGpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$xgf_pk),
-      "HomeGpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pk),
+      "HomeGpk" = as.numeric(nst_report[nst_report$h_a == "home", ]$gf_pk),
       "AwayGpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pk),
-      "HomeCFpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pk),
+      "HomeCFpk" = as.numeric(nst_report[nst_report$h_a == "home", ]$cf_pk),
       "AwayCFpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pk),
       "HomexGpp" = as.numeric(nst_report[nst_report$h_a == "home", ]$xgf_pp),
       "AwayxGpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$xgf_pp),
-      "HomeGpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pp),
+      "HomeGpp" = as.numeric(nst_report[nst_report$h_a == "home", ]$gf_pp),
       "AwayGpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pp),
-      "HomeCFpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pp),
+      "HomeCFpp" = as.numeric(nst_report[nst_report$h_a == "home", ]$cf_pp),
       "AwayCFpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pp)
     ))
   }
@@ -303,6 +309,8 @@ updateScoresAPI <- function(scores = HockeyModel::scores, schedule = HockeyModel
       scores <- scores %>%
         dplyr::filter(!(.data$GameID %in% neededGames)) %>%
         dplyr::bind_rows(updatedSc) %>%
+        dplyr::mutate(Date = as.Date(.data$Date),
+                      GameID = as.numeric(.data$GameID)) %>%
         dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
       if (save_data && requireNamespace("usethis", quietly = TRUE)) {
         suppressMessages(usethis::use_data(scores, overwrite = TRUE))
@@ -495,6 +503,7 @@ validateWins <- function(playoffSeries, seriesStatusShort) {
 getSeasonStartDate <- function(season = NULL) {
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%
@@ -520,6 +529,7 @@ getSeasonStartDate <- function(season = NULL) {
 getCurrentSeason8 <- function() {
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%
@@ -539,6 +549,7 @@ getCurrentSeason8 <- function() {
 getSeasonEndDate <- function(season = NULL) {
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%
@@ -566,6 +577,7 @@ getSeasonEndDate <- function(season = NULL) {
 inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%
@@ -596,6 +608,7 @@ inOffSeason <- function(date = Sys.Date()) {
   date <- as.Date(date)
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%
@@ -623,6 +636,7 @@ inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
   return(all(date > getSeasonEndDate(), date < as.Date("2025-07-05")))
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%
@@ -650,6 +664,7 @@ getSeason <- function(gamedate = Sys.Date()) {
   stopifnot(is.Date(gamedate))
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%
@@ -748,6 +763,7 @@ getNumGames <- function(season = NULL) {
 
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%

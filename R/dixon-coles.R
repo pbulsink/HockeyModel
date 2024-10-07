@@ -180,6 +180,7 @@ remainderSeasonDC <- function(nsims = 1e4, cores = NULL, params = NULL, scores =
     odds_table <- rbind(odds_table, preds)
   }
   odds_table$Date <- schedule$Date
+  odds_table$GameID <- as.numeric(odds_table$GameID)
 
   if (odds) {
     return(odds_table)

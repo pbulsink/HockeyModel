@@ -100,33 +100,33 @@ ratings <- function(m = HockeyModel::m) {
 tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = stats::runif(1, min = 2, max = 6) * 60, schedule = HockeyModel::schedule) {
   if (!is.null(games_today())) {
     #   #don't try tweet todays' games if none exist
-    rtoot::post_toot(
-      status = "Predicted odds table for today's #NHL games.",
-      media = file.path(graphic_dir, "today_odds_table.png"),
-      alt_text = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), ".")
-    )
+    # rtoot::post_toot(
+    #   status = "Predicted odds table for today's #NHL games.",
+    #   media = file.path(graphic_dir, "today_odds_table.png"),
+    #   alt_text = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), ".")
+    # )
     atrrr::post(
       text = "Predicted odds table for today's #NHL games.",
       image = file.path(graphic_dir, "today_odds_table.png"),
       image_alt = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), ".")
     )
 
-    rtoot::post_toot(
-      status = "Predicted odds for today's #NHL games.",
-      media = file.path(graphic_dir, "today_odds.png"),
-      alt_text = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), ".")
-    )
+    # rtoot::post_toot(
+    #   status = "Predicted odds for today's #NHL games.",
+    #   media = file.path(graphic_dir, "today_odds.png"),
+    #   alt_text = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), ".")
+    # )
     atrrr::post(
       text = "Predicted odds for today's #NHL games.",
       image = file.path(graphic_dir, "today_odds.png"),
       image_alt = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), ".")
     )
 
-    rtoot::post_toot(
-      status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
-      media = file.path(graphic_dir, "current_rating.png"),
-      alt_text = paste0("Current team rating graphic for ", Sys.Date(), ".")
-    )
+    # rtoot::post_toot(
+    #   status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
+    #   media = file.path(graphic_dir, "current_rating.png"),
+    #   alt_text = paste0("Current team rating graphic for ", Sys.Date(), ".")
+    # )
 
     atrrr::post(
       text = paste0("Current team ratings (as of ", Sys.Date(), ")."),
@@ -134,11 +134,11 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
       image_alt = paste0("Current team rating graphic for ", Sys.Date(), ".")
     )
   } else {
-    rtoot::post_toot(
-      status = paste0("No #NHL games today. Current team ratings (as of ", Sys.Date(), ")."),
-      media = file.path(graphic_dir, "current_rating.png"),
-      alt_text = paste0("Current team rating graphic for ", Sys.Date(), ".")
-    )
+    # rtoot::post_toot(
+    #   status = paste0("No #NHL games today. Current team ratings (as of ", Sys.Date(), ")."),
+    #   media = file.path(graphic_dir, "current_rating.png"),
+    #   alt_text = paste0("Current team rating graphic for ", Sys.Date(), ".")
+    # )
     atrrr::post(
       text = paste0("No #NHL games today. Current team ratings (as of ", Sys.Date(), ")."),
       image = file.path(graphic_dir, "current_rating.png"),
@@ -152,11 +152,11 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
   if (nrow(schedule[schedule$Date >= Sys.Date() & schedule$GameType == "R", ]) > 0) {
     # Only runs if schedule has regular season games remaining
 
-    rtoot::post_toot(
-      status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), ")."),
-      media = file.path(graphic_dir, "point_predict.png"), # token = token,
-      alt_text = paste0("Points predicted history for the last 14 days, as of ", Sys.Date(), "")
-    )
+    # rtoot::post_toot(
+    #   status = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), ")."),
+    #   media = file.path(graphic_dir, "point_predict.png"), # token = token,
+    #   alt_text = paste0("Points predicted history for the last 14 days, as of ", Sys.Date(), "")
+    # )
     atrrr::post(
       text = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), ")."),
       image = file.path(graphic_dir, "point_predict.png"), # token = token,
@@ -167,11 +167,11 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
 
-    rtoot::post_toot(
-      status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
-      media = file.path(graphic_dir, "playoff_odds.png"),
-      alt_text = paste0("Playoff Odds for each NHL team history and today's value as of ", Sys.Date(), "")
-    )
+    # rtoot::post_toot(
+    #   status = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
+    #   media = file.path(graphic_dir, "playoff_odds.png"),
+    #   alt_text = paste0("Playoff Odds for each NHL team history and today's value as of ", Sys.Date(), "")
+    # )
     atrrr::post(
       text = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
       image = file.path(graphic_dir, "playoff_odds.png"),
@@ -181,11 +181,11 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
 
-    rtoot::post_toot(
-      status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
-      media = file.path(graphic_dir, "president_odds.png"),
-      alt_text = paste0("President's Trophy Odds for each NHL team history and today's value as of ", Sys.Date(), "")
-    )
+    # rtoot::post_toot(
+    #   status = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
+    #   media = file.path(graphic_dir, "president_odds.png"),
+    #   alt_text = paste0("President's Trophy Odds for each NHL team history and today's value as of ", Sys.Date(), "")
+    # )
     atrrr::post(
       text = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
       image = file.path(graphic_dir, "president_odds.png"),
@@ -373,11 +373,11 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
       image = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", team)), ".png")),
       image_alt = paste0(team, "'s Performance against predicted pace as of ", Sys.Date(), "")
     )
-    rtoot::post_toot(
-      status = status,
-      media = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", team)), ".png")),
-      alt_text = paste0(team, "'s Performance against predicted pace as of ", Sys.Date(), "")
-    )
+    # rtoot::post_toot(
+    #   status = status,
+    #   media = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", team)), ".png")),
+    #   alt_text = paste0(team, "'s Performance against predicted pace as of ", Sys.Date(), "")
+    # )
 
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(stats::runif(1, min = 1, max = 3) * 60)
@@ -394,7 +394,7 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
     "\nFurthest below expectation: ", minteam, " ", teamColours[teamColours$Team == minteam, "Hashtag"]
   )
   atrrr::post(text = recapstatus)
-  rtoot::post_toot(status = recapstatus)
+  # rtoot::post_toot(status = recapstatus)
 
   Sys.sleep(stats::runif(1, min = 2, max = 6) * 60)
 
@@ -403,11 +403,11 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
 
   for (division in getDivisions()) {
     status <- paste("Current Points compared to predicted (at season start) for #NHL teams in the", division, "division.\nPositive values are exceeding expectation, negative are performing below predicted.")
-    rtoot::post_toot(
-      status = status,
-      media = file.path(graphic_dir, subdir, paste0(division, "_pace.png")),
-      alt_text = paste0(division, " teams pace above/below expected as of ", Sys.Date(), ".")
-    )
+    # rtoot::post_toot(
+    #   status = status,
+    #   media = file.path(graphic_dir, subdir, paste0(division, "_pace.png")),
+    #   alt_text = paste0(division, " teams pace above/below expected as of ", Sys.Date(), ".")
+    # )
     atrrr::post(
       text = status,
       image = file.path(graphic_dir, subdir, paste0(division, "_pace.png")),
@@ -435,11 +435,11 @@ tweetLikelihoods <- function(delay = stats::runif(1, min = 3, max = 6) * 60, gra
       as.Date(file.mtime(file.path(graphic_dir, subdir, paste0(tolower(conf), "likelihood.png")))) == Sys.Date()) {
       # Tweet them out
 
-      rtoot::post_toot(
-        status = paste0("#NHL ", conf, " Conference Team final point likelihoods:"),
-        media = file.path(graphic_dir, subdir, paste0(tolower(conf), "likelihood.png")),
-        alt_text = paste0("Point likelihoods for teams in the ", conf, " conference.")
-      )
+      # rtoot::post_toot(
+      #   status = paste0("#NHL ", conf, " Conference Team final point likelihoods:"),
+      #   media = file.path(graphic_dir, subdir, paste0(tolower(conf), "likelihood.png")),
+      #   alt_text = paste0("Point likelihoods for teams in the ", conf, " conference.")
+      # )
       atrrr::post(
         text = paste0("#NHL ", conf, " Conference Team final point likelihoods:"),
         image = file.path(graphic_dir, subdir, paste0(tolower(conf), "likelihood.png")),
@@ -491,11 +491,11 @@ tweetGames <- function(games = games_today(), delay = stats::runif(1, min = 4, m
     }
     status <- paste0(teamColours[teamColours$Team == away, "Hashtag"], " at ", teamColours[teamColours$Team == home, "Hashtag"], " predicted goals. #", getShortTeam(away), "vs", getShortTeam(home), " #HockeyTwitter")
 
-    rtoot::post_toot(
-      status = status,
-      media = file.path(graphic_dir, "predicted_goals.png"),
-      alt_text = paste0("Odds of each goal for both ", away, " and ", home, " in their game.")
-    )
+    # rtoot::post_toot(
+    #   status = status,
+    #   media = file.path(graphic_dir, "predicted_goals.png"),
+    #   alt_text = paste0("Odds of each goal for both ", away, " and ", home, " in their game.")
+    # )
     atrrr::post(
       text = status,
       image = file.path(graphic_dir, "predicted_goals.png"),
@@ -523,7 +523,7 @@ tweetMetrics <- function() {
   )
   message(status)
 
-  rtoot::post_toot(status = status)
+  # rtoot::post_toot(status = status)
   atrrr::post(text = status)
 }
 
@@ -554,11 +554,11 @@ tweetSeries <- function(params = NULL, graphic_dir = getOption("HockeyModel.grap
   }
 
   status <- paste0("#NHL #StanleyCup Playoff Series Odds before games on ", Sys.Date())
-  rtoot::post_toot(
-    status = status,
-    media = file.path(graphic_dir, "series_odds.png"),
-    alt_text = "A graphic showing odds for each series' winner"
-  )
+  # rtoot::post_toot(
+  #   status = status,
+  #   media = file.path(graphic_dir, "series_odds.png"),
+  #   alt_text = "A graphic showing odds for each series' winner"
+  # )
   atrrr::post(
     text = status,
     image = file.path(graphic_dir, "series_odds.png"),
@@ -592,11 +592,11 @@ tweetPlayoffOdds <- function(summary_results = NULL, params = NULL, graphic_dir 
     status <- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
 
     # Posting Tweet
-    rtoot::post_toot(
-      status = paste0("#NHL Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
-      media = file.path(graphic_dir, "playoff_odds.png"),
-      alt_text = "Playoff Odds"
-    )
+    # rtoot::post_toot(
+    #   status = paste0("#NHL Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+    #   media = file.path(graphic_dir, "playoff_odds.png"),
+    #   alt_text = "Playoff Odds"
+    # )
 
     atrrr::post(
       text = paste0("#NHL Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
@@ -611,16 +611,16 @@ tweetPlayoffOdds <- function(summary_results = NULL, params = NULL, graphic_dir 
     status <- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
 
     # Posting Tweet
-    rtoot::post_toot(
-      status = paste0("#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
-      media = file.path(graphic_dir, "eastern_playoff_odds.png"),
-      alt_text = "Eastern Playoff Odds"
-    )
-    rtoot::post_toot(
-      status = paste0("#NHL Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
-      media = file.path(graphic_dir, "western_playoff_odds.png"),
-      alt_text = "Western Playoff Odds"
-    )
+    # rtoot::post_toot(
+    #   status = paste0("#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+    #   media = file.path(graphic_dir, "eastern_playoff_odds.png"),
+    #   alt_text = "Eastern Playoff Odds"
+    # )
+    # rtoot::post_toot(
+    #   status = paste0("#NHL Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+    #   media = file.path(graphic_dir, "western_playoff_odds.png"),
+    #   alt_text = "Western Playoff Odds"
+    # )
     atrrr::post(
       text = paste0("#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
       image = file.path(graphic_dir, "eastern_playoff_odds.png"),
