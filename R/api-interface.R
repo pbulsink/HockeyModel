@@ -339,6 +339,7 @@ updateScoresAPI_byGameID <- function(gameids, save_data = FALSE) {
 clean_names <- function(sc) {
   if (is.vector(sc)) {
     sc <- stringi::stri_trans_general(str = sc, "latin-ascii")
+    sc <- replace(sc, sc == "Utah Utah Hockey Club", "Utah Hockey Club")
     sc <- replace(sc, sc == "Phoenix Coyotes", "Arizona Coyotes")
     sc <- replace(sc, sc == "Arizona Coyotes", "Utah Hockey Club")
     sc <- replace(sc, sc == "Atlanta Thrashers", "Winnipeg Jets")
@@ -349,6 +350,7 @@ clean_names <- function(sc) {
       sc <- sc %>%
         dplyr::mutate("HomeTeam" = stringi::stri_trans_general(str = .data$HomeTeam, "latin-ascii")) %>%
         dplyr::mutate(
+          "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Utah Utah Hockey Club", "Utah Hockey Club"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Arizona Coyotes", "Utah Hockey Club"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
@@ -360,6 +362,7 @@ clean_names <- function(sc) {
       sc <- sc %>%
         dplyr::mutate("AwayTeam" = stringi::stri_trans_general(str = .data$AwayTeam, "latin-ascii")) %>%
         dplyr::mutate(
+          "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Utah Utah Hockey Club", "Utah Hockey Club"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Arizona Coyotes", "Utah Hockey Club"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
@@ -371,6 +374,7 @@ clean_names <- function(sc) {
       sc <- sc %>%
         dplyr::mutate("Team" = stringi::stri_trans_general(str = .data$Team, "latin-ascii")) %>%
         dplyr::mutate(
+          "Team" = replace(.data$Team, .data$Team == "Utah Utah Hockey Club", "Utah Hockey Club"),
           "Team" = replace(.data$Team, .data$Team == "Phoenix Coyotes", "Arizona Coyotes"),
           "Team" = replace(.data$Team, .data$Team == "Arizona Coyotes", "Utah Hockey Club"),
           "Team" = replace(.data$Team, .data$Team == "Atlanta Thrashers", "Winnipeg Jets"),
@@ -382,6 +386,7 @@ clean_names <- function(sc) {
       sc <- sc %>%
         dplyr::mutate("name" = stringi::stri_trans_general(str = .data$name, "latin-ascii")) %>%
         dplyr::mutate(
+          "name" = replace(.data$name, .data$name == "Utah Utah Hockey Club", "Utah Hockey Club"),
           "name" = replace(.data$name, .data$name == "Phoenix Coyotes", "Arizona Coyotes"),
           "name" = replace(.data$name, .data$name == "Arizona Coyotes", "Utah Hockey Club"),
           "name" = replace(.data$name, .data$name == "Atlanta Thrashers", "Winnipeg Jets"),
@@ -754,7 +759,7 @@ getLongTeam <- function(teams) {
   }
 }
 
-getNumGames <- function(season = NULL) {
+getNumGames <- function(season = getCurrentSeason8()) {
   if (!is.null(season)) {
     stopifnot(seasonValidator(season))
   } else {

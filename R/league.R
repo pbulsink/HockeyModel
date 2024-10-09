@@ -454,7 +454,7 @@ sim_engine <- function(all_season, nsims, params = NULL) {
 
   all_results$Points <- all_results$W * 2 + all_results$OTW * 2 + all_results$SOW * 2 + all_results$OTL + all_results$SOL
 
-  all_results$Conference <- getTeamConferences(all_results$Team)
+  all_results$Conference <- unlist(getTeamConferences(all_results$Team))
   all_results$Division <- getTeamDivisions(all_results$Team)
   all_results$Wildcard <- 100
 
