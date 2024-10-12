@@ -418,35 +418,32 @@ clean_names <- function(sc) {
 #' @export
 getAPISeries <- function(season = getCurrentSeason8()) {
 
+  url <- paste0("https://api-web.nhle.com/v1/playoff-bracket/", substr(getCurrentSeason8(), 5, 8))
 
-#  series <- nhlapi::nhl_tournaments_playoffs(expand = "round.series", seasons = as.character(season))
-  playoffSeries <- data.frame(
-    "Round" = integer(), "Series" = integer(), "HomeTeam" = character(), "AwayTeam" = character(),
-    "HomeWins" = integer(), "AwayWins" = integer(), "HomeSeed" = integer(), "AwaySeed" = integer(),
-    "requiredWins" = integer()
-  )
-  for (rnd in seq_along(length(series[[1]]$rounds$series))) {
-    if ("matchupTeams" %in% names(series[[1]]$rounds$series[[rnd]])) {
-      for (srs in seq_along(length(series[[1]]$rounds$series[[rnd]]$matchupTeams))) {
-        if (!is.null(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]])) {
-          playoffSeries[nrow(playoffSeries) + 1, ] <- c(
-            rnd,
-            srs,
-            series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$team.name,
-            series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins,
-            series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seed.rank,
-            series[[1]]$rounds$format.numberOfWins[[rnd]]
-          )
-          if (sum(series[[1]]$rounds$series[[rnd]]$matchupTeams[[srs]]$seriesRecord.wins) != series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.gameNumber[[srs]] - 1) {
-            playoffSeries[nrow(playoffSeries), c("HomeWins", "AwayWins")] <- validateWins(
-              playoffSeries[nrow(playoffSeries), ],
-              series[[1]]$rounds$series[[rnd]]$currentGame.seriesSummary.seriesStatusShort[[srs]]
-            )
-          }
-        }
-      }
-    }
+  series <- httr2::request(url) %>%
+    httr2::req_retry(max_seconds = 120) %>%
+    httr2::req_perform() %>%
+    httr2::resp_body_string() %>%
+    jsonlite::fromJSON(flatten = TRUE)
+
+  series <- series$series
+
+  if (length(series) == 0) {
+    return(data.frame())
+    # stop('No Series Data Available')
   }
+
+  playoffSeries <- series %>%
+    dplyr::select("Round" = "playoffRound",
+           "Series" = "seriesLetter",
+           "HomeTeam" = "topSeedTeam",
+           "AwayTeam" = "bottomSeedTeam.name.default",
+           "HomeWins" = "topSeedWins",
+           "AwayWins" = "bottomSeedWins",
+           "HomeSeed" = "topSeedRank",
+           "AwaySeed" = "bottomSeedRank",
+           "requiredWins" = 4)
+
   if (nrow(playoffSeries) == 0) {
     return(data.frame())
     # stop('No Series Data Available')
@@ -459,18 +456,12 @@ getAPISeries <- function(season = getCurrentSeason8()) {
   playoffSeries <- playoffSeries %>%
     dplyr::mutate(
       "Round" = as.integer(.data$Round),
-      "Series" = as.integer(.data$Series),
+      "Series" = sapply(.data$Series, function(x) which(LETTERS == x, useNames = FALSE), USE.NAMES = FALSE),
       "HomeWins" = as.integer(.data$HomeWins),
       "AwayWins" = as.integer(.data$AwayWins),
       "HomeSeed" = as.integer(.data$HomeSeed),
       "AwaySeed" = as.integer(.data$AwaySeed)
-    ) %>%
-    dplyr::mutate("SeriesID" = dplyr::case_when(
-      .data$Round == 1 ~ .data$Series + 0, ## + 0 recasts to numeric, avoids issue, see https://github.com/tidyverse/dplyr/issues/5876
-      .data$Round == 2 ~ .data$Series + 8,
-      .data$Round == 3 ~ .data$Series + 12,
-      .data$Round == 4 ~ .data$Series + 14
-    ))
+    )
   return(playoffSeries)
 }
 

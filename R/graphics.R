@@ -362,9 +362,9 @@ plot_pace_by_team <- function(graphic_dir = getOption("HockeyModel.graphics.path
         caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
       ) +
       ggplot2::theme_minimal() +
-      ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = ppoints, alpha = 0.05, colour = "grey") +
-      ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = maxp, alpha = 0.05, colour = "grey") +
-      ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = minp, alpha = 0.05, colour = "grey") +
+      ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = ppoints, alpha = 0.2, colour = "grey") +
+      ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = maxp, alpha = 0.2, colour = "grey") +
+      ggplot2::geom_segment(x = 0, y = 0, xend = numgames, yend = minp, alpha = 0.2, colour = "grey") +
       ggplot2::geom_segment(x = ngames, y = cp, xend = numgames, yend = qpoints, alpha = 0.2, colour = colour) +
       ggplot2::geom_segment(x = ngames, y = cp, xend = numgames, yend = maxq, alpha = 0.2, colour = colour) +
       ggplot2::geom_segment(x = ngames, y = cp, xend = numgames, yend = minq, alpha = 0.2, colour = colour)
