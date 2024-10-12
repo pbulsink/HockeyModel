@@ -149,7 +149,7 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if (nrow(schedule[schedule$Date >= Sys.Date() & schedule$GameType == "R", ]) > 0) {
+  if (nrow(schedule[schedule$Date >= Sys.Date() & schedule$GameType == "REG", ]) > 0) {
     # Only runs if schedule has regular season games remaining
 
     # rtoot::post_toot(
