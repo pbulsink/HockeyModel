@@ -48,6 +48,10 @@ getNHLSchedule <- function(season = getCurrentSeason8()) {
     unique() %>%
     dplyr::arrange(.data$Date, .data$GameID)
 
+  if(nrow(sched[sched$GameStatus %in% c("FUT", "PPD") & sched$Date < Sys.Date(),]) > 0){
+    sched[sched$GameStatus %in% c("FUT", "PPD") & sched$Date < Sys.Date(),]$Date <- max(sched$Date)
+  }
+
   return(sched)
 }
 
@@ -138,6 +142,8 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
       total = length(gameIDs), show_after = 5
     )
   }
+  dropped_gid <- c()
+
   for (g in gameIDs) {
 
     sc <- NA
@@ -166,12 +172,15 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
       scores <- rbind(scores, dfs)
     } else {
       warning("Game ", g, " not in final state, instead showing ", sc$gameState, "\nGame schedule state is ", sc$gameScheduleState)
+      dropped_gid <- c(dropped_gid, g)
       next
     }
     if (progress) {
       pb$tick()
     }
   }
+
+  gameIDs <- gameIDs[!(gameIDs %in% dropped_gid)]
 
   scores_xg <- get_xg(gameIds = gameIDs)
   if (!is.null(scores)) {
