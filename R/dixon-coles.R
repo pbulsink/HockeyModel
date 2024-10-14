@@ -57,7 +57,8 @@ updateDC <- function(scores = HockeyModel::scores, currentDate = Sys.Date(), sav
 todayDC <- function(params = NULL, today = Sys.Date(), schedule = HockeyModel::schedule, expected_mean = NULL, season_percent = NULL, include_xG = FALSE, draws = TRUE) {
   stopifnot(is.Date(today))
   params <- parse_dc_params(params)
-  games <- games_today(date = today)
+  #games <- games_today(date = today)
+  games <- schedule[schedule$Date == today, ]
   if (nrow(games) == 0) {
     return(NULL)
   }
@@ -149,6 +150,8 @@ remainderSeasonDC <- function(nsims = 1e4, cores = NULL, params = NULL, scores =
   last_game_date <- as.Date(max(scores$Date))
   schedule <- add_postponed_to_schedule_end(schedule)
   schedule <- schedule[schedule$Date > last_game_date, ]
+  schedule <- schedule %>%
+    dplyr::arrange(.data$Date, .data$GameID)
 
   # cant regress through playoffs, turn off if not regular season anymore
   if (regress) {
@@ -179,7 +182,8 @@ remainderSeasonDC <- function(nsims = 1e4, cores = NULL, params = NULL, scores =
     preds$Date <- d
     odds_table <- rbind(odds_table, preds)
   }
-  odds_table$Date <- schedule$Date
+
+  #odds_table$Date <- schedule$Date
   odds_table$GameID <- as.numeric(odds_table$GameID)
 
   if (odds) {

@@ -339,8 +339,8 @@ add_postponed_to_schedule_end <- function(schedule = HockeyModel::schedule) {
 
   for (g in schedule[schedule$GameStatus == "Postponed" & schedule$Date < Sys.Date(), ]$GameID) {
     # The model doesn't (currently) account for what games are back to back or anything - so they can all be played on the same (last) date of the schedule
-    # Using the last date of the regualr sseason to not interfere with playoffs
-    schedule[schedule$GameID == g, ]$Date <- max(schedule[schedule$GameType == "R", ]$Date, Sys.Date())
+    # Using the last date of the regular season to not interfere with playoffs
+    schedule[schedule$GameID == g, ]$Date <- max(max(schedule[schedule$GameType == "R", ]$Date), Sys.Date())
   }
   schedule <- schedule %>%
     dplyr::arrange(.data$Date, .data$GameID)
