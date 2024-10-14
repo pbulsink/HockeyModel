@@ -95,18 +95,17 @@ games_today <- function(schedule = HockeyModel::schedule, date = Sys.Date(), all
 
 #' Update schedule using the NHL API
 #'
-#' @param schedule current schedule data
 #' @param save_data whether to write to package data
 #'
 #' @return data frame of schedule, after optionally writing to package data
 #' @export
-updateScheduleAPI <- function(schedule = HockeyModel::schedule, save_data = FALSE) {
+updateScheduleAPI <- function(save_data = FALSE) {
   currentSeason <- getSeason()
   if (is.null(currentSeason)) {
     currentSeason <- getCurrentSeason8()
   }
-  sched <- getNHLSchedule(currentSeason)
-  stopifnot(!is.null(sched))
+  schedule <- getNHLSchedule(currentSeason)
+  stopifnot(!is.null(schedule))
 
   if (save_data && requireNamespace("usethis", quietly = TRUE)) {
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
@@ -224,7 +223,8 @@ load_or_get_nst <- function(gid) {
     nstdf <- naturalstattrick::nst_report_df(
       season = season,
       game_id = game_id
-    )
+    ) %>%
+      dplyr::mutate("game_id" = gid)
     utils::write.table(nstdf,
       file = "~/Documents/natstattrick.csv", append = TRUE,
       row.names = FALSE, col.names = FALSE, sep = ","

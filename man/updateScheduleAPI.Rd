@@ -4,11 +4,9 @@
 \alias{updateScheduleAPI}
 \title{Update schedule using the NHL API}
 \usage{
-updateScheduleAPI(schedule = HockeyModel::schedule, save_data = FALSE)
+updateScheduleAPI(save_data = FALSE)
 }
 \arguments{
-\item{schedule}{current schedule data}
-
 \item{save_data}{whether to write to package data}
 }
 \value{
