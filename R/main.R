@@ -149,7 +149,7 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if (nrow(schedule[schedule$Date >= Sys.Date() & schedule$GameType == "REG", ]) > 0) {
+  if (inRegularSeason()) {
     # Only runs if schedule has regular season games remaining
 
     # rtoot::post_toot(
@@ -318,7 +318,7 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
   }
 
   series <- getAPISeries()
-  if (!is.na(series) & nrow(series[series$Status == "Ongoing", ]) > 0) { # TODO: Watch next spring to see if this goes ok
+  if (!is.na(series) && length(series) > 1 && nrow(series[series$Status == "Ongoing", ]) > 0) { # TODO: Watch next spring to see if this goes ok
     message("Tweeting Series")
     tweetSeries(graphic_dir = graphic_dir, params = params)
     Sys.sleep(delay)

@@ -16,6 +16,7 @@ getNHLSchedule <- function(season = getCurrentSeason8()) {
 
     site <- tryCatch(
       httr2::request(url) %>%
+        httr2::req_cache(tempdir()) %>%
         httr2::req_retry(max_seconds = 120) %>%
         httr2::req_perform() %>%
         httr2::resp_body_string() %>%
@@ -73,6 +74,7 @@ games_today <- function(schedule = HockeyModel::schedule, date = Sys.Date(), all
   url <- paste0("https://api-web.nhle.com/v1/schedule/", as.Date(date, "%Y-%m-%d"))
 
   sched <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%
@@ -430,6 +432,7 @@ getAPISeries <- function(season = getCurrentSeason8()) {
   url <- paste0("https://api-web.nhle.com/v1/playoff-bracket/", substr(getCurrentSeason8(), 5, 8))
 
   series <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_perform() %>%
     httr2::resp_body_string() %>%
@@ -781,6 +784,7 @@ getNumGames <- function(season = getCurrentSeason8()) {
 nhl_boxscore <- function(gid) {
   url <- paste0("https://api-web.nhle.com/v1/gamecenter/", gid, "/boxscore")
   req <- httr2::request(url) %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
     httr2::req_cache(path = "./cache/") %>%
     httr2::req_perform()
