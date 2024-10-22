@@ -98,57 +98,6 @@ ratings <- function(m = HockeyModel::m) {
 }
 
 tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = stats::runif(1, min = 2, max = 6) * 60, schedule = HockeyModel::schedule) {
-  if (!is.null(games_today())) {
-    #   #don't try tweet todays' games if none exist
-    # rtoot::post_toot(
-    #   status = "Predicted odds table for today's #NHL games.",
-    #   media = file.path(graphic_dir, "today_odds_table.png"),
-    #   alt_text = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), ".")
-    # )
-    atrrr::post(
-      text = "Predicted odds table for today's #NHL games.",
-      image = file.path(graphic_dir, "today_odds_table.png"),
-      image_alt = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), ".")
-    )
-
-    # rtoot::post_toot(
-    #   status = "Predicted odds for today's #NHL games.",
-    #   media = file.path(graphic_dir, "today_odds.png"),
-    #   alt_text = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), ".")
-    # )
-    atrrr::post(
-      text = "Predicted odds for today's #NHL games.",
-      image = file.path(graphic_dir, "today_odds.png"),
-      image_alt = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), ".")
-    )
-
-    # rtoot::post_toot(
-    #   status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
-    #   media = file.path(graphic_dir, "current_rating.png"),
-    #   alt_text = paste0("Current team rating graphic for ", Sys.Date(), ".")
-    # )
-
-    atrrr::post(
-      text = paste0("Current team ratings (as of ", Sys.Date(), ")."),
-      image = file.path(graphic_dir, "current_rating.png"),
-      image_alt = paste0("Current team rating graphic for ", Sys.Date(), ".")
-    )
-  } else {
-    # rtoot::post_toot(
-    #   status = paste0("No #NHL games today. Current team ratings (as of ", Sys.Date(), ")."),
-    #   media = file.path(graphic_dir, "current_rating.png"),
-    #   alt_text = paste0("Current team rating graphic for ", Sys.Date(), ".")
-    # )
-    atrrr::post(
-      text = paste0("No #NHL games today. Current team ratings (as of ", Sys.Date(), ")."),
-      image = file.path(graphic_dir, "current_rating.png"),
-      image_alt = paste0("Current team rating graphic for ", Sys.Date(), ".")
-    )
-  }
-
-  message("Delaying ", delay, " seconds to space tweets...")
-  Sys.sleep(delay)
-
   if (inRegularSeason()) {
     # Only runs if schedule has regular season games remaining
 
@@ -234,6 +183,40 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
 
     today_table <- daily_odds_table(params = params, schedule = modelparams$schedule)
     gt::gtsave(today_table, filename = file.path(graphic_dir, "today_odds_table.png"))
+
+    # rtoot::post_toot(
+    #   status = "Predicted odds table for today's #NHL games.",
+    #   media = file.path(graphic_dir, "today_odds_table.png"),
+    #   alt_text = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), ".")
+    # )
+    atrrr::post(
+      text = "Predicted odds table for today's #NHL games.",
+      image = file.path(graphic_dir, "today_odds_table.png"),
+      image_alt = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), ".")
+    )
+
+    # rtoot::post_toot(
+    #   status = "Predicted odds for today's #NHL games.",
+    #   media = file.path(graphic_dir, "today_odds.png"),
+    #   alt_text = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), ".")
+    # )
+    atrrr::post(
+      text = "Predicted odds for today's #NHL games.",
+      image = file.path(graphic_dir, "today_odds.png"),
+      image_alt = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), ".")
+    )
+
+    # rtoot::post_toot(
+    #   status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
+    #   media = file.path(graphic_dir, "current_rating.png"),
+    #   alt_text = paste0("Current team rating graphic for ", Sys.Date(), ".")
+    # )
+
+    atrrr::post(
+      text = paste0("Current team ratings (as of ", Sys.Date(), ")."),
+      image = file.path(graphic_dir, "current_rating.png"),
+      image_alt = paste0("Current team rating graphic for ", Sys.Date(), ".")
+    )
   }
 
   if (inRegularSeason()) {
