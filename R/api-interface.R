@@ -283,7 +283,7 @@ get_xg <- function(gameIds) {
   if (length(gameIds) == 0) {
     return(NA)
   } else if (length(gameIds) == 1) {
-    return(gxg(gameIds))
+    return(as.data.frame(gxg(gameIds)))
   } else {
     gxgs <- data.frame()
     for (i in seq_along(gameIds)) {
