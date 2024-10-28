@@ -309,7 +309,7 @@ plot_pace_by_division <- function(graphic_dir = getOption("HockeyModel.graphics.
 #' @export
 plot_pace_by_team <- function(graphic_dir = getOption("HockeyModel.graphics.path"), subdir = "pace", prediction_dir = getOption("HockeyModel.prediction.path"), scores = HockeyModel::scores) {
   stopifnot(requireNamespace("ggplot2", quietly = TRUE))
-  sc <- scores[scores$Date > as.Date(getSeasonStartDate()), ]
+  sc <- scores[scores$Date >= as.Date(getSeasonStartDate()), ]
 
   teamlist <- unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
 
