@@ -161,8 +161,8 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
     if (sc$gameState == "OFF") {
       dfs <- data.frame(
         "Date" = as.Date(sc$gameDate),
-        "HomeTeam" = paste(sc$homeTeam$placeName[[1]], sc$homeTeam$name[[1]]),
-        "AwayTeam" = paste(sc$awayTeam$placeName[[1]], sc$awayTeam$name[[1]]),
+        "HomeTeam" = paste(sc$homeTeam$placeName[[1]], sc$homeTeam$commonName[[1]]),
+        "AwayTeam" = paste(sc$awayTeam$placeName[[1]], sc$awayTeam$commonName[[1]]),
         "GameID" = sc$id,
         "HomeGoals" = sc$homeTeam$score,
         "AwayGoals" = sc$awayTeam$score,
