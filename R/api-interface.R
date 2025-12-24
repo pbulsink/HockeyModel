@@ -353,6 +353,7 @@ clean_names <- function(sc) {
     sc <- replace(sc, sc == "Utah Utah Hockey Club", "Utah Hockey Club")
     sc <- replace(sc, sc == "Phoenix Coyotes", "Arizona Coyotes")
     sc <- replace(sc, sc == "Arizona Coyotes", "Utah Hockey Club")
+    sc <- replace(sc, sc == "Utah Hockey Club", "Utah Mammoth")
     sc <- replace(sc, sc == "Atlanta Thrashers", "Winnipeg Jets")
     sc <- replace(sc, sc == "Minnesota North Stars", "Dallas Stars")
     sc <- replace(sc, sc == "Quebec Nordiques", "Colorado Avalanche")
@@ -364,6 +365,7 @@ clean_names <- function(sc) {
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Utah Utah Hockey Club", "Utah Hockey Club"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Phoenix Coyotes", "Arizona Coyotes"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Arizona Coyotes", "Utah Hockey Club"),
+          "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Utah Hockey Club", "Utah Mammoth"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Atlanta Thrashers", "Winnipeg Jets"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Minnesota North Stars", "Dallas Stars"),
           "HomeTeam" = replace(.data$HomeTeam, .data$HomeTeam == "Quebec Nordiques", "Colorado Avalanche"),
@@ -376,6 +378,7 @@ clean_names <- function(sc) {
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Utah Utah Hockey Club", "Utah Hockey Club"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Phoenix Coyotes", "Arizona Coyotes"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Arizona Coyotes", "Utah Hockey Club"),
+          "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Utah Hockey Club", "Utah Mammoth"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Atlanta Thrashers", "Winnipeg Jets"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Minnesota North Stars", "Dallas Stars"),
           "AwayTeam" = replace(.data$AwayTeam, .data$AwayTeam == "Quebec Nordiques", "Colorado Avalanche"),
@@ -388,6 +391,7 @@ clean_names <- function(sc) {
           "Team" = replace(.data$Team, .data$Team == "Utah Utah Hockey Club", "Utah Hockey Club"),
           "Team" = replace(.data$Team, .data$Team == "Phoenix Coyotes", "Arizona Coyotes"),
           "Team" = replace(.data$Team, .data$Team == "Arizona Coyotes", "Utah Hockey Club"),
+          "Team" = replace(.data$Team, .data$Team == "Utah Hockey Club", "Utah Mammoth"),
           "Team" = replace(.data$Team, .data$Team == "Atlanta Thrashers", "Winnipeg Jets"),
           "Team" = replace(.data$Team, .data$Team == "Minnesota North Stars", "Dallas Stars"),
           "Team" = replace(.data$Team, .data$Team == "Quebec Nordiques", "Colorado Avalanche"),
@@ -400,6 +404,7 @@ clean_names <- function(sc) {
           "name" = replace(.data$name, .data$name == "Utah Utah Hockey Club", "Utah Hockey Club"),
           "name" = replace(.data$name, .data$name == "Phoenix Coyotes", "Arizona Coyotes"),
           "name" = replace(.data$name, .data$name == "Arizona Coyotes", "Utah Hockey Club"),
+          "name" = replace(.data$name, .data$name == "Utah Hockey Club", "Utah Mammoth"),
           "name" = replace(.data$name, .data$name == "Atlanta Thrashers", "Winnipeg Jets"),
           "name" = replace(.data$name, .data$name == "Minnesota North Stars", "Dallas Stars"),
           "name" = replace(.data$name, .data$name == "Quebec Nordiques", "Colorado Avalanche"),

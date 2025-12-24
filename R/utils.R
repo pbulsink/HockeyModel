@@ -256,7 +256,7 @@ formatPredsForHockeyVisContest <- function(predictions, candyType = "Fuzzy Peach
     "'STL':(", round(predictions[predictions$Team == "St. Louis Blues", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "St. Louis Blues", ]$sdPoints, 2), "), ",
     "'T.B':(", round(predictions[predictions$Team == "Tampa Bay Lightning", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Tampa Bay Lightning", ]$sdPoints, 2), "), ",
     "'TOR':(", round(predictions[predictions$Team == "Toronto Maple Leafs", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Toronto Maple Leafs", ]$sdPoints, 2), "), ",
-    "'UTA':(", round(predictions[predictions$Team == "Utah Hockey Club", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Utah Hockey Club", ]$sdPoints, 2), "), ",
+    "'UTA':(", round(predictions[predictions$Team == "Utah Mammoth", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Utah Hockey Club", ]$sdPoints, 2), "), ",
     "'VAN':(", round(predictions[predictions$Team == "Vancouver Canucks", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Vancouver Canucks", ]$sdPoints, 2), "), ",
     "'VGK':(", round(predictions[predictions$Team == "Vegas Golden Knights", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Vegas Golden Knights", ]$sdPoints, 2), "), ",
     "'WPG':(", round(predictions[predictions$Team == "Winnipeg Jets", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Winnipeg Jets", ]$sdPoints, 2), "), ",
