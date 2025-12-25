@@ -216,6 +216,7 @@ load_or_get_nst <- function(gid) {
   game_id <- as.numeric(substr(gid, 5, 10))
 
   season <- paste0(season, season + 1)
+  season <- as.numeric(season)
 
   if (system2("grep", paste0('-l "', gid, '" ', "~/Documents/natstattrick.csv"), stdout = FALSE) == 0) {
     nstall <- utils::read.csv("~/Documents/natstattrick.csv")
@@ -791,7 +792,7 @@ nhl_boxscore <- function(gid) {
   req <- httr2::request(url) %>%
     httr2::req_cache(tempdir()) %>%
     httr2::req_retry(max_seconds = 120) %>%
-    httr2::req_cache(path = "./cache/") %>%
+    httr2::req_cache(tempdir()) %>%
     httr2::req_perform()
   req <- jsonlite::fromJSON(httr2::resp_body_string(req))
   return(req)
