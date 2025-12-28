@@ -180,6 +180,7 @@ getNHLScores <- function(gameIDs = NULL, schedule = HockeyModel::schedule, progr
       pb$tick()
     }
   }
+  message("Now getting natural stat trick xG results")
 
   gameIDs <- gameIDs[!(gameIDs %in% dropped_gid)]
 
@@ -226,7 +227,8 @@ load_or_get_nst <- function(gid) {
     nstdf <- naturalstattrick::nst_report_df(
       season = season,
       game_id = game_id
-    ) %>%
+    )
+    nstdf <- nstdf %>%
       dplyr::mutate("game_id" = gid)
     utils::write.table(nstdf,
       file = "~/Documents/natstattrick.csv", append = TRUE,
