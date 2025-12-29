@@ -333,7 +333,7 @@ updateScoresAPI <- function(scores = HockeyModel::scores, schedule = HockeyModel
   } else {
     message("Scores are updated to today's date already.")
   }
-  return(scores)
+  return(unique(scores))
 }
 
 updateScoresAPI_byGameID <- function(gameids, save_data = FALSE) {
