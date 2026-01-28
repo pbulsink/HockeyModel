@@ -204,7 +204,6 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
       )
     )
 
-
     # rtoot::post_toot(
     #   status = "Predicted odds for today's #NHL games.",
     #   media = file.path(graphic_dir, "today_odds.png"),
@@ -218,6 +217,14 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
       )
     )
 
+    rating <- ratings(params$m)
+    # save to files.
+    grDevices::png(filename = file.path(graphic_dir, "current_rating.png"), width = 11, height = 8.5, units = "in", res = 300)
+    print(rating)
+    Sys.sleep(5)
+    while (grDevices::dev.cur() != 1) {
+      grDevices::dev.off()
+    }
 
     # rtoot::post_toot(
     #   status = paste0("Current team ratings (as of ", Sys.Date(), ")."),
