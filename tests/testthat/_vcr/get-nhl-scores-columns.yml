@@ -1,0 +1,35 @@
+http_interactions:
+- request:
+    method: GET
+    uri: https://api-web.nhle.com/v1/gamecenter/20242025/boxscore
+  response:
+    status: 404
+    headers:
+      date: Sat, 11 Apr 2026 12:00:44 GMT
+      content-type: text/html;charset=iso-8859-1
+      content-encoding: gzip
+      cache-control: must-revalidate,no-cache,no-store
+      cteonnt-length: '376'
+      vary: accept-encoding
+      cf-cache-status: MISS
+      server: cloudflare
+      cf-ray: 9ea9d5275e4f90e5-YYZ
+    body:
+      string: |
+        <html>
+        <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1"/>
+        <title>Error 404 Not Found</title>
+        </head>
+        <body>
+        <h2>HTTP ERROR 404 Not Found</h2>
+        <table>
+        <tr><th>URI:</th><td>https://api-web.nhle.com/v1/gamecenter/20242025/boxscore</td></tr>
+        <tr><th>STATUS:</th><td>404</td></tr>
+        <tr><th>MESSAGE:</th><td>Not Found</td></tr>
+        </table>
+
+        </body>
+        </html>
+  recorded_at: 2026-04-11 12:00:44
+recorded_with: VCR-vcr/2.0.0
