@@ -36,15 +36,20 @@ test_that("Season from Game Date works", {
 
 test_that("Past points function works", {
   # Just test that the function runs without error
-  sc <- scores[scores$Date > as.Date("2017-11-01") & scores$Date < as.Date("2017-12-01"), ]
+  sc <- scores[
+    scores$Date > as.Date("2017-11-01") & scores$Date < as.Date("2017-12-01"),
+  ]
   if (nrow(sc) > 0) {
-    tryCatch({
-      p <- HockeyModel:::historicalPoints(sc = sc)
-      expect_true(is.data.frame(p))
-    }, error = function(e) {
-      # Function has type mismatch in buildStats - that's a separate issue
-      skip("historicalPoints has type issues in buildStats")
-    })
+    tryCatch(
+      {
+        p <- HockeyModel:::historicalPoints(sc = sc)
+        expect_true(is.data.frame(p))
+      },
+      error = function(e) {
+        # Function has type mismatch in buildStats - that's a separate issue
+        skip("historicalPoints has type issues in buildStats")
+      }
+    )
   }
 })
 
@@ -209,7 +214,10 @@ test_that("Season Validates", {
 })
 
 test_that("Draws Normalize", {
-  expect_equal(extraTimeSolver(0.45, 0.35, 0.2), c(0.45, 0.1018125, 0.0981875, 0.35))
+  expect_equal(
+    extraTimeSolver(0.45, 0.35, 0.2),
+    c(0.45, 0.1018125, 0.0981875, 0.35)
+  )
 })
 
 # ============ mutate_cond tests ============
@@ -226,7 +234,7 @@ test_that("mutate_cond preserves non-matching rows", {
 })
 
 test_that("mutate_cond works with dplyr", {
-  df <- data.frame(x = c(1, 2, 3), y = c(4, 5, 6)) %>%
+  df <- data.frame(x = c(1, 2, 3), y = c(4, 5, 6)) |>
     mutate_cond(x >= 2, y = y + 10)
   expect_equal(df$y, c(4, 15, 16))
 })
@@ -257,7 +265,10 @@ test_that("colourDelta calculates correctly", {
 })
 
 test_that("colourDelta is symmetric", {
-  expect_equal(colourDelta("#FF0000", "#00FF00"), colourDelta("#00FF00", "#FF0000"))
+  expect_equal(
+    colourDelta("#FF0000", "#00FF00"),
+    colourDelta("#00FF00", "#FF0000")
+  )
 })
 
 # ============ getSeason tests ============

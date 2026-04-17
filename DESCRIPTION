@@ -22,7 +22,6 @@ Imports:
     naturalstattrick,
     httr2,
     atrrr,
-    rtoot,
     jsonlite,
     stbl (>= 0.3.0)
 Remotes: pbulsink/naturalstattrick
@@ -47,5 +46,6 @@ Suggests:
     devtools,
     usethis,
     doSNOW,
+    rtoot,
     withr
 VignetteBuilder: knitr

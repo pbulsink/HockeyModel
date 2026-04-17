@@ -50,7 +50,6 @@ One exported function per file: `R/{function_name}.R` (e.g. `fetch_records()` �
 - Always run `air format .` after generating code.
 - Use the base pipe operator (`|>`) not the magrittr pipe (`|>`).
 - Use `\() ...` for single-line anonymous functions. For all other cases, use `function() {...}`.
-- Always use full words (`TRUE` or `FALSE`) instead of single letter abbreviations (`T` or `F`).
 
 ## Function design
 
@@ -134,42 +133,9 @@ summarize_data <- function(x) {
 
 ## Input validation
 
-Use `stbl::to_*()` and `stbl::stabilize_*()` to validate parameters. These functions coerce when safe and fail with clear error messages when not.
-
-- **`to_*()`** — simple type coercion. Use when you need to ensure a parameter is the right type but don't need additional constraints.
-- **`stabilize_*()`** — coercion plus content validation (regex, ranges, etc.). Use when simple type coercion isn't enough.
+Perform input validation (check type, expected values, etc.). Produce error messages with cli::cli_abort() as required.
 
 **Validate in the function that uses the parameter**, not in a caller that passes it through. This preserves R's lazy evaluation — if a parameter is never used on a code path, it is never evaluated or validated.
-
-```r
-# Good — validation happens where the parameter is used
-build_report <- function(data, title, page_size) {
-  data <- .clean_data(data)
-  summary <- .compute_summary(data, page_size)
-  .write_report(summary, title)
-}
-
-.compute_summary <- function(data, page_size, call = rlang::caller_env()) {
-  page_size <- stbl::to_int_scalar(page_size, call = call)
-  ...
-}
-
-.write_report <- function(summary, title, call = rlang::caller_env()) {
-  title <- stbl::to_chr_scalar(title, call = call)
-  ...
-}
-```
-
-```r
-# Bad — validates everything eagerly, breaking lazy evaluation
-build_report <- function(data, title, page_size) {
-  title <- stbl::to_chr_scalar(title)
-  page_size <- stbl::to_int_scalar(page_size)
-  ...
-}
-```
-
-When `call` is available (because the function accepts it), always pass it to `stbl` calls so error messages point to the user's call frame.
 
 ## Internal vs. exported functions
 
@@ -187,17 +153,7 @@ Internal helpers use a dot prefix (e.g. `.parse_response()`).
 
 ## Error handling
 
-Use `.pkg_abort()` (defined in `R/aaa-conditions.R`) rather than calling `cli::cli_abort()` directly. This wraps `stbl::pkg_abort()` and ensures consistent error class formatting:
-
-```r
-.pkg_abort(
-  "Column {.field {name}} not found in {.arg data}.",
-  "column_not_found",
-  call = call
-)
-```
-
-Always pass `call = call` (or `call = rlang::caller_env()`) so errors point to the user's call frame, not an internal helper.
+When writing error text be sure to include the function: For example, `cli::cli_abort("Error in pkg::foo(). Parameter should be integer")`
 
 ## Common package mistakes
 
