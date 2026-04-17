@@ -40,7 +40,7 @@ updateDC <- function(
   beta <- params$beta
   eta <- params$eta
   k <- params$k
-  if (save_data & requireNamespace("usethis", quietly = TRUE)) {
+  if (save_data && requireNamespace("usethis", quietly = TRUE)) {
     suppressMessages(usethis::use_data(m, rho, beta, eta, k, overwrite = TRUE))
   }
   return(list("m" = m, "rho" = rho, "beta" = beta, "eta" = eta, "k" = k))
@@ -87,7 +87,7 @@ todayDC <- function(
   if (include_xG) {
     preds$Away_xG <- preds$Home_xG <- 0
   }
-  for (i in 1:nrow(preds)) {
+  for (i in seq_along(nrow(preds))) {
     p <- DCPredict(
       preds$HomeTeam[[i]],
       preds$AwayTeam[[i]],
@@ -249,7 +249,7 @@ remainderSeasonDC <- function(
     odds_table$mu <- NA
     odds_table$lambda <- NA
 
-    for (g in 1:nrow(odds_table)) {
+    for (g in seq_len(nrow(odds_table))) {
       d <- as.Date(odds_table[g, "Date"], origin = "1970-01-01")
       # Expected goals home
       lambda <- try(
@@ -325,13 +325,13 @@ remainderSeasonDC <- function(
 }
 
 tau_singular <- function(xx, yy, lambda, mu, rho) {
-  if (xx == 0 & yy == 0) {
+  if (xx == 0 && yy == 0) {
     return(1 - (lambda * mu * rho))
-  } else if (xx == 0 & yy == 1) {
+  } else if (xx == 0 && yy == 1) {
     return(1 + (lambda * rho))
-  } else if (xx == 1 & yy == 0) {
+  } else if (xx == 1 && yy == 0) {
     return(1 + (mu * rho))
-  } else if (xx == 1 & yy == 1) {
+  } else if (xx == 1 && yy == 1) {
     return(1 - rho)
   } else {
     return(1)
@@ -427,9 +427,9 @@ getRho <- function(m = HockeyModel::m, scores = HockeyModel::scores) {
   }
   scores <- scores[scores$GameID %in% unique(m$data$GameID), ]
   expected <- stats::fitted(m)
-  home.expected <- as.vector(expected[1:nrow(scores)])
+  home.expected <- as.vector(expected[seq_len(nrow(scores))])
   away.expected <- as.vector(expected[(nrow(scores) + 1):(nrow(scores) * 2)])
-  weights <- m$data$Weight[1:nrow(scores)]
+  weights <- m$data$Weight[seq_len(nrow(scores))]
 
   DCoptimRhoFn.fast <- function(par) {
     rho <- par[1]
@@ -481,8 +481,8 @@ getWeibullParams <- function(
   scores <- scores |>
     dplyr::filter(.data$GameID %in% unique(m$data$GameID)) |>
     dplyr::mutate(
-      "weight" = m$data$Weight[1:dplyr::n()],
-      "mu" = stats::fitted(m)[1:dplyr::n()],
+      "weight" = m$data$Weight[seq_len(dplyr::n())],
+      "mu" = stats::fitted(m)[seq_len(dplyr::n())],
       "lambda" = stats::fitted(m)[(dplyr::n() + 1):(dplyr::n() * 2)]
     ) |>
     dplyr::mutate(
@@ -681,7 +681,7 @@ dcProbMatrix <- function(
   # Expected goals away
   mu <- as.numeric(xg$away)
 
-  if (!is.null(expected_mean) & !is.null(season_percent)) {
+  if (!is.null(expected_mean) && !is.null(season_percent)) {
     lambda <- lambda *
       (1 - 1 / 3 * season_percent) +
       expected_mean * (1 / 3 * season_percent)
@@ -800,7 +800,7 @@ dcSample <- function(
   pm2[pm2 < 0] <- 1e-8
 
   goals <- as.vector(arrayInd(
-    sample(1:length(pm2), size = 1, prob = pm2),
+    sample(seq_along(pm2), size = 1, prob = pm2),
     .dim = dim(pm2)
   )) -
     1
@@ -1013,7 +1013,7 @@ DCPredictErrorRecover <- function(
     homeice <- 0
   }
 
-  if (!(team %in% teamlist) & !(opponent %in% opponentlist)) {
+  if (!(team %in% teamlist) && !(opponent %in% opponentlist)) {
     lambda <- NA
   } else if (!(team %in% teamlist)) {
     teamp <- min(m$coefficients[grep("Team", names(m$coefficients))]) # lowest goals scored for new team
@@ -1107,7 +1107,7 @@ dcPredictMultipleDays <- function(
       }
     )
 
-    if (!is.null(preds) & "summary_results" %in% names(preds)) {
+    if (!is.null(preds) && "summary_results" %in% names(preds)) {
       message("Saving Prediction file...")
       saveRDS(
         preds$summary_results,
@@ -1135,7 +1135,7 @@ dcPredictMultipleDays <- function(
           return(NULL)
         }
       )
-      if (!is.null(preds) & "summary_results" %in% names(preds)) {
+      if (!is.null(preds) && "summary_results" %in% names(preds)) {
         message("Saving Prediction file...")
         saveRDS(
           preds$summary_results,

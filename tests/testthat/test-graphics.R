@@ -56,8 +56,8 @@ test_that("Single Game xG plot OK", {
 
 test_that("Predicted Points plot OK", {
   preds <- HockeyModel::example_raw_predictions
-  p <- suppressWarnings(plot_point_likelihood(preds = preds, savefiles = F))
-  for (i in 1:length(p)) {
+  p <- suppressWarnings(plot_point_likelihood(preds = preds, savefiles = FALSE))
+  for (i in seq_along(length(p))) {
     expect_true(ggplot2::is.ggplot(p[[i]]))
     expect_identical(p[[i]]$labels$y, "")
     expect_identical(p[[i]]$labels$x, "Predicted Point Likelyhood")

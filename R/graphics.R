@@ -361,7 +361,7 @@ plot_pace_by_division <- function(
     teamscores[teamscores$AwayTeam == team, "Venue"] <- "Away"
     teamscores$Points <- ceiling(2 * teamscores$Result)
     teamscores$cPoints <- cumsum(teamscores$Points)
-    teamscores$GameNum <- 1:nrow(teamscores)
+    teamscores$GameNum <- seq_len(nrow(teamscores))
     teamscores$xPoints <- teamscores$GameNum *
       (p[p$Team == team, ]$meanPoints / ngames)
     teamscores$xDiff <- teamscores$cPoints - teamscores$xPoints
@@ -548,7 +548,7 @@ plot_pace_by_team <- function(
     teamscores[teamscores$AwayTeam == team, "Venue"] <- "Away"
     teamscores$Points <- ceiling(2 * teamscores$Result)
     teamscores$cPoints <- cumsum(teamscores$Points)
-    teamscores$GameNum <- 1:nrow(teamscores)
+    teamscores$GameNum <- seq_len(nrow(teamscores))
     ngames <- nrow(teamscores)
     cp <- utils::tail(teamscores$cPoints, 1)
 
@@ -674,7 +674,7 @@ plot_odds_today <- function(
   todayodds$HomeWinOT <- todayodds$AwayWinOT <- 0
 
   # add odds for each team in OT/SO
-  for (g in 1:nrow(todayodds)) {
+  for (g in seq_len(nrow(todayodds))) {
     todayodds$HomeWinOT[g] <- extraTimeSolver(
       home_win = todayodds$HomeWin[g],
       away_win = todayodds$AwayWin[g],
@@ -714,7 +714,7 @@ plot_odds_today <- function(
 
   melted$alpha <- 1
   melted$colour <- ""
-  for (i in 1:nrow(melted)) {
+  for (i in seq_len(nrow(melted))) {
     melted[i, ]$alpha <- ifelse(
       melted[i, ]$variable %in% c("HomeWin", "AwayWin"),
       yes = 1,
@@ -876,7 +876,7 @@ plot_playoff_series_odds <- function(
   # melted$HomeTeam <- factor(x = melted$HomeTeam, levels = melted$HomeTeam[1:(length(melted$HomeTeam)/2)], ordered = TRUE)
   melted$colour <- ""
 
-  for (i in 1:nrow(melted)) {
+  for (i in seq_len(nrow(melted))) {
     tc <- getTeamColours(
       home = melted[i, ]$HomeTeam,
       away = melted[i, ]$AwayTeam
@@ -1249,7 +1249,7 @@ plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
   }
   # Note: invert defence because positive is better defence makes more sense
   team_params <- data.frame(
-    Attack = as.numeric(m$coefficients[1:length(teamlist)]),
+    Attack = as.numeric(m$coefficients[seq_along(teamlist)]),
     Defence = c(
       0,
       -m$coefficients[(length(teamlist) + 1):(length(teamlist) * 2 - 1)]
@@ -1491,7 +1491,7 @@ format_playoff_odds <- function(
     gt::fmt_percent(columns = 4:8, drop_trailing_zeros = FALSE) |>
     gt::tab_options(heading.align = "left")
 
-  for (i in 1:nrow(playoff_odds)) {
+  for (i in seq_len(nrow(playoff_odds))) {
     playoff_odds_gt <- playoff_odds_gt |>
       gt::tab_style(
         style = gt::cell_fill(
@@ -1556,7 +1556,7 @@ daily_odds_table <- function(
   todayodds$HomexG <- NA
   todayodds$AwayxG <- NA
 
-  for (g in 1:nrow(todayodds)) {
+  for (g in seq_len(nrow(todayodds))) {
     # Expected goals home
     lambda <- try(
       stats::predict(
@@ -1675,7 +1675,7 @@ daily_odds_table <- function(
       table.border.top.color = "white"
     )
 
-  for (i in 1:nrow(todayodds)) {
+  for (i in seq_len(nrow(todayodds))) {
     todayodds_gt <- todayodds_gt |>
       gt::tab_style(
         style = gt::cell_fill(

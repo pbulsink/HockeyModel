@@ -32,7 +32,7 @@ getNHLSchedule <- function(season = getCurrentSeason8()) {
       }
     )
 
-    if (!is.null(site) & !is.null(site$games) & length(site$games) > 0) {
+    if (!is.null(site) && !is.null(site$games) && length(site$games) > 0) {
       sg <- site$games |>
         dplyr::filter(.data$gameType > 1)
 
@@ -320,7 +320,6 @@ get_xg <- function(gameIds) {
       return(list("GameID" = gid, "HomexG" = NA, "AwayxG" = NA))
     }
 
-    # xG<-BulsinkBxG::get_game_xg(gid)
     nst_report <- load_or_get_nst(gid)
 
     return(list(
@@ -346,8 +345,6 @@ get_xg <- function(gameIds) {
     ))
   }
 
-  # v_gxg <- Vectorize(gxg, SIMPLIFY = FALSE)
-
   if (length(gameIds) == 0) {
     return(NA)
   } else if (length(gameIds) == 1) {
@@ -357,8 +354,6 @@ get_xg <- function(gameIds) {
     for (i in seq_along(gameIds)) {
       gxgs <- dplyr::bind_rows(gxgs, gxg(gameIds[i]))
     }
-    # gxgs <- v_gxg(gid = gameIds)
-    # gxgs <- dplyr::bind_rows(gxgs)
 
     return(gxgs)
   }
@@ -658,7 +653,6 @@ getAPISeries <- function(season = getCurrentSeason8()) {
 
   if (length(series) == 0) {
     return(data.frame())
-    # stop('No Series Data Available')
   }
 
   playoffSeries <- series |>
@@ -676,7 +670,6 @@ getAPISeries <- function(season = getCurrentSeason8()) {
 
   if (nrow(playoffSeries) == 0) {
     return(data.frame())
-    # stop('No Series Data Available')
   }
 
   playoffSeries <- clean_names(playoffSeries)

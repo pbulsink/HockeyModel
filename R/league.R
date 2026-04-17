@@ -221,7 +221,7 @@ simulateSeasonParallel <- function(
     odds_table$Draw
   )[, 3]
 
-  if (cores > 1 & requireNamespace("parallel", quietly = TRUE)) {
+  if (cores > 1 && requireNamespace("parallel", quietly = TRUE)) {
     `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK
     cl <- parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
@@ -290,7 +290,7 @@ simulateSeasonParallel <- function(
     parallel::stopCluster(cl)
     gc(verbose = FALSE)
   } else {
-    if (cores > 1 & !requireNamespace("parallel", quietly = TRUE)) {
+    if (cores > 1 && !requireNamespace("parallel", quietly = TRUE)) {
       message(
         "Parallel processing is only available if the parallels package is installed."
       )
@@ -431,7 +431,7 @@ loopless_sim <- function(
   schedule <- add_postponed_to_schedule_end(schedule)
 
   if (
-    is.null(odds_table) |
+    is.null(odds_table) ||
       !(all(
         c(
           "HomeTeam",
@@ -486,7 +486,7 @@ loopless_sim <- function(
 
   rm(oddsseason, season_sofar, odds_table)
 
-  if (cores == 1 | !requireNamespace("parallel", quietly = TRUE)) {
+  if (cores == 1 || !requireNamespace("parallel", quietly = TRUE)) {
     if (cores > 1) {
       message("Multi-core processing requires the parallel package.")
     }
@@ -819,7 +819,7 @@ playoffSeriesOdds <- function(
   if (is.null(ngames)) {
     ngames <- 7
   }
-  if (is.null(game_home) & ngames == 7) {
+  if (is.null(game_home) && ngames == 7) {
     game_home <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE)
   } else {
     game_home <- rep(c(TRUE, FALSE), as.integer(ngames + 1 / 2))[1:ngames]
@@ -827,20 +827,20 @@ playoffSeriesOdds <- function(
 
   game_to <- ceiling(ngames / 2)
 
-  if (length(home_odds) > 1 | length(away_odds) > 1) {
+  if (length(home_odds) > 1 || length(away_odds) > 1) {
     stop("handle only one series at a time")
   }
   p1_home <- home_odds
   p1_road <- away_odds
 
-  if (p1_home < 0 | p1_home > 1 | p1_road < 0 | p1_road > 1) {
+  if (p1_home < 0 || p1_home > 1 || p1_road < 0 || p1_road > 1) {
     stop("impossible odds")
   }
 
   home_win <- as.integer(home_win)
   away_win <- as.integer(away_win)
 
-  if (home_win < 0 | away_win < 0) {
+  if (home_win < 0 || away_win < 0) {
     stop("negative number of wins impossible")
   }
   if (home_win >= game_to) {
@@ -1163,7 +1163,7 @@ single_series_solver <- function(
   }
   series <- currentSeries[currentSeries$SeriesID == series_number, ]
   if (nrow(series[series$Status == "Complete", ]) == 1) {
-    if (series$HomeTeam != homeTeam | series$AwayTeam != awayTeam) {
+    if (series$HomeTeam != homeTeam || series$AwayTeam != awayTeam) {
       warning(
         "Team Mismatch series ",
         series_number,
@@ -1189,7 +1189,7 @@ single_series_solver <- function(
     ]) ==
       1
   ) {
-    if (series$HomeTeam != homeTeam | series$AwayTeam != awayTeam) {
+    if (series$HomeTeam != homeTeam || series$AwayTeam != awayTeam) {
       warning(
         "Team Mismatch series ",
         series_number,
@@ -1361,7 +1361,7 @@ playoffSolverEngine <- function(
       }
       if (!("p1" %in% names(eastseries))) {
         eastseries["p1"] <- er[
-          sample(1:nrow(er), size = 1, prob = er$p_rank1),
+          sample(seq_len(nrow(er)), size = 1, prob = er$p_rank1),
         ]$Team
         er <- er[er$Team != eastseries["p1"], ]
         p1div <- getTeamDivisions(eastseries["p1"])
@@ -1370,13 +1370,13 @@ playoffSolverEngine <- function(
       }
       if (!("p2" %in% names(eastseries))) {
         eastseries["p2"] <- er[er$Div == p1div, ]$Team[sample(
-          1:nrow(er[er$Div == p1div, ]),
+          seq_len(nrow(er[er$Div == p1div, ])),
           size = 1,
           prob = er[er$Div == p1div, ]$p_rank_34
         )]
         er <- er[er$Team != eastseries["p2"], ]
         eastseries["p7"] <- er[er$Div == p1div, ]$Team[sample(
-          1:nrow(er[er$Div == p1div, ]),
+          seq_len(nrow(er[er$Div == p1div, ])),
           size = 1,
           prob = er[er$Div == p1div, ]$p_rank_56
         )]
@@ -1384,7 +1384,7 @@ playoffSolverEngine <- function(
       }
       if (!("p3" %in% names(eastseries))) {
         eastseries["p3"] <- er[er$Div != p1div, ]$Team[sample(
-          1:nrow(er[er$Div != p1div, ]),
+          seq_len(nrow(er[er$Div != p1div, ])),
           size = 1,
           prob = er[er$Div != p1div, ]$p_rank2
         )]
@@ -1392,13 +1392,13 @@ playoffSolverEngine <- function(
       }
       if (!("p4" %in% names(eastseries))) {
         eastseries["p4"] <- er[er$Div != p1div, ]$Team[sample(
-          1:nrow(er[er$Div != p1div, ]),
+          seq_len(nrow(er[er$Div != p1div, ])),
           size = 1,
           prob = er[er$Div != p1div, ]$p_rank_34
         )]
         er <- er[er$Team != eastseries["p4"], ]
         eastseries["p5"] <- er[er$Div != p1div, ]$Team[sample(
-          1:nrow(er[er$Div != p1div, ]),
+          seq_len(nrow(er[er$Div != p1div, ])),
           size = 1,
           prob = er[er$Div != p1div, ]$p_rank_56
         )]
@@ -1407,14 +1407,14 @@ playoffSolverEngine <- function(
 
       if (!("p6" %in% names(eastseries))) {
         eastseries["p6"] <- er[
-          sample(1:nrow(er), size = 1, prob = er$p_rank7),
+          sample(seq_len(nrow(er)), size = 1, prob = er$p_rank7),
         ]$Team
         er <- er[er$Team != eastseries["p6"], ]
       }
 
       if (!("p8" %in% names(eastseries))) {
         eastseries["p8"] <- er[
-          sample(1:nrow(er), size = 1, prob = er$p_rank8),
+          sample(seq_len(nrow(er)), size = 1, prob = er$p_rank8),
         ]$Team
         # er<-er[er$Team != eastseries['p8'],]
       }
@@ -1538,7 +1538,7 @@ playoffSolverEngine <- function(
       }
       if (!("p1" %in% names(westseries))) {
         westseries["p1"] <- wr[
-          sample(1:nrow(wr), size = 1, prob = wr$p_rank1),
+          sample(seq_len(nrow(wr)), size = 1, prob = wr$p_rank1),
         ]$Team
         wr <- wr[wr$Team != westseries["p1"], ]
         p1div <- getTeamDivisions(westseries["p1"])
@@ -1547,13 +1547,13 @@ playoffSolverEngine <- function(
       }
       if (!("p2" %in% names(westseries))) {
         westseries["p2"] <- wr[wr$Div == p1div, ]$Team[sample(
-          1:nrow(wr[wr$Div == p1div, ]),
+          seq_len(nrow(wr[wr$Div == p1div, ])),
           size = 1,
           prob = wr[wr$Div == p1div, ]$p_rank_34
         )]
         wr <- wr[wr$Team != westseries["p2"], ]
         westseries["p7"] <- wr[wr$Div == p1div, ]$Team[sample(
-          1:nrow(wr[wr$Div == p1div, ]),
+          seq_len(nrow(wr[wr$Div == p1div, ])),
           size = 1,
           prob = wr[wr$Div == p1div, ]$p_rank_56
         )]
@@ -1561,7 +1561,7 @@ playoffSolverEngine <- function(
       }
       if (!("p3" %in% names(westseries))) {
         westseries["p3"] <- wr[wr$Div != p1div, ]$Team[sample(
-          1:nrow(wr[wr$Div != p1div, ]),
+          seq_len(nrow(wr[wr$Div != p1div, ])),
           size = 1,
           prob = wr[wr$Div != p1div, ]$p_rank2
         )]
@@ -1569,13 +1569,13 @@ playoffSolverEngine <- function(
       }
       if (!("p4" %in% names(westseries))) {
         westseries["p4"] <- wr[wr$Div != p1div, ]$Team[sample(
-          1:nrow(wr[wr$Div != p1div, ]),
+          seq_len(nrow(wr[wr$Div != p1div, ])),
           size = 1,
           prob = wr[wr$Div != p1div, ]$p_rank_34
         )]
         wr <- wr[wr$Team != westseries["p4"], ]
         westseries["p5"] <- wr[wr$Div != p1div, ]$Team[sample(
-          1:nrow(wr[wr$Div != p1div, ]),
+          seq_len(nrow(wr[wr$Div != p1div, ])),
           size = 1,
           prob = wr[wr$Div != p1div, ]$p_rank_56
         )]
@@ -1584,14 +1584,14 @@ playoffSolverEngine <- function(
 
       if (!("p6" %in% names(westseries))) {
         westseries["p6"] <- wr[
-          sample(1:nrow(wr), size = 1, prob = wr$p_rank7),
+          sample(seq_len(nrow(wr)), size = 1, prob = wr$p_rank7),
         ]$Team
         wr <- wr[wr$Team != westseries["p6"], ]
       }
 
       if (!("p8" %in% names(westseries))) {
         westseries["p8"] <- wr[
-          sample(1:nrow(wr), size = 1, prob = wr$p_rank8),
+          sample(seq_len(nrow(wr)), size = 1, prob = wr$p_rank8),
         ]$Team
         # wr<-wr[wr$Team != westseries['p8'],]
       }
@@ -2254,7 +2254,7 @@ getSeriesOdds <- function(params = NULL) {
   series$AwaySeed <- NULL
   series$SeriesID <- NULL
   series$HomeOdds <- 0
-  for (i in 1:nrow(series)) {
+  for (i in seq_len(nrow(series))) {
     series[i, ]$HomeOdds <- playoffWin(
       series[i, ]$HomeTeam,
       series[i, ]$AwayTeam,

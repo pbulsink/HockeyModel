@@ -72,7 +72,8 @@ historicalPoints <- function(sc) {
 
 
 #' Conditional Mutate
-#' @description Mutate at condition. useful in dplyr pipes. From StackOverflow https://stackoverflow.com/a/34096575/3933405
+#' @description Mutate at condition. useful in dplyr pipes.
+#' From StackOverflow https://stackoverflow.com/a/34096575/3933405
 #'
 #' @param .data Data passed in
 #' @param condition Condition whether to peform mutate
@@ -89,7 +90,8 @@ mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
 #' Log Loss Calculator
 #'
 #' @param predicted Predicted odds of an event occuring
-#' @param actual If the event occured (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0
+#' @param actual If the event occured (0 or 1), or model results
+#' in 0, 0.25, 0.4, 0.6, 0.75, 1.0
 #'
 #' @return a log loss value for the event(s)
 #' @export
@@ -571,7 +573,7 @@ parseCores <- function(cores) {
         "Parallel package must be installed to use multi-core processing."
       )
       cores <- 1
-    } else if (!is.numeric(cores) | cores %% 1 != 0 | cores <= 0) {
+    } else if (!is.numeric(cores) || cores %% 1 != 0 || cores <= 0) {
       message("Cores must be a integer number")
       cores <- 1
     } else if (cores > parallel::detectCores()) {

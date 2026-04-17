@@ -30,7 +30,7 @@ tune_dc_weight <- function(xi = 0.003, upsilon = 150) {
   doSNOW::registerDoSNOW(cl)
   `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK
   `%do%` <- foreach::`%do%`
-  r <- foreach::foreach(i = 1:length(unique(schedule$Date)), .combine = "rbind", .packages = c("HockeyModel")) %dopar% (
+  r <- foreach::foreach(i = seq_along(length(unique(schedule$Date))), .combine = "rbind", .packages = c("HockeyModel")) %dopar% (
     get_game_odds(unique(schedule$Date)[i], schedule, scores, xi, upsilon)
   )
   parallel::stopCluster(cl)

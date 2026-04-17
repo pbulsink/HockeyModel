@@ -22,8 +22,7 @@ Imports:
     naturalstattrick,
     httr2,
     atrrr,
-    jsonlite,
-    stbl (>= 0.3.0)
+    jsonlite
 Remotes: pbulsink/naturalstattrick
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
