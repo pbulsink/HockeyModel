@@ -42,7 +42,11 @@ normalizeOdds <- function(odds) {
 #'
 #' @return a tibble of season points for each team that season(s)
 historicalPoints <- function(sc) {
-  points <- tibble::tibble(Team = character(), Season = character(), Points = integer())
+  points <- tibble::tibble(
+    Team = character(),
+    Season = character(),
+    Points = integer()
+  )
 
   sc$Season <- getSeason(sc$Date)
 
@@ -57,7 +61,10 @@ historicalPoints <- function(sc) {
     b <- buildStats(s)
     b$Season <- i
 
-    points <- dplyr::bind_rows(points, b[, colnames(b) %in% c("Team", "Season", "Points")])
+    points <- dplyr::bind_rows(
+      points,
+      b[, colnames(b) %in% c("Team", "Season", "Points")]
+    )
   }
 
   return(points)
@@ -65,7 +72,8 @@ historicalPoints <- function(sc) {
 
 
 #' Conditional Mutate
-#' @description Mutate at condition. useful in dplyr pipes. From StackOverflow https://stackoverflow.com/a/34096575/3933405
+#' @description Mutate at condition. useful in dplyr pipes.
+#' From StackOverflow https://stackoverflow.com/a/34096575/3933405
 #'
 #' @param .data Data passed in
 #' @param condition Condition whether to peform mutate
@@ -74,7 +82,7 @@ historicalPoints <- function(sc) {
 #' @export
 mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
   condition <- eval(substitute(condition), .data, envir)
-  .data[condition, ] <- .data[condition, ] %>% dplyr::mutate(...)
+  .data[condition, ] <- .data[condition, ] |> dplyr::mutate(...)
   .data
 }
 
@@ -82,7 +90,8 @@ mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
 #' Log Loss Calculator
 #'
 #' @param predicted Predicted odds of an event occuring
-#' @param actual If the event occured (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0
+#' @param actual If the event occured (0 or 1), or model results
+#' in 0, 0.25, 0.4, 0.6, 0.75, 1.0
 #'
 #' @return a log loss value for the event(s)
 #' @export
@@ -135,7 +144,8 @@ auc <- function(predicted, actual) {
   n_positive <- sum(actual > 0.5)
   n_negative <- sum(actual < 0.5)
 
-  auc <- (sum(rank[actual > 0.5]) - n_positive * (n_positive + 1) / 2) / (n_positive * n_negative)
+  auc <- (sum(rank[actual > 0.5]) - n_positive * (n_positive + 1) / 2) /
+    (n_positive * n_negative)
 
   return(auc)
 }
@@ -222,45 +232,224 @@ hexToRGB <- function(hex) {
   return(c(r, g, b))
 }
 
-formatPredsForHockeyVisContest <- function(predictions, candyType = "Fuzzy Peaches", handle = "@bot.bulsink.ca") {
+formatPredsForHockeyVisContest <- function(
+  predictions,
+  candyType = "Fuzzy Peaches",
+  handle = "@bot.bulsink.ca"
+) {
   # IneffectiveMath's (Micah's) contest
   # format = {'handle':'???','preferredSourCandyType':'???', 'Predictions':{ 'ANA':(m,u), 'ARI':(m,u), 'BOS':(m,u), 'BUF':(m,u), 'CAR':(m,u), 'CBJ':(m,u), 'CGY':(m,u), 'CHI':(m,u), 'COL':(m,u), 'DAL':(m,u), 'DET':(m,u), 'EDM':(m,u), 'FLA':(m,u), 'L.A':(m,u), 'MIN':(m,u), 'MTL':(m,u), 'N.J':(m,u), 'NSH':(m,u), 'NYI':(m,u), 'NYR':(m,u), 'OTT':(m,u), 'PHI':(m,u), 'PIT':(m,u), 'S.J':(m,u), 'STL':(m,u), 'T.B':(m,u), 'TOR':(m,u), 'VAN':(m,u), 'VGK':(m,u), 'WPG':(m,u), 'WSH':(m,u), } }
   output <- paste0(
-    "{'handle':'", handle,
-    "', 'preferredSourCandyType':'", candyType,
+    "{'handle':'",
+    handle,
+    "', 'preferredSourCandyType':'",
+    candyType,
     "', 'Predictions':{ ",
-    "'ANA':(", round(predictions[predictions$Team == "Anaheim Ducks", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Anaheim Ducks", ]$sdPoints, 2), "), ",
-    "'BOS':(", round(predictions[predictions$Team == "Boston Bruins", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Boston Bruins", ]$sdPoints, 2), "), ",
-    "'BUF':(", round(predictions[predictions$Team == "Buffalo Sabres", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Buffalo Sabres", ]$sdPoints, 2), "), ",
-    "'CAR':(", round(predictions[predictions$Team == "Carolina Hurricanes", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Carolina Hurricanes", ]$sdPoints, 2), "), ",
-    "'CBJ':(", round(predictions[predictions$Team == "Columbus Blue Jackets", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Columbus Blue Jackets", ]$sdPoints, 2), "), ",
-    "'CGY':(", round(predictions[predictions$Team == "Calgary Flames", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Calgary Flames", ]$sdPoints, 2), "), ",
-    "'CHI':(", round(predictions[predictions$Team == "Chicago Blackhawks", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Chicago Blackhawks", ]$sdPoints, 2), "), ",
-    "'COL':(", round(predictions[predictions$Team == "Colorado Avalanche", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Colorado Avalanche", ]$sdPoints, 2), "), ",
-    "'DAL':(", round(predictions[predictions$Team == "Dallas Stars", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Dallas Stars", ]$sdPoints, 2), "), ",
-    "'DET':(", round(predictions[predictions$Team == "Detroit Red Wings", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Detroit Red Wings", ]$sdPoints, 2), "), ",
-    "'EDM':(", round(predictions[predictions$Team == "Edmonton Oilers", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Edmonton Oilers", ]$sdPoints, 2), "), ",
-    "'FLA':(", round(predictions[predictions$Team == "Florida Panthers", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Florida Panthers", ]$sdPoints, 2), "), ",
-    "'L.A':(", round(predictions[predictions$Team == "Los Angeles Kings", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Los Angeles Kings", ]$sdPoints, 2), "), ",
-    "'MIN':(", round(predictions[predictions$Team == "Minnesota Wild", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Minnesota Wild", ]$sdPoints, 2), "), ",
-    "'MTL':(", round(predictions[predictions$Team == "Montreal Canadiens", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Montreal Canadiens", ]$sdPoints, 2), "), ",
-    "'N.J':(", round(predictions[predictions$Team == "New Jersey Devils", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "New Jersey Devils", ]$sdPoints, 2), "), ",
-    "'NSH':(", round(predictions[predictions$Team == "Nashville Predators", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Nashville Predators", ]$sdPoints, 2), "), ",
-    "'NYI':(", round(predictions[predictions$Team == "New York Islanders", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "New York Islanders", ]$sdPoints, 2), "), ",
-    "'NYR':(", round(predictions[predictions$Team == "New York Rangers", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "New York Rangers", ]$sdPoints, 2), "), ",
-    "'OTT':(", round(predictions[predictions$Team == "Ottawa Senators", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Ottawa Senators", ]$sdPoints, 2), "), ",
-    "'PHI':(", round(predictions[predictions$Team == "Philadelphia Flyers", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Philadelphia Flyers", ]$sdPoints, 2), "), ",
-    "'PIT':(", round(predictions[predictions$Team == "Pittsburgh Penguins", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Pittsburgh Penguins", ]$sdPoints, 2), "), ",
-    "'S.J':(", round(predictions[predictions$Team == "San Jose Sharks", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "San Jose Sharks", ]$sdPoints, 2), "), ",
-    "'SEA':(", round(predictions[predictions$Team == "Seattle Kraken", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Seattle Kraken", ]$sdPoints, 2), "), ",
-    "'STL':(", round(predictions[predictions$Team == "St. Louis Blues", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "St. Louis Blues", ]$sdPoints, 2), "), ",
-    "'T.B':(", round(predictions[predictions$Team == "Tampa Bay Lightning", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Tampa Bay Lightning", ]$sdPoints, 2), "), ",
-    "'TOR':(", round(predictions[predictions$Team == "Toronto Maple Leafs", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Toronto Maple Leafs", ]$sdPoints, 2), "), ",
-    "'UTA':(", round(predictions[predictions$Team == "Utah Mammoth", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Utah Hockey Club", ]$sdPoints, 2), "), ",
-    "'VAN':(", round(predictions[predictions$Team == "Vancouver Canucks", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Vancouver Canucks", ]$sdPoints, 2), "), ",
-    "'VGK':(", round(predictions[predictions$Team == "Vegas Golden Knights", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Vegas Golden Knights", ]$sdPoints, 2), "), ",
-    "'WPG':(", round(predictions[predictions$Team == "Winnipeg Jets", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Winnipeg Jets", ]$sdPoints, 2), "), ",
-    "'WSH':(", round(predictions[predictions$Team == "Washington Capitals", ]$meanPoints, 1), ",", round(predictions[predictions$Team == "Washington Capitals", ]$sdPoints, 2), "), ",
+    "'ANA':(",
+    round(predictions[predictions$Team == "Anaheim Ducks", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Anaheim Ducks", ]$sdPoints, 2),
+    "), ",
+    "'BOS':(",
+    round(predictions[predictions$Team == "Boston Bruins", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Boston Bruins", ]$sdPoints, 2),
+    "), ",
+    "'BUF':(",
+    round(predictions[predictions$Team == "Buffalo Sabres", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Buffalo Sabres", ]$sdPoints, 2),
+    "), ",
+    "'CAR':(",
+    round(
+      predictions[predictions$Team == "Carolina Hurricanes", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Carolina Hurricanes", ]$sdPoints, 2),
+    "), ",
+    "'CBJ':(",
+    round(
+      predictions[predictions$Team == "Columbus Blue Jackets", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(
+      predictions[predictions$Team == "Columbus Blue Jackets", ]$sdPoints,
+      2
+    ),
+    "), ",
+    "'CGY':(",
+    round(predictions[predictions$Team == "Calgary Flames", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Calgary Flames", ]$sdPoints, 2),
+    "), ",
+    "'CHI':(",
+    round(
+      predictions[predictions$Team == "Chicago Blackhawks", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Chicago Blackhawks", ]$sdPoints, 2),
+    "), ",
+    "'COL':(",
+    round(
+      predictions[predictions$Team == "Colorado Avalanche", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Colorado Avalanche", ]$sdPoints, 2),
+    "), ",
+    "'DAL':(",
+    round(predictions[predictions$Team == "Dallas Stars", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Dallas Stars", ]$sdPoints, 2),
+    "), ",
+    "'DET':(",
+    round(predictions[predictions$Team == "Detroit Red Wings", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Detroit Red Wings", ]$sdPoints, 2),
+    "), ",
+    "'EDM':(",
+    round(predictions[predictions$Team == "Edmonton Oilers", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Edmonton Oilers", ]$sdPoints, 2),
+    "), ",
+    "'FLA':(",
+    round(predictions[predictions$Team == "Florida Panthers", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Florida Panthers", ]$sdPoints, 2),
+    "), ",
+    "'L.A':(",
+    round(predictions[predictions$Team == "Los Angeles Kings", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Los Angeles Kings", ]$sdPoints, 2),
+    "), ",
+    "'MIN':(",
+    round(predictions[predictions$Team == "Minnesota Wild", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Minnesota Wild", ]$sdPoints, 2),
+    "), ",
+    "'MTL':(",
+    round(
+      predictions[predictions$Team == "Montreal Canadiens", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Montreal Canadiens", ]$sdPoints, 2),
+    "), ",
+    "'N.J':(",
+    round(predictions[predictions$Team == "New Jersey Devils", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "New Jersey Devils", ]$sdPoints, 2),
+    "), ",
+    "'NSH':(",
+    round(
+      predictions[predictions$Team == "Nashville Predators", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Nashville Predators", ]$sdPoints, 2),
+    "), ",
+    "'NYI':(",
+    round(
+      predictions[predictions$Team == "New York Islanders", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "New York Islanders", ]$sdPoints, 2),
+    "), ",
+    "'NYR':(",
+    round(predictions[predictions$Team == "New York Rangers", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "New York Rangers", ]$sdPoints, 2),
+    "), ",
+    "'OTT':(",
+    round(predictions[predictions$Team == "Ottawa Senators", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Ottawa Senators", ]$sdPoints, 2),
+    "), ",
+    "'PHI':(",
+    round(
+      predictions[predictions$Team == "Philadelphia Flyers", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Philadelphia Flyers", ]$sdPoints, 2),
+    "), ",
+    "'PIT':(",
+    round(
+      predictions[predictions$Team == "Pittsburgh Penguins", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Pittsburgh Penguins", ]$sdPoints, 2),
+    "), ",
+    "'S.J':(",
+    round(predictions[predictions$Team == "San Jose Sharks", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "San Jose Sharks", ]$sdPoints, 2),
+    "), ",
+    "'SEA':(",
+    round(predictions[predictions$Team == "Seattle Kraken", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Seattle Kraken", ]$sdPoints, 2),
+    "), ",
+    "'STL':(",
+    round(predictions[predictions$Team == "St. Louis Blues", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "St. Louis Blues", ]$sdPoints, 2),
+    "), ",
+    "'T.B':(",
+    round(
+      predictions[predictions$Team == "Tampa Bay Lightning", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Tampa Bay Lightning", ]$sdPoints, 2),
+    "), ",
+    "'TOR':(",
+    round(
+      predictions[predictions$Team == "Toronto Maple Leafs", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Toronto Maple Leafs", ]$sdPoints, 2),
+    "), ",
+    "'UTA':(",
+    round(predictions[predictions$Team == "Utah Mammoth", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Utah Hockey Club", ]$sdPoints, 2),
+    "), ",
+    "'VAN':(",
+    round(predictions[predictions$Team == "Vancouver Canucks", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Vancouver Canucks", ]$sdPoints, 2),
+    "), ",
+    "'VGK':(",
+    round(
+      predictions[predictions$Team == "Vegas Golden Knights", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(
+      predictions[predictions$Team == "Vegas Golden Knights", ]$sdPoints,
+      2
+    ),
+    "), ",
+    "'WPG':(",
+    round(predictions[predictions$Team == "Winnipeg Jets", ]$meanPoints, 1),
+    ",",
+    round(predictions[predictions$Team == "Winnipeg Jets", ]$sdPoints, 2),
+    "), ",
+    "'WSH':(",
+    round(
+      predictions[predictions$Team == "Washington Capitals", ]$meanPoints,
+      1
+    ),
+    ",",
+    round(predictions[predictions$Team == "Washington Capitals", ]$sdPoints, 2),
+    "), ",
     "} }"
   )
   return(output)
@@ -319,7 +508,6 @@ extraTimeSolver <- function(home_win, away_win, draw) {
 }
 
 
-
 #' Add Postponed Games to Schedule End
 #'
 #' @description Sometimes games are postponed without a makeup date initially announced. The model just drops those games if this function is not employed to move the games to the end of the season
@@ -332,17 +520,24 @@ add_postponed_to_schedule_end <- function(schedule = HockeyModel::schedule) {
   if (!any(schedule$GameStatus == "Postponed")) {
     # no postponed games
     return(schedule)
-  } else if (all(schedule[schedule$GameStatus == "Postponed", "Date"] > Sys.Date())) {
+  } else if (
+    all(schedule[schedule$GameStatus == "Postponed", "Date"] > Sys.Date())
+  ) {
     # all game postponements are in future games - just play them.
     return(schedule)
   }
 
-  for (g in schedule[schedule$GameStatus == "Postponed" & schedule$Date < Sys.Date(), ]$GameID) {
+  for (g in schedule[
+    schedule$GameStatus == "Postponed" & schedule$Date < Sys.Date(),
+  ]$GameID) {
     # The model doesn't (currently) account for what games are back to back or anything - so they can all be played on the same (last) date of the schedule
     # Using the last date of the regular season to not interfere with playoffs
-    schedule[schedule$GameID == g, ]$Date <- max(max(schedule[schedule$GameType == "R", ]$Date), Sys.Date())
+    schedule[schedule$GameID == g, ]$Date <- max(
+      max(schedule[schedule$GameType == "R", ]$Date),
+      Sys.Date()
+    )
   }
-  schedule <- schedule %>%
+  schedule <- schedule |>
     dplyr::arrange(.data$Date, .data$GameID)
   return(schedule)
 }
@@ -365,16 +560,20 @@ parseCores <- function(cores) {
   cores <- cores
   if (is.null(cores)) {
     if (!requireNamespace("parallel", quietly = TRUE)) {
-      message("Parallel package must be installed to use multi-core processing.")
+      message(
+        "Parallel package must be installed to use multi-core processing."
+      )
       cores <- 1
     } else {
       cores <- parallel::detectCores()
     }
   } else {
     if (!requireNamespace("parallel", quietly = TRUE)) {
-      message("Parallel package must be installed to use multi-core processing.")
+      message(
+        "Parallel package must be installed to use multi-core processing."
+      )
       cores <- 1
-    } else if (!is.numeric(cores) | cores %% 1 != 0 | cores <= 0) {
+    } else if (!is.numeric(cores) || cores %% 1 != 0 || cores <= 0) {
       message("Cores must be a integer number")
       cores <- 1
     } else if (cores > parallel::detectCores()) {
@@ -396,29 +595,52 @@ parseCores <- function(cores) {
       op.HockeyModel <- NULL
     } else {
       op.HockeyModel <- list(
-        HockeyModel.prediction.path = file.path(devtools::package_file(), "prediction_results"),
-        HockeyModel.graphics.path = file.path(devtools::package_file(), "prediction_results", "graphics"),
+        HockeyModel.prediction.path = file.path(
+          devtools::package_file(),
+          "prediction_results"
+        ),
+        HockeyModel.graphics.path = file.path(
+          devtools::package_file(),
+          "prediction_results",
+          "graphics"
+        ),
         HockeyModel.data.path = file.path(devtools::package_file(), "data-raw")
       )
     }
   }
   if (is.null(op.HockeyModel)) {
     op.HockeyModel <- list(
-      HockeyModel.prediction.path = file.path(path.expand("~"), "HockeyModel", "prediction_results"),
-      HockeyModel.graphics.path = file.path(path.expand("~"), "HockeyModel", "prediction_results", "graphics"),
-      HockeyModel.data.path = file.path(path.expand("~"), "HockeyModel", "data-raw")
+      HockeyModel.prediction.path = file.path(
+        path.expand("~"),
+        "HockeyModel",
+        "prediction_results"
+      ),
+      HockeyModel.graphics.path = file.path(
+        path.expand("~"),
+        "HockeyModel",
+        "prediction_results",
+        "graphics"
+      ),
+      HockeyModel.data.path = file.path(
+        path.expand("~"),
+        "HockeyModel",
+        "data-raw"
+      )
     )
   }
 
   toset <- !(names(op.HockeyModel) %in% names(op))
-  if (any(toset)) options(op.HockeyModel[toset])
+  if (any(toset)) {
+    options(op.HockeyModel[toset])
+  }
 
   invisible()
 }
 
 .onAttach <- function(libname, pkgname) {
   msgtext <- paste0(
-    "HockeyModel package loaded.\nUsing ", getOption("HockeyModel.prediction.path"),
+    "HockeyModel package loaded.\nUsing ",
+    getOption("HockeyModel.prediction.path"),
     ' as prediction path.\nTo change path, set option("HockeyModel.prediction.path" = [new path]).\n',
     "This can be done interactively or using .RProfile to save your preference."
   )

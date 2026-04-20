@@ -10,10 +10,14 @@
 #'
 #' @export
 updateModel <- function(save_data = TRUE) {
-  schedule<-updateScheduleAPI(save_data = save_data)
+  schedule <- updateScheduleAPI(save_data = save_data)
   scores <- updateScoresAPI(schedule = schedule, save_data = save_data)
   params <- updateDC(scores = scores, save_data = save_data)
-  return(list("scores" = scores, "schedule" = HockeyModel::schedule, "params" = params))
+  return(list(
+    "scores" = scores,
+    "schedule" = HockeyModel::schedule,
+    "params" = params
+  ))
 }
 
 #' Update predictions
@@ -26,7 +30,12 @@ updateModel <- function(save_data = TRUE) {
 #' @return NULL
 #'
 #' @export
-updatePredictions <- function(data_dir = getOption("HockeyModel.prediction.path"), scores = HockeyModel::scores, schedule = HockeyModel::schedule, params = NULL) {
+updatePredictions <- function(
+  data_dir = getOption("HockeyModel.prediction.path"),
+  scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule,
+  params = NULL
+) {
   params <- parse_dc_params(params)
 
   if (scores$Date[nrow(scores)] < (Sys.Date())) {
@@ -37,7 +46,12 @@ updatePredictions <- function(data_dir = getOption("HockeyModel.prediction.path"
   pdates <- pdates[pdates != "graphics"]
   lastp <- as.Date(max(pdates))
   if (lastp != Sys.Date()) {
-    dcPredictMultipleDays(start = as.Date(lastp) + 1, scores = scores, schedule = schedule, filedir = data_dir)
+    dcPredictMultipleDays(
+      start = as.Date(lastp) + 1,
+      scores = scores,
+      schedule = schedule,
+      filedir = data_dir
+    )
   }
 }
 
@@ -50,11 +64,18 @@ updatePredictions <- function(data_dir = getOption("HockeyModel.prediction.path"
 #'
 #' @return today's odds ggplot object
 #' @export
-todayOddsPlot <- function(date = Sys.Date(), params = NULL, schedule = HockeyModel::schedule, scores = HockeyModel::scores) {
+todayOddsPlot <- function(
+  date = Sys.Date(),
+  params = NULL,
+  schedule = HockeyModel::schedule,
+  scores = HockeyModel::scores
+) {
   params <- parse_dc_params(params)
 
   if (scores$Date[nrow(scores)] < (date - 7)) {
-    message("Scores may be out of date. This can affect predictions. Please update if midseason.")
+    message(
+      "Scores may be out of date. This can affect predictions. Please update if midseason."
+    )
   }
   if (nrow(games_today(date = date)) == 0) {
     message("No games today.")
@@ -97,7 +118,12 @@ ratings <- function(m = HockeyModel::m) {
   return(plot_team_rating(m = m))
 }
 
-tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = stats::runif(1, min = 2, max = 6) * 60, schedule = HockeyModel::schedule) {
+tweet <- function(
+  games,
+  graphic_dir = "./prediction_results/graphics",
+  delay = stats::runif(1, min = 2, max = 6) * 60,
+  schedule = HockeyModel::schedule
+) {
   if (inRegularSeason()) {
     # Only runs if schedule has regular season games remaining
 
@@ -108,12 +134,19 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
     # )
     try(
       atrrr::post(
-        text = paste0("Predicted points for #NHL teams (before games on ", Sys.Date(), ")."),
+        text = paste0(
+          "Predicted points for #NHL teams (before games on ",
+          Sys.Date(),
+          ")."
+        ),
         image = file.path(graphic_dir, "point_predict.png"), # token = token,
-        image_alt = paste0("Points predicted history for the last 14 days, as of ", Sys.Date(), "")
+        image_alt = paste0(
+          "Points predicted history for the last 14 days, as of ",
+          Sys.Date(),
+          ""
+        )
       )
     )
-
 
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
@@ -125,9 +158,17 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
     # )
     try(
       atrrr::post(
-        text = paste0("Playoff odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
+        text = paste0(
+          "Playoff odds for #NHL teams (before games on ",
+          Sys.Date(),
+          "). #HockeyTwitter"
+        ),
         image = file.path(graphic_dir, "playoff_odds.png"),
-        image_alt = paste0("Playoff Odds for each NHL team history and today's value as of ", Sys.Date(), "")
+        image_alt = paste0(
+          "Playoff Odds for each NHL team history and today's value as of ",
+          Sys.Date(),
+          ""
+        )
       )
     )
 
@@ -141,12 +182,19 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
     # )
     try(
       atrrr::post(
-        text = paste0("President's trophy odds for #NHL teams (before games on ", Sys.Date(), "). #HockeyTwitter"),
+        text = paste0(
+          "President's trophy odds for #NHL teams (before games on ",
+          Sys.Date(),
+          "). #HockeyTwitter"
+        ),
         image = file.path(graphic_dir, "president_odds.png"),
-        image_alt = paste0("President's Trophy Odds for each NHL team history and today's value as of ", Sys.Date(), "")
+        image_alt = paste0(
+          "President's Trophy Odds for each NHL team history and today's value as of ",
+          Sys.Date(),
+          ""
+        )
       )
     )
-
   }
 }
 
@@ -157,9 +205,16 @@ tweet <- function(games, graphic_dir = "./prediction_results/graphics", delay = 
 #' @param delay delay between tweet posts
 #'
 #' @export
-dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir = "pace", delay = stats::runif(1, min = 2, max = 6) * 60) {
+dailySummary <- function(
+  graphic_dir = "./prediction_results/graphics",
+  subdir = "pace",
+  delay = stats::runif(1, min = 2, max = 6) * 60
+) {
   if (inOffSeason()) {
-    if (getSeasonStartDate() - Sys.Date() > 7 | getSeasonStartDate() - Sys.Date() < 0) {
+    if (
+      getSeasonStartDate() - Sys.Date() > 7 ||
+        getSeasonStartDate() - Sys.Date() < 0
+    ) {
       stop("Offseason")
     }
   }
@@ -179,17 +234,33 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
 
   # generate plots
   if (!is.null(games_today())) {
-    today <- todayOddsPlot(params = params, schedule = modelparams$schedule, scores = modelparams$scores)
+    today <- todayOddsPlot(
+      params = params,
+      schedule = modelparams$schedule,
+      scores = modelparams$scores
+    )
     # save to files.
-    grDevices::png(filename = file.path(graphic_dir, "today_odds.png"), width = 11, height = 8.5, units = "in", res = 300)
+    grDevices::png(
+      filename = file.path(graphic_dir, "today_odds.png"),
+      width = 11,
+      height = 8.5,
+      units = "in",
+      res = 300
+    )
     print(today)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()
     }
 
-    today_table <- daily_odds_table(params = params, schedule = modelparams$schedule)
-    gt::gtsave(today_table, filename = file.path(graphic_dir, "today_odds_table.png"))
+    today_table <- daily_odds_table(
+      params = params,
+      schedule = modelparams$schedule
+    )
+    gt::gtsave(
+      today_table,
+      filename = file.path(graphic_dir, "today_odds_table.png")
+    )
 
     # rtoot::post_toot(
     #   status = "Predicted odds table for today's #NHL games.",
@@ -200,7 +271,11 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
       atrrr::post(
         text = "Predicted odds table for today's #NHL games.",
         image = file.path(graphic_dir, "today_odds_table.png"),
-        image_alt = paste0("Odds table for Today's NHL games, for date ", Sys.Date(), ".")
+        image_alt = paste0(
+          "Odds table for Today's NHL games, for date ",
+          Sys.Date(),
+          "."
+        )
       )
     )
 
@@ -213,13 +288,23 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
       atrrr::post(
         text = "Predicted odds for today's #NHL games.",
         image = file.path(graphic_dir, "today_odds.png"),
-        image_alt = paste0("Odds graphic for Today's NHL games, for date ", Sys.Date(), ".")
+        image_alt = paste0(
+          "Odds graphic for Today's NHL games, for date ",
+          Sys.Date(),
+          "."
+        )
       )
     )
 
     rating <- ratings(params$m)
     # save to files.
-    grDevices::png(filename = file.path(graphic_dir, "current_rating.png"), width = 11, height = 8.5, units = "in", res = 300)
+    grDevices::png(
+      filename = file.path(graphic_dir, "current_rating.png"),
+      width = 11,
+      height = 8.5,
+      units = "in",
+      res = 300
+    )
     print(rating)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
@@ -238,11 +323,14 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
         image_alt = paste0("Current team rating graphic for ", Sys.Date(), ".")
       )
     )
-
   }
 
   if (inRegularSeason()) {
-    updatePredictions(scores = modelparams$scores, schedule = modelparams$schedule, params = params)
+    updatePredictions(
+      scores = modelparams$scores,
+      schedule = modelparams$schedule,
+      params = params
+    )
     playoff <- playoffOdds()
     president <- presidentOdds()
     point <- pointPredict()
@@ -254,28 +342,52 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
       grDevices::dev.off()
     }
 
-    grDevices::png(filename = file.path(graphic_dir, "playoff_odds.png"), width = 11, height = 8.5, units = "in", res = 300)
+    grDevices::png(
+      filename = file.path(graphic_dir, "playoff_odds.png"),
+      width = 11,
+      height = 8.5,
+      units = "in",
+      res = 300
+    )
     print(playoff)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()
     }
 
-    grDevices::png(filename = file.path(graphic_dir, "president_odds.png"), width = 11, height = 8.5, units = "in", res = 300)
+    grDevices::png(
+      filename = file.path(graphic_dir, "president_odds.png"),
+      width = 11,
+      height = 8.5,
+      units = "in",
+      res = 300
+    )
     print(president)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()
     }
 
-    grDevices::png(filename = file.path(graphic_dir, "point_predict.png"), width = 11, height = 8.5, units = "in", res = 300)
+    grDevices::png(
+      filename = file.path(graphic_dir, "point_predict.png"),
+      width = 11,
+      height = 8.5,
+      units = "in",
+      res = 300
+    )
     print(point)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()
     }
 
-    grDevices::png(filename = file.path(graphic_dir, "current_rating.png"), width = 11, height = 8.5, units = "in", res = 300)
+    grDevices::png(
+      filename = file.path(graphic_dir, "current_rating.png"),
+      width = 11,
+      height = 8.5,
+      units = "in",
+      res = 300
+    )
     print(rating)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
@@ -283,11 +395,18 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
     }
 
     # Make Pace Plots
-    plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, scores = modelparams$scores)
-    plot_pace_by_division(graphic_dir = graphic_dir, subdir = subdir, scores = modelparams$scores)
+    plot_pace_by_team(
+      graphic_dir = graphic_dir,
+      subdir = subdir,
+      scores = modelparams$scores
+    )
+    plot_pace_by_division(
+      graphic_dir = graphic_dir,
+      subdir = subdir,
+      scores = modelparams$scores
+    )
     plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
   }
-
 
   message("Posting Tweets...")
   tweet(graphic_dir, delay = delay, graphic_dir = graphic_dir) # , games_today = Sys.Date() %in% sc[sc$GameStatus != "Postponed", ]$Date)
@@ -305,7 +424,7 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
     tweetPlayoffOdds(graphic_dir = graphic_dir, trimcup = TRUE)
   }
 
-  if (as.numeric(format(Sys.Date(), "%w")) == 1 & inRegularSeason()) {
+  if (as.numeric(format(Sys.Date(), "%w")) == 1 && inRegularSeason()) {
     # On monday post pace plots
     tweetPace(delay = delay, graphic_dir = graphic_dir)
   }
@@ -323,7 +442,12 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
   }
 
   series <- getAPISeries()
-  if (!is.na(series) && length(series) > 1 && nrow(series[series$Status == "Ongoing", ]) > 0) { # TODO: Watch next spring to see if this goes ok
+  if (
+    !is.na(series) &&
+      length(series) > 1 &&
+      nrow(series[series$Status == "Ongoing", ]) > 0
+  ) {
+    # TODO: Watch next spring to see if this goes ok
     message("Tweeting Series")
     tweetSeries(graphic_dir = graphic_dir, params = params)
     Sys.sleep(delay)
@@ -339,19 +463,36 @@ dailySummary <- function(graphic_dir = "./prediction_results/graphics", subdir =
 #' @param scores HockeyModel::scores or a custom value
 #'
 #' @export
-tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_dir = getOption("HockeyModel.graphics.path"), subdir = "pace", prediction_dir = getOption("HockeyModel.prediction.path"), scores = HockeyModel::scores) {
+tweetPace <- function(
+  delay = stats::runif(1, min = 1, max = 3) * 60,
+  graphic_dir = getOption("HockeyModel.graphics.path"),
+  subdir = "pace",
+  prediction_dir = getOption("HockeyModel.prediction.path"),
+  scores = HockeyModel::scores
+) {
   # make sure we're working with the most up-to-date info.
   scores <- updateScoresAPI(save_data = T)
 
   # Make Pace Plots
-  plot_pace_by_team(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores = scores)
+  plot_pace_by_team(
+    graphic_dir = graphic_dir,
+    subdir = subdir,
+    prediction_dir = prediction_dir,
+    scores = scores
+  )
 
   filelist <- list.files(path = prediction_dir)
   pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
   pdates <- pdates[pdates != "graphics"]
   lastp <- as.Date(max(pdates))
-  current_preds <- readRDS(file.path(prediction_dir, paste0(lastp, "-predictions.RDS")))
-  preds <- readRDS(file.path(prediction_dir, paste0(getSeasonStartDate(), "-predictions.RDS")))
+  current_preds <- readRDS(file.path(
+    prediction_dir,
+    paste0(lastp, "-predictions.RDS")
+  ))
+  preds <- readRDS(file.path(
+    prediction_dir,
+    paste0(getSeasonStartDate(), "-predictions.RDS")
+  ))
   scores <- scores[scores$Date > as.Date(getSeasonStartDate()), ]
 
   teamlist <- unique(preds$Team)
@@ -366,9 +507,18 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
       " pace after ",
       ngames,
       " games. The model initially predicted ",
-      format(round(as.numeric(preds[preds$Team == team, "meanPoints"]), digits = 1), nsmall = 1),
+      format(
+        round(as.numeric(preds[preds$Team == team, "meanPoints"]), digits = 1),
+        nsmall = 1
+      ),
       " points, now expecting ",
-      format(round(as.numeric(current_preds[current_preds$Team == team, "meanPoints"]), digits = 1), nsmall = 1),
+      format(
+        round(
+          as.numeric(current_preds[current_preds$Team == team, "meanPoints"]),
+          digits = 1
+        ),
+        nsmall = 1
+      ),
       ". #HockeyTwitter ",
       teamColours[teamColours$Team == team, "Hashtag"]
     )
@@ -376,8 +526,17 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
     try(
       atrrr::post(
         text = status,
-        image = file.path(graphic_dir, subdir, paste0(tolower(gsub(" ", "_", team)), ".png")),
-        image_alt = paste0(team, "'s Performance against predicted pace as of ", Sys.Date(), "")
+        image = file.path(
+          graphic_dir,
+          subdir,
+          paste0(tolower(gsub(" ", "_", team)), ".png")
+        ),
+        image_alt = paste0(
+          team,
+          "'s Performance against predicted pace as of ",
+          Sys.Date(),
+          ""
+        )
       )
     )
 
@@ -390,7 +549,12 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(stats::runif(1, min = 1, max = 3) * 60)
   }
-  pacediff <- data.frame("Team" = current_preds$Team, "Initial" = preds$meanPoints, "Current" = current_preds$meanPoints, stringsAsFactors = FALSE)
+  pacediff <- data.frame(
+    "Team" = current_preds$Team,
+    "Initial" = preds$meanPoints,
+    "Current" = current_preds$meanPoints,
+    stringsAsFactors = FALSE
+  )
   pacediff$Diff <- pacediff$Current - pacediff$Initial
 
   maxteam <- pacediff[which.max(pacediff$Diff), "Team"]
@@ -398,8 +562,14 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
 
   recapstatus <- paste0(
     "To recap - ",
-    "\nFurthest above expectation: ", maxteam, " ", teamColours[teamColours$Team == maxteam, "Hashtag"],
-    "\nFurthest below expectation: ", minteam, " ", teamColours[teamColours$Team == minteam, "Hashtag"]
+    "\nFurthest above expectation: ",
+    maxteam,
+    " ",
+    teamColours[teamColours$Team == maxteam, "Hashtag"],
+    "\nFurthest below expectation: ",
+    minteam,
+    " ",
+    teamColours[teamColours$Team == minteam, "Hashtag"]
   )
   atrrr::post(text = recapstatus)
   # rtoot::post_toot(status = recapstatus)
@@ -407,10 +577,19 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
   Sys.sleep(stats::runif(1, min = 2, max = 6) * 60)
 
   # Make Division Plots
-  plot_pace_by_division(graphic_dir = graphic_dir, subdir = subdir, prediction_dir = prediction_dir, scores = scores)
+  plot_pace_by_division(
+    graphic_dir = graphic_dir,
+    subdir = subdir,
+    prediction_dir = prediction_dir,
+    scores = scores
+  )
 
   for (division in getDivisions()) {
-    status <- paste("Current Points compared to predicted (at season start) for #NHL teams in the", division, "division.\nPositive values are exceeding expectation, negative are performing below predicted.")
+    status <- paste(
+      "Current Points compared to predicted (at season start) for #NHL teams in the",
+      division,
+      "division.\nPositive values are exceeding expectation, negative are performing below predicted."
+    )
     # rtoot::post_toot(
     #   status = status,
     #   media = file.path(graphic_dir, subdir, paste0(division, "_pace.png")),
@@ -420,7 +599,12 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
       atrrr::post(
         text = status,
         image = file.path(graphic_dir, subdir, paste0(division, "_pace.png")),
-        image_alt = paste0(division, " teams pace above/below expected as of ", Sys.Date(), ".")
+        image_alt = paste0(
+          division,
+          " teams pace above/below expected as of ",
+          Sys.Date(),
+          "."
+        )
       )
     )
 
@@ -437,13 +621,29 @@ tweetPace <- function(delay = stats::runif(1, min = 1, max = 3) * 60, graphic_di
 #' @param scores updated scores
 #
 #' @export
-tweetLikelihoods <- function(delay = stats::runif(1, min = 3, max = 6) * 60, graphic_dir = getOption("HockeyModel.graphics.path"), subdir = "pace", scores = HockeyModel::scores) {
+tweetLikelihoods <- function(
+  delay = stats::runif(1, min = 3, max = 6) * 60,
+  graphic_dir = getOption("HockeyModel.graphics.path"),
+  subdir = "pace",
+  scores = HockeyModel::scores
+) {
   # make likelihood plots
   plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
 
   for (conf in getConferences()) {
-    if (file.exists(file.path(graphic_dir, subdir, paste0(tolower(conf), "likelihood.png"))) &
-      as.Date(file.mtime(file.path(graphic_dir, subdir, paste0(tolower(conf), "likelihood.png")))) == Sys.Date()) {
+    if (
+      file.exists(file.path(
+        graphic_dir,
+        subdir,
+        paste0(tolower(conf), "likelihood.png")
+      )) &&
+        as.Date(file.mtime(file.path(
+          graphic_dir,
+          subdir,
+          paste0(tolower(conf), "likelihood.png")
+        ))) ==
+          Sys.Date()
+    ) {
       # Tweet them out
 
       # rtoot::post_toot(
@@ -453,12 +653,23 @@ tweetLikelihoods <- function(delay = stats::runif(1, min = 3, max = 6) * 60, gra
       # )
       try(
         atrrr::post(
-          text = paste0("#NHL ", conf, " Conference Team final point likelihoods:"),
-          image = file.path(graphic_dir, subdir, paste0(tolower(conf), "likelihood.png")),
-          image_alt = paste0("Point likelihoods for teams in the ", conf, " conference.")
+          text = paste0(
+            "#NHL ",
+            conf,
+            " Conference Team final point likelihoods:"
+          ),
+          image = file.path(
+            graphic_dir,
+            subdir,
+            paste0(tolower(conf), "likelihood.png")
+          ),
+          image_alt = paste0(
+            "Point likelihoods for teams in the ",
+            conf,
+            " conference."
+          )
         )
       )
-
 
       # delay
       message("Delaying ", delay / 2, " seconds to space tweets...")
@@ -475,7 +686,12 @@ tweetLikelihoods <- function(delay = stats::runif(1, min = 3, max = 6) * 60, gra
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @export
-tweetGames <- function(games = games_today(), delay = stats::runif(1, min = 4, max = 8) * 60, graphic_dir = getOption("HockeyModel.graphics.path"), params = NULL) {
+tweetGames <- function(
+  games = games_today(),
+  delay = stats::runif(1, min = 4, max = 8) * 60,
+  graphic_dir = getOption("HockeyModel.graphics.path"),
+  params = NULL
+) {
   params <- parse_dc_params(params)
   # Tweet each game
   if (is.null(games)) {
@@ -494,16 +710,31 @@ tweetGames <- function(games = games_today(), delay = stats::runif(1, min = 4, m
 
   teamColours <- HockeyModel::teamColours
 
-  for (g in 1:nrow(games)) {
+  for (g in seq_len(nrow(games))) {
     home <- as.character(games[g, "HomeTeam"])
     away <- as.character(games[g, "AwayTeam"])
     plt <- plot_game(home = home, away = away, params = params)
-    grDevices::png(filename = file.path(graphic_dir, "predicted_goals.png"), width = 11, height = 8.5, units = "in", res = 300)
+    grDevices::png(
+      filename = file.path(graphic_dir, "predicted_goals.png"),
+      width = 11,
+      height = 8.5,
+      units = "in",
+      res = 300
+    )
     print(plt)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()
     }
-    status <- paste0(teamColours[teamColours$Team == away, "Hashtag"], " at ", teamColours[teamColours$Team == home, "Hashtag"], " predicted goals. #", getShortTeam(away), "vs", getShortTeam(home), " #HockeyTwitter")
+    status <- paste0(
+      teamColours[teamColours$Team == away, "Hashtag"],
+      " at ",
+      teamColours[teamColours$Team == home, "Hashtag"],
+      " predicted goals. #",
+      getShortTeam(away),
+      "vs",
+      getShortTeam(home),
+      " #HockeyTwitter"
+    )
 
     # rtoot::post_toot(
     #   status = status,
@@ -514,7 +745,13 @@ tweetGames <- function(games = games_today(), delay = stats::runif(1, min = 4, m
       atrrr::post(
         text = status,
         image = file.path(graphic_dir, "predicted_goals.png"),
-        image_alt = paste0("Odds of each goal for both ", away, " and ", home, " in their game.")
+        image_alt = paste0(
+          "Odds of each goal for both ",
+          away,
+          " and ",
+          home,
+          " in their game."
+        )
       )
     )
 
@@ -534,9 +771,13 @@ tweetMetrics <- function() {
   metrics <- getSeasonMetricsDC()
 
   status <- paste0(
-    "Metrics as of ", Sys.Date(),
-    "\nLog Loss: ", round(metrics$LogLoss, 4),
-    "\nAccuracy: ", round(metrics$Accuracy * 100, 2), " %"
+    "Metrics as of ",
+    Sys.Date(),
+    "\nLog Loss: ",
+    round(metrics$LogLoss, 4),
+    "\nAccuracy: ",
+    round(metrics$Accuracy * 100, 2),
+    " %"
   )
   message(status)
 
@@ -552,25 +793,40 @@ tweetMetrics <- function() {
 #'
 #' @return NULL
 #' @export
-tweetSeries <- function(params = NULL, graphic_dir = getOption("HockeyModel.graphics.path")) {
+tweetSeries <- function(
+  params = NULL,
+  graphic_dir = getOption("HockeyModel.graphics.path")
+) {
   params <- parse_dc_params(params)
   while (grDevices::dev.cur() != 1) {
     grDevices::dev.off()
   }
   series <- getAPISeries()
-  series <- series[series$Status == "Ongoing", c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
+  series <- series[
+    series$Status == "Ongoing",
+    c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")
+  ]
   if (nrow(series) == 0) {
     message("No Series to Tweet")
     return()
   }
   plt <- plot_playoff_series_odds(series = series, params = params)
-  grDevices::png(filename = file.path(graphic_dir, "series_odds.png"), width = 11, height = 8.5, units = "in", res = 300)
+  grDevices::png(
+    filename = file.path(graphic_dir, "series_odds.png"),
+    width = 11,
+    height = 8.5,
+    units = "in",
+    res = 300
+  )
   print(plt)
   while (grDevices::dev.cur() != 1) {
     grDevices::dev.off()
   }
 
-  status <- paste0("#NHL #StanleyCup Playoff Series Odds before games on ", Sys.Date())
+  status <- paste0(
+    "#NHL #StanleyCup Playoff Series Odds before games on ",
+    Sys.Date()
+  )
   # rtoot::post_toot(
   #   status = status,
   #   media = file.path(graphic_dir, "series_odds.png"),
@@ -597,18 +853,35 @@ tweetSeries <- function(params = NULL, graphic_dir = getOption("HockeyModel.grap
 #'
 #' @return NULL
 #' @export
-tweetPlayoffOdds <- function(summary_results = NULL, params = NULL, graphic_dir = getOption("HockeyModel.graphics.path"), trimcup = FALSE) {
+tweetPlayoffOdds <- function(
+  summary_results = NULL,
+  params = NULL,
+  graphic_dir = getOption("HockeyModel.graphics.path"),
+  trimcup = FALSE
+) {
   stopifnot(requireNamespace("gt", quietly = TRUE))
 
   params <- parse_dc_params(params)
-  playoffodds <- simulatePlayoffs(summary_results = summary_results, params = params)
+  playoffodds <- simulatePlayoffs(
+    summary_results = summary_results,
+    params = params
+  )
 
   playoffodds$Conference <- getTeamConferences(playoffodds$Team)
   if (trimcup) {
-    plt <- format_playoff_odds(playoff_odds = playoffodds, caption_text = "NHL Playoffs", trim = FALSE, trimcup = trimcup)
+    plt <- format_playoff_odds(
+      playoff_odds = playoffodds,
+      caption_text = "NHL Playoffs",
+      trim = FALSE,
+      trimcup = trimcup
+    )
     gt::gtsave(plt, filename = file.path(graphic_dir, "playoff_odds.png"))
 
-    status <- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
+    status <- paste0(
+      "#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ",
+      Sys.Date(),
+      ". #HockeyTwitter"
+    )
 
     # Posting Tweet
     # rtoot::post_toot(
@@ -618,18 +891,39 @@ tweetPlayoffOdds <- function(summary_results = NULL, params = NULL, graphic_dir 
     # )
     try(
       atrrr::post(
-        text = paste0("#NHL Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+        text = paste0(
+          "#NHL Playoff and #StanleyCup Odds before games on ",
+          Sys.Date(),
+          "."
+        ),
         image = file.path(graphic_dir, "playoff_odds.png"),
         image_alt = "Playoff Odds"
       )
     )
-
   } else {
     for (conf in unique(playoffodds$Conference)) {
-      plt <- format_playoff_odds(playoff_odds = playoffodds[playoffodds$Conference == conf, which(names(playoffodds) != "Conference")], caption_text = paste(conf, "Conference"), trim = FALSE, trimcup = trimcup)
-      gt::gtsave(plt, filename = file.path(graphic_dir, paste0(tolower(conf), "_playoff_odds.png")))
+      plt <- format_playoff_odds(
+        playoff_odds = playoffodds[
+          playoffodds$Conference == conf,
+          which(names(playoffodds) != "Conference")
+        ],
+        caption_text = paste(conf, "Conference"),
+        trim = FALSE,
+        trimcup = trimcup
+      )
+      gt::gtsave(
+        plt,
+        filename = file.path(
+          graphic_dir,
+          paste0(tolower(conf), "_playoff_odds.png")
+        )
+      )
     }
-    status <- paste0("#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), ". #HockeyTwitter")
+    status <- paste0(
+      "#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ",
+      Sys.Date(),
+      ". #HockeyTwitter"
+    )
 
     # Posting Tweet
     # rtoot::post_toot(
@@ -644,7 +938,11 @@ tweetPlayoffOdds <- function(summary_results = NULL, params = NULL, graphic_dir 
     # )
     try(
       atrrr::post(
-        text = paste0("#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+        text = paste0(
+          "#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ",
+          Sys.Date(),
+          "."
+        ),
         image = file.path(graphic_dir, "eastern_playoff_odds.png"),
         image_alt = "Eastern Playoff Odds"
       )
@@ -652,7 +950,11 @@ tweetPlayoffOdds <- function(summary_results = NULL, params = NULL, graphic_dir 
 
     try(
       atrrr::post(
-        text = paste0("#NHL Western Conference Playoff and #StanleyCup Odds before games on ", Sys.Date(), "."),
+        text = paste0(
+          "#NHL Western Conference Playoff and #StanleyCup Odds before games on ",
+          Sys.Date(),
+          "."
+        ),
         image = file.path(graphic_dir, "western_playoff_odds.png"),
         image_alt = "Western Playoff Odds"
       )
