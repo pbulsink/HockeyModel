@@ -694,7 +694,7 @@ getAPISeries <- function(season = getCurrentSeason8()) {
       "HomeSeed" = as.integer(.data$HomeSeed),
       "AwaySeed" = as.integer(.data$AwaySeed)
     )
-  return(playoffSeries)
+  return(playoffSeries[complete.cases(playoffSeries),])
 }
 
 
