@@ -659,7 +659,7 @@ getAPISeries <- function(season = getCurrentSeason8()) {
     dplyr::select(
       "Round" = "playoffRound",
       "Series" = "seriesLetter",
-      "HomeTeam" = "topSeedTeam",
+      "HomeTeam" = "topSeedTeam.name.default",
       "AwayTeam" = "bottomSeedTeam.name.default",
       "HomeWins" = "topSeedWins",
       "AwayWins" = "bottomSeedWins",
