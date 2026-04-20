@@ -201,9 +201,12 @@ local_mocked_bindings(
 result <- my_function_that_calls_other_fn()
 ```
 
+For anything that requests data from a online resource use `vcr` to enable offline testing.
+
 ## Common mistakes
 
 - **Do not modify tests to make them pass.** Fix the implementation.
 - **Do not write tests that depend on other tests' state.** Each test must be independently runnable.
 - **Ask for help if test is bad.** If you think a test might be invalid, do not loop through trying to make impossible tests pass. Ask for help if possible.
 - **Functions written in {filename}.R should have tests written to test_{filename}.R** 
+- **Do not simply write `is_function(foo)` as this is a meaningless test of the `foo()` function**
