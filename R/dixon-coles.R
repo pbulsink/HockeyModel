@@ -87,7 +87,7 @@ todayDC <- function(
   if (include_xG) {
     preds$Away_xG <- preds$Home_xG <- 0
   }
-  for (i in seq_along(nrow(preds))) {
+  for (i in seq_len(nrow(preds))) {
     p <- DCPredict(
       preds$HomeTeam[[i]],
       preds$AwayTeam[[i]],

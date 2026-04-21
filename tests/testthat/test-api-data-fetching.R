@@ -151,14 +151,14 @@ test_that("recordTodaysPredictions handles valid predictions", {
     Draw = 0.1,
     GameID = 2024010001
   )
-  
+
   result <- tryCatch({
     recordTodaysPredictions(predictions = preds, filedir = tmpdir)
     TRUE
   }, error = function(e) {
     FALSE
   })
-  
+
   expect_true(is.logical(result))
 })
 

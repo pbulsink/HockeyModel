@@ -32,8 +32,8 @@ test_that("Scores are OK", {
   ), row.names = c(NA, -1L), class = "data.frame")
   expect_identical(score, goodscore)
 
-  today <- games_today(date = as.Date("2019-11-01"))
-  expect_true(is.null(today)) # Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
+  expect_message(games_today(date = as.Date("2019-11-01")), "Games on today aren't present in Schedule")
+  expect_true(is.null(games_today(date = as.Date("2019-11-01")))) # Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
 })
 
 test_that("Series is ok", {

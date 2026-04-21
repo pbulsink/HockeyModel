@@ -93,7 +93,7 @@ test_that("dcResult handles various score combinations", {
   set.seed(42)
   result1 <- dcResult(5, 2)
   expect_true(result1 %in% c(0, 0.25, 0.4, 0.5, 0.6, 0.75, 1))
-  
+
   set.seed(42)
   result2 <- dcResult(2, 5)
   expect_true(result2 %in% c(0, 0.25, 0.4, 0.5, 0.6, 0.75, 1))
@@ -105,7 +105,7 @@ test_that("Predictions Run", {
 
   sched <- schedule[schedule$Date > as.Date("2018-09-01") & schedule$Date <= as.Date("2019-04-06"), ]
   scor <- scores[scores$Date < as.Date("2018-09-01"), ]
-  
+
   sched$Date <- as.Date(sched$Date)
   scor$Date <- as.Date(scor$Date)
 
@@ -142,7 +142,7 @@ test_that("dcPredictMultipleDays returns TRUE", {
       likelihood_graphic = FALSE
     ))
     expect_true(result)
-    
+
     if (file.exists("./2018-08-01-predictions.RDS")) {
       file.remove("./2018-08-01-predictions.RDS")
     }
@@ -188,7 +188,7 @@ test_that("DC Today returns data or NULL", {
 
   today_odds <- todayDC(today = as.Date("2019-11-01"))
   expect_true(is.null(today_odds) || is.data.frame(today_odds))
-  
+
   if (!is.null(today_odds)) {
     expect_true("HomeTeam" %in% colnames(today_odds))
     expect_true("AwayTeam" %in% colnames(today_odds))
@@ -219,7 +219,7 @@ test_that("dcResult handles different scores", {
   set.seed(42)
   result1 <- dcResult(3, 1)
   expect_true(result1 %in% c(1, 0.75, 0.6, 0.4, 0.25, 0))
-  
+
   set.seed(42)
   result2 <- dcResult(1, 3)
   expect_true(result2 %in% c(1, 0.75, 0.6, 0.4, 0.25, 0))

@@ -16,5 +16,6 @@ mutate_cond(.data, condition, ..., envir = parent.frame())
 \item{envir}{environment to cary through.}
 }
 \description{
-Mutate at condition. useful in dplyr pipes. From StackOverflow https://stackoverflow.com/a/34096575/3933405
+Mutate at condition. useful in dplyr pipes.
+From StackOverflow https://stackoverflow.com/a/34096575/3933405
 }

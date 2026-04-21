@@ -10,8 +10,11 @@
 #'
 #' @export
 updateModel <- function(save_data = TRUE) {
+  cli::cli_inform("Updating Schedule")
   schedule <- updateScheduleAPI(save_data = save_data)
+  cli::cli_inform("Updating Scores")
   scores <- updateScoresAPI(schedule = schedule, save_data = save_data)
+  cli::cli_inform("Refitting Model Parameters")
   params <- updateDC(scores = scores, save_data = save_data)
   return(list(
     "scores" = scores,

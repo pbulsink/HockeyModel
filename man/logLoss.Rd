@@ -9,7 +9,8 @@ logLoss(predicted, actual)
 \arguments{
 \item{predicted}{Predicted odds of an event occuring}
 
-\item{actual}{If the event occured (0 or 1), or model results in 0, 0.25, 0.4, 0.6, 0.75, 1.0}
+\item{actual}{If the event occured (0 or 1), or model results
+in 0, 0.25, 0.4, 0.6, 0.75, 1.0}
 }
 \value{
 a log loss value for the event(s)
