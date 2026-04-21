@@ -641,6 +641,70 @@ get_team_xg_stats <- function(scores = HockeyModel::scores) {
 }
 
 
+# Fit a global xG scaling ratio by regressing observed per-team-game xG on predicted
+# lambdas from the current model. Returns a multiplicative ratio to convert
+# predicted lambdas to xG-scaled lambdas (defaults to 1 if insufficient data).
+fit_xg_ratio <- function(params = NULL, scores = HockeyModel::scores, min_games = 10, clamp = c(0.1, 10)) {
+  params <- parse_dc_params(params)
+  if (is.null(scores)) return(1)
+  if (!all(c("HomexG", "AwayxG", "HomeTeam", "AwayTeam") %in% names(scores))) return(1)
+  n <- nrow(scores)
+  if (n == 0) return(1)
+
+  pred_h <- numeric(n)
+  pred_a <- numeric(n)
+
+  for (i in seq_len(n)) {
+    ph <- try(
+      stats::predict(params$m, data.frame(Home = 1, Team = scores$HomeTeam[i], Opponent = scores$AwayTeam[i]), type = "response")[1],
+      TRUE
+    )
+    if (!is.numeric(ph) || is.na(ph)) {
+      ph <- tryCatch(
+        DCPredictErrorRecover(team = scores$HomeTeam[i], opponent = scores$AwayTeam[i], homeiceadv = TRUE, m = params$m),
+        error = function(e) NA
+      )
+    }
+
+    pa <- try(
+      stats::predict(params$m, data.frame(Home = 0, Team = scores$AwayTeam[i], Opponent = scores$HomeTeam[i]), type = "response")[1],
+      TRUE
+    )
+    if (!is.numeric(pa) || is.na(pa)) {
+      pa <- tryCatch(
+        DCPredictErrorRecover(team = scores$AwayTeam[i], opponent = scores$HomeTeam[i], homeiceadv = FALSE, m = params$m),
+        error = function(e) NA
+      )
+    }
+
+    pred_h[i] <- as.numeric(ph)
+    pred_a[i] <- as.numeric(pa)
+  }
+
+  obs_h <- as.numeric(scores$HomexG)
+  obs_a <- as.numeric(scores$AwayxG)
+
+  keep_h <- !is.na(pred_h) & !is.na(obs_h) & pred_h > 0 & is.finite(pred_h) & is.finite(obs_h)
+  keep_a <- !is.na(pred_a) & !is.na(obs_a) & pred_a > 0 & is.finite(pred_a) & is.finite(obs_a)
+
+  count <- sum(keep_h) + sum(keep_a)
+  if (count < min_games) return(1)
+
+  pred_all <- c(pred_h[keep_h], pred_a[keep_a])
+  obs_all <- c(obs_h[keep_h], obs_a[keep_a])
+
+  denom <- sum(pred_all^2, na.rm = TRUE)
+  if (denom <= 0) return(1)
+
+  ratio <- sum(obs_all * pred_all, na.rm = TRUE) / denom
+  if (!is.finite(ratio) || ratio <= 0) ratio <- 1
+
+  # Clamp to avoid extreme scaling
+  ratio <- min(max(ratio, clamp[1]), clamp[2])
+  return(as.numeric(ratio))
+}
+
+
 dcLambda <- function(home, away, params = NULL, scores = HockeyModel::scores, use_xg = FALSE) {
   params <- parse_dc_params(params = params)
   xg <- list("home" = NA, "away" = NA)
@@ -680,17 +744,12 @@ dcLambda <- function(home, away, params = NULL, scores = HockeyModel::scores, us
     )
   }
 
-  # Optionally adjust predicted goals using team-level average xG from historical data.
+  # Optionally adjust predicted goals using fitted xG scaling ratio based on historical xG vs predicted lambdas.
   if (isTRUE(use_xg)) {
-    team_stats <- tryCatch(get_team_xg_stats(scores), error = function(e) NULL)
-    if (!is.null(team_stats)) {
-      home_xg_team <- team_stats$team_xg_for[[home]]
-      away_xg_team <- team_stats$team_xg_for[[away]]
-      league_avg <- team_stats$league_avg
-      if (!is.null(home_xg_team) && !is.null(away_xg_team) && !is.na(league_avg) && league_avg > 0) {
-        xg$home <- as.numeric(xg$home) * (as.numeric(home_xg_team) / as.numeric(league_avg))
-        xg$away <- as.numeric(xg$away) * (as.numeric(away_xg_team) / as.numeric(league_avg))
-      }
+    ratio <- tryCatch(fit_xg_ratio(params = params, scores = scores), error = function(e) 1)
+    if (!is.null(ratio) && is.numeric(ratio) && is.finite(ratio) && ratio > 0) {
+      xg$home <- as.numeric(xg$home) * ratio
+      xg$away <- as.numeric(xg$away) * ratio
     }
   }
 
