@@ -2163,6 +2163,9 @@ recordTodaysPredictions <- function(
 cleanupPredictionsFile <- function(
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv")
 ) {
+  if (!file.exists(filepath)) {
+    return(TRUE)
+  }
   dailyodds <- utils::read.csv(filepath)
   dailyodds <- dailyodds |>
     dplyr::mutate("Date" = as.Date(.data$Date)) |>

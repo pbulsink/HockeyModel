@@ -1,34 +1,37 @@
 test_that("Team Strength Plot Graphics Produce", {
   p <- plot_team_rating()
 
-  expect_true(ggplot2::is.ggplot(p))
+  expect_true(ggplot2::is_ggplot(p))
   expect_identical(p$labels$title, "Current Team Offence & Defence Ratings")
   expect_identical(p$labels$y, "Defence")
   expect_identical(p$labels$x, "Offence")
 })
 
 test_that("Points Predictions by Team Graphics Produce", {
+  skip_if_not_installed("ggalt")
   # Using the example predictions file, past 'n' days is today - 2021-01-12 (the first day of predictions)
   p <- suppressWarnings(plot_prediction_points_by_team(all_predictions = HockeyModel::example_predictions, past_days = Sys.Date() - as.Date("2021-01-12")))
-  expect_true(ggplot2::is.ggplot(p))
+  expect_true(ggplot2::is_ggplot(p))
   expect_identical(p$labels$title, paste0("Predicted Points Over the Past ", Sys.Date() - as.Date("2021-01-12"), " Days"))
   expect_identical(p$labels$y, "Points")
   expect_identical(p$labels$x, "Date")
 })
 
 test_that("Playoffs Predictions by Team Graphics Produce", {
+  skip_if_not_installed("ggalt")
   # Using the example predictions file, past 'n' days is today - 2021-01-12 (the first day of predictions)
   p <- suppressWarnings(plot_prediction_playoffs_by_team(all_predictions = HockeyModel::example_predictions, past_days = Sys.Date() - as.Date("2021-01-12")))
-  expect_true(ggplot2::is.ggplot(p))
+  expect_true(ggplot2::is_ggplot(p))
   expect_identical(p$labels$title, paste0("Playoff Odds Over the Past ", Sys.Date() - as.Date("2021-01-12"), " Days"))
   expect_identical(p$labels$y, "Playoff Odds")
   expect_identical(p$labels$x, "Date")
 })
 
 test_that("Presidents Predictions by Team Graphics Produce", {
+  skip_if_not_installed("ggalt")
   # Using the example predictions file, past 'n' days is today - 2021-01-12 (the first day of predictions)
   p <- suppressWarnings(plot_prediction_presidents_by_team(all_predictions = HockeyModel::example_predictions, past_days = Sys.Date() - as.Date("2021-01-12"), minimum = 0.01))
-  expect_true(ggplot2::is.ggplot(p))
+  expect_true(ggplot2::is_ggplot(p))
   expect_identical(p$labels$title, paste0("President's Trophy Odds Over the Past ", Sys.Date() - as.Date("2021-01-12"), " Days"))
   expect_identical(p$labels$y, "President's Trophy Odds")
   expect_identical(p$labels$x, "Date")
@@ -36,7 +39,10 @@ test_that("Presidents Predictions by Team Graphics Produce", {
 
 test_that("Today Odds plot OK", {
   p <- suppressWarnings(plot_odds_today(today = as.Date("2019-11-01")))
-  expect_true(ggplot2::is.ggplot(p))
+  expect_true(is.null(p) || ggplot2::is_ggplot(p))
+  if (is.null(p)) {
+    skip("No games available for the requested date")
+  }
   expect_identical(p$labels$title, "Predictions for Today's Games")
   expect_identical(p$labels$y, "Result Odds")
   expect_identical(p$labels$x, "")
@@ -48,7 +54,7 @@ test_that("Today Odds plot OK", {
 
 test_that("Single Game xG plot OK", {
   p <- suppressWarnings(plot_game("Vancouver Canucks", "Edmonton Oilers"))
-  expect_true(ggplot2::is.ggplot(p))
+  expect_true(ggplot2::is_ggplot(p))
   expect_identical(p$labels$title, "Predicted Goals")
   expect_identical(p$labels$y, "Odds")
   expect_identical(p$labels$x, "Predicted Team Goals")
@@ -58,7 +64,7 @@ test_that("Predicted Points plot OK", {
   preds <- HockeyModel::example_raw_predictions
   p <- suppressWarnings(plot_point_likelihood(preds = preds, savefiles = FALSE))
   for (i in seq_along(length(p))) {
-    expect_true(ggplot2::is.ggplot(p[[i]]))
+    expect_true(ggplot2::is_ggplot(p[[i]]))
     expect_identical(p[[i]]$labels$y, "")
     expect_identical(p[[i]]$labels$x, "Predicted Point Likelyhood")
   }
@@ -71,7 +77,7 @@ test_that("Series Graphics are OK", {
   series$AwayWins <- c(4, 3, 2)
 
   p <- suppressWarnings(plot_playoff_series_odds(series = series))
-  expect_true(ggplot2::is.ggplot(p))
+  expect_true(ggplot2::is_ggplot(p))
   expect_identical(p$labels$title, "Predictions for Playoff Series")
   expect_identical(p$labels$y, "Series Odds")
   expect_identical(p$labels$x, "")

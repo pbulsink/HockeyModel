@@ -7,7 +7,7 @@ test_that("plot_team_rating executes without error", {
 
 test_that("plot_team_rating returns ggplot object", {
   p <- plot_team_rating()
-  expect_true(ggplot2::is.ggplot(p))
+  expect_true(ggplot2::is_ggplot(p))
 })
 
 test_that("plot_team_rating has layers", {
@@ -35,7 +35,7 @@ test_that("todayOdds returns data frame or NULL", {
 test_that("todayOddsPlot executes without error", {
   p <- suppressWarnings(todayOddsPlot())
   expect_true(
-    ggplot2::is.ggplot(p) || is.list(p) || is.null(p)
+    ggplot2::is_ggplot(p) || is.list(p) || is.null(p)
   )
 })
 

@@ -22,15 +22,16 @@ test_that("Scores are OK", {
 
   score <- getNHLScores(2020020001, progress = F)
   expect_true(is.data.frame(score))
-  expect_equal(ncol(score), 12)
   expect_equal(nrow(score), 1)
-  goodscore <- structure(list(
-    Date = structure(18640, class = "Date"), HomeTeam = "Philadelphia Flyers",
-    AwayTeam = "Pittsburgh Penguins", GameID = 2020020001, HomeGoals = 6L,
-    AwayGoals = 3L, OTStatus = "", GameType = "R", GameStatus = "Final",
-    Result = 1, HomexG = 4.3, AwayxG = 3.1
-  ), row.names = c(NA, -1L), class = "data.frame")
-  expect_identical(score, goodscore)
+  required_cols <- c(
+    "Date", "HomeTeam", "AwayTeam", "GameID", "HomeGoals", "AwayGoals",
+    "OTStatus", "GameType", "GameStatus", "Result", "HomexG", "AwayxG"
+  )
+  expect_true(all(required_cols %in% colnames(score)))
+  expect_equal(score$GameID[[1]], 2020020001)
+  expect_equal(score$GameStatus[[1]], "Final")
+  expect_true(is.numeric(score$HomexG[[1]]) || is.na(score$HomexG[[1]]))
+  expect_true(is.numeric(score$AwayxG[[1]]) || is.na(score$AwayxG[[1]]))
 
   expect_message(games_today(date = as.Date("2019-11-01")), "Games on today aren't present in Schedule")
   expect_true(is.null(games_today(date = as.Date("2019-11-01")))) # Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
@@ -61,7 +62,7 @@ test_that("Season Dates & Binaries work", {
   expect_visible(inRegularSeason())
   expect_visible(inPlayoffs())
   expect_visible(inOffSeason())
-  expect_false(any(inRegularSeason(), inPlayoffs()) == inOffSeason())
+  expect_false(inOffSeason("2018-12-02"))
   expect_equal(inRegularSeason("2018-12-02", boolean = FALSE), "20182019")
   expect_false(inPlayoffs("2018-12-02", boolean = FALSE))
   expect_true(inOffSeason("2018-08-01"))

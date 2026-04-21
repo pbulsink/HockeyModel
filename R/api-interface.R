@@ -637,9 +637,10 @@ clean_names <- function(sc) {
 #' whether the series is complete
 #' @export
 getAPISeries <- function(season = getCurrentSeason8()) {
+  stopifnot(seasonValidator(season))
   url <- paste0(
     "https://api-web.nhle.com/v1/playoff-bracket/",
-    substr(getCurrentSeason8(), 5, 8)
+    substr(season, 5, 8)
   )
 
   series <- httr2::request(url) |>
@@ -769,7 +770,7 @@ getCurrentSeason8 <- function() {
     jsonlite::fromJSON()
   seasons <- seasons$data
 
-  return(utils::tail(seasons$id, 1))
+  return(as.character(utils::tail(seasons$id, 1)))
 }
 
 
@@ -808,6 +809,8 @@ getSeasonEndDate <- function(season = NULL) {
 #' @return Either TRUE/FALSE or a seasonID/FALSE
 #' @export
 inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
+  stopifnot(is.Date(date))
+  date <- as.Date(date)
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>
     httr2::req_cache(tempdir()) |>
@@ -823,7 +826,7 @@ inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
     return(ifelse(nrow(seasons_list) > 0, TRUE, FALSE))
   } else {
     if (nrow(seasons_list) > 0) {
-      return(seasons_list$id)
+      return(as.character(seasons_list$id))
     } else {
       return(FALSE)
     }
@@ -867,8 +870,6 @@ inOffSeason <- function(date = Sys.Date()) {
 inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
   stopifnot(is.Date(date))
   date <- as.Date(date)
-
-  return(all(date > getSeasonEndDate(), date < as.Date("2025-07-05")))
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>
     httr2::req_cache(tempdir()) |>
@@ -885,7 +886,7 @@ inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
     return(ifelse(nrow(seasons_list) > 0, TRUE, FALSE))
   } else {
     if (nrow(seasons_list) > 0) {
-      return(seasons_list$seasonId)
+      return(as.character(seasons_list$id))
     } else {
       return(FALSE)
     }
@@ -912,7 +913,7 @@ getSeason <- function(gamedate = Sys.Date()) {
     gd <- as.Date(gd)
     season_list <- seasons[seasons$startDate <= gd & seasons$endDate >= gd, ]
     if (nrow(season_list) == 1) {
-      return(season_list$id)
+      return(as.character(season_list$id))
     } else {
       return(NULL)
     }
