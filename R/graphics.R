@@ -55,9 +55,9 @@ plot_prediction_points_by_team <- function(
   p <- ggplot2::ggplot(
     data = all_predictions,
     ggplot2::aes(
-      x = predictionDate,
-      y = meanPoints,
-      colour = Team
+      x = .data$predictionDate,
+      y = .data$meanPoints,
+      colour = .data$Team
     )
   ) +
     ggalt::geom_xspline(spline_shape = 0.5) +
@@ -79,7 +79,7 @@ plot_prediction_points_by_team <- function(
   if (requireNamespace("ggrepel", quietly = TRUE)) {
     p <- p +
       ggrepel::geom_label_repel(
-        ggplot2::aes(label = label),
+        ggplot2::aes(label = .data$label),
         direction = "y",
         na.rm = TRUE,
         segment.alpha = 0,
@@ -163,9 +163,9 @@ plot_prediction_playoffs_by_team <- function(
   p <- ggplot2::ggplot(
     data = all_predictions,
     ggplot2::aes(
-      x = predictionDate,
-      y = Playoffs,
-      colour = Team
+      x = .data$predictionDate,
+      y = .data$Playoffs,
+      colour = .data$Team
     )
   ) +
     ggalt::geom_xspline(spline_shape = 0.5) +
@@ -188,7 +188,7 @@ plot_prediction_playoffs_by_team <- function(
   if (requireNamespace("ggrepel", quietly = TRUE)) {
     p <- p +
       ggrepel::geom_label_repel(
-        ggplot2::aes(label = label),
+        ggplot2::aes(label = .data$label),
         direction = "y",
         na.rm = TRUE,
         segment.alpha = 0,
@@ -266,9 +266,9 @@ plot_prediction_presidents_by_team <- function(
   p <- ggplot2::ggplot(
     data = all_predictions,
     ggplot2::aes(
-      x = predictionDate,
-      y = Presidents,
-      colour = Team
+      x = .data$predictionDate,
+      y = .data$Presidents,
+      colour = .data$Team
     )
   ) +
     ggalt::geom_xspline(spline_shape = 0.5) +
@@ -299,7 +299,7 @@ plot_prediction_presidents_by_team <- function(
   if (requireNamespace("ggrepel", quietly = TRUE)) {
     p <- p +
       ggrepel::geom_label_repel(
-        ggplot2::aes(label = label),
+        ggplot2::aes(label = .data$label),
         direction = "y",
         na.rm = TRUE,
         segment.alpha = 0,
@@ -437,7 +437,7 @@ plot_pace_by_division <- function(
 
     plt <- ggplot2::ggplot(
       tp,
-      ggplot2::aes(x = GameNum, y = PointDiff, colour = Team)
+      ggplot2::aes(x = .data$GameNum, y = .data$PointDiff, colour = .data$Team)
     ) +
       # ggplot2::geom_line(na.rm = TRUE) +
       ggplot2::geom_smooth(span = 0.2, na.rm = TRUE, se = FALSE) +
@@ -465,7 +465,7 @@ plot_pace_by_division <- function(
     if (requireNamespace("ggrepel", quietly = TRUE)) {
       plt <- plt +
         ggrepel::geom_label_repel(
-          ggplot2::aes(label = label),
+          ggplot2::aes(label = .data$label),
           direction = "y",
           na.rm = TRUE,
           segment.alpha = 0,
@@ -564,9 +564,9 @@ plot_pace_by_team <- function(
     plt <- ggplot2::ggplot(
       teamscores,
       ggplot2::aes(
-        x = GameNum,
-        y = cPoints,
-        colour = Venue
+        x = .data$GameNum,
+        y = .data$cPoints,
+        colour = .data$Venue
       )
     ) +
       ggplot2::geom_point() +
@@ -755,9 +755,9 @@ plot_odds_today <- function(
   p <- ggplot2::ggplot(
     melted,
     ggplot2::aes(
-      y = value,
-      x = HomeTeam,
-      group = variable
+      y = .data$value,
+      x = .data$HomeTeam,
+      group = .data$variable
     )
   ) +
     ggplot2::geom_bar(
@@ -896,9 +896,9 @@ plot_playoff_series_odds <- function(
   p <- ggplot2::ggplot(
     melted,
     ggplot2::aes(
-      y = value,
-      x = HomeTeam,
-      group = variable
+      y = .data$value,
+      x = .data$HomeTeam,
+      group = .data$variable
     )
   ) +
     ggplot2::geom_bar(
@@ -1055,7 +1055,7 @@ plot_game <- function(home, away, params = NULL, maxgoal = 10) {
 
   p <- ggplot2::ggplot(
     data = goals,
-    ggplot2::aes(x = Goals, y = Density, fill = Team)
+    ggplot2::aes(x = .data$Goals, y = .data$Density, fill = .data$Team)
   ) +
     ggplot2::geom_area(position = "identity", alpha = 0.6) +
     ggplot2::geom_vline(xintercept = mu, linetype = "dashed") +
@@ -1182,7 +1182,7 @@ plot_point_likelihood <- function(
 
     plot <- ggplot2::ggplot(
       conf_preds,
-      ggplot2::aes(x = Points, y = Team, fill = Team)
+      ggplot2::aes(x = .data$Points, y = .data$Team, fill = .data$Team)
     ) +
       ggridges::geom_density_ridges(
         rel_min_height = 0.01,
@@ -1271,10 +1271,10 @@ plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
   p <- ggplot2::ggplot(
     team_params,
     ggplot2::aes(
-      x = Attack,
-      y = Defence,
-      color = Team,
-      label = Team
+      x = .data$Attack,
+      y = .data$Defence,
+      color = .data$Team,
+      label = .data$Team
     )
   ) +
     ggplot2::geom_hline(yintercept = 0, colour = "grey", size = 1) +
