@@ -80,9 +80,10 @@ todayOddsPlot <- function(
       "Scores may be out of date. This can affect predictions. Please update if midseason."
     )
   }
-  if (nrow(games_today(date = date)) == 0) {
+  games <- games_today(schedule = schedule, date = date)
+  if (is.null(games) || nrow(games) == 0) {
     message("No games today.")
-    return()
+    return(NULL)
   }
   return(plot_odds_today(today = date, params = params, schedule = schedule))
 }

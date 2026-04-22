@@ -15,7 +15,7 @@ plot_prediction_points_by_team <- function(
 ) {
   stopifnot(all(
     requireNamespace("ggplot2", quietly = TRUE),
-    requireNamespace("ggalt", quietly = TRUE)
+    requireNamespace("ggforce", quietly = TRUE)
   ))
   # Trim predictions to fit plot
   all_predictions$predictionDate <- as.Date(all_predictions$predictionDate)
@@ -60,7 +60,7 @@ plot_prediction_points_by_team <- function(
       colour = .data$Team
     )
   ) +
-    ggalt::geom_xspline(spline_shape = 0.5) +
+    ggforce::geom_bspline() +
     ggplot2::facet_wrap(
       ~facet,
       ncol = length(unique(all_predictions$Division))
@@ -106,7 +106,7 @@ plot_prediction_playoffs_by_team <- function(
 ) {
   stopifnot(all(
     requireNamespace("ggplot2", quietly = TRUE),
-    requireNamespace("ggalt", quietly = TRUE)
+    requireNamespace("ggforce", quietly = TRUE)
   ))
   # Trim predictions to fit plot
   all_predictions$predictionDate <- as.Date(all_predictions$predictionDate)
@@ -168,7 +168,7 @@ plot_prediction_playoffs_by_team <- function(
       colour = .data$Team
     )
   ) +
-    ggalt::geom_xspline(spline_shape = 0.5) +
+    ggforce::geom_bspline() +
     # ggplot2::geom_line() +
     ggplot2::facet_wrap(
       ~facet,
@@ -218,7 +218,7 @@ plot_prediction_presidents_by_team <- function(
 ) {
   stopifnot(all(
     requireNamespace("ggplot2", quietly = TRUE),
-    requireNamespace("ggalt", quietly = TRUE)
+    requireNamespace("ggforce", quietly = TRUE)
   ))
   # Trim predictions to fit plot
   all_predictions$predictionDate <- as.Date(all_predictions$predictionDate)
@@ -271,7 +271,7 @@ plot_prediction_presidents_by_team <- function(
       colour = .data$Team
     )
   ) +
-    ggalt::geom_xspline(spline_shape = 0.5) +
+    ggforce::geom_bspline() +
     ggplot2::facet_wrap(
       ~facet,
       ncol = length(unique(all_predictions$Division))
@@ -1277,8 +1277,8 @@ plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
       label = .data$Team
     )
   ) +
-    ggplot2::geom_hline(yintercept = 0, colour = "grey", size = 1) +
-    ggplot2::geom_vline(xintercept = 0, colour = "grey", size = 1) +
+    ggplot2::geom_hline(yintercept = 0, colour = "grey", linewidth = 1) +
+    ggplot2::geom_vline(xintercept = 0, colour = "grey", linewidth = 1) +
     ggplot2::geom_point() +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::labs(
