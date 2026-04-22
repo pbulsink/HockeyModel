@@ -28,7 +28,7 @@ Current predictions are below, and are always posted on Bluesky at [@bot.bulsink
 <img src="https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/graphics/president_odds.png" alt="President's Trophy Odds">
 
 # Recent Changes
-Installation now doesn't automatically install documenting, testing, tweeting, graphics and parallel processing requirements. You may wish to run `install.packages(c('knitr', 'rmarkdown', 'testthat', 'webshot', 'progress', 'markdown', 'covr', 'tictoc', 'parallel', 'ggrepel', 'gt', 'ggalt', 'ggridges', 'scales', 'ggplot2', 'rtweet', 'devtools', 'usethis'))`.
+Installation now doesn't automatically install documenting, testing, tweeting, graphics and parallel processing requirements. You may wish to run `install.packages(c('knitr', 'rmarkdown', 'testthat', 'webshot', 'progress', 'markdown', 'covr', 'tictoc', 'parallel', 'ggrepel', 'gt', 'ggforce', 'ggridges', 'scales', 'ggplot2', 'rtweet', 'devtools', 'usethis'))`.
 
 # To Do
 

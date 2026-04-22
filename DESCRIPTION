@@ -38,7 +38,7 @@ Suggests:
     parallel,
     ggrepel,
     gt,
-    ggalt,
+    ggforce,
     ggridges,
     scales,
     ggplot2,
