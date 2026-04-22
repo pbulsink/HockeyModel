@@ -8,7 +8,7 @@ test_that("Team Strength Plot Graphics Produce", {
 })
 
 test_that("Points Predictions by Team Graphics Produce", {
-  skip_if_not_installed("ggalt")
+  skip_if_not_installed("ggforce")
   # Using the example predictions file, past 'n' days is today - 2021-01-12 (the first day of predictions)
   p <- suppressWarnings(plot_prediction_points_by_team(all_predictions = HockeyModel::example_predictions, past_days = Sys.Date() - as.Date("2021-01-12")))
   expect_true(ggplot2::is_ggplot(p))
@@ -18,7 +18,7 @@ test_that("Points Predictions by Team Graphics Produce", {
 })
 
 test_that("Playoffs Predictions by Team Graphics Produce", {
-  skip_if_not_installed("ggalt")
+  skip_if_not_installed("ggforce")
   # Using the example predictions file, past 'n' days is today - 2021-01-12 (the first day of predictions)
   p <- suppressWarnings(plot_prediction_playoffs_by_team(all_predictions = HockeyModel::example_predictions, past_days = Sys.Date() - as.Date("2021-01-12")))
   expect_true(ggplot2::is_ggplot(p))
@@ -28,7 +28,7 @@ test_that("Playoffs Predictions by Team Graphics Produce", {
 })
 
 test_that("Presidents Predictions by Team Graphics Produce", {
-  skip_if_not_installed("ggalt")
+  skip_if_not_installed("ggforce")
   # Using the example predictions file, past 'n' days is today - 2021-01-12 (the first day of predictions)
   p <- suppressWarnings(plot_prediction_presidents_by_team(all_predictions = HockeyModel::example_predictions, past_days = Sys.Date() - as.Date("2021-01-12"), minimum = 0.01))
   expect_true(ggplot2::is_ggplot(p))
