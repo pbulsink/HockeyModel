@@ -638,7 +638,9 @@ clean_names <- function(sc) {
 #' @export
 getAPISeries <- function(season = getCurrentSeason8()) {
   if (!seasonValidator(season)) {
-    cli::cli_abort("{.arg season} must be an 8-digit season ID string like {.val 20182019}.")
+    cli::cli_abort(
+      "{.arg season} must be an 8-digit season ID string like {.val 20182019}."
+    )
   }
   url <- paste0(
     "https://api-web.nhle.com/v1/playoff-bracket/",
@@ -697,7 +699,7 @@ getAPISeries <- function(season = getCurrentSeason8()) {
       "HomeSeed" = as.integer(.data$HomeSeed),
       "AwaySeed" = as.integer(.data$AwaySeed)
     )
-  return(playoffSeries[complete.cases(playoffSeries),])
+  return(playoffSeries[complete.cases(playoffSeries), ])
 }
 
 

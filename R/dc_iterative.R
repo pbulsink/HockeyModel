@@ -840,7 +840,7 @@ getReplacementRankings <- function(
     "rankings_date" = Sys.Date()
   )
   if (save_data && requireNamespace("usethis", quietly = TRUE)) {
-    usethis::use_data(iterativeRankings, overwrite = T)
+    usethis::use_data(iterativeRankings, overwrite = TRUE)
   }
   invisible(iterativeRankings)
 }
@@ -880,7 +880,7 @@ getReplacementIterativeParameters <- function(
   )
   iterativeParameters <- list("params_wl" = params_wl, "params_xg" = params_xg)
   if (save_data && requireNamespace("usethis", quietly = TRUE)) {
-    usethis::use_data(iterativeParameters, overwrite = T)
+    usethis::use_data(iterativeParameters, overwrite = TRUE)
   }
   invisible(iterativeParameters)
 }

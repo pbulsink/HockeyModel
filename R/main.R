@@ -475,7 +475,7 @@ tweetPace <- function(
   scores = HockeyModel::scores
 ) {
   # make sure we're working with the most up-to-date info.
-  scores <- updateScoresAPI(save_data = T)
+  scores <- updateScoresAPI(save_data = TRUE)
 
   # Make Pace Plots
   plot_pace_by_team(

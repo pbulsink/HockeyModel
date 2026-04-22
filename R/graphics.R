@@ -377,7 +377,7 @@ plot_pace_by_division <- function(
   }
 
   games_played <- max(which(
-    rowSums(teamPerformance[, 2:ncol(teamPerformance)], na.rm = T) != 0
+    rowSums(teamPerformance[, 2:ncol(teamPerformance)], na.rm = TRUE) != 0
   ))
 
   teamPerformance <- teamPerformance[

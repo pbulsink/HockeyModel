@@ -207,7 +207,7 @@ simulateSeasonParallel <- function(
     scores = scores,
     schedule = schedule,
     params = params,
-    odds = T
+    odds = TRUE
   )
 
   odds_table$HOT <- extraTimeSolver(
@@ -450,7 +450,7 @@ loopless_sim <- function(
       schedule = schedule,
       params = params,
       nsims = nsims,
-      odds = T
+      odds = TRUE
     )
   }
 
