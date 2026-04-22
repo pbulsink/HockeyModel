@@ -174,7 +174,7 @@ playoffDC <- function(home, away, params = NULL, home_wins = 0, away_wins = 0, u
 #' @param odds whether to return odds table or simulate season
 #' @param regress whether to apply a regression to the mean for team strength on future predictions
 #' @param mu_lambda whether to return team xG values. Can't be set true if odds is true
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, k, and optional xg_weight. See [updateDC] for information on the params list
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
@@ -554,7 +554,7 @@ getWeibullParams <- function(
 #'
 #' @param home home team
 #' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, k, and optional xg_weight. See [updateDC] for information on the params list
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
