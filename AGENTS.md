@@ -66,3 +66,4 @@ For any feature, fix, or refactor:
 | from github | @.github/skills/github/SKILL.md |
 | implement issue / work on #NNN | @.github/skills/implement-issue/SKILL.md |
 | writing R functions / API design / error handling | @.github/skills/r-code/SKILL.md |
+| verify / check package / | @.github/skills/cmd-check/SKILL.md |
