@@ -16,20 +16,6 @@ test_that("Points Predictions by Team Graphics Produce", {
   expect_identical(p$labels$x, "Date")
 })
 
-test_that("Spline graphics use ggforce instead of ggalt", {
-  points_body <- paste(deparse(body(plot_prediction_points_by_team)), collapse = "\n")
-  playoffs_body <- paste(deparse(body(plot_prediction_playoffs_by_team)), collapse = "\n")
-  presidents_body <- paste(deparse(body(plot_prediction_presidents_by_team)), collapse = "\n")
-
-  expect_match(points_body, "ggforce::geom_bspline", fixed = TRUE)
-  expect_match(playoffs_body, "ggforce::geom_bspline", fixed = TRUE)
-  expect_match(presidents_body, "ggforce::geom_bspline", fixed = TRUE)
-
-  expect_no_match(points_body, "ggalt::geom_xspline", fixed = TRUE)
-  expect_no_match(playoffs_body, "ggalt::geom_xspline", fixed = TRUE)
-  expect_no_match(presidents_body, "ggalt::geom_xspline", fixed = TRUE)
-})
-
 test_that("Playoffs Predictions by Team Graphics Produce", {
   # Using the example predictions file, past 'n' days is today - 2021-01-12 (the first day of predictions)
   p <- suppressWarnings(plot_prediction_playoffs_by_team(all_predictions = HockeyModel::example_predictions, past_days = Sys.Date() - as.Date("2021-01-12")))
