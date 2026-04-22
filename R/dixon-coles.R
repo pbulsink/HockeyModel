@@ -547,6 +547,8 @@ getWeibullParams <- function(
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
 #' @param draws Whether draws are allowed. Default True
+#' @param use_xg Whether to use xG-adjusted lambdas when producing the probability matrix (logical)
+#' @param xg_weight Optional blending weight (0..1). If provided, blends xG-based and goal-based probabilities: combined = xg_weight * p_xg + (1-xg_weight) * p_goal
 #'
 #' @return a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
 #' @export
@@ -559,9 +561,68 @@ DCPredict <- function(
   expected_mean = NULL,
   season_percent = NULL,
   draws = TRUE,
-  use_xg = FALSE
+  use_xg = FALSE,
+  xg_weight = NULL
 ) {
   params <- parse_dc_params(params = params)
+
+  # If a blending weight is supplied, compute both goal-based and xG-based probability
+  # distributions and return their convex combination.
+  if (!is.null(xg_weight) && is.numeric(xg_weight)) {
+    w <- as.numeric(xg_weight)
+    if (is.na(w)) w <- 0
+    w <- min(max(w, 0), 1)
+
+    pm_goal <- dcProbMatrix(
+      home = home,
+      away = away,
+      params = params,
+      maxgoal = maxgoal,
+      scores = scores,
+      expected_mean = expected_mean,
+      season_percent = season_percent,
+      use_xg = FALSE
+    )
+
+    pm_xg <- dcProbMatrix(
+      home = home,
+      away = away,
+      params = params,
+      maxgoal = maxgoal,
+      scores = scores,
+      expected_mean = expected_mean,
+      season_percent = season_percent,
+      use_xg = TRUE
+    )
+
+    p_goal <- c(
+      sum(pm_goal[lower.tri(pm_goal)]),
+      sum(diag(pm_goal)),
+      sum(pm_goal[upper.tri(pm_goal)])
+    )
+    p_xg <- c(
+      sum(pm_xg[lower.tri(pm_xg)]),
+      sum(diag(pm_xg)),
+      sum(pm_xg[upper.tri(pm_xg)])
+    )
+
+    p_combined <- w * p_xg + (1 - w) * p_goal
+    odds <- normalizeOdds(p_combined)
+
+    if (!draws) {
+      HomeWinProbability <- p_combined[1] +
+        normalizeOdds(c(p_combined[1], p_combined[3]))[1] *
+        p_combined[2]
+      AwayWinProbability <- p_combined[3] +
+        normalizeOdds(c(p_combined[1], p_combined[3]))[2] *
+        p_combined[2]
+      odds <- normalizeOdds(c(HomeWinProbability, AwayWinProbability))
+    }
+
+    return(odds)
+  }
+
+  # Default (no blending): generate probability matrix using requested lambda source
   probability_matrix <- dcProbMatrix(
     home = home,
     away = away,
@@ -596,6 +657,87 @@ DCPredict <- function(
   return(odds)
 }
 
+
+# Fit an optimal blending weight between xG-based and goal-based predictions.
+# The function minimizes log loss on historical games by finding w in [0,1]
+# that minimizes logLoss( w * HomeWL_xg + (1-w) * HomeWL_goal , actualResult ).
+fit_xg_weight <- function(params = NULL, scores = HockeyModel::scores, min_games = 30) {
+  params <- parse_dc_params(params)
+  if (is.null(scores) || nrow(scores) == 0) return(0)
+  if (!all(c("HomeTeam", "AwayTeam", "Result") %in% names(scores))) return(0)
+
+  n <- nrow(scores)
+  p_goal_mat <- matrix(NA_real_, nrow = n, ncol = 3)
+  p_xg_mat <- matrix(NA_real_, nrow = n, ncol = 3)
+  results <- rep(NA_real_, n)
+
+  for (i in seq_len(n)) {
+    row <- scores[i, ]
+    if (is.na(row$HomeTeam) || is.na(row$AwayTeam) || is.na(row$Result)) next
+
+    pm_goal <- try(
+      dcProbMatrix(
+        home = row$HomeTeam,
+        away = row$AwayTeam,
+        params = params,
+        maxgoal = 10,
+        scores = scores,
+        use_xg = FALSE
+      ),
+      TRUE
+    )
+    pm_xg <- try(
+      dcProbMatrix(
+        home = row$HomeTeam,
+        away = row$AwayTeam,
+        params = params,
+        maxgoal = 10,
+        scores = scores,
+        use_xg = TRUE
+      ),
+      TRUE
+    )
+
+    if (inherits(pm_goal, "try-error") || inherits(pm_xg, "try-error")) next
+
+    p_goal <- c(sum(pm_goal[lower.tri(pm_goal)]), sum(diag(pm_goal)), sum(pm_goal[upper.tri(pm_goal)]))
+    p_xg <- c(sum(pm_xg[lower.tri(pm_xg)]), sum(diag(pm_xg)), sum(pm_xg[upper.tri(pm_xg)]))
+
+    if (!all(is.finite(p_goal)) || !all(is.finite(p_xg))) next
+
+    p_goal_mat[i, ] <- p_goal
+    p_xg_mat[i, ] <- p_xg
+    results[i] <- as.numeric(row$Result)
+  }
+
+  valid <- which(!is.na(results) & rowSums(is.na(p_goal_mat)) == 0 & rowSums(is.na(p_xg_mat)) == 0)
+  if (length(valid) < min_games) return(0)
+
+  p_goal_mat <- p_goal_mat[valid, , drop = FALSE]
+  p_xg_mat <- p_xg_mat[valid, , drop = FALSE]
+  results_vec <- results[valid]
+
+  # Objective: for a given w, compute combined Home.WL and return logLoss
+  objective <- function(w) {
+    p_comb <- w * p_xg_mat + (1 - w) * p_goal_mat
+    homeWL <- numeric(nrow(p_comb))
+    for (j in seq_len(nrow(p_comb))) {
+      ph <- p_comb[j, 1]
+      pd <- p_comb[j, 2]
+      pa <- p_comb[j, 3]
+      denom <- ph + pa
+      if (!is.finite(denom) || denom <= 0) {
+        homeWL[j] <- ph
+      } else {
+        homeWL[j] <- (ph / denom) * pd + ph
+      }
+    }
+    return(logLoss(homeWL, results_vec))
+  }
+
+  res <- stats::optimize(f = objective, interval = c(0, 1))
+  return(as.numeric(res$minimum))
+}
 #' DC Expected Goals
 #'
 #' @description Given a home and away team, provide lambda values
