@@ -23,7 +23,8 @@
 updateDC <- function(
   scores = HockeyModel::scores,
   currentDate = Sys.Date(),
-  save_data = TRUE
+  save_data = TRUE,
+  min_games_for_xg_weight = 30
 ) {
   message("Calculating new model parameters...")
   stopifnot(is.Date(currentDate))
@@ -36,14 +37,24 @@ updateDC <- function(
   message("Solving for low scoring games...")
   rho <- getRho(m = m, scores = scores)
   message("Enhancing Tie Games")
-  params <- getWeibullParams(m = m, rho = rho, scores = scores)
-  beta <- params$beta
-  eta <- params$eta
-  k <- params$k
+  params_w <- getWeibullParams(m = m, rho = rho, scores = scores)
+  beta <- params_w$beta
+  eta <- params_w$eta
+  k <- params_w$k
+
+  # Fit xG blending weight using historical data (may return 0 if insufficient data)
+  xg_weight <- tryCatch(
+    fit_xg_weight(params = list(m = m, rho = rho, beta = beta, eta = eta, k = k), scores = scores, min_games = min_games_for_xg_weight),
+    error = function(e) {
+      message("Warning: fit_xg_weight failed: ", e$message)
+      return(0)
+    }
+  )
+
   if (save_data && requireNamespace("usethis", quietly = TRUE)) {
-    suppressMessages(usethis::use_data(m, rho, beta, eta, k, overwrite = TRUE))
+    suppressMessages(usethis::use_data(m, rho, beta, eta, k, xg_weight, overwrite = TRUE))
   }
-  return(list("m" = m, "rho" = rho, "beta" = beta, "eta" = eta, "k" = k))
+  return(list("m" = m, "rho" = rho, "beta" = beta, "eta" = eta, "k" = k, "xg_weight" = xg_weight))
 }
 
 
@@ -566,11 +577,18 @@ DCPredict <- function(
 ) {
   params <- parse_dc_params(params = params)
 
-  # If a blending weight is supplied, compute both goal-based and xG-based probability
-  # distributions and return their convex combination.
-  if (!is.null(xg_weight) && is.numeric(xg_weight)) {
+  # Use xg_weight from params if not explicitly supplied
+  if (is.null(xg_weight)) {
+    if ("xg_weight" %in% names(params)) {
+      xg_weight <- params$xg_weight
+    } else {
+      xg_weight <- NULL
+    }
+  }
+
+  # If xg_weight is provided and strictly between 0 and 1, blend the two distributions
+  if (!is.null(xg_weight) && is.numeric(xg_weight) && xg_weight > 0 && xg_weight < 1) {
     w <- as.numeric(xg_weight)
-    if (is.na(w)) w <- 0
     w <- min(max(w, 0), 1)
 
     pm_goal <- dcProbMatrix(
@@ -595,63 +613,56 @@ DCPredict <- function(
       use_xg = TRUE
     )
 
-    p_goal <- c(
-      sum(pm_goal[lower.tri(pm_goal)]),
-      sum(diag(pm_goal)),
-      sum(pm_goal[upper.tri(pm_goal)])
-    )
-    p_xg <- c(
-      sum(pm_xg[lower.tri(pm_xg)]),
-      sum(diag(pm_xg)),
-      sum(pm_xg[upper.tri(pm_xg)])
-    )
+    p_goal <- c(sum(pm_goal[lower.tri(pm_goal)]), sum(diag(pm_goal)), sum(pm_goal[upper.tri(pm_goal)]))
+    p_xg <- c(sum(pm_xg[lower.tri(pm_xg)]), sum(diag(pm_xg)), sum(pm_xg[upper.tri(pm_xg)]))
 
     p_combined <- w * p_xg + (1 - w) * p_goal
     odds <- normalizeOdds(p_combined)
 
     if (!draws) {
-      HomeWinProbability <- p_combined[1] +
-        normalizeOdds(c(p_combined[1], p_combined[3]))[1] *
-        p_combined[2]
-      AwayWinProbability <- p_combined[3] +
-        normalizeOdds(c(p_combined[1], p_combined[3]))[2] *
-        p_combined[2]
+      HomeWinProbability <- p_combined[1] + normalizeOdds(c(p_combined[1], p_combined[3]))[1] * p_combined[2]
+      AwayWinProbability <- p_combined[3] + normalizeOdds(c(p_combined[1], p_combined[3]))[2] * p_combined[2]
       odds <- normalizeOdds(c(HomeWinProbability, AwayWinProbability))
     }
 
     return(odds)
   }
 
-  # Default (no blending): generate probability matrix using requested lambda source
-  probability_matrix <- dcProbMatrix(
-    home = home,
-    away = away,
-    params = params,
-    maxgoal = maxgoal,
-    scores = scores,
-    expected_mean = expected_mean,
-    season_percent = season_percent,
-    use_xg = use_xg
-  )
+  # If xg_weight == 1, use xG-based lambdas; if xg_weight == 0 or NULL, fall back to use_xg flag
+  if (!is.null(xg_weight) && is.numeric(xg_weight) && xg_weight == 1) {
+    probability_matrix <- dcProbMatrix(
+      home = home,
+      away = away,
+      params = params,
+      maxgoal = maxgoal,
+      scores = scores,
+      expected_mean = expected_mean,
+      season_percent = season_percent,
+      use_xg = TRUE
+    )
+  } else {
+    probability_matrix <- dcProbMatrix(
+      home = home,
+      away = away,
+      params = params,
+      maxgoal = maxgoal,
+      scores = scores,
+      expected_mean = expected_mean,
+      season_percent = season_percent,
+      use_xg = use_xg
+    )
+  }
 
   HomeWinProbability <- sum(probability_matrix[lower.tri(probability_matrix)])
   DrawProbability <- sum(diag(probability_matrix))
   AwayWinProbability <- sum(probability_matrix[upper.tri(probability_matrix)])
 
   # Simple Adjust for under-predicting odds
-  odds <- normalizeOdds(c(
-    HomeWinProbability,
-    DrawProbability,
-    AwayWinProbability
-  ))
+  odds <- normalizeOdds(c(HomeWinProbability, DrawProbability, AwayWinProbability))
 
   if (!draws) {
-    HomeWinProbability <- HomeWinProbability +
-      normalizeOdds(c(HomeWinProbability, AwayWinProbability))[1] *
-        DrawProbability
-    AwayWinProbability <- AwayWinProbability +
-      normalizeOdds(c(HomeWinProbability, AwayWinProbability))[2] *
-        DrawProbability
+    HomeWinProbability <- HomeWinProbability + normalizeOdds(c(HomeWinProbability, AwayWinProbability))[1] * DrawProbability
+    AwayWinProbability <- AwayWinProbability + normalizeOdds(c(HomeWinProbability, AwayWinProbability))[2] * DrawProbability
     odds <- normalizeOdds(c(HomeWinProbability, AwayWinProbability))
   }
   return(odds)
@@ -1545,6 +1556,18 @@ parse_dc_params <- function(params = NULL) {
     returnparams$k <- params$k
   } else {
     returnparams$k <- HockeyModel::k
+  }
+
+  # xg_weight: blended weight for xG vs goals. Prefer explicit param, then package-saved value, else default 0
+  if ("xg_weight" %in% names(params)) {
+    returnparams$xg_weight <- params$xg_weight
+  } else {
+    pkg_xw <- tryCatch(HockeyModel::xg_weight, error = function(e) NULL)
+    if (!is.null(pkg_xw)) {
+      returnparams$xg_weight <- pkg_xw
+    } else {
+      returnparams$xg_weight <- 0
+    }
   }
 
   return(returnparams)
