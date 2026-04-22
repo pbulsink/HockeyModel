@@ -65,6 +65,7 @@ todayDC <- function(
   expected_mean = NULL,
   season_percent = NULL,
   include_xG = FALSE,
+  use_xg = FALSE,
   draws = TRUE
 ) {
   stopifnot(is.Date(today))
@@ -94,7 +95,8 @@ todayDC <- function(
       params = params,
       expected_mean = expected_mean,
       season_percent = season_percent,
-      draws = draws
+      draws = draws,
+      use_xg = use_xg
     )
     if (draws) {
       preds$HomeWin[[i]] <- p[[1]]
@@ -109,7 +111,8 @@ todayDC <- function(
       xg <- dcxG(
         home = preds$HomeTeam[[i]],
         away = preds$AwayTeam[[i]],
-        params = params
+        params = params,
+        use_xg = use_xg
       )
       preds$Home_xG[[i]] <- xg$home
       preds$Away_xG[[i]] <- xg$away
@@ -134,13 +137,13 @@ todayDC <- function(
 #'
 #' @return home ice advantage team odds to win series
 #' @export
-playoffDC <- function(home, away, params = NULL, home_wins = 0, away_wins = 0) {
+playoffDC <- function(home, away, params = NULL, home_wins = 0, away_wins = 0, use_xg = FALSE) {
   params <- parse_dc_params(params)
   # Odds of home ice advantage team win at home
-  homeodds <- DCPredict(home = home, away = away, params = params)
+  homeodds <- DCPredict(home = home, away = away, params = params, use_xg = use_xg)
   homeodds <- normalizeOdds(c(homeodds[1], homeodds[3]))[1]
   # Odds of home ice advantage team win away
-  awayodds <- DCPredict(home = away, away = home, params = params)
+  awayodds <- DCPredict(home = away, away = home, params = params, use_xg = use_xg)
   awayodds <- normalizeOdds(c(awayodds[3], awayodds[1]))[1]
 
   homewin <- playoffSeriesOdds(homeodds, awayodds, home_wins, away_wins)
@@ -170,7 +173,8 @@ remainderSeasonDC <- function(
   schedule = HockeyModel::schedule,
   odds = FALSE,
   regress = TRUE,
-  mu_lambda = FALSE
+  mu_lambda = FALSE,
+  use_xg = FALSE
 ) {
   odds_table <- data.frame(
     HomeTeam = character(),
@@ -232,7 +236,8 @@ remainderSeasonDC <- function(
       schedule = schedule,
       season_percent = season_percent,
       expected_mean = expected_mean,
-      params = params
+      params = params,
+      use_xg = use_xg
     )
     preds$Date <- d
     odds_table <- rbind(odds_table, preds)
@@ -553,14 +558,19 @@ DCPredict <- function(
   scores = HockeyModel::scores,
   expected_mean = NULL,
   season_percent = NULL,
-  draws = TRUE
+  draws = TRUE,
+  use_xg = FALSE
 ) {
   params <- parse_dc_params(params = params)
   probability_matrix <- dcProbMatrix(
     home = home,
     away = away,
     params = params,
-    maxgoal = maxgoal
+    maxgoal = maxgoal,
+    scores = scores,
+    expected_mean = expected_mean,
+    season_percent = season_percent,
+    use_xg = use_xg
   )
 
   HomeWinProbability <- sum(probability_matrix[lower.tri(probability_matrix)])
@@ -595,7 +605,107 @@ DCPredict <- function(
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
 #' @return a list of $home and $away Poisson Lambda values -
-dcLambda <- function(home, away, params = NULL) {
+get_team_xg_stats <- function(scores = HockeyModel::scores) {
+  if (is.null(scores)) return(NULL)
+  if (!all(c("HomexG", "AwayxG", "HomeTeam", "AwayTeam") %in% names(scores))) {
+    return(NULL)
+  }
+
+  df_home <- data.frame(
+    Team = scores$HomeTeam,
+    xg_for = as.numeric(scores$HomexG),
+    xg_against = as.numeric(scores$AwayxG),
+    stringsAsFactors = FALSE
+  )
+  df_away <- data.frame(
+    Team = scores$AwayTeam,
+    xg_for = as.numeric(scores$AwayxG),
+    xg_against = as.numeric(scores$HomexG),
+    stringsAsFactors = FALSE
+  )
+  long_df <- dplyr::bind_rows(df_home, df_away)
+  long_df <- long_df[stats::complete.cases(long_df), ]
+  if (nrow(long_df) == 0) return(NULL)
+
+  team_stats <- long_df |>
+    dplyr::group_by(.data$Team) |>
+    dplyr::summarize(
+      xg_for = mean(.data$xg_for, na.rm = TRUE),
+      xg_against = mean(.data$xg_against, na.rm = TRUE),
+      .groups = "drop"
+    )
+  team_xg_for <- setNames(team_stats$xg_for, team_stats$Team)
+  team_xg_against <- setNames(team_stats$xg_against, team_stats$Team)
+  league_avg <- mean(long_df$xg_for, na.rm = TRUE)
+  return(list(team_xg_for = team_xg_for, team_xg_against = team_xg_against, league_avg = league_avg))
+}
+
+
+# Fit a global xG scaling ratio by regressing observed per-team-game xG on predicted
+# lambdas from the current model. Returns a multiplicative ratio to convert
+# predicted lambdas to xG-scaled lambdas (defaults to 1 if insufficient data).
+fit_xg_ratio <- function(params = NULL, scores = HockeyModel::scores, min_games = 10, clamp = c(0.1, 10)) {
+  params <- parse_dc_params(params)
+  if (is.null(scores)) return(1)
+  if (!all(c("HomexG", "AwayxG", "HomeTeam", "AwayTeam") %in% names(scores))) return(1)
+  n <- nrow(scores)
+  if (n == 0) return(1)
+
+  pred_h <- numeric(n)
+  pred_a <- numeric(n)
+
+  for (i in seq_len(n)) {
+    ph <- try(
+      stats::predict(params$m, data.frame(Home = 1, Team = scores$HomeTeam[i], Opponent = scores$AwayTeam[i]), type = "response")[1],
+      TRUE
+    )
+    if (!is.numeric(ph) || is.na(ph)) {
+      ph <- tryCatch(
+        DCPredictErrorRecover(team = scores$HomeTeam[i], opponent = scores$AwayTeam[i], homeiceadv = TRUE, m = params$m),
+        error = function(e) NA
+      )
+    }
+
+    pa <- try(
+      stats::predict(params$m, data.frame(Home = 0, Team = scores$AwayTeam[i], Opponent = scores$HomeTeam[i]), type = "response")[1],
+      TRUE
+    )
+    if (!is.numeric(pa) || is.na(pa)) {
+      pa <- tryCatch(
+        DCPredictErrorRecover(team = scores$AwayTeam[i], opponent = scores$HomeTeam[i], homeiceadv = FALSE, m = params$m),
+        error = function(e) NA
+      )
+    }
+
+    pred_h[i] <- as.numeric(ph)
+    pred_a[i] <- as.numeric(pa)
+  }
+
+  obs_h <- as.numeric(scores$HomexG)
+  obs_a <- as.numeric(scores$AwayxG)
+
+  keep_h <- !is.na(pred_h) & !is.na(obs_h) & pred_h > 0 & is.finite(pred_h) & is.finite(obs_h)
+  keep_a <- !is.na(pred_a) & !is.na(obs_a) & pred_a > 0 & is.finite(pred_a) & is.finite(obs_a)
+
+  count <- sum(keep_h) + sum(keep_a)
+  if (count < min_games) return(1)
+
+  pred_all <- c(pred_h[keep_h], pred_a[keep_a])
+  obs_all <- c(obs_h[keep_h], obs_a[keep_a])
+
+  denom <- sum(pred_all^2, na.rm = TRUE)
+  if (denom <= 0) return(1)
+
+  ratio <- sum(obs_all * pred_all, na.rm = TRUE) / denom
+  if (!is.finite(ratio) || ratio <= 0) ratio <- 1
+
+  # Clamp to avoid extreme scaling
+  ratio <- min(max(ratio, clamp[1]), clamp[2])
+  return(as.numeric(ratio))
+}
+
+
+dcLambda <- function(home, away, params = NULL, scores = HockeyModel::scores, use_xg = FALSE) {
   params <- parse_dc_params(params = params)
   xg <- list("home" = NA, "away" = NA)
 
@@ -634,15 +744,26 @@ dcLambda <- function(home, away, params = NULL) {
     )
   }
 
+  # Optionally adjust predicted goals using fitted xG scaling ratio based on historical xG vs predicted lambdas.
+  if (isTRUE(use_xg)) {
+    ratio <- tryCatch(fit_xg_ratio(params = params, scores = scores), error = function(e) 1)
+    if (!is.null(ratio) && is.numeric(ratio) && is.finite(ratio) && ratio > 0) {
+      xg$home <- as.numeric(xg$home) * ratio
+      xg$away <- as.numeric(xg$away) * ratio
+    }
+  }
+
   return(xg)
 }
 
-dcxG <- function(home, away, params = NULL, maxgoal = 10) {
+dcxG <- function(home, away, params = NULL, maxgoal = 10, scores = HockeyModel::scores, use_xg = FALSE) {
   pm <- dcProbMatrix(
     home = home,
     away = away,
     params = params,
-    maxgoal = maxgoal
+    maxgoal = maxgoal,
+    scores = scores,
+    use_xg = use_xg
   )
 
   away_xg <- stats::weighted.mean(0:maxgoal, colSums(pm))
@@ -670,11 +791,12 @@ dcProbMatrix <- function(
   maxgoal = 10,
   scores = HockeyModel::scores,
   expected_mean = NULL,
-  season_percent = NULL
+  season_percent = NULL,
+  use_xg = FALSE
 ) {
   params <- parse_dc_params(params = params)
 
-  xg <- dcLambda(home = home, away = away, params = params)
+  xg <- dcLambda(home = home, away = away, params = params, scores = scores, use_xg = use_xg)
   # Expected goals home
   lambda <- as.numeric(xg$home)
 
@@ -785,14 +907,19 @@ dcSample <- function(
   scores = HockeyModel::scores,
   expected_mean = NULL,
   season_percent = NULL,
-  as_result = TRUE
+  as_result = TRUE,
+  use_xg = FALSE
 ) {
   params <- parse_dc_params(params)
   pm <- dcProbMatrix(
     home = home,
     away = away,
     params = params,
-    maxgoal = maxgoal
+    maxgoal = maxgoal,
+    scores = scores,
+    expected_mean = expected_mean,
+    season_percent = season_percent,
+    use_xg = use_xg
   )
 
   # sometimes there's negative probabilities. This handles that with fakign a very low value instead
