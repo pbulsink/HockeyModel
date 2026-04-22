@@ -111,6 +111,6 @@ test_that("colourDelta handles equal values", {
 test_that("todayOddsPlot executes without error", {
   p <- suppressWarnings(todayOddsPlot())
   expect_true(
-    ggplot2::is.ggplot(p) || is.list(p) || is.null(p)
+    ggplot2::is_ggplot(p) || is.list(p) || is.null(p)
   )
 })

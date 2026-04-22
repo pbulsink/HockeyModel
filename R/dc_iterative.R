@@ -725,6 +725,10 @@ getIterativeTable <- function(
     schedule = schedule
   )$results
 
+  if (is.null(results_xg) || is.null(results_wl)) {
+    return(data.frame())
+  }
+
   results_xg <- results_xg[, c("GameID", "TotalxG")]
   results_wl$TotalxG <- NULL
 

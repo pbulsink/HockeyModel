@@ -34,8 +34,8 @@ test_that("getNHLSchedule returns valid dates", {
 
 # ============ getNHLScores tests ============
 test_that("getNHLScores returns data frame", {
-  vcr::use_cassette("get-nhl-scores-2024-2025", {
-    scores <- getNHLScores("20242025")
+  vcr::use_cassette("get-nhl-scores-single-game", {
+    scores <- getNHLScores(2020020001, progress = FALSE)
     expect_true(is.data.frame(scores))
   })
 })
@@ -46,24 +46,20 @@ test_that("getNHLScores validates season input", {
 })
 
 test_that("getNHLScores has required columns", {
-  vcr::use_cassette("get-nhl-scores-columns", {
-    scores <- getNHLScores("20242025")
-    if (!is.null(scores) && nrow(scores) > 0) {
-      required_cols <- c("Date", "HomeTeam", "AwayTeam", "HomeGoals", "AwayGoals", "GameID", "GameType")
-      expect_true(all(required_cols %in% colnames(scores)))
-    }
+  vcr::use_cassette("get-nhl-scores-single-game-columns", {
+    scores <- getNHLScores(2020020001, progress = FALSE)
+    required_cols <- c("Date", "HomeTeam", "AwayTeam", "HomeGoals", "AwayGoals", "GameID", "GameType")
+    expect_true(all(required_cols %in% colnames(scores)))
   })
 })
 
 test_that("getNHLScores returns valid goals", {
-  vcr::use_cassette("get-nhl-scores-goals", {
-    scores <- getNHLScores("20242025")
-    if (!is.null(scores) && nrow(scores) > 0) {
-      expect_true(all(is.numeric(scores$HomeGoals)))
-      expect_true(all(is.numeric(scores$AwayGoals)))
-      expect_true(all(scores$HomeGoals >= 0))
-      expect_true(all(scores$AwayGoals >= 0))
-    }
+  vcr::use_cassette("get-nhl-scores-single-game-goals", {
+    scores <- getNHLScores(2020020001, progress = FALSE)
+    expect_true(all(is.numeric(scores$HomeGoals)))
+    expect_true(all(is.numeric(scores$AwayGoals)))
+    expect_true(all(scores$HomeGoals >= 0))
+    expect_true(all(scores$AwayGoals >= 0))
   })
 })
 
@@ -92,19 +88,12 @@ test_that("games_today returns games on specified date", {
 
 # ============ getAPISeries tests ============
 test_that("getAPISeries returns data frame", {
-  vcr::use_cassette("get-api-series", {
-    series <- getAPISeries(seriesID = 1)
-    expect_true(is.data.frame(series) || is.null(series))
-  })
+  series <- getAPISeries(season = "20182019")
+  expect_true(is.data.frame(series) || is.null(series))
 })
 
 test_that("getAPISeries handles integer input", {
-  vcr::use_cassette("get-api-series-int", {
-    series <- getAPISeries(seriesID = 1)
-    if (!is.null(series)) {
-      expect_true(is.data.frame(series))
-    }
-  })
+  expect_error(getAPISeries(season = 1))
 })
 
 # ============ updateScheduleAPI tests ============

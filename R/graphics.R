@@ -1277,8 +1277,8 @@ plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
       label = .data$Team
     )
   ) +
-    ggplot2::geom_hline(yintercept = 0, colour = "grey", size = 1) +
-    ggplot2::geom_vline(xintercept = 0, colour = "grey", size = 1) +
+    ggplot2::geom_hline(yintercept = 0, colour = "grey", linewidth = 1) +
+    ggplot2::geom_vline(xintercept = 0, colour = "grey", linewidth = 1) +
     ggplot2::geom_point() +
     ggplot2::scale_colour_manual(values = teamColoursList) +
     ggplot2::labs(
