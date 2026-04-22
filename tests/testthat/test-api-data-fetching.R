@@ -34,8 +34,10 @@ test_that("getNHLSchedule returns valid dates", {
 
 # ============ getNHLScores tests ============
 test_that("getNHLScores returns data frame", {
-  scores <- getNHLScores(2020020001, progress = FALSE)
-  expect_true(is.data.frame(scores))
+  vcr::use_cassette("get-nhl-scores-single-game", {
+    scores <- getNHLScores(2020020001, progress = FALSE)
+    expect_true(is.data.frame(scores))
+  })
 })
 
 test_that("getNHLScores validates season input", {
@@ -44,17 +46,21 @@ test_that("getNHLScores validates season input", {
 })
 
 test_that("getNHLScores has required columns", {
-  scores <- getNHLScores(2020020001, progress = FALSE)
-  required_cols <- c("Date", "HomeTeam", "AwayTeam", "HomeGoals", "AwayGoals", "GameID", "GameType")
-  expect_true(all(required_cols %in% colnames(scores)))
+  vcr::use_cassette("get-nhl-scores-single-game-columns", {
+    scores <- getNHLScores(2020020001, progress = FALSE)
+    required_cols <- c("Date", "HomeTeam", "AwayTeam", "HomeGoals", "AwayGoals", "GameID", "GameType")
+    expect_true(all(required_cols %in% colnames(scores)))
+  })
 })
 
 test_that("getNHLScores returns valid goals", {
-  scores <- getNHLScores(2020020001, progress = FALSE)
-  expect_true(all(is.numeric(scores$HomeGoals)))
-  expect_true(all(is.numeric(scores$AwayGoals)))
-  expect_true(all(scores$HomeGoals >= 0))
-  expect_true(all(scores$AwayGoals >= 0))
+  vcr::use_cassette("get-nhl-scores-single-game-goals", {
+    scores <- getNHLScores(2020020001, progress = FALSE)
+    expect_true(all(is.numeric(scores$HomeGoals)))
+    expect_true(all(is.numeric(scores$AwayGoals)))
+    expect_true(all(scores$HomeGoals >= 0))
+    expect_true(all(scores$AwayGoals >= 0))
+  })
 })
 
 # ============ games_today tests ============

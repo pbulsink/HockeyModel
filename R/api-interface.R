@@ -637,7 +637,9 @@ clean_names <- function(sc) {
 #' whether the series is complete
 #' @export
 getAPISeries <- function(season = getCurrentSeason8()) {
-  stopifnot(seasonValidator(season))
+  if (!seasonValidator(season)) {
+    cli::cli_abort("{.arg season} must be an 8-digit season ID string like {.val 20182019}.")
+  }
   url <- paste0(
     "https://api-web.nhle.com/v1/playoff-bracket/",
     substr(season, 5, 8)
@@ -809,7 +811,12 @@ getSeasonEndDate <- function(season = NULL) {
 #' @return Either TRUE/FALSE or a seasonID/FALSE
 #' @export
 inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
-  stopifnot(is.Date(date))
+  if (!is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
+  if (!is.logical(boolean) || length(boolean) != 1 || is.na(boolean)) {
+    cli::cli_abort("{.arg boolean} must be a single TRUE/FALSE value.")
+  }
   date <- as.Date(date)
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>
