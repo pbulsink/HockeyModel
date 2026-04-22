@@ -280,16 +280,39 @@ load_or_get_nst <- function(gid) {
   xg_path <- path.expand(xg_path)
 
   if (file.exists(xg_path)) {
-    nstall <- tryCatch(
-      utils::read.csv(xg_path, stringsAsFactors = FALSE),
+    nstdf <- tryCatch(
+      {
+        header <- readLines(xg_path, n = 1, warn = FALSE)
+        if (length(header) == 0) {
+          return(NULL)
+        }
+
+        gid_pattern <- paste0("^", gid, ",")
+        grep_bin <- Sys.which("grep")
+        matched_lines <- if (nzchar(grep_bin)) {
+          system2(
+            grep_bin,
+            args = c("-E", gid_pattern, xg_path),
+            stdout = TRUE,
+            stderr = FALSE
+          )
+        } else {
+          grep(gid_pattern, readLines(xg_path, warn = FALSE), value = TRUE)
+        }
+
+        if (length(matched_lines) == 0) {
+          return(NULL)
+        }
+
+        utils::read.csv(
+          text = paste(c(header, matched_lines), collapse = "\n"),
+          stringsAsFactors = FALSE
+        )
+      },
       error = function(e) NULL
     )
-    if (!is.null(nstall) && "game_id" %in% names(nstall)) {
-      nstdf <- nstall |>
-        dplyr::filter(.data$game_id == gid)
-      if (nrow(nstdf) > 0) {
-        return(nstdf)
-      }
+    if (!is.null(nstdf) && "game_id" %in% names(nstdf) && nrow(nstdf) > 0) {
+      return(nstdf)
     }
   }
 

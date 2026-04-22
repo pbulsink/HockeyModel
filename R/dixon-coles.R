@@ -14,8 +14,9 @@
 #' @param scores scores, if not then HockeyModel::scores is used
 #' @param currentDate Current Date, usually today but useful to set a different date if back calculating results
 #' @param save_data Whether to save parameters to the package.
+#' @param min_games_for_xg_weight Minimum number of complete games required to fit `xg_weight`. Defaults to 30.
 #'
-#' @return a named list containing m, rho, beta, eta and k values for the model.
+#' @return a named list containing m, rho, beta, eta, k and xg_weight values for the model.
 #'
 #' @seealso [m], [rho], [beta], [eta], [k]
 #'
@@ -61,11 +62,12 @@ updateDC <- function(
 #' DC Predictions Today
 #'
 #' @param today Generate predictions for this date. Defaults to today
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, k, and optional xg_weight. See [updateDC] for information on the params list
 #' @param schedule schedule to use, if not the built-in
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
 #' @param include_xG Whether to include team expected goals. default FALSE
+#' @param use_xg Whether to use xG-adjusted lambdas when producing probabilities. Default FALSE
 #' @param draws whether to report draws in odds (AwayWin/HomeWin/Draw) or not (AwayWin/HomeWin). Default True
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
@@ -142,7 +144,7 @@ todayDC <- function(
 #'
 #' @param home Series Home Ice Advantage Team Name
 #' @param away Away (Opponent) Team Name
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, k, and optional xg_weight. See [updateDC] for information on the params list
 #' @param home_wins Number of wins for home ice advantage team thus far in series
 #' @param away_wins Number of wins for away team thus far in series
 #'
