@@ -845,9 +845,25 @@ playoffSeriesOdds <- function(
     ))
   }
 
-  home_win <- as.integer(home_win)
-  away_win <- as.integer(away_win)
+  home_win_num <- suppressWarnings(as.numeric(home_win))
+  away_win_num <- suppressWarnings(as.numeric(away_win))
 
+  if (
+    length(home_win) != 1 || length(away_win) != 1 ||
+      is.na(home_win_num) || is.na(away_win_num) ||
+      !is.finite(home_win_num) || !is.finite(away_win_num) ||
+      home_win_num != floor(home_win_num) ||
+      away_win_num != floor(away_win_num)
+  ) {
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected single whole-number values for {.arg home_win} and {.arg away_win}.",
+      "i" = "Please retry with one non-negative integer win count for each team."
+    ))
+  }
+
+  home_win <- as.integer(home_win_num)
+  away_win <- as.integer(away_win_num)
   if (home_win < 0 || away_win < 0) {
     cli::cli_abort(c(
       "Error in HockeyModel::playoffSeriesOdds()",
