@@ -96,7 +96,10 @@ test_that("rmse calculation is correct", {
 })
 
 test_that("rmse handles mismatched lengths", {
-  expect_error(rmse(c(1, 2), c(1, 2, 3)), regexp = "Expected .* same length")
+  expect_error(
+    rmse(c(1, 2), c(1, 2, 3)),
+    regexp = "Error in HockeyModel::rmse\\(\\)"
+  )
 })
 
 # ============ MSE tests ============
@@ -122,7 +125,7 @@ test_that("rsquare calculation is correct", {
 test_that("rsquare handles mismatched lengths", {
   expect_error(
     rsquare(c(1, 2), c(1, 2, 3)),
-    regexp = "Please retry with vectors of equal length"
+    regexp = "Error in HockeyModel::rsquare\\(\\)"
   )
 })
 

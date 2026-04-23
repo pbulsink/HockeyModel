@@ -10,7 +10,7 @@ test_that("Playoff series odds ok", {
   )
   expect_warning(
     playoffSeriesOdds(0.5, 0.5, 4, 2),
-    regexp = "Series already won"
+    regexp = "Series already won; returning 1 for the home team win probability"
   )
 })
 
