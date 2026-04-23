@@ -324,6 +324,15 @@ remainderSeasonDC <- function(
   return(summary_results)
 }
 
+#' Compute one Dixon-Coles low-score adjustment factor
+#'
+#' @param xx (`integer(1)`) Home goals.
+#' @param yy (`integer(1)`) Away goals.
+#' @param lambda (`double(1)`) Home expected goals.
+#' @param mu (`double(1)`) Away expected goals.
+#' @param rho (`double(1)`) Low-score dependence parameter.
+#' @returns (`double(1)`) Tau scaling factor for one score pair.
+#' @keywords internal
 tau_singular <- function(xx, yy, lambda, mu, rho) {
   if (xx == 0 && yy == 0) {
     return(1 - (lambda * mu * rho))
@@ -637,6 +646,14 @@ dcLambda <- function(home, away, params = NULL) {
   return(xg)
 }
 
+#' Compute expected goals from a Dixon-Coles probability matrix
+#'
+#' @param home (`character(1)`) Home team name.
+#' @param away (`character(1)`) Away team name.
+#' @param params (`list` or `NULL`) Dixon-Coles parameter list.
+#' @param maxgoal (`integer(1)`) Maximum goals included per team.
+#' @returns (`list`) Home and away expected goals.
+#' @keywords internal
 dcxG <- function(home, away, params = NULL, maxgoal = 10) {
   pm <- dcProbMatrix(
     home = home,
@@ -899,6 +916,17 @@ dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
 }
 
 
+#' Sample one or more result labels from expanded win-state probabilities
+#'
+#' @param hw (`double`) Regulation home-win probability.
+#' @param hot (`double`) Home overtime-win probability.
+#' @param hso (`double`) Home shootout-win probability.
+#' @param aso (`double`) Away shootout-win probability.
+#' @param aot (`double`) Away overtime-win probability.
+#' @param aw (`double`) Regulation away-win probability.
+#' @param size (`integer(1)`) Number of samples to draw.
+#' @returns (`numeric`) Result values encoded like `scores$Result`.
+#' @keywords internal
 sampleResult <- function(hw, hot, hso, aso, aot, aw, size = 1) {
   sr <- function(hw, hot, hso, aso, aot, aw, size) {
     return(sample(
@@ -918,6 +946,15 @@ sampleResult <- function(hw, hot, hso, aso, aot, aw, size = 1) {
 }
 
 
+#' Expand DC odds into regulation/OT/SO result components
+#'
+#' @param lambda (`double`) Home expected goals.
+#' @param mu (`double`) Away expected goals.
+#' @param params (`list` or `NULL`) Dixon-Coles parameter list.
+#' @param maxgoal (`integer(1)`) Maximum goals included per team.
+#' @returns (`numeric`) Probabilities for home win, home OT, home SO, away SO,
+#'   away OT, and away win.
+#' @keywords internal
 dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
   params <- parse_dc_params(params)
 
@@ -973,6 +1010,14 @@ DCweights_old <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
   return(w)
 }
 
+#' Compute sigmoid time-decay weights for historical matches
+#'
+#' @param dates (`Date`) Match dates.
+#' @param currentDate (`Date`) Reference date for weighting.
+#' @param xi (`double(1)`) Logistic slope.
+#' @param upsilon (`double(1)`) Logistic midpoint.
+#' @returns (`double`) Weight per input date.
+#' @keywords internal
 DCweights <- function(
   dates,
   currentDate = Sys.Date(),
@@ -986,6 +1031,16 @@ DCweights <- function(
   return(w)
 }
 
+#' Evaluate Dixon-Coles log-likelihood for a rho value
+#'
+#' @param y1 (`integer`) Home goals.
+#' @param y2 (`integer`) Away goals.
+#' @param lambda (`double`) Home expected goals.
+#' @param mu (`double`) Away expected goals.
+#' @param rho (`double(1)`) Dependence parameter.
+#' @param weights (`double` or `NULL`) Optional per-match weights.
+#' @returns (`double(1)`) Summed (optionally weighted) log-likelihood.
+#' @keywords internal
 DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
   # rho=0, independence y1 home goals y2 away goals mu:expected Home, lambda: expected Away
   t <- tau(y1, y2, lambda, mu, rho)
@@ -998,6 +1053,14 @@ DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
 }
 
 
+#' Recover fallback expected goals when model prediction fails
+#'
+#' @param team (`character(1)`) Team being predicted.
+#' @param opponent (`character(1)`) Opponent team.
+#' @param homeiceadv (`logical(1)`) Whether to include home-ice coefficient.
+#' @param m (`glm`) Fitted Dixon-Coles model.
+#' @returns (`double(1)`) Fallback expected goals estimate.
+#' @keywords internal
 DCPredictErrorRecover <- function(
   team,
   opponent,
@@ -1243,6 +1306,12 @@ predictMultipleDaysResultsDC <- function(
   return(sched)
 }
 
+#' Normalize nested Dixon-Coles parameter lists
+#'
+#' @param params (`list` or `NULL`) Candidate parameters, optionally nested
+#'   under a `params` element.
+#' @returns (`list`) Named list containing `m`, `rho`, `beta`, `eta`, and `k`.
+#' @keywords internal
 parse_dc_params <- function(params = NULL) {
   returnparams <- list()
   while ("params" %in% names(params)) {

@@ -40,7 +40,7 @@ normalizeOdds <- function(odds) {
 #'
 #' @param sc scores frame
 #'
-#' @return a tibble of season points for each team that season(s)
+#' @returns A [tibble::tibble()] with season point totals by team.
 historicalPoints <- function(sc) {
   points <- tibble::tibble(
     Team = character(),
@@ -232,6 +232,14 @@ hexToRGB <- function(hex) {
   return(c(r, g, b))
 }
 
+#' Format predictions for the HockeyViz contest submission string
+#'
+#' @param predictions (`data.frame`) Predictions containing `Team`,
+#'   `meanPoints`, and `sdPoints`.
+#' @param candyType (`character(1)`) Preferred sour candy label.
+#' @param handle (`character(1)`) Contest handle to include in output.
+#' @returns (`character(1)`) Serialized contest payload string.
+#' @keywords internal
 formatPredsForHockeyVisContest <- function(
   predictions,
   candyType = "Fuzzy Peaches",
@@ -482,6 +490,11 @@ is.Date <- function(date) {
   })
 }
 
+#' Validate an NHL season identifier
+#'
+#' @param season (`character(1)`) Candidate season ID.
+#' @returns (`logical(1)`) `TRUE` when `season` matches `YYYYYYYY` format.
+#' @keywords internal
 seasonValidator <- function(season) {
   # TODO: Currently 19272099 would pass - make sure the two years are sequential
   if (!is.character(season)) {
@@ -491,6 +504,14 @@ seasonValidator <- function(season) {
 }
 
 
+#' Split draw probability into overtime/shootout outcomes
+#'
+#' @param home_win (`double`) Regulation home-win probabilities.
+#' @param away_win (`double`) Regulation away-win probabilities.
+#' @param draw (`double`) Draw probabilities before overtime resolution.
+#' @returns (`matrix` or `numeric`) Home regulation, home OT/SO, away OT/SO,
+#'   and away regulation probabilities.
+#' @keywords internal
 extraTimeSolver <- function(home_win, away_win, draw) {
   ets <- function(home_win, away_win, draw) {
     homenorm <- normalizeOdds(c(home_win, away_win))[1]
@@ -546,6 +567,11 @@ add_postponed_to_schedule_end <- function(schedule = HockeyModel::schedule) {
 }
 
 
+#' Validate one NHL game ID value
+#'
+#' @param gameId (`numeric(1)`) Candidate game ID.
+#' @returns (`logical(1)`) `TRUE` when the ID matches expected NHL format.
+#' @keywords internal
 gId <- function(gameId) {
   if (!is.numeric(gameId)) {
     return(FALSE)
@@ -559,6 +585,11 @@ gId <- function(gameId) {
 }
 is_valid_gameId <- Vectorize(gId)
 
+#' Resolve a safe worker-core count
+#'
+#' @param cores (`integer(1)` or `NULL`) Requested core count.
+#' @returns (`integer(1)`) Core count constrained to available resources.
+#' @keywords internal
 parseCores <- function(cores) {
   cores <- cores
   if (is.null(cores)) {
@@ -586,6 +617,12 @@ parseCores <- function(cores) {
   return(cores)
 }
 
+#' Initialize package options on load
+#'
+#' @param libname (`character(1)`) Library path provided by R.
+#' @param pkgname (`character(1)`) Package name provided by R.
+#' @returns `NULL` (invisibly).
+#' @keywords internal
 .onLoad <- function(libname, pkgname) {
   op <- options()
   op.HockeyModel <- NULL
@@ -640,6 +677,12 @@ parseCores <- function(cores) {
   invisible()
 }
 
+#' Print package startup message on attach
+#'
+#' @param libname (`character(1)`) Library path provided by R.
+#' @param pkgname (`character(1)`) Package name provided by R.
+#' @returns `NULL` (invisibly).
+#' @keywords internal
 .onAttach <- function(libname, pkgname) {
   msgtext <- paste0(
     "HockeyModel package loaded.\nUsing ",

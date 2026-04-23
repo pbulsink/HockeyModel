@@ -1744,6 +1744,10 @@ daily_odds_table <- function(
 }
 
 
+#' Placeholder for playoff series odds table output
+#'
+#' @returns `NULL`. This helper is not implemented yet.
+#' @keywords internal
 series_odds_table <- function() {
   NULL # TODO: DO IT
 }

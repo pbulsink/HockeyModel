@@ -1110,6 +1110,14 @@ simulatePlayoffs <- function(
   return(simodds)
 }
 
+#' Order two teams by predicted seeding priority
+#'
+#' @param team1 (`character(1)`) First team.
+#' @param team2 (`character(1)`) Second team.
+#' @param summary_results (`data.frame`) Simulation summary with `meanPoints`.
+#' @param p1 (`character(1)` or `NULL`) Optional forced first seed.
+#' @returns (`character`) Length-two vector in seeding order.
+#' @keywords internal
 reseedTwoTeams <- function(team1, team2, summary_results, p1 = NULL) {
   t1p <- summary_results[summary_results$Team == team1, ]$meanPoints
   t2p <- summary_results[summary_results$Team == team2, ]$meanPoints
@@ -1222,6 +1230,11 @@ single_series_solver <- function(
   }
 }
 
+#' Build winner/loser summary for completed playoff series
+#'
+#' @param currentSeries (`data.frame`) Series table from [getAPISeries()].
+#' @returns (`data.frame`) Series identifier with winner and loser teams.
+#' @keywords internal
 getCompletedSeries <- function(currentSeries) {
   completedSeries <- currentSeries |>
     dplyr::filter(.data$Status == "Complete") |>
@@ -2027,6 +2040,12 @@ playoffSolverEngine <- function(
   return(simresults)
 }
 
+#' Precompute playoff win odds for all home-away team pairings
+#'
+#' @param teamlist (`character`) Team names to pair.
+#' @param params (`list` or `NULL`) Dixon-Coles parameter list.
+#' @returns (`data.frame`) Pairwise table with `HomeOdds`.
+#' @keywords internal
 getAllHomeAwayOdds <- function(teamlist, params = NULL) {
   params <- parse_dc_params(params)
   homeAwayOdds <- expand.grid(
@@ -2184,6 +2203,15 @@ cleanupPredictionsFile <- function(
   return(TRUE)
 }
 
+#' Backfill historical daily prediction records
+#'
+#' @param startDate (`Date`) First date to backfill.
+#' @param endDate (`Date`) Last date to backfill.
+#' @param filepath (`character(1)`) CSV path for recorded predictions.
+#' @param include_xG (`logical(1)`) Whether to include xG columns.
+#' @param draws (`logical(1)`) Whether to store draw probabilities.
+#' @returns (`logical(1)`) `TRUE` when processing completes.
+#' @keywords internal
 build_past_predictions <- function(
   startDate,
   endDate,

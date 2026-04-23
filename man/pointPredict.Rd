@@ -7,8 +7,8 @@
 pointPredict()
 }
 \value{
-point prediction ggplot object
+A point-projection \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
 }
 \description{
-Predict Points graphic
+Convenience wrapper around \code{\link[=plot_prediction_points_by_team]{plot_prediction_points_by_team()}}.
 }
