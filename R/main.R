@@ -214,6 +214,8 @@ tweet <- function(
       )
     )
   }
+
+  return(invisible(NULL))
 }
 
 #' Daily functions, rolled into one call
