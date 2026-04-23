@@ -31,8 +31,8 @@ test_that("normalizeOdds works with unlisted vectors", {
 
 test_that("Season from Game Date works", {
   skip_if_hockey_apis_unavailable()
-  expect_equal(HockeyModel::getSeason("2018-10-05"), 20182019L)
-  expect_equal(HockeyModel::getSeason("2019-02-15"), 20182019L)
+  expect_equal(HockeyModel::getSeason("2018-10-05"), "20182019")
+  expect_equal(HockeyModel::getSeason("2019-02-15"), "20182019")
 })
 
 test_that("Past points function works", {
@@ -275,14 +275,14 @@ test_that("colourDelta is symmetric", {
 # ============ getSeason tests ============
 test_that("getSeason from Game Date works", {
   skip_if_hockey_apis_unavailable()
-  expect_equal(HockeyModel::getSeason("2018-10-05"), 20182019L)
-  expect_equal(HockeyModel::getSeason("2019-02-15"), 20182019L)
+  expect_equal(HockeyModel::getSeason("2018-10-05"), "20182019")
+  expect_equal(HockeyModel::getSeason("2019-02-15"), "20182019")
 })
 
 test_that("getSeason handles regular season dates", {
   skip_if_hockey_apis_unavailable()
-  expect_equal(HockeyModel::getSeason("2018-10-15"), 20182019L)
-  expect_equal(HockeyModel::getSeason("2019-04-01"), 20182019L)
+  expect_equal(HockeyModel::getSeason("2018-10-15"), "20182019")
+  expect_equal(HockeyModel::getSeason("2019-04-01"), "20182019")
 })
 
 test_that("getSeason returns numeric integer", {
