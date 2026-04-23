@@ -13,7 +13,7 @@ updateScoresAPI_byGameID(gameids, save_data = FALSE)
 data when \code{usethis} is available.}
 }
 \value{
-(\code{scores}) Invisibly, the updated scores data frame.
+(\code{data.frame}) Invisibly, the updated scores table.
 }
 \description{
 Update scores for specific game IDs

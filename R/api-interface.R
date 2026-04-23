@@ -415,7 +415,7 @@ updateScoresAPI <- function(
 #' @param gameids (`character` or `numeric`) One or more NHL game IDs.
 #' @param save_data (`logical(1)`) Whether to write updated scores into package
 #'   data when `usethis` is available.
-#' @returns (`scores`) Invisibly, the updated scores data frame.
+#' @returns (`data.frame`) Invisibly, the updated scores table.
 #' @keywords internal
 updateScoresAPI_byGameID <- function(gameids, save_data = FALSE) {
   updatedSc <- getNHLScores(

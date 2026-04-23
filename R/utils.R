@@ -40,7 +40,7 @@ normalizeOdds <- function(odds) {
 #'
 #' @param sc scores frame
 #'
-#' @returns A [tibble::tibble()] with season point totals by team.
+#' @returns A tibble with season point totals by team.
 historicalPoints <- function(sc) {
   points <- tibble::tibble(
     Team = character(),

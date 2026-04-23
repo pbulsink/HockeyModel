@@ -10,7 +10,7 @@ historicalPoints(sc)
 \item{sc}{scores frame}
 }
 \value{
-A \code{\link[tibble:tibble]{tibble::tibble()}} with season point totals by team.
+A tibble with season point totals by team.
 }
 \description{
 Get Historical Points for all teams listed in a scores frame
