@@ -1059,12 +1059,12 @@ getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
     return(teamColours[teamColours$ShortCode == t, ]$Team)
   }
 
-  v_getteamshort <- Vectorize(getteamlong, "t")
+  v_getteamlong <- Vectorize(getteamlong, "t")
   teams <- clean_names(teams)
   if (length(teams) == 1) {
     return(getteamlong(t = teams))
   } else {
-    return(unname(v_getteamshort(t = teams)))
+    return(unname(v_getteamlong(t = teams)))
   }
 }
 
