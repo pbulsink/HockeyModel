@@ -444,7 +444,7 @@ optimizeIterative_WL_Internal <- function(params) {
   acc <- accuracy(pre$HomeWin, ifelse(pre$Result > 0.5, 1, 0))
   rocauc <- auc(pre$HomeWin, ifelse(pre$Result > 0.5, 1, 0))
   # ----- CHOOSE EVALUATOR
-  return(rocauc)
+  return(list(ll, acc, rocauc)[1])
 }
 
 optimizeIterative_XG_Internal <- function(params) {
@@ -496,7 +496,7 @@ optimizeIterative_XG_Internal <- function(params) {
   r2 <- rsquare(pre$TotalxGPred, pre$TotalGoals)
   mse <- mse(pre$TotalxGPred, pre$TotalGoals)
   # ----- CHOOSE Evaluator
-  return(rmse)
+  return(list(rmse, r2, mse)[1])
 }
 
 #' Predict the outcome of one game using iterative Dixon Coles model

@@ -4,5 +4,4 @@ linters: linters_with_defaults(
     commented_code_linter = NULL,
     return_linter = NULL,
     object_length_linter = NULL
-
   )
