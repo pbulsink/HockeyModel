@@ -8,9 +8,13 @@ test_that("Playoff series odds ok", {
     playoffSeriesOdds(1.2, 0.5),
     regexp = "Error in HockeyModel::playoffSeriesOdds\\(\\)"
   )
-  expect_warning(
+  expect_message(
     playoffSeriesOdds(0.5, 0.5, 4, 2),
     regexp = "Series already won; returning 1 for the home team win probability"
+  )
+  expect_message(
+    playoffSeriesOdds(0.5, 0.5, 2, 4),
+    regexp = "Series already won; returning 0 for the home team win probability"
   )
 })
 

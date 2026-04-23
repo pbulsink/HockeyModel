@@ -856,13 +856,13 @@ playoffSeriesOdds <- function(
     ))
   }
   if (home_win >= game_to) {
-    cli::cli_warn(
+    cli::cli_alert_info(
       "Series already won; returning 1 for the home team win probability."
     )
     return(1)
   }
   if (away_win >= game_to) {
-    cli::cli_warn(
+    cli::cli_alert_info(
       "Series already won; returning 0 for the home team win probability."
     )
     return(0)
