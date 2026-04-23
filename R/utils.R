@@ -87,6 +87,17 @@ mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
 }
 
 
+validate_metric_inputs <- function(predicted, actual, fn_name) {
+  if (length(predicted) != length(actual)) {
+    cli::cli_abort(c(
+      "Error in HockeyModel::{fn_name}()",
+      "x" = "Expected {.arg predicted} and {.arg actual} to have the same length, got {length(predicted)} and {length(actual)} instead.",
+      "i" = "Please retry with vectors of equal length."
+    ))
+  }
+}
+
+
 #' Log Loss Calculator
 #'
 #' @param predicted Predicted odds of an event occuring
@@ -96,7 +107,7 @@ mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
 #' @return a log loss value for the event(s)
 #' @export
 logLoss <- function(predicted, actual) {
-  stopifnot(length(predicted) == length(actual))
+  validate_metric_inputs(predicted, actual, "logLoss")
   predicted[predicted == 0] <- 1e-15
   predicted[predicted == 1] <- 1 - 1e-15
 
@@ -116,7 +127,7 @@ logLoss <- function(predicted, actual) {
 #' @return a percentage of correct predictions
 #' @export
 accuracy <- function(predicted, actual) {
-  stopifnot(length(predicted) == length(actual))
+  validate_metric_inputs(predicted, actual, "accuracy")
 
   predicted <- as.numeric(predicted > 0.5)
   actual <- as.numeric(actual > 0.5)
@@ -136,7 +147,7 @@ accuracy <- function(predicted, actual) {
 #' @return a single value for auc
 #' @export
 auc <- function(predicted, actual) {
-  stopifnot(length(predicted) == length(actual))
+  validate_metric_inputs(predicted, actual, "auc")
 
   actual <- as.numeric(actual > 0.5)
 
@@ -160,7 +171,7 @@ auc <- function(predicted, actual) {
 #' @return a single value for RMSE
 #' @export
 rmse <- function(predicted, actual) {
-  stopifnot(length(predicted) == length(actual))
+  validate_metric_inputs(predicted, actual, "rmse")
 
   return(sqrt(mean((actual - predicted)^2)))
 }
@@ -175,7 +186,7 @@ rmse <- function(predicted, actual) {
 #' @return a single value for R^2
 #' @export
 rsquare <- function(predicted, actual) {
-  stopifnot(length(predicted) == length(actual))
+  validate_metric_inputs(predicted, actual, "rsquare")
 
   return(stats::cor(predicted, actual)^2)
 }
@@ -189,7 +200,7 @@ rsquare <- function(predicted, actual) {
 #' @return a single value for MSE
 #' @export
 mse <- function(predicted, actual) {
-  stopifnot(length(predicted) == length(actual))
+  validate_metric_inputs(predicted, actual, "mse")
 
   return(mean((actual - predicted)^2))
 }
