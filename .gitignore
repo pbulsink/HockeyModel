@@ -42,3 +42,6 @@ prediction_results
 
 .DS_Store
 tests/testthat/testthat-problems.rds
+
+# testthat transient problem outputs
+tests/testthat/_problems/
