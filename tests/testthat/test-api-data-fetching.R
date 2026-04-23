@@ -1,4 +1,5 @@
 context("test-api-data-fetching")
+skip_if_hockey_apis_unavailable()
 
 # ============ getNHLSchedule tests ============
 test_that("getNHLSchedule returns data frame", {

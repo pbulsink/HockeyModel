@@ -38,6 +38,7 @@ test_that("Presidents Predictions by Team Graphics Produce", {
 })
 
 test_that("Today Odds plot OK", {
+  skip_if_hockey_apis_unavailable()
   p <- suppressWarnings(plot_odds_today(today = as.Date("2019-11-01")))
   expect_true(is.null(p) || ggplot2::is_ggplot(p))
   if (is.null(p)) {
@@ -53,6 +54,7 @@ test_that("Today Odds plot OK", {
 })
 
 test_that("Single Game xG plot OK", {
+  skip_if_hockey_apis_unavailable()
   p <- suppressWarnings(plot_game("Vancouver Canucks", "Edmonton Oilers"))
   expect_true(ggplot2::is_ggplot(p))
   expect_identical(p$labels$title, "Predicted Goals")
@@ -61,6 +63,7 @@ test_that("Single Game xG plot OK", {
 })
 
 test_that("Predicted Points plot OK", {
+  skip_if_hockey_apis_unavailable()
   preds <- HockeyModel::example_raw_predictions
   p <- suppressWarnings(plot_point_likelihood(preds = preds, savefiles = FALSE))
   for (i in seq_along(length(p))) {
@@ -71,6 +74,7 @@ test_that("Predicted Points plot OK", {
 })
 
 test_that("Series Graphics are OK", {
+  skip_if_hockey_apis_unavailable()
   series <- getAPISeries("20182019")
   series <- series[1:3, c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
   series$HomeWins <- c(0, 3, 3)

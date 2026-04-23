@@ -1,4 +1,5 @@
 test_that("iterative functions works", {
+  skip_if_hockey_apis_unavailable()
   it <- iterativeOddsTable()
   expect_equal(colnames(it), c(
     "GameID", "HomeTeam", "AwayTeam", "HomeWin",

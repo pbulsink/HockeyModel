@@ -30,6 +30,7 @@ test_that("Playoff Sim finishes OK", {
 })
 
 test_that("Convenience Functions are OK", {
+  skip_if_hockey_apis_unavailable()
   odds <- todayOdds(today = as.Date("2019-11-01"))
   expect_true(is.null(odds) || is.data.frame(odds))
   if (!is.null(odds)) {
@@ -38,6 +39,7 @@ test_that("Convenience Functions are OK", {
 })
 
 test_that("Predictions File saves", {
+  skip_if_hockey_apis_unavailable()
   tmpfile <- withr::local_tempfile(pattern = "odds-", fileext = ".csv")
   expect_true(suppressWarnings(build_past_predictions(startDate = "2021-01-30", endDate = "2021-01-30", filepath = tmpfile)))
   expect_true(file.exists(tmpfile))

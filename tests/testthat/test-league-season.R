@@ -1,4 +1,5 @@
 context("test-league-season")
+skip_if_hockey_apis_unavailable()
 
 # ============ getSeasonStartDate tests ============
 test_that("getSeasonStartDate returns Date object", {

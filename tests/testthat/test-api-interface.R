@@ -1,4 +1,5 @@
 context("test-api-interface")
+skip_if_hockey_apis_unavailable()
 
 test_that("Schedules are ok", {
   tmpdir <- withr::local_tempdir()

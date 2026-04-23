@@ -17,22 +17,26 @@ test_that("plot_team_rating has layers", {
 
 # ============ plot_pace_by_team tests ============
 test_that("plot_pace_by_team executes without error", {
+  skip_if_hockey_apis_unavailable()
   expect_error(suppressWarnings(plot_pace_by_team()), NA)
 })
 
 # ============ plot_pace_by_division tests ============
 test_that("plot_pace_by_division executes without error", {
+  skip_if_hockey_apis_unavailable()
   expect_error(suppressWarnings(plot_pace_by_division()), NA)
 })
 
 # ============ todayOdds tests ============
 test_that("todayOdds returns data frame or NULL", {
+  skip_if_hockey_apis_unavailable()
   result <- suppressWarnings(todayOdds())
   expect_true(is.data.frame(result) || is.null(result))
 })
 
 # ============ todayOddsPlot tests ============
 test_that("todayOddsPlot executes without error", {
+  skip_if_hockey_apis_unavailable()
   p <- suppressWarnings(todayOddsPlot())
   expect_true(
     ggplot2::is_ggplot(p) || is.list(p) || is.null(p)
