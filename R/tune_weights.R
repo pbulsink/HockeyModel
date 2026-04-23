@@ -51,8 +51,9 @@ tune_dc_weight <- function(xi = 0.003, upsilon = 150) {
 
   cl <- parallel::makeCluster(4)
   doSNOW::registerDoSNOW(cl)
-  `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK
-  `%do%` <- foreach::`%do%`
+  `%dopar%` <- foreach::`%dopar%`  # This hack passes R CMD CHK
+  `%do%` <- foreach::`%do%`  # This hack passes R CMD CHK
+  i <- 0  # This hack passes R CMD CHK
   r <- foreach::foreach(
     i = seq_along(length(unique(schedule$Date))),
     .combine = "rbind",

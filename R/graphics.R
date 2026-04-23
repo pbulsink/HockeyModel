@@ -689,7 +689,7 @@ plot_odds_today <- function(
 
   if (nrow(todayodds) > 0) {
     todayodds$GameID <- as.numeric(todayodds$GameID)
-    write.csv(
+    utils::write.csv(
       todayodds,
       file = paste0("./", getCurrentSeason8(), ".csv"),
       row.names = FALSE,

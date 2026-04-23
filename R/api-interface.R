@@ -3,10 +3,11 @@
 #' @description Gets the NHL schedule from the NHL API for the season(s) requested. Returns data formatted for further use. This can be slow if requesting many seasons due to the API rate limit.
 #'
 #' @param season Season(s) for which the schedule is requested, as YYYY format. Defaults to current season. Accepts single years, ranges e.g.c(2010:2015) or complex ranges e.g. c(2010:2015, 2018).
+#' @param teamColours the built-in teamColours data set if not otherwise provided.
 #'
 #' @return a data frame of all scheduled games for the season(s) requested, with Date, HomeTeam, AwayTeam, GameID, and GameType.
 #' @export
-getNHLSchedule <- function(season = getCurrentSeason8()) {
+getNHLSchedule <- function(season = getCurrentSeason8(), teamColours = HockeyModel::teamColours) {
   stopifnot(seasonValidator(season))
 
   # This is imilar to how Dan Morse did it in hockeyR
@@ -699,7 +700,7 @@ getAPISeries <- function(season = getCurrentSeason8()) {
       "HomeSeed" = as.integer(.data$HomeSeed),
       "AwaySeed" = as.integer(.data$AwaySeed)
     )
-  return(playoffSeries[complete.cases(playoffSeries), ])
+  return(playoffSeries[stats::complete.cases(playoffSeries), ])
 }
 
 
@@ -937,43 +938,43 @@ getSeason <- function(gamedate = Sys.Date()) {
 }
 
 
-getConferences <- function() {
+getConferences <- function(teamColours = HockeyModel::teamColours) {
   return(unique(teamColours$Conference))
 }
 
-getDivisions <- function() {
+getDivisions <- function(teamColours = HockeyModel::teamColours) {
   return(unique(teamColours$Division))
 }
 
-getTeamConferences <- function(teams) {
-  getteamconf <- function(t) {
+getTeamConferences <- function(teams, teamColours = HockeyModel::teamColours) {
+  getteamconf <- function(t, teamColours = HockeyModel::teamColours) {
     return(teamColours[teamColours$Team == t, ]$Conference)
   }
 
   v_getteamconf <- Vectorize(getteamconf, "t")
   teams <- clean_names(teams)
   if (length(teams) == 1) {
-    return(getteamconf(t = teams))
+    return(getteamconf(t = teams, teamColours = teamColours))
   } else {
-    return(unname(v_getteamconf(t = teams)))
+    return(unname(v_getteamconf(t = teams, teamColours = teamColours)))
   }
 }
 
-getTeamDivisions <- function(teams) {
-  getteamdiv <- function(t) {
+getTeamDivisions <- function(teams, teamColours = HockeyModel::teamColours) {
+  getteamdiv <- function(t, teamColours = HockeyModel::teamColours) {
     return(teamColours[teamColours$Team == t, ]$Division)
   }
 
   v_getteamdiv <- Vectorize(getteamdiv, "t")
   teams <- clean_names(teams)
   if (length(teams) == 1) {
-    return(getteamdiv(t = teams))
+    return(getteamdiv(t = teams, teamColours = teamColours))
   } else {
-    return(unname(v_getteamdiv(t = teams)))
+    return(unname(v_getteamdiv(t = teams, teamColours = teamColours)))
   }
 }
 
-getShortTeam <- function(teams) {
+getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamshort <- function(t) {
     return(teamColours[teamColours$Team == t, ]$ShortCode)
   }
@@ -987,7 +988,7 @@ getShortTeam <- function(teams) {
   }
 }
 
-getLongTeam <- function(teams) {
+getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamlong <- function(t) {
     return(teamColours[teamColours$ShortCode == t, ]$Team)
   }
