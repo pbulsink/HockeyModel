@@ -423,13 +423,15 @@ updateScoresAPI_byGameID <- function(gameids, save_data = FALSE) {
     schedule = dplyr::bind_rows(HockeyModel::scores, HockeyModel::schedule)
   )
   if (!is.null(updatedSc)) {
-    scores <- scores |>
+    scores <- HockeyModel::scores |>
       dplyr::filter(!(.data$GameID %in% gameids)) |>
       dplyr::bind_rows(updatedSc) |>
       dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
     if (save_data && requireNamespace("usethis", quietly = TRUE)) {
       suppressMessages(usethis::use_data(scores, overwrite = TRUE))
     }
+  } else {
+    scores <- HockeyModel::scores
   }
   invisible(scores)
 }

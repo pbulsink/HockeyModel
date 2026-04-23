@@ -637,6 +637,8 @@ saveIterativePredictions <- function(
     rankparams,
     file = file.path(filepath, paste0(Sys.Date(), "-iterative-rankings.RDS"))
   )
+
+  return(invisible(NULL))
 }
 
 
@@ -831,7 +833,7 @@ getIterativeTable <- function(
 #'
 #' @returns (`data.frame` or `NULL`) Current-day iterative prediction table.
 #' @keywords internal
-iterateiveDailyUpdate <- function() {
+iterativeDailyUpdate <- function() {
   scores <- updateScoresAPI()
   schedule <- updateScheduleAPI()
   results <- getIterativeTable(

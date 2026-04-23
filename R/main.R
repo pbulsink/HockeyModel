@@ -697,6 +697,8 @@ tweetLikelihoods <- function(
       Sys.sleep(delay / 2)
     }
   }
+
+  return(invisible(NULL))
 }
 
 #' Tweet Game Plots
