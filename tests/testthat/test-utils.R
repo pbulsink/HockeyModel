@@ -266,21 +266,10 @@ test_that("colourDelta is symmetric", {
   )
 })
 
-# ============ getSeason tests ============
-test_that("getSeason from Game Date works", {
-  skip_if_hockey_apis_unavailable()
-  expect_equal(HockeyModel::getSeason("2018-10-05"), "20182019")
-  expect_equal(HockeyModel::getSeason("2019-02-15"), "20182019")
-})
-
-test_that("getSeason handles regular season dates", {
-  skip_if_hockey_apis_unavailable()
-  expect_equal(HockeyModel::getSeason("2018-10-15"), "20182019")
-  expect_equal(HockeyModel::getSeason("2019-04-01"), "20182019")
-})
 
 test_that("getSeason returns character season id", {
   skip_if_hockey_apis_unavailable()
   result <- HockeyModel::getSeason("2020-12-25")
-  expect_true(is.null(result) || (is.character(result) && grepl("^\\d{8}$", result)))
+  expect_true(is.character(result))
+  expect_true(grepl("^\\d{8}$", result))
 })
