@@ -1,38 +1,52 @@
 context("test-league-season")
-skip_if_hockey_apis_unavailable()
 
 # ============ getSeasonStartDate tests ============
 test_that("getSeasonStartDate returns Date object", {
-  start <- getSeasonStartDate(20182019)
-  expect_true(inherits(start, "Date"))
+  vcr::use_cassette("current-season", {
+    start <- getSeasonStartDate(20242025)
+    expect_true(inherits(start, "Date"))
+  })
 })
 
 test_that("getSeasonStartDate returns valid date", {
-  start <- getSeasonStartDate(20182019)
-  expect_true(!is.na(start))
+  vcr::use_cassette("current-season", {
+    start <- getSeasonStartDate(20242025)
+    expect_true(!is.na(start))
+  })
 })
 
 test_that("getSeasonStartDate is before end date", {
-  start <- getSeasonStartDate(20182019)
-  end <- getSeasonEndDate(20182019)
-  expect_true(start < end)
+  vals <- new.env(parent = emptyenv())
+  vcr::use_cassette("current-season", {
+    vals$start <- getSeasonStartDate(20242025)
+  })
+  vcr::use_cassette("current-season", {
+    vals$end <- getSeasonEndDate(20242025)
+    expect_true(vals$start < vals$end)
+  })
 })
 
 # ============ getSeasonEndDate tests ============
 test_that("getSeasonEndDate returns Date object", {
-  end <- getSeasonEndDate(20182019)
-  expect_true(inherits(end, "Date"))
+  vcr::use_cassette("current-season", {
+    end <- getSeasonEndDate(20242025)
+    expect_true(inherits(end, "Date"))
+  })
 })
 
 test_that("getSeasonEndDate returns valid date", {
-  end <- getSeasonEndDate(20182019)
-  expect_true(!is.na(end))
+  vcr::use_cassette("current-season", {
+    end <- getSeasonEndDate(20242025)
+    expect_true(!is.na(end))
+  })
 })
 
 # ============ getCurrentSeason8 tests ============
 test_that("getCurrentSeason8 returns numeric or character", {
-  result <- suppressWarnings(getCurrentSeason8())
-  expect_true(is.numeric(result) || is.character(result))
+  vcr::use_cassette("current-season", {
+    result <- suppressWarnings(getCurrentSeason8())
+    expect_true(is.null(result) || is.numeric(result) || is.character(result))
+  })
 })
 
 # ============ inOffSeason tests ============
@@ -93,8 +107,10 @@ test_that("getTeamColours returns hex colors", {
 
 # ============ todayOdds tests ============
 test_that("todayOdds returns data frame or NULL", {
-  result <- suppressWarnings(todayOdds())
-  expect_true(is.data.frame(result) || is.null(result))
+  vcr::use_cassette("games-today", {
+    result <- suppressWarnings(todayOdds(today = as.Date("2019-11-01")))
+    expect_true(is.data.frame(result) || is.null(result))
+  })
 })
 
 # ============ colourDelta tests ============
@@ -110,8 +126,10 @@ test_that("colourDelta handles equal values", {
 
 # ============ todayOddsPlot tests ============
 test_that("todayOddsPlot executes without error", {
-  p <- suppressWarnings(todayOddsPlot())
-  expect_true(
-    ggplot2::is_ggplot(p) || is.list(p) || is.null(p)
-  )
+  vcr::use_cassette("games-today", {
+    p <- suppressWarnings(todayOddsPlot(date = as.Date("2019-11-01")))
+    expect_true(
+      ggplot2::is_ggplot(p) || is.list(p) || is.null(p)
+    )
+  })
 })

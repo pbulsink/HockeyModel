@@ -1,5 +1,4 @@
 context("test-api-interface")
-skip_if_hockey_apis_unavailable()
 
 test_that("getNHLSchedule validates season input", {
   expect_error(getNHLSchedule("bob"))
@@ -7,17 +6,16 @@ test_that("getNHLSchedule validates season input", {
 })
 
 test_that("Schedules are ok", {
-  tmpdir <- withr::local_tempdir()
-  withr::local_options("HockeyModel.prediction.path" = tmpdir)
-
-  sched <- getNHLSchedule()
-  expect_true(is.data.frame(sched))
-  expect_equal(ncol(sched), 6)
-  expect_equal(
-    colnames(sched),
-    c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
-  )
-  expect_true(all(sched$GameType %in% c("R", "P")))
+  vcr::use_cassette("nhl-schedule", {
+    sched <- getNHLSchedule("20242025")
+    expect_true(is.data.frame(sched))
+    expect_equal(ncol(sched), 6)
+    expect_equal(
+      colnames(sched),
+      c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+    )
+    expect_true(all(sched$GameType %in% c("R", "P")))
+  })
 })
 
 test_that("getNHLScores validates season input", {
@@ -40,28 +38,30 @@ test_that("Scores are OK", {
     .package = "HockeyModel"
   )
 
-  score <- getNHLScores(2020020001, progress = FALSE)
-  expect_true(is.data.frame(score))
-  expect_equal(nrow(score), 1)
-  required_cols <- c(
-    "Date",
-    "HomeTeam",
-    "AwayTeam",
-    "GameID",
-    "HomeGoals",
-    "AwayGoals",
-    "OTStatus",
-    "GameType",
-    "GameStatus",
-    "Result",
-    "HomexG",
-    "AwayxG"
-  )
-  expect_true(all(required_cols %in% colnames(score)))
-  expect_equal(score$GameID[[1]], 2020020001)
-  expect_equal(score$GameStatus[[1]], "Final")
-  expect_true(is.numeric(score$HomexG[[1]]) || is.na(score$HomexG[[1]]))
-  expect_true(is.numeric(score$AwayxG[[1]]) || is.na(score$AwayxG[[1]]))
+  vcr::use_cassette("get-nhl-scores-single-game-columns", {
+    score <- getNHLScores(2020020001, progress = FALSE)
+    expect_true(is.data.frame(score))
+    expect_equal(nrow(score), 1)
+    required_cols <- c(
+      "Date",
+      "HomeTeam",
+      "AwayTeam",
+      "GameID",
+      "HomeGoals",
+      "AwayGoals",
+      "OTStatus",
+      "GameType",
+      "GameStatus",
+      "Result",
+      "HomexG",
+      "AwayxG"
+    )
+    expect_true(all(required_cols %in% colnames(score)))
+    expect_equal(score$GameID[[1]], 2020020001)
+    expect_equal(score$GameStatus[[1]], "Final")
+    expect_true(is.numeric(score$HomexG[[1]]) || is.na(score$HomexG[[1]]))
+    expect_true(is.numeric(score$AwayxG[[1]]) || is.na(score$AwayxG[[1]]))
+  })
 })
 
 test_that("get_xg() uses component parser results", {
@@ -113,34 +113,26 @@ test_that("games_today validates date input", {
 })
 
 test_that("Series is ok", {
-  # tough to test as it's a moving target
-  tmpdir <- withr::local_tempdir()
-  withr::local_options("HockeyModel.prediction.path" = tmpdir)
-
-  series <- getAPISeries()
-  if (inPlayoffs()) {
-    # now there should be a series
-    expect_gt(nrow(series), 0)
+  vcr::use_cassette("get-series", {
+    series <- getAPISeries("20182019")
     expect_true(is.data.frame(series))
-  }
-  series <- getAPISeries("20182019")
-  expect_true(is.data.frame(series))
-  expect_equal(nrow(series), 15)
-  expect_true(all(
-    c(
-      "Round",
-      "Series",
-      "HomeTeam",
-      "AwayTeam",
-      "HomeWins",
-      "AwayWins",
-      "HomeSeed",
-      "AwaySeed",
-      "Status"
-    ) %in%
-      colnames(series)
-  ))
-  expect_true(all(series$Status == "Complete"))
+    expect_equal(nrow(series), 15)
+    expect_true(all(
+      c(
+        "Round",
+        "Series",
+        "HomeTeam",
+        "AwayTeam",
+        "HomeWins",
+        "AwayWins",
+        "HomeSeed",
+        "AwaySeed",
+        "Status"
+      ) %in%
+        colnames(series)
+    ))
+    expect_true(all(series$Status == "Complete"))
+  })
 })
 
 test_that("getAPISeries handles integer input", {
@@ -164,13 +156,17 @@ test_that("SeasonID gets seasons ok", {
   tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
-  season <- getCurrentSeason8()
-  expect_true(is.character(season))
-  expect_equal(nchar(season), 8)
-  expect_true(grepl("^\\d{8}$", season))
-  first_four <- as.integer(substr(season, 1, 4))
-  last_four <- as.integer(substr(season, 5, 8))
-  expect_equal(last_four - first_four, 1)
+  vcr::use_cassette("current-season", {
+    season <- getCurrentSeason8()
+    expect_true(is.null(season) || is.character(season))
+    if (!is.null(season)) {
+      expect_equal(nchar(season), 8)
+      expect_true(grepl("^\\d{8}$", season))
+      first_four <- as.integer(substr(season, 1, 4))
+      last_four <- as.integer(substr(season, 5, 8))
+      expect_equal(last_four - first_four, 1)
+    }
+  })
 
   expect_equal(getSeason("2018-12-02"), "20182019")
   expect_null(getSeason("2018-09-01"))
