@@ -20,7 +20,7 @@ test_that("Schedules are ok", {
   expect_true(all(sched$GameType %in% c("R", "P")))
 })
 
-test_that("getNHLScores validates gameIDs input", {
+test_that("getNHLScores validates season input", {
   expect_error(getNHLScores("not-a-season"))
   expect_error(getNHLScores(12345))
 })
@@ -108,8 +108,8 @@ test_that("games_today returns NULL or data frame", {
 })
 
 test_that("games_today validates date input", {
-  expect_error(games_today(date = "not-a-date"))
-  expect_error(games_today(date = 12345))
+  expect_error(games_today(date = "not-a-date"), "is.Date")
+  expect_error(games_today(date = 12345), "standard unambiguous format")
 })
 
 test_that("Series is ok", {
@@ -144,7 +144,7 @@ test_that("Series is ok", {
 })
 
 test_that("getAPISeries handles integer input", {
-  expect_error(getAPISeries(season = 1))
+  expect_error(getAPISeries(season = 1), "8-digit season ID string")
 })
 
 test_that("Season Dates & Binaries work", {
