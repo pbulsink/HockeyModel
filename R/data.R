@@ -129,6 +129,11 @@
 #' @format a tibble
 "example_raw_predictions"
 
+#' Rebuild `teamColours` package data from source CSV
+#'
+#' @returns `NULL` (invisibly). Writes updated data when `usethis` is
+#'   available.
+#' @keywords internal
 buildTeamColours <- function() {
   teamColours <- utils::read.csv(
     "./data-raw/logos/team_colours.csv",
