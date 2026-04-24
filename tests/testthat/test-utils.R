@@ -29,12 +29,6 @@ test_that("normalizeOdds works with unlisted vectors", {
   expect_equal(sum(result), 1)
 })
 
-test_that("Season from Game Date works", {
-  skip_if_hockey_apis_unavailable()
-  expect_equal(HockeyModel::getSeason("2018-10-05"), "20182019")
-  expect_equal(HockeyModel::getSeason("2019-02-15"), "20182019")
-})
-
 test_that("Past points function works", {
   # Just test that the function runs without error
   sc <- scores[

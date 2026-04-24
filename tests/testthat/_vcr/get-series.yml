@@ -5,12 +5,12 @@ http_interactions:
   response:
     status: 200
     headers:
-      date: Fri, 24 Apr 2026 01:41:17 GMT
+      date: Fri, 24 Apr 2026 10:11:22 GMT
       content-type: application/json
-      cf-ray: 9f1167a0ba9844b0-YYZ
+      cf-ray: 9f1452ce9d3436b7-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=12, s-maxage=12
-      etag: W/"69eaca4a--gzip"
+      cache-control: no-transform, max-age=7, s-maxage=7
+      etag: W/"69eb41d2--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -91,5 +91,5 @@ http_interactions:
         Boston"},"logo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_dark.svg"},"bottomSeedTeam":{"id":19,"abbrev":"STL","name":{"default":"St.
         Louis Blues","fr":"Blues de St. Louis"},"commonName":{"default":"Blues"},"placeNameWithPreposition":{"default":"St.
         Louis","fr":"de St. Louis"},"logo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_dark.svg"}}]}'
-  recorded_at: 2026-04-24 01:41:17
+  recorded_at: 2026-04-24 10:11:22
 recorded_with: VCR-vcr/2.1.0

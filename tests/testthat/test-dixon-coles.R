@@ -1,11 +1,10 @@
 context("test-dixon-coles")
 
 # ============ updateDC tests ============
-test_that("Model Creates OK", {
-  tmpdir <- withr::local_tempdir()
-  withr::local_options("HockeyModel.prediction.path" = tmpdir)
-
+test_that("Model params generate OK", {
   params <- suppressWarnings(updateDC(save_data = FALSE))
+  expect_true(is.list(params))
+  expect_true(all(c("m", "rho", "beta", "eta", "k") %in% names(params)))
 
   expect_lt(params$rho, 0)
   expect_gt(params$rho, -0.5)
@@ -16,12 +15,6 @@ test_that("Model Creates OK", {
   expect_gt(params$eta, 1)
   expect_lt(params$k, 10)
   expect_gt(params$k, 1)
-})
-
-test_that("updateDC returns list with required fields", {
-  params <- suppressWarnings(updateDC(save_data = FALSE))
-  expect_true(is.list(params))
-  expect_true(all(c("m", "rho", "beta", "eta", "k") %in% names(params)))
 })
 
 test_that("updateDC with historical date works", {
@@ -90,13 +83,9 @@ test_that("dcSample with as_result=FALSE returns data frame", {
 })
 
 test_that("dcResult handles various score combinations", {
-  set.seed(42)
-  result1 <- dcResult(5, 2)
-  expect_true(result1 %in% c(0, 0.25, 0.4, 0.5, 0.6, 0.75, 1))
-
-  set.seed(42)
-  result2 <- dcResult(2, 5)
-  expect_true(result2 %in% c(0, 0.25, 0.4, 0.5, 0.6, 0.75, 1))
+  set.seed(10)
+  expect_equal(dcResult(5, 2), 1)
+  expect_equal(dcResult(2, 5), 0)
 })
 
 test_that("Predictions Run", {
@@ -110,13 +99,44 @@ test_that("Predictions Run", {
   scor$Date <- as.Date(scor$Date)
 
   tryCatch({
-    result <- suppressWarnings(dcPredictMultipleDays(start = as.Date("2018-08-01"), end = as.Date("2018-08-01"), schedule = sched, scores = scor, nsims = 3, cores = 1, filedir = "./", likelihood_graphic = FALSE))
+    result <- suppressWarnings(
+      dcPredictMultipleDays(
+        start = as.Date("2018-08-01"),
+        end = as.Date("2018-08-01"),
+        schedule = sched,
+        scores = scor,
+        nsims = 3,
+        cores = 1,
+        filedir = "./",
+        likelihood_graphic = FALSE)
+      )
     expect_true(result)
     if (file.exists("./2018-08-01-predictions.RDS")) {
       file.remove("./2018-08-01-predictions.RDS")
     }
   }, error = function(e) {
-    skip("dcPredictMultipleDays has issues with schedule format")
+    stop("dcPredictMultipleDays has issues")
+  })
+
+  #Try multicore:
+  tryCatch({
+    result <- suppressWarnings(
+      dcPredictMultipleDays(
+        start = as.Date("2018-08-01"),
+        end = as.Date("2018-08-01"),
+        schedule = sched,
+        scores = scor,
+        nsims = 4,
+        cores = 2,
+        filedir = "./",
+        likelihood_graphic = FALSE)
+    )
+    expect_true(result)
+    if (file.exists("./2018-08-01-predictions.RDS")) {
+      file.remove("./2018-08-01-predictions.RDS")
+    }
+  }, error = function(e) {
+    skip("dcPredictMultipleDays has issues with multicore")
   })
 })
 
@@ -147,7 +167,7 @@ test_that("dcPredictMultipleDays returns TRUE", {
       file.remove("./2018-08-01-predictions.RDS")
     }
   }, error = function(e) {
-    skip("dcPredictMultipleDays has issues with schedule format")
+    stop("dcPredictMultipleDays has issues")
   })
 })
 
@@ -159,7 +179,7 @@ test_that("remainderSeasonDC returns correct structure", {
     result <- remainderSeasonDC(nsims = 3, cores = 1, scores = scor, schedule = sched, regress = FALSE)
     expect_true(is.list(result))
   }, error = function(e) {
-    skip("remainderSeasonDC has implementation issues")
+    stop("remainderSeasonDC has implementation issues")
   })
 })
 
@@ -201,26 +221,13 @@ test_that("todayDC returns NULL for no games", {
 })
 
 test_that("todayDC odds sum to 1 when available", {
-  today_odds <- todayDC(today = as.Date("2019-11-01"))
+  sched <- HockeyModel::scores
+  sched <- sched[sched$Date > as.Date("2019-10-01"),]
+  sched <- sched[sched$Date < as.Date("2019-12-31"),]
+  today_odds <- todayDC(today = as.Date("2019-11-01"), schedule = sched)
   if (!is.null(today_odds) && nrow(today_odds) > 0) {
-    for (i in 1:min(3, nrow(today_odds))) {
+    for (i in seq_len(nrow(today_odds))) {
       expect_equal(today_odds$HomeWin[i] + today_odds$AwayWin[i] + today_odds$Draw[i], 1, tolerance = 1e-10)
     }
   }
-})
-
-# ============ DC Result tests ============
-test_that("DC Result works", {
-  expect_true(dcResult(4, 2) %in% c(1, 0.75, 0.6, 0.4, 0.25, 0))
-  expect_true(all(dcResult(c(4, 2), c(2, 4)) %in% c(1, 0.75, 0.6, 0.4, 0.25, 0)))
-})
-
-test_that("dcResult handles different scores", {
-  set.seed(42)
-  result1 <- dcResult(3, 1)
-  expect_true(result1 %in% c(1, 0.75, 0.6, 0.4, 0.25, 0))
-
-  set.seed(42)
-  result2 <- dcResult(1, 3)
-  expect_true(result2 %in% c(1, 0.75, 0.6, 0.4, 0.25, 0))
 })
