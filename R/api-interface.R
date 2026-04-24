@@ -168,6 +168,12 @@ getNHLScores <- function(
       gameIDs %in% schedule[schedule$Date < Sys.Date(), "GameID"]
     ]
   }
+
+  gameIDs <- gameIDs[gameIDValidator(gameIDs)]
+  if(length(gameIDs) == 0) {
+    cli::cli_abort("Error in HockeyModel::getNHLScores. No valid {.param gameIDs} provided.")
+  }
+
   if (progress) {
     if (!requireNamespace("progress", quietly = TRUE)) {
       progress <- FALSE
@@ -234,6 +240,8 @@ getNHLScores <- function(
   message("Now getting natural stat trick xG results")
 
   gameIDs <- gameIDs[!(gameIDs %in% dropped_gid)]
+
+
 
   scores_xg <- get_xg(gameIds = gameIDs)
   if (!is.null(scores)) {
@@ -670,7 +678,8 @@ getAPISeries <- function(season = getCurrentSeason8()) {
       "HomeWins" = "topSeedWins",
       "AwayWins" = "bottomSeedWins",
       "HomeSeed" = "topSeedRank",
-      "AwaySeed" = "bottomSeedRank",
+      "AwaySeed" = "bottomSeedRank") |>
+    dplyr::mutate(
       "requiredWins" = 4
     )
 

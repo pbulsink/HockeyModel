@@ -1,0 +1,95 @@
+http_interactions:
+- request:
+    method: GET
+    uri: https://api-web.nhle.com/v1/playoff-bracket/2019
+  response:
+    status: 200
+    headers:
+      date: Fri, 24 Apr 2026 01:41:17 GMT
+      content-type: application/json
+      cf-ray: 9f1167a0ba9844b0-YYZ
+      vary: Accept-Encoding
+      cache-control: no-transform, max-age=12, s-maxage=12
+      etag: W/"69eaca4a--gzip"
+      content-encoding: gzip
+      cf-cache-status: EXPIRED
+      server: cloudflare
+    body:
+      string: '{"bracketLogo":"https://assets.nhle.com/logos/playoffs/png/scp-horizontal-banner-en.png","bracketLogoFr":"https://assets.nhle.com/logos/playoffs/png/scp-horizontal-banner-fr.png","series":[{"seriesUrl":"/schedule/playoff-series/2019/series-a/bluejackets-vs-lightning","seriesTitle":"1st
+        Round","seriesAbbrev":"R1","seriesLetter":"A","playoffRound":1,"topSeedRank":1,"topSeedRankAbbrev":"D1","topSeedWins":0,"bottomSeedRank":4,"bottomSeedRankAbbrev":"WC2","bottomSeedWins":4,"winningTeamId":29,"losingTeamId":14,"topSeedTeam":{"id":14,"abbrev":"TBL","name":{"default":"Tampa
+        Bay Lightning","fr":"Lightning de Tampa Bay"},"commonName":{"default":"Lightning"},"placeNameWithPreposition":{"default":"Tampa
+        Bay","fr":"de Tampa Bay"},"logo":"https://assets.nhle.com/logos/nhl/svg/TBL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/TBL_dark.svg"},"bottomSeedTeam":{"id":29,"abbrev":"CBJ","name":{"default":"Columbus
+        Blue Jackets","fr":"Blue Jackets de Columbus"},"commonName":{"default":"Blue
+        Jackets"},"placeNameWithPreposition":{"default":"Columbus","fr":"de Columbus"},"logo":"https://assets.nhle.com/logos/nhl/svg/CBJ_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CBJ_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-b/mapleleafs-vs-bruins","seriesTitle":"1st
+        Round","seriesAbbrev":"R1","seriesLetter":"B","playoffRound":1,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":4,"bottomSeedRank":3,"bottomSeedRankAbbrev":"D3","bottomSeedWins":3,"winningTeamId":6,"losingTeamId":10,"topSeedTeam":{"id":6,"abbrev":"BOS","name":{"default":"Boston
+        Bruins","fr":"Bruins de Boston"},"commonName":{"default":"Bruins"},"placeNameWithPreposition":{"default":"Boston","fr":"de
+        Boston"},"logo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_dark.svg"},"bottomSeedTeam":{"id":10,"abbrev":"TOR","name":{"default":"Toronto
+        Maple Leafs","fr":"Maple Leafs de Toronto"},"commonName":{"default":"Maple
+        Leafs"},"placeNameWithPreposition":{"default":"Toronto","fr":"de Toronto"},"logo":"https://assets.nhle.com/logos/nhl/svg/TOR_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/TOR_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-c/hurricanes-vs-capitals","seriesTitle":"1st
+        Round","seriesAbbrev":"R1","seriesLetter":"C","playoffRound":1,"topSeedRank":1,"topSeedRankAbbrev":"D1","topSeedWins":3,"bottomSeedRank":4,"bottomSeedRankAbbrev":"WC1","bottomSeedWins":4,"winningTeamId":12,"losingTeamId":15,"topSeedTeam":{"id":15,"abbrev":"WSH","name":{"default":"Washington
+        Capitals","fr":"Capitals de Washington"},"commonName":{"default":"Capitals"},"placeNameWithPreposition":{"default":"Washington","fr":"de
+        Washington"},"logo":"https://assets.nhle.com/logos/nhl/svg/WSH_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/WSH_dark.svg"},"bottomSeedTeam":{"id":12,"abbrev":"CAR","name":{"default":"Carolina
+        Hurricanes","fr":"Hurricanes de la Caroline"},"commonName":{"default":"Hurricanes"},"placeNameWithPreposition":{"default":"Carolina","fr":"de
+        la Caroline"},"logo":"https://assets.nhle.com/logos/nhl/svg/CAR_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CAR_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-d/penguins-vs-islanders","seriesTitle":"1st
+        Round","seriesAbbrev":"R1","seriesLetter":"D","playoffRound":1,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":4,"bottomSeedRank":3,"bottomSeedRankAbbrev":"D3","bottomSeedWins":0,"winningTeamId":2,"losingTeamId":5,"topSeedTeam":{"id":2,"abbrev":"NYI","name":{"default":"New
+        York Islanders","fr":"Islanders de New York"},"commonName":{"default":"Islanders"},"placeNameWithPreposition":{"default":"New
+        York","fr":"de New York"},"logo":"https://assets.nhle.com/logos/nhl/svg/NYI_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/NYI_dark.svg"},"bottomSeedTeam":{"id":5,"abbrev":"PIT","name":{"default":"Pittsburgh
+        Penguins","fr":"Penguins de Pittsburgh"},"commonName":{"default":"Penguins"},"placeNameWithPreposition":{"default":"Pittsburgh","fr":"de
+        Pittsburgh"},"logo":"https://assets.nhle.com/logos/nhl/svg/PIT_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/PIT_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-e/stars-vs-predators","seriesTitle":"1st
+        Round","seriesAbbrev":"R1","seriesLetter":"E","playoffRound":1,"topSeedRank":1,"topSeedRankAbbrev":"D1","topSeedWins":2,"bottomSeedRank":4,"bottomSeedRankAbbrev":"WC1","bottomSeedWins":4,"winningTeamId":25,"losingTeamId":18,"topSeedTeam":{"id":18,"abbrev":"NSH","name":{"default":"Nashville
+        Predators","fr":"Predators de Nashville"},"commonName":{"default":"Predators"},"placeNameWithPreposition":{"default":"Nashville","fr":"de
+        Nashville"},"logo":"https://assets.nhle.com/logos/nhl/svg/NSH_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/NSH_dark.svg"},"bottomSeedTeam":{"id":25,"abbrev":"DAL","name":{"default":"Dallas
+        Stars","fr":"Stars de Dallas"},"commonName":{"default":"Stars"},"placeNameWithPreposition":{"default":"Dallas","fr":"de
+        Dallas"},"logo":"https://assets.nhle.com/logos/nhl/svg/DAL_20122013-20202021_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/DAL_20122013-20202021_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-f/blues-vs-jets","seriesTitle":"1st
+        Round","seriesAbbrev":"R1","seriesLetter":"F","playoffRound":1,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":2,"bottomSeedRank":3,"bottomSeedRankAbbrev":"D3","bottomSeedWins":4,"winningTeamId":19,"losingTeamId":52,"topSeedTeam":{"id":52,"abbrev":"WPG","name":{"default":"Winnipeg
+        Jets","fr":"Jets de Winnipeg"},"commonName":{"default":"Jets"},"placeNameWithPreposition":{"default":"Winnipeg","fr":"de
+        Winnipeg"},"logo":"https://assets.nhle.com/logos/nhl/svg/WPG_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/WPG_dark.svg"},"bottomSeedTeam":{"id":19,"abbrev":"STL","name":{"default":"St.
+        Louis Blues","fr":"Blues de St. Louis"},"commonName":{"default":"Blues"},"placeNameWithPreposition":{"default":"St.
+        Louis","fr":"de St. Louis"},"logo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-g/avalanche-vs-flames","seriesTitle":"1st
+        Round","seriesAbbrev":"R1","seriesLetter":"G","playoffRound":1,"topSeedRank":1,"topSeedRankAbbrev":"D1","topSeedWins":1,"bottomSeedRank":4,"bottomSeedRankAbbrev":"WC2","bottomSeedWins":4,"winningTeamId":21,"losingTeamId":20,"topSeedTeam":{"id":20,"abbrev":"CGY","name":{"default":"Calgary
+        Flames","fr":"Flames de Calgary"},"commonName":{"default":"Flames"},"placeNameWithPreposition":{"default":"Calgary","fr":"de
+        Calgary"},"logo":"https://assets.nhle.com/logos/nhl/svg/CGY_19941995-20192020_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CGY_19941995-20192020_dark.svg"},"bottomSeedTeam":{"id":21,"abbrev":"COL","name":{"default":"Colorado
+        Avalanche","fr":"Avalanche du Colorado"},"commonName":{"default":"Avalanche"},"placeNameWithPreposition":{"default":"Colorado","fr":"du
+        Colorado"},"logo":"https://assets.nhle.com/logos/nhl/svg/COL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/COL_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-h/goldenknights-vs-sharks","seriesTitle":"1st
+        Round","seriesAbbrev":"R1","seriesLetter":"H","playoffRound":1,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":4,"bottomSeedRank":3,"bottomSeedRankAbbrev":"D3","bottomSeedWins":3,"winningTeamId":28,"losingTeamId":54,"topSeedTeam":{"id":28,"abbrev":"SJS","name":{"default":"San
+        Jose Sharks","fr":"Sharks de San Jose"},"commonName":{"default":"Sharks"},"placeNameWithPreposition":{"default":"San
+        Jose","fr":"de San Jose"},"logo":"https://assets.nhle.com/logos/nhl/svg/SJS_20082009-20232024_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/SJS_20082009-20232024_dark.svg"},"bottomSeedTeam":{"id":54,"abbrev":"VGK","name":{"default":"Vegas
+        Golden Knights","fr":"Golden Knights de Vegas"},"commonName":{"default":"Golden
+        Knights"},"placeNameWithPreposition":{"default":"Vegas","fr":"de Vegas"},"logo":"https://assets.nhle.com/logos/nhl/svg/VGK_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/VGK_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-i/bluejackets-vs-bruins","seriesTitle":"2nd
+        Round","seriesAbbrev":"R2","seriesLetter":"I","playoffRound":2,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":4,"bottomSeedRank":4,"bottomSeedRankAbbrev":"WC2","bottomSeedWins":2,"winningTeamId":6,"losingTeamId":29,"topSeedTeam":{"id":6,"abbrev":"BOS","name":{"default":"Boston
+        Bruins","fr":"Bruins de Boston"},"commonName":{"default":"Bruins"},"placeNameWithPreposition":{"default":"Boston","fr":"de
+        Boston"},"logo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_dark.svg"},"bottomSeedTeam":{"id":29,"abbrev":"CBJ","name":{"default":"Columbus
+        Blue Jackets","fr":"Blue Jackets de Columbus"},"commonName":{"default":"Blue
+        Jackets"},"placeNameWithPreposition":{"default":"Columbus","fr":"de Columbus"},"logo":"https://assets.nhle.com/logos/nhl/svg/CBJ_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CBJ_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-j/hurricanes-vs-islanders","seriesTitle":"2nd
+        Round","seriesAbbrev":"R2","seriesLetter":"J","playoffRound":2,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":0,"bottomSeedRank":4,"bottomSeedRankAbbrev":"WC1","bottomSeedWins":4,"winningTeamId":12,"losingTeamId":2,"topSeedTeam":{"id":2,"abbrev":"NYI","name":{"default":"New
+        York Islanders","fr":"Islanders de New York"},"commonName":{"default":"Islanders"},"placeNameWithPreposition":{"default":"New
+        York","fr":"de New York"},"logo":"https://assets.nhle.com/logos/nhl/svg/NYI_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/NYI_dark.svg"},"bottomSeedTeam":{"id":12,"abbrev":"CAR","name":{"default":"Carolina
+        Hurricanes","fr":"Hurricanes de la Caroline"},"commonName":{"default":"Hurricanes"},"placeNameWithPreposition":{"default":"Carolina","fr":"de
+        la Caroline"},"logo":"https://assets.nhle.com/logos/nhl/svg/CAR_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CAR_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-k/stars-vs-blues","seriesTitle":"2nd
+        Round","seriesAbbrev":"R2","seriesLetter":"K","playoffRound":2,"topSeedRank":3,"topSeedRankAbbrev":"D3","topSeedWins":4,"bottomSeedRank":4,"bottomSeedRankAbbrev":"WC1","bottomSeedWins":3,"winningTeamId":19,"losingTeamId":25,"topSeedTeam":{"id":19,"abbrev":"STL","name":{"default":"St.
+        Louis Blues","fr":"Blues de St. Louis"},"commonName":{"default":"Blues"},"placeNameWithPreposition":{"default":"St.
+        Louis","fr":"de St. Louis"},"logo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_dark.svg"},"bottomSeedTeam":{"id":25,"abbrev":"DAL","name":{"default":"Dallas
+        Stars","fr":"Stars de Dallas"},"commonName":{"default":"Stars"},"placeNameWithPreposition":{"default":"Dallas","fr":"de
+        Dallas"},"logo":"https://assets.nhle.com/logos/nhl/svg/DAL_20122013-20202021_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/DAL_20122013-20202021_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-l/avalanche-vs-sharks","seriesTitle":"2nd
+        Round","seriesAbbrev":"R2","seriesLetter":"L","playoffRound":2,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":4,"bottomSeedRank":4,"bottomSeedRankAbbrev":"WC2","bottomSeedWins":3,"winningTeamId":28,"losingTeamId":21,"topSeedTeam":{"id":28,"abbrev":"SJS","name":{"default":"San
+        Jose Sharks","fr":"Sharks de San Jose"},"commonName":{"default":"Sharks"},"placeNameWithPreposition":{"default":"San
+        Jose","fr":"de San Jose"},"logo":"https://assets.nhle.com/logos/nhl/svg/SJS_20082009-20232024_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/SJS_20082009-20232024_dark.svg"},"bottomSeedTeam":{"id":21,"abbrev":"COL","name":{"default":"Colorado
+        Avalanche","fr":"Avalanche du Colorado"},"commonName":{"default":"Avalanche"},"placeNameWithPreposition":{"default":"Colorado","fr":"du
+        Colorado"},"logo":"https://assets.nhle.com/logos/nhl/svg/COL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/COL_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-m/hurricanes-vs-bruins","seriesTitle":"Eastern
+        Conference Finals","seriesAbbrev":"ECF","seriesLetter":"M","conferenceAbbrev":"E","conferenceName":"Eastern","playoffRound":3,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":4,"bottomSeedRank":4,"bottomSeedRankAbbrev":"WC1","bottomSeedWins":0,"winningTeamId":6,"losingTeamId":12,"topSeedTeam":{"id":6,"abbrev":"BOS","name":{"default":"Boston
+        Bruins","fr":"Bruins de Boston"},"commonName":{"default":"Bruins"},"placeNameWithPreposition":{"default":"Boston","fr":"de
+        Boston"},"logo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_dark.svg"},"bottomSeedTeam":{"id":12,"abbrev":"CAR","name":{"default":"Carolina
+        Hurricanes","fr":"Hurricanes de la Caroline"},"commonName":{"default":"Hurricanes"},"placeNameWithPreposition":{"default":"Carolina","fr":"de
+        la Caroline"},"logo":"https://assets.nhle.com/logos/nhl/svg/CAR_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CAR_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-n/blues-vs-sharks","seriesTitle":"Western
+        Conference Finals","seriesAbbrev":"WCF","seriesLetter":"N","conferenceAbbrev":"W","conferenceName":"Western","playoffRound":3,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":2,"bottomSeedRank":3,"bottomSeedRankAbbrev":"D3","bottomSeedWins":4,"winningTeamId":19,"losingTeamId":28,"topSeedTeam":{"id":28,"abbrev":"SJS","name":{"default":"San
+        Jose Sharks","fr":"Sharks de San Jose"},"commonName":{"default":"Sharks"},"placeNameWithPreposition":{"default":"San
+        Jose","fr":"de San Jose"},"logo":"https://assets.nhle.com/logos/nhl/svg/SJS_20082009-20232024_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/SJS_20082009-20232024_dark.svg"},"bottomSeedTeam":{"id":19,"abbrev":"STL","name":{"default":"St.
+        Louis Blues","fr":"Blues de St. Louis"},"commonName":{"default":"Blues"},"placeNameWithPreposition":{"default":"St.
+        Louis","fr":"de St. Louis"},"logo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_dark.svg"}},{"seriesUrl":"/schedule/playoff-series/2019/series-o/blues-vs-bruins","seriesLogo":"https://assets.nhle.com/logos/playoffs/png/sc-banner.png","seriesLogoFr":"https://assets.nhle.com/logos/playoffs/png/sc-banner.png","seriesTitle":"Stanley
+        Cup Final","seriesAbbrev":"SCF","seriesLetter":"O","playoffRound":4,"topSeedRank":2,"topSeedRankAbbrev":"D2","topSeedWins":3,"bottomSeedRank":3,"bottomSeedRankAbbrev":"D3","bottomSeedWins":4,"winningTeamId":19,"losingTeamId":6,"topSeedTeam":{"id":6,"abbrev":"BOS","name":{"default":"Boston
+        Bruins","fr":"Bruins de Boston"},"commonName":{"default":"Bruins"},"placeNameWithPreposition":{"default":"Boston","fr":"de
+        Boston"},"logo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/BOS_20082009-20222023_dark.svg"},"bottomSeedTeam":{"id":19,"abbrev":"STL","name":{"default":"St.
+        Louis Blues","fr":"Blues de St. Louis"},"commonName":{"default":"Blues"},"placeNameWithPreposition":{"default":"St.
+        Louis","fr":"de St. Louis"},"logo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_dark.svg"}}]}'
+  recorded_at: 2026-04-24 01:41:17
+recorded_with: VCR-vcr/2.1.0

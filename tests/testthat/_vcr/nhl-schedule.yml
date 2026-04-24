@@ -5,14 +5,14 @@ http_interactions:
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 11:59:59 GMT
+      date: Fri, 24 Apr 2026 01:29:02 GMT
       content-type: application/json
-      cf-ray: 9ea9d40bae9990e5-YYZ
+      cf-ray: 9f1155b0af7acbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=0, s-maxage=0
-      etag: W/"69da37c0--gzip"
+      cache-control: no-transform, max-age=12, s-maxage=12
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
-      cf-cache-status: MISS
+      cf-cache-status: EXPIRED
       server: cloudflare
     body:
       string: '{"previousSeason":20232024,"currentSeason":20242025,"nextSeason":20252026,"clubTimezone":"America/Los_Angeles","clubUTCOffset":"-07:00","games":[{"id":2024010026,"season":20242025,"gameType":1,"gameDate":"2024-09-24","venue":{"default":"SAP
@@ -300,39 +300,39 @@ http_interactions:
         Packages","score":3},"periodDescriptor":{"periodType":"OT","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"OT"},"winningGoalie":{"playerId":8470594,"firstInitial":{"default":"M."},"lastName":{"default":"Fleury"}},"winningGoalScorer":{"playerId":8481557,"firstInitial":{"default":"M."},"lastName":{"default":"Boldy"}},"threeMinRecap":"/video/ana-at-min-recap-6371543326112","gameCenterLink":"/gamecenter/ana-vs-min/2025/04/15/2024021298"},{"id":2024021302,"season":20242025,"gameType":2,"gameDate":"2025-04-16","venue":{"default":"Canada
         Life Centre"},"neutralSite":false,"startTimeUTC":"2025-04-16T23:00:00Z","easternUTCOffset":"-04:00","venueUTCOffset":"-05:00","venueTimezone":"America/Winnipeg","gameState":"OFF","gameScheduleState":"OK","tvBroadcasts":[{"id":289,"market":"N","countryCode":"CA","network":"SNW","sequenceNumber":34},{"id":283,"market":"N","countryCode":"CA","network":"SN360","sequenceNumber":114},{"id":553,"market":"A","countryCode":"US","network":"Victory+","sequenceNumber":382},{"id":219,"market":"A","countryCode":"US","network":"KCOP-13","sequenceNumber":656}],"awayTeam":{"id":24,"commonName":{"default":"Ducks"},"placeName":{"default":"Anaheim"},"placeNameWithPreposition":{"default":"Anaheim","fr":"d''Anaheim"},"abbrev":"ANA","logo":"https://assets.nhle.com/logos/nhl/svg/ANA_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/ANA_dark.svg","awaySplitSquad":false,"score":1},"homeTeam":{"id":52,"commonName":{"default":"Jets"},"placeName":{"default":"Winnipeg"},"placeNameWithPreposition":{"default":"Winnipeg","fr":"de
         Winnipeg"},"abbrev":"WPG","logo":"https://assets.nhle.com/logos/nhl/svg/WPG_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/WPG_dark.svg","homeSplitSquad":false,"score":2},"periodDescriptor":{"periodType":"OT","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"OT"},"winningGoalie":{"playerId":8476945,"firstInitial":{"default":"C."},"lastName":{"default":"Hellebuyck"}},"winningGoalScorer":{"playerId":8476460,"firstInitial":{"default":"M."},"lastName":{"default":"Scheifele"}},"threeMinRecap":"/video/ana-at-wpg-recap-6371580049112","gameCenterLink":"/gamecenter/ana-vs-wpg/2025/04/16/2024021302"}]}'
-  recorded_at: 2026-04-11 11:59:59
+  recorded_at: 2026-04-24 01:29:03
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/ARI/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:00 GMT
+      date: Fri, 24 Apr 2026 01:29:03 GMT
       content-type: application/json
       content-length: '85'
-      cf-ray: 9ea9d411682890e5-YYZ
+      cf-ray: 9f1155b2fd5bcbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=14, s-maxage=14
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=11, s-maxage=11
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       accept-ranges: bytes
       cf-cache-status: EXPIRED
       server: cloudflare
     body:
       string: '{"clubTimezone":"America/Phoenix","clubUTCOffset":"-07:00","games":[]}'
-  recorded_at: 2026-04-11 12:00:00
+  recorded_at: 2026-04-24 01:29:03
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/BOS/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:00 GMT
+      date: Fri, 24 Apr 2026 01:29:03 GMT
       content-type: application/json
-      cf-ray: 9ea9d412196690e5-YYZ
+      cf-ray: 9f1155b3f82ecbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=14, s-maxage=14
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=11, s-maxage=11
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -741,19 +741,19 @@ http_interactions:
         Jersey"},"placeNameWithPreposition":{"default":"New Jersey","fr":"du New Jersey"},"abbrev":"NJD","logo":"https://assets.nhle.com/logos/nhl/svg/NJD_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/NJD_dark.svg","awaySplitSquad":false,"score":5},"homeTeam":{"id":6,"commonName":{"default":"Bruins"},"placeName":{"default":"Boston"},"placeNameWithPreposition":{"default":"Boston","fr":"de
         Boston"},"abbrev":"BOS","logo":"https://assets.nhle.com/logos/nhl/svg/BOS_20242025-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/BOS_20242025-20242025_dark.svg","homeSplitSquad":false,"airlineLink":"https://www.jetblue.com/?utm_source=Bruins-Web&utm_medium=Schedule-Icon&utm_campaign=Ticket-Booking","airlineDesc":"Fly
         JetBlue","score":4},"periodDescriptor":{"periodType":"OT","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"OT"},"winningGoalie":{"playerId":8474596,"firstInitial":{"default":"J."},"lastName":{"default":"Allen"}},"winningGoalScorer":{"playerId":8475208,"firstInitial":{"default":"B."},"lastName":{"default":"Dumoulin"}},"threeMinRecap":"/video/njd-at-bos-recap-6371541795112","threeMinRecapFr":"/fr/video/njd-vs-bos-15-04-2025-resume-6371541902112","gameCenterLink":"/gamecenter/njd-vs-bos/2025/04/15/2024021291"}]}'
-  recorded_at: 2026-04-11 12:00:00
+  recorded_at: 2026-04-24 01:29:03
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/BUF/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:00 GMT
+      date: Fri, 24 Apr 2026 01:29:03 GMT
       content-type: application/json
-      cf-ray: 9ea9d4140ccd90e5-YYZ
+      cf-ray: 9f1155b5bcb5cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=14, s-maxage=14
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=11, s-maxage=11
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -1089,19 +1089,19 @@ http_interactions:
         Center"},"neutralSite":false,"startTimeUTC":"2025-04-17T23:00:00Z","easternUTCOffset":"-04:00","venueUTCOffset":"-04:00","venueTimezone":"America/New_York","gameState":"OFF","gameScheduleState":"OK","tvBroadcasts":[{"id":322,"market":"A","countryCode":"US","network":"NBCSP","sequenceNumber":389},{"id":28,"market":"H","countryCode":"US","network":"MSG-B","sequenceNumber":392}],"awayTeam":{"id":4,"commonName":{"default":"Flyers"},"placeName":{"default":"Philadelphia","fr":"Philadelphie"},"placeNameWithPreposition":{"default":"Philadelphia","fr":"de
         Philadelphie"},"abbrev":"PHI","logo":"https://assets.nhle.com/logos/nhl/svg/PHI_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/PHI_dark.svg","awaySplitSquad":false,"score":4},"homeTeam":{"id":7,"commonName":{"default":"Sabres"},"placeName":{"default":"Buffalo"},"placeNameWithPreposition":{"default":"Buffalo","fr":"de
         Buffalo"},"abbrev":"BUF","logo":"https://assets.nhle.com/logos/nhl/svg/BUF_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/BUF_dark.svg","homeSplitSquad":false,"score":5},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8473503,"firstInitial":{"default":"J."},"lastName":{"default":"Reimer"}},"winningGoalScorer":{"playerId":8480802,"firstInitial":{"default":"R."},"lastName":{"default":"McLeod"}},"threeMinRecap":"/video/phi-at-buf-recap-6371625393112","gameCenterLink":"/gamecenter/phi-vs-buf/2025/04/17/2024021307"}]}'
-  recorded_at: 2026-04-11 12:00:00
+  recorded_at: 2026-04-24 01:29:03
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/CGY/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:01 GMT
+      date: Fri, 24 Apr 2026 01:29:04 GMT
       content-type: application/json
-      cf-ray: 9ea9d415f93b90e5-YYZ
+      cf-ray: 9f1155b778d8cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=14, s-maxage=14
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=11, s-maxage=11
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -1434,19 +1434,19 @@ http_interactions:
         Calgary"},"abbrev":"CGY","logo":"https://assets.nhle.com/logos/nhl/svg/CGY_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CGY_dark.svg","awaySplitSquad":false,"score":5},"homeTeam":{"id":26,"commonName":{"default":"Kings"},"placeName":{"default":"Los
         Angeles"},"placeNameWithPreposition":{"default":"Los Angeles","fr":"de Los
         Angeles"},"abbrev":"LAK","logo":"https://assets.nhle.com/logos/nhl/svg/LAK_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/LAK_dark.svg","homeSplitSquad":false,"airlineLink":"https://delta.com/","airlineDesc":"Flights","score":1},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8478435,"firstInitial":{"default":"D."},"lastName":{"default":"Vladar","cs":"Vladař","sk":"Vladař"}},"winningGoalScorer":{"playerId":8484821,"firstInitial":{"default":"S."},"lastName":{"default":"Morton"}},"threeMinRecap":"/video/cgy-at-lak-recap-6371631944112","threeMinRecapFr":"/fr/video/cgy-vs-lak-17-04-2025-resume-6371632842112","condensedGame":"/video/cgy-at-lak-condensed-game-6371632626112","condensedGameFr":"/fr/video/match-condense-flames-kings-17-04-2025-6371632228112","gameCenterLink":"/gamecenter/cgy-vs-lak/2025/04/17/2024020653"}]}'
-  recorded_at: 2026-04-11 12:00:01
+  recorded_at: 2026-04-24 01:29:04
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/CAR/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:01 GMT
+      date: Fri, 24 Apr 2026 01:29:04 GMT
       content-type: application/json
-      cf-ray: 9ea9d417bd1990e5-YYZ
+      cf-ray: 9f1155b95ececbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=13, s-maxage=13
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=10, s-maxage=10
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -1990,19 +1990,19 @@ http_interactions:
         Packages","hotelLink":"https://hurricanes.bookseats.com/build-package/2942793?data-url=Lw==&utm_source=hurricanes&utm_medium=schedule_page&utm_campaign=panthers_canes&utm_term=home","hotelDesc":"Travel
         Packages","score":3},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8475683,"firstInitial":{"default":"S."},"lastName":{"default":"Bobrovsky","cs":"Bobrovskij","fi":"Bobrovski","sk":"Bobrovskij"}},"winningGoalScorer":{"playerId":8477409,"firstInitial":{"default":"C."},"lastName":{"default":"Verhaeghe"}},"seriesStatus":{"round":3,"seriesAbbrev":"ECF","seriesTitle":"Conference
         Finals","seriesLetter":"M","neededToWin":4,"topSeedWins":1,"bottomSeedWins":4,"gameNumberOfSeries":5},"seriesUrl":"/schedule/playoff-series/2025/series-m/hurricanes-vs-panthers","threeMinRecapFr":"/fr/video/fla-vs-car-28-05-2025-resume-6373589748112","condensedGame":"/video/fla-at-car-condensed-game-6373592123112","condensedGameFr":"/fr/video/match-condense-panthers-hurricanes-28-05-2025-6373591526112","gameCenterLink":"/gamecenter/fla-vs-car/2025/05/28/2024030315"}]}'
-  recorded_at: 2026-04-11 12:00:01
+  recorded_at: 2026-04-24 01:29:04
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/CBJ/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:01 GMT
+      date: Fri, 24 Apr 2026 01:29:04 GMT
       content-type: application/json
-      cf-ray: 9ea9d419f99e90e5-YYZ
+      cf-ray: 9f1155bb8d91cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=13, s-maxage=13
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=10, s-maxage=10
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -2459,21 +2459,21 @@ http_interactions:
         Jackets"},"placeName":{"default":"Columbus"},"placeNameWithPreposition":{"default":"Columbus","fr":"de
         Columbus"},"abbrev":"CBJ","logo":"https://assets.nhle.com/logos/nhl/svg/CBJ_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CBJ_dark.svg","homeSplitSquad":false,"hotelLink":"https://www.sonesta.com/sonesta-hotels-resorts/oh/columbus/sonesta-columbus-downtown?isGroupCode=false&promoCode=CBJ&","hotelDesc":"Stay
         at Sonesta Columbus Downtown","score":6},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8482982,"firstInitial":{"default":"J."},"lastName":{"default":"Greaves"}},"winningGoalScorer":{"playerId":8479371,"firstInitial":{"default":"D."},"lastName":{"default":"Fabbro"}},"threeMinRecap":"/video/nyi-at-cbj-recap-6371625766112","gameCenterLink":"/gamecenter/nyi-vs-cbj/2025/04/17/2024021312"}]}'
-  recorded_at: 2026-04-11 12:00:01
+  recorded_at: 2026-04-24 01:29:04
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/CHI/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:02 GMT
+      date: Fri, 24 Apr 2026 01:29:05 GMT
       content-type: application/json
-      cf-ray: 9ea9d41c5dc090e5-YYZ
+      cf-ray: 9f1155bd4a24cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=13, s-maxage=13
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=10, s-maxage=10
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
-      cf-cache-status: MISS
+      cf-cache-status: EXPIRED
       server: cloudflare
     body:
       string: '{"previousSeason":20232024,"currentSeason":20242025,"nextSeason":20252026,"clubTimezone":"America/Chicago","clubUTCOffset":"-05:00","games":[{"id":2024010031,"season":20242025,"gameType":1,"gameDate":"2024-09-25","venue":{"default":"United
@@ -2803,19 +2803,19 @@ http_interactions:
         Montréal"},"abbrev":"MTL","logo":"https://assets.nhle.com/logos/nhl/svg/MTL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/MTL_dark.svg","homeSplitSquad":false,"score":3},"periodDescriptor":{"periodType":"SO","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"SO"},"winningGoalie":{"playerId":8482821,"firstInitial":{"default":"A."},"lastName":{"default":"Soderblom","cs":"Söderblom","fi":"Söderblom","sk":"Söderblom","sv":"Söderblom"}},"threeMinRecap":"/video/chi-at-mtl-recap-6371496201112","condensedGame":"/video/chi-at-mtl-condensed-game-6371498356112","condensedGameFr":"/fr/video/match-condense-blackhawks-canadiens-14-04-2025-6371495908112","gameCenterLink":"/gamecenter/chi-vs-mtl/2025/04/14/2024021285"},{"id":2024021293,"season":20242025,"gameType":2,"gameDate":"2025-04-15","venue":{"default":"Canadian
         Tire Centre","fr":"Centre Canadian Tire"},"neutralSite":false,"startTimeUTC":"2025-04-15T23:00:00Z","easternUTCOffset":"-04:00","venueUTCOffset":"-04:00","venueTimezone":"US/Eastern","gameState":"OFF","gameScheduleState":"OK","tvBroadcasts":[{"id":294,"market":"H","countryCode":"CA","network":"TSN5","sequenceNumber":135},{"id":33,"market":"H","countryCode":"CA","network":"RDS","sequenceNumber":145},{"id":551,"market":"A","countryCode":"US","network":"CHSN","sequenceNumber":254}],"awayTeam":{"id":16,"commonName":{"default":"Blackhawks"},"placeName":{"default":"Chicago"},"placeNameWithPreposition":{"default":"Chicago","fr":"de
         Chicago"},"abbrev":"CHI","logo":"https://assets.nhle.com/logos/nhl/svg/CHI_19981999-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CHI_19981999-20242025_dark.svg","awaySplitSquad":false,"score":4},"homeTeam":{"id":9,"commonName":{"default":"Senators","fr":"Sénateurs"},"placeName":{"default":"Ottawa"},"placeNameWithPreposition":{"default":"Ottawa","fr":"d''Ottawa"},"abbrev":"OTT","logo":"https://assets.nhle.com/logos/nhl/svg/OTT_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/OTT_dark.svg","homeSplitSquad":false,"score":3},"periodDescriptor":{"periodType":"OT","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"OT"},"winningGoalie":{"playerId":8481519,"firstInitial":{"default":"S."},"lastName":{"default":"Knight"}},"winningGoalScorer":{"playerId":8483493,"firstInitial":{"default":"F."},"lastName":{"default":"Nazar"}},"threeMinRecap":"/video/chi-at-ott-recap-6371540916112","threeMinRecapFr":"/fr/video/chi-vs-ott-15-04-2025-resume-6371541107112","gameCenterLink":"/gamecenter/chi-vs-ott/2025/04/15/2024021293"}]}'
-  recorded_at: 2026-04-11 12:00:02
+  recorded_at: 2026-04-24 01:29:05
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/COL/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:02 GMT
+      date: Fri, 24 Apr 2026 01:29:05 GMT
       content-type: application/json
-      cf-ray: 9ea9d41e89ea90e5-YYZ
+      cf-ray: 9f1155bf78cccbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=12, s-maxage=12
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=9, s-maxage=9
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -3173,19 +3173,19 @@ http_interactions:
         Colorado"},"abbrev":"COL","logo":"https://assets.nhle.com/logos/nhl/svg/COL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/COL_dark.svg","awaySplitSquad":false,"score":2},"homeTeam":{"id":25,"commonName":{"default":"Stars"},"placeName":{"default":"Dallas"},"placeNameWithPreposition":{"default":"Dallas","fr":"de
         Dallas"},"abbrev":"DAL","logo":"https://assets.nhle.com/logos/nhl/svg/DAL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/DAL_dark.svg","homeSplitSquad":false,"score":4},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8479979,"firstInitial":{"default":"J."},"lastName":{"default":"Oettinger"}},"winningGoalScorer":{"playerId":8482740,"firstInitial":{"default":"W."},"lastName":{"default":"Johnston"}},"seriesStatus":{"round":1,"seriesAbbrev":"R1","seriesTitle":"1st
         Round","seriesLetter":"F","neededToWin":4,"topSeedWins":4,"bottomSeedWins":3,"gameNumberOfSeries":7},"seriesUrl":"/schedule/playoff-series/2025/series-f/stars-vs-avalanche","threeMinRecap":"/video/col-at-dal-recap-6372314949112","threeMinRecapFr":"/fr/video/col-vs-dal-03-05-2025-resume-6372315440112","condensedGame":"/video/col-at-dal-condensed-game-6372314175112","condensedGameFr":"/fr/video/match-condense-avalanche-stars-03-05-2025-6372315648112","gameCenterLink":"/gamecenter/col-vs-dal/2025/05/03/2024030167"}]}'
-  recorded_at: 2026-04-11 12:00:02
+  recorded_at: 2026-04-24 01:29:05
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/DAL/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:02 GMT
+      date: Fri, 24 Apr 2026 01:29:05 GMT
       content-type: application/json
-      cf-ray: 9ea9d420bde890e5-YYZ
+      cf-ray: 9f1155c17f5acbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=12, s-maxage=12
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=9, s-maxage=9
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -3757,19 +3757,19 @@ http_interactions:
         Dallas"},"abbrev":"DAL","logo":"https://assets.nhle.com/logos/nhl/svg/DAL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/DAL_dark.svg","homeSplitSquad":false,"airlineLink":"https://www.aa.com/homePage.do?c=SPNS|DSP|STR|2025|SCH|_STARS_SCHEDULE_PAGE_HOME","airlineDesc":"Book
         flights with American Airlines","score":3},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8479973,"firstInitial":{"default":"S."},"lastName":{"default":"Skinner"}},"winningGoalScorer":{"playerId":8478402,"firstInitial":{"default":"C."},"lastName":{"default":"McDavid"}},"seriesStatus":{"round":3,"seriesAbbrev":"WCF","seriesTitle":"Conference
         Finals","seriesLetter":"N","neededToWin":4,"topSeedWins":1,"bottomSeedWins":4,"gameNumberOfSeries":5},"seriesUrl":"/schedule/playoff-series/2025/series-n/stars-vs-oilers","threeMinRecap":"/video/edm-at-dal-recap-6373633356112","threeMinRecapFr":"/fr/video/edm-vs-dal-29-05-2025-resume-6373635034112","condensedGame":"/video/edm-at-dal-condensed-game-6373634356112","gameCenterLink":"/gamecenter/edm-vs-dal/2025/05/29/2024030325"}]}'
-  recorded_at: 2026-04-11 12:00:02
+  recorded_at: 2026-04-24 01:29:05
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/DET/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:03 GMT
+      date: Fri, 24 Apr 2026 01:29:06 GMT
       content-type: application/json
-      cf-ray: 9ea9d422b9b690e5-YYZ
+      cf-ray: 9f1155c40e36cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=11, s-maxage=11
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=9, s-maxage=9
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -4179,19 +4179,19 @@ http_interactions:
         Leafs"},"placeName":{"default":"Toronto"},"placeNameWithPreposition":{"default":"Toronto","fr":"de
         Toronto"},"abbrev":"TOR","logo":"https://assets.nhle.com/logos/nhl/svg/TOR_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/TOR_dark.svg","homeSplitSquad":false,"hotelLink":"https://www.marriott.com/default.mi?scid=cfdfa4af-106f-4087-8192-1caa58e5f6ad","hotelDesc":"Book
         Now","score":4},"periodDescriptor":{"periodType":"OT","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"OT"},"winningGoalie":{"playerId":8479361,"firstInitial":{"default":"J."},"lastName":{"default":"Woll"}},"winningGoalScorer":{"playerId":8476872,"firstInitial":{"default":"S."},"lastName":{"default":"Laughton"}},"threeMinRecap":"/video/det-at-tor-recap-6371626247112","condensedGame":"/video/det-at-tor-condensed-game-6371624682112","gameCenterLink":"/gamecenter/det-vs-tor/2025/04/17/2024021308"}]}'
-  recorded_at: 2026-04-11 12:00:03
+  recorded_at: 2026-04-24 01:29:06
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/EDM/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:03 GMT
+      date: Fri, 24 Apr 2026 01:29:06 GMT
       content-type: application/json
-      cf-ray: 9ea9d424cd5390e5-YYZ
+      cf-ray: 9f1155c60c93cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=11, s-maxage=11
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=8, s-maxage=8
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -4660,19 +4660,19 @@ http_interactions:
         in ASL</b>: MAX"}]}],"awayTeam":{"id":22,"commonName":{"default":"Oilers"},"placeName":{"default":"Edmonton"},"placeNameWithPreposition":{"default":"Edmonton","fr":"d''Edmonton"},"abbrev":"EDM","logo":"https://assets.nhle.com/logos/nhl/svg/EDM_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/EDM_dark.svg","awaySplitSquad":false,"score":1},"homeTeam":{"id":13,"commonName":{"default":"Panthers"},"placeName":{"default":"Florida","fr":"Floride"},"placeNameWithPreposition":{"default":"Florida","fr":"de
         la Floride"},"abbrev":"FLA","logo":"https://assets.nhle.com/logos/nhl/svg/FLA_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/FLA_dark.svg","homeSplitSquad":false,"score":5},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8475683,"firstInitial":{"default":"S."},"lastName":{"default":"Bobrovsky","cs":"Bobrovskij","fi":"Bobrovski","sk":"Bobrovskij"}},"winningGoalScorer":{"playerId":8479314,"firstInitial":{"default":"M."},"lastName":{"default":"Tkachuk"}},"seriesStatus":{"round":4,"seriesAbbrev":"SCF","seriesTitle":"Stanley
         Cup Final","seriesLetter":"O","neededToWin":4,"topSeedWins":2,"bottomSeedWins":4,"gameNumberOfSeries":6},"seriesUrl":"/schedule/playoff-series/2025/series-o/panthers-vs-oilers","threeMinRecap":"/video/edm-at-fla-recap-6374493945112","threeMinRecapFr":"/fr/video/edm-vs-fla-17-06-2025-resume-6374494626112","condensedGameFr":"/fr/video/match-condense-oilers-panthers-17-06-2025-6374492469112","gameCenterLink":"/gamecenter/edm-vs-fla/2025/06/17/2024030416"}]}'
-  recorded_at: 2026-04-11 12:00:03
+  recorded_at: 2026-04-24 01:29:06
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/FLA/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:03 GMT
+      date: Fri, 24 Apr 2026 01:29:06 GMT
       content-type: application/json
-      cf-ray: 9ea9d427296090e5-YYZ
+      cf-ray: 9f1155c8dcd9cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=11, s-maxage=11
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=8, s-maxage=8
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -5280,19 +5280,19 @@ http_interactions:
         in ASL</b>: MAX"}]}],"awayTeam":{"id":22,"commonName":{"default":"Oilers"},"placeName":{"default":"Edmonton"},"placeNameWithPreposition":{"default":"Edmonton","fr":"d''Edmonton"},"abbrev":"EDM","logo":"https://assets.nhle.com/logos/nhl/svg/EDM_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/EDM_dark.svg","awaySplitSquad":false,"score":1},"homeTeam":{"id":13,"commonName":{"default":"Panthers"},"placeName":{"default":"Florida","fr":"Floride"},"placeNameWithPreposition":{"default":"Florida","fr":"de
         la Floride"},"abbrev":"FLA","logo":"https://assets.nhle.com/logos/nhl/svg/FLA_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/FLA_dark.svg","homeSplitSquad":false,"score":5},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8475683,"firstInitial":{"default":"S."},"lastName":{"default":"Bobrovsky","cs":"Bobrovskij","fi":"Bobrovski","sk":"Bobrovskij"}},"winningGoalScorer":{"playerId":8479314,"firstInitial":{"default":"M."},"lastName":{"default":"Tkachuk"}},"seriesStatus":{"round":4,"seriesAbbrev":"SCF","seriesTitle":"Stanley
         Cup Final","seriesLetter":"O","neededToWin":4,"topSeedWins":2,"bottomSeedWins":4,"gameNumberOfSeries":6},"seriesUrl":"/schedule/playoff-series/2025/series-o/panthers-vs-oilers","threeMinRecap":"/video/edm-at-fla-recap-6374493945112","threeMinRecapFr":"/fr/video/edm-vs-fla-17-06-2025-resume-6374494626112","condensedGameFr":"/fr/video/match-condense-oilers-panthers-17-06-2025-6374492469112","gameCenterLink":"/gamecenter/edm-vs-fla/2025/06/17/2024030416"}]}'
-  recorded_at: 2026-04-11 12:00:03
+  recorded_at: 2026-04-24 01:29:06
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/LAK/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:04 GMT
+      date: Fri, 24 Apr 2026 01:29:07 GMT
       content-type: application/json
-      cf-ray: 9ea9d4298da790e5-YYZ
+      cf-ray: 9f1155cb4bd4cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=10, s-maxage=10
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=7, s-maxage=7
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -5727,21 +5727,21 @@ http_interactions:
         Angeles"},"placeNameWithPreposition":{"default":"Los Angeles","fr":"de Los
         Angeles"},"abbrev":"LAK","logo":"https://assets.nhle.com/logos/nhl/svg/LAK_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/LAK_dark.svg","awaySplitSquad":false,"score":4},"homeTeam":{"id":22,"commonName":{"default":"Oilers"},"placeName":{"default":"Edmonton"},"placeNameWithPreposition":{"default":"Edmonton","fr":"d''Edmonton"},"abbrev":"EDM","logo":"https://assets.nhle.com/logos/nhl/svg/EDM_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/EDM_dark.svg","homeSplitSquad":false,"score":6},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8475717,"firstInitial":{"default":"C."},"lastName":{"default":"Pickard"}},"winningGoalScorer":{"playerId":8479365,"firstInitial":{"default":"T."},"lastName":{"default":"Frederic"}},"seriesStatus":{"round":1,"seriesAbbrev":"R1","seriesTitle":"1st
         Round","seriesLetter":"H","neededToWin":4,"topSeedWins":2,"bottomSeedWins":4,"gameNumberOfSeries":6},"seriesUrl":"/schedule/playoff-series/2025/series-h/oilers-vs-kings","threeMinRecap":"/video/lak-at-edm-recap-6372202983112","threeMinRecapFr":"/fr/video/lak-vs-edm-01-05-2025-resume-6372201685112","condensedGame":"/video/lak-at-edm-condensed-game-6372203173112","gameCenterLink":"/gamecenter/lak-vs-edm/2025/05/01/2024030186"}]}'
-  recorded_at: 2026-04-11 12:00:04
+  recorded_at: 2026-04-24 01:29:07
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/MIN/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:04 GMT
+      date: Fri, 24 Apr 2026 01:29:07 GMT
       content-type: application/json
-      cf-ray: 9ea9d42be9dc90e5-YYZ
+      cf-ray: 9f1155cd7a75cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=10, s-maxage=10
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=7, s-maxage=7
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
-      cf-cache-status: MISS
+      cf-cache-status: EXPIRED
       server: cloudflare
     body:
       string: '{"previousSeason":20232024,"currentSeason":20242025,"nextSeason":20252026,"clubTimezone":"US/Central","clubUTCOffset":"-05:00","games":[{"id":2024010003,"season":20242025,"gameType":1,"gameDate":"2024-09-21","venue":{"default":"Canada
@@ -6190,19 +6190,19 @@ http_interactions:
         Minnesota"},"abbrev":"MIN","logo":"https://assets.nhle.com/logos/nhl/svg/MIN_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/MIN_dark.svg","homeSplitSquad":false,"airlineLink":"https://wild.bookseats.com/build-package/2946002?data-url=Lw==&utm_source=wild&utm_medium=schedule_page&utm_campaign=vgk_wild&utm_term=home_3","airlineDesc":"Travel
         Packages","hotelLink":"","hotelDesc":"","score":2},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8478499,"firstInitial":{"default":"A."},"lastName":{"default":"Hill"}},"winningGoalScorer":{"playerId":8475913,"firstInitial":{"default":"M."},"lastName":{"default":"Stone"}},"seriesStatus":{"round":1,"seriesAbbrev":"R1","seriesTitle":"1st
         Round","seriesLetter":"G","neededToWin":4,"topSeedWins":4,"bottomSeedWins":2,"gameNumberOfSeries":6},"seriesUrl":"/schedule/playoff-series/2025/series-g/wild-vs-goldenknights","threeMinRecap":"/video/vgk-at-min-recap-6372199796112","gameCenterLink":"/gamecenter/vgk-vs-min/2025/05/01/2024030176"}]}'
-  recorded_at: 2026-04-11 12:00:04
+  recorded_at: 2026-04-24 01:29:07
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/MTL/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:05 GMT
+      date: Fri, 24 Apr 2026 01:29:07 GMT
       content-type: application/json
-      cf-ray: 9ea9d42e2d6b90e5-YYZ
+      cf-ray: 9f1155cfc91fcbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=10, s-maxage=10
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=7, s-maxage=7
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -6545,19 +6545,19 @@ http_interactions:
         Montréal"},"abbrev":"MTL","logo":"https://assets.nhle.com/logos/nhl/svg/MTL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/MTL_dark.svg","awaySplitSquad":false,"score":1},"homeTeam":{"id":15,"commonName":{"default":"Capitals"},"placeName":{"default":"Washington"},"placeNameWithPreposition":{"default":"Washington","fr":"de
         Washington"},"abbrev":"WSH","logo":"https://assets.nhle.com/logos/nhl/svg/WSH_secondary_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/WSH_secondary_dark.svg","homeSplitSquad":false,"score":4},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8480313,"firstInitial":{"default":"L."},"lastName":{"default":"Thompson"}},"winningGoalScorer":{"playerId":8479345,"firstInitial":{"default":"J."},"lastName":{"default":"Chychrun"}},"seriesStatus":{"round":1,"seriesAbbrev":"R1","seriesTitle":"1st
         Round","seriesLetter":"C","neededToWin":4,"topSeedWins":4,"bottomSeedWins":1,"gameNumberOfSeries":5},"seriesUrl":"/schedule/playoff-series/2025/series-c/capitals-vs-canadiens","threeMinRecap":"/video/mtl-at-wsh-recap-6372143097112","threeMinRecapFr":"/fr/video/mtl-vs-wsh-30-04-2025-resume-6372144544112","condensedGame":"/video/mtl-at-wsh-condensed-game-6372143273112","condensedGameFr":"/fr/video/match-condense-canadiens-capitals-30-04-2025-6372141894112","gameCenterLink":"/gamecenter/mtl-vs-wsh/2025/04/30/2024030135"}]}'
-  recorded_at: 2026-04-11 12:00:05
+  recorded_at: 2026-04-24 01:29:08
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/NSH/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:05 GMT
+      date: Fri, 24 Apr 2026 01:29:08 GMT
       content-type: application/json
-      cf-ray: 9ea9d430799290e5-YYZ
+      cf-ray: 9f1155d1ef96cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=9, s-maxage=9
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=6, s-maxage=6
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -6925,19 +6925,19 @@ http_interactions:
         with Hilton®","score":1},"homeTeam":{"id":18,"commonName":{"default":"Predators"},"placeName":{"default":"Nashville"},"placeNameWithPreposition":{"default":"Nashville","fr":"de
         Nashville"},"abbrev":"NSH","logo":"https://assets.nhle.com/logos/nhl/svg/NSH_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/NSH_dark.svg","homeSplitSquad":false,"airlineLink":"","airlineDesc":"","hotelLink":"https://www.hyatt.com/grand-hyatt/en-US/bnarn-grand-hyatt-nashville?offercode=PREDS","hotelDesc":"Immerse
         Yourself in Luxury at Grand Hyatt Nashville","score":5},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8477424,"firstInitial":{"default":"J."},"lastName":{"default":"Saros"}},"winningGoalScorer":{"playerId":8477944,"firstInitial":{"default":"J."},"lastName":{"default":"Vrana","cs":"Vrána","sk":"Vrána"}},"threeMinRecap":"/video/dal-at-nsh-recap-6371583311112","gameCenterLink":"/gamecenter/dal-vs-nsh/2025/04/16/2024021304"}]}'
-  recorded_at: 2026-04-11 12:00:05
+  recorded_at: 2026-04-24 01:29:08
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/NJD/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:05 GMT
+      date: Fri, 24 Apr 2026 01:29:08 GMT
       content-type: application/json
-      cf-ray: 9ea9d432aca190e5-YYZ
+      cf-ray: 9f1155d42f51cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=9, s-maxage=9
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=6, s-maxage=6
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -7292,19 +7292,19 @@ http_interactions:
         Packages","hotelLink":"https://hurricanes.bookseats.com/build-package/2942782?data-url=Lw==&utm_source=hurricanes&utm_medium=schedule_page&utm_campaign=devils_canes&utm_term=home_3","hotelDesc":"Travel
         Packages","score":5},"periodDescriptor":{"periodType":"OT","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"OT"},"winningGoalie":{"playerId":8481611,"firstInitial":{"default":"P."},"lastName":{"default":"Kochetkov","fi":"Kotshetkov"}},"winningGoalScorer":{"playerId":8478427,"firstInitial":{"default":"S."},"lastName":{"default":"Aho"}},"seriesStatus":{"round":1,"seriesAbbrev":"R1","seriesTitle":"1st
         Round","seriesLetter":"D","neededToWin":4,"topSeedWins":4,"bottomSeedWins":1,"gameNumberOfSeries":5},"seriesUrl":"/schedule/playoff-series/2025/series-d/hurricanes-vs-devils","threeMinRecap":"/video/njd-at-car-recap-6372094306112","threeMinRecapFr":"/fr/video/njd-vs-car-29-04-2025-resume-6372095172112","condensedGame":"/video/njd-at-car-condensed-game-6372093514112","condensedGameFr":"/fr/video/match-condense-devils-hurricanes-29-04-2025-6372092925112","gameCenterLink":"/gamecenter/njd-vs-car/2025/04/29/2024030145"}]}'
-  recorded_at: 2026-04-11 12:00:05
+  recorded_at: 2026-04-24 01:29:08
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/NYI/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:06 GMT
+      date: Fri, 24 Apr 2026 01:29:09 GMT
       content-type: application/json
-      cf-ray: 9ea9d435491190e5-YYZ
+      cf-ray: 9f1155d6cf00cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=9, s-maxage=9
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=6, s-maxage=6
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -7653,19 +7653,19 @@ http_interactions:
         Jackets"},"placeName":{"default":"Columbus"},"placeNameWithPreposition":{"default":"Columbus","fr":"de
         Columbus"},"abbrev":"CBJ","logo":"https://assets.nhle.com/logos/nhl/svg/CBJ_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/CBJ_dark.svg","homeSplitSquad":false,"hotelLink":"https://www.sonesta.com/sonesta-hotels-resorts/oh/columbus/sonesta-columbus-downtown?isGroupCode=false&promoCode=CBJ&","hotelDesc":"Stay
         at Sonesta Columbus Downtown","score":6},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8482982,"firstInitial":{"default":"J."},"lastName":{"default":"Greaves"}},"winningGoalScorer":{"playerId":8479371,"firstInitial":{"default":"D."},"lastName":{"default":"Fabbro"}},"threeMinRecap":"/video/nyi-at-cbj-recap-6371625766112","gameCenterLink":"/gamecenter/nyi-vs-cbj/2025/04/17/2024021312"}]}'
-  recorded_at: 2026-04-11 12:00:06
+  recorded_at: 2026-04-24 01:29:09
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/NYR/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:06 GMT
+      date: Fri, 24 Apr 2026 01:29:09 GMT
       content-type: application/json
-      cf-ray: 9ea9d4379ddf90e5-YYZ
+      cf-ray: 9f1155d8fd84cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=8, s-maxage=8
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=5, s-maxage=5
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -7998,22 +7998,22 @@ http_interactions:
         Square Garden"},"neutralSite":false,"startTimeUTC":"2025-04-17T23:00:00Z","easternUTCOffset":"-04:00","venueUTCOffset":"-04:00","venueTimezone":"America/New_York","gameState":"OFF","gameScheduleState":"OK","tvBroadcasts":[{"id":560,"market":"A","countryCode":"US","network":"FDSNSUN","sequenceNumber":287},{"id":27,"market":"H","countryCode":"US","network":"MSG","sequenceNumber":417}],"awayTeam":{"id":14,"commonName":{"default":"Lightning"},"placeName":{"default":"Tampa
         Bay"},"placeNameWithPreposition":{"default":"Tampa Bay","fr":"de Tampa Bay"},"abbrev":"TBL","logo":"https://assets.nhle.com/logos/nhl/svg/TBL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/TBL_dark.svg","awaySplitSquad":false,"score":0},"homeTeam":{"id":3,"commonName":{"default":"Rangers"},"placeName":{"default":"New
         York"},"placeNameWithPreposition":{"default":"New York","fr":"de New York"},"abbrev":"NYR","logo":"https://assets.nhle.com/logos/nhl/svg/NYR_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/NYR_dark.svg","homeSplitSquad":false,"score":4},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8478048,"firstInitial":{"default":"I."},"lastName":{"default":"Shesterkin","cs":"Šesťorkin","fi":"Shestjorkin","sk":"Šesťorkin"}},"winningGoalScorer":{"playerId":8476389,"firstInitial":{"default":"V."},"lastName":{"default":"Trocheck"}},"threeMinRecap":"/video/tbl-at-nyr-recap-6371624870112","threeMinRecapFr":"/fr/video/tbl-vs-nyr-17-04-2025-resume-6371627036112","condensedGame":"/video/tbl-at-nyr-condensed-game-6371625281112","gameCenterLink":"/gamecenter/tbl-vs-nyr/2025/04/17/2024021310"}]}'
-  recorded_at: 2026-04-11 12:00:06
+  recorded_at: 2026-04-24 01:29:09
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/OTT/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:06 GMT
+      date: Fri, 24 Apr 2026 01:29:09 GMT
       content-type: application/json
-      cf-ray: 9ea9d439f9d290e5-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=8, s-maxage=8
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=5, s-maxage=5
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
+      cf-ray: 9f1155db1c62cbfd-YYZ
     body:
       string: '{"previousSeason":20232024,"currentSeason":20242025,"nextSeason":20252026,"clubTimezone":"US/Eastern","clubUTCOffset":"-04:00","games":[{"id":2024010010,"season":20242025,"gameType":1,"gameDate":"2024-09-22","venue":{"default":"Scotiabank
         Arena"},"neutralSite":false,"startTimeUTC":"2024-09-22T23:00:00Z","easternUTCOffset":"-04:00","venueUTCOffset":"-04:00","venueTimezone":"America/Toronto","gameState":"FINAL","gameScheduleState":"OK","tvBroadcasts":[{"id":324,"market":"N","countryCode":"US","network":"NHLN","sequenceNumber":35},{"id":282,"market":"N","countryCode":"CA","network":"SN","sequenceNumber":107}],"awayTeam":{"id":9,"commonName":{"default":"Senators","fr":"Sénateurs"},"placeName":{"default":"Ottawa"},"placeNameWithPreposition":{"default":"Ottawa","fr":"d''Ottawa"},"abbrev":"OTT","logo":"https://assets.nhle.com/logos/nhl/svg/OTT_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/OTT_dark.svg","awaySplitSquad":false,"score":6},"homeTeam":{"id":10,"commonName":{"default":"Maple
@@ -8276,19 +8276,19 @@ http_interactions:
         Leafs"},"placeName":{"default":"Toronto"},"placeNameWithPreposition":{"default":"Toronto","fr":"de
         Toronto"},"abbrev":"TOR","logo":"https://assets.nhle.com/logos/nhl/svg/TOR_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/TOR_dark.svg","awaySplitSquad":false,"score":4},"homeTeam":{"id":9,"commonName":{"default":"Senators","fr":"Sénateurs"},"placeName":{"default":"Ottawa"},"placeNameWithPreposition":{"default":"Ottawa","fr":"d''Ottawa"},"abbrev":"OTT","logo":"https://assets.nhle.com/logos/nhl/svg/OTT_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/OTT_dark.svg","homeSplitSquad":false,"score":2},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8476932,"firstInitial":{"default":"A."},"lastName":{"default":"Stolarz"}},"winningGoalScorer":{"playerId":8474157,"firstInitial":{"default":"M."},"lastName":{"default":"Pacioretty"}},"seriesStatus":{"round":1,"seriesAbbrev":"R1","seriesTitle":"1st
         Round","seriesLetter":"A","neededToWin":4,"topSeedWins":4,"bottomSeedWins":2,"gameNumberOfSeries":6},"seriesUrl":"/schedule/playoff-series/2025/series-a/senators-vs-mapleleafs","threeMinRecap":"/video/tor-at-ott-recap-6372196144112","threeMinRecapFr":"/fr/video/tor-vs-ott-01-05-2025-resume-6372198101112","gameCenterLink":"/gamecenter/tor-vs-ott/2025/05/01/2024030116"}]}'
-  recorded_at: 2026-04-11 12:00:06
+  recorded_at: 2026-04-24 01:29:09
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/PHI/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:07 GMT
+      date: Fri, 24 Apr 2026 01:29:10 GMT
       content-type: application/json
-      cf-ray: 9ea9d43c8eec90e5-YYZ
+      cf-ray: 9f1155dd4ae1cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=7, s-maxage=7
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=5, s-maxage=5
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -8616,19 +8616,19 @@ http_interactions:
         Center"},"neutralSite":false,"startTimeUTC":"2025-04-17T23:00:00Z","easternUTCOffset":"-04:00","venueUTCOffset":"-04:00","venueTimezone":"America/New_York","gameState":"OFF","gameScheduleState":"OK","tvBroadcasts":[{"id":322,"market":"A","countryCode":"US","network":"NBCSP","sequenceNumber":389},{"id":28,"market":"H","countryCode":"US","network":"MSG-B","sequenceNumber":392}],"awayTeam":{"id":4,"commonName":{"default":"Flyers"},"placeName":{"default":"Philadelphia","fr":"Philadelphie"},"placeNameWithPreposition":{"default":"Philadelphia","fr":"de
         Philadelphie"},"abbrev":"PHI","logo":"https://assets.nhle.com/logos/nhl/svg/PHI_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/PHI_dark.svg","awaySplitSquad":false,"score":4},"homeTeam":{"id":7,"commonName":{"default":"Sabres"},"placeName":{"default":"Buffalo"},"placeNameWithPreposition":{"default":"Buffalo","fr":"de
         Buffalo"},"abbrev":"BUF","logo":"https://assets.nhle.com/logos/nhl/svg/BUF_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/BUF_dark.svg","homeSplitSquad":false,"score":5},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8473503,"firstInitial":{"default":"J."},"lastName":{"default":"Reimer"}},"winningGoalScorer":{"playerId":8480802,"firstInitial":{"default":"R."},"lastName":{"default":"McLeod"}},"threeMinRecap":"/video/phi-at-buf-recap-6371625393112","gameCenterLink":"/gamecenter/phi-vs-buf/2025/04/17/2024021307"}]}'
-  recorded_at: 2026-04-11 12:00:07
+  recorded_at: 2026-04-24 01:29:10
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/PIT/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:07 GMT
+      date: Fri, 24 Apr 2026 01:29:10 GMT
       content-type: application/json
-      cf-ray: 9ea9d43eeaeb90e5-YYZ
+      cf-ray: 9f1155df6904cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=7, s-maxage=7
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=4, s-maxage=4
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -8956,19 +8956,19 @@ http_interactions:
         Washington"},"abbrev":"WSH","logo":"https://assets.nhle.com/logos/nhl/svg/WSH_secondary_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/WSH_secondary_dark.svg","awaySplitSquad":false,"airlineLink":"https://www.united.com/en/us?utm_source=washcaps_schedulepage&utm_medium=web_organic&utm_campaign=2425_washcaps&utm_content=united","airlineDesc":"Book
         Flights with United Airlines","score":2},"homeTeam":{"id":5,"commonName":{"default":"Penguins"},"placeName":{"default":"Pittsburgh"},"placeNameWithPreposition":{"default":"Pittsburgh","fr":"de
         Pittsburgh"},"abbrev":"PIT","logo":"https://assets.nhle.com/logos/nhl/svg/PIT_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/PIT_dark.svg","homeSplitSquad":false,"score":5},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8477968,"firstInitial":{"default":"A."},"lastName":{"default":"Nedeljkovic"}},"winningGoalScorer":{"playerId":8471675,"firstInitial":{"default":"S."},"lastName":{"default":"Crosby"}},"threeMinRecap":"/video/wsh-at-pit-recap-6371627932112","threeMinRecapFr":"/fr/video/wsh-vs-pit-17-04-2025-resume-6371627539112","gameCenterLink":"/gamecenter/wsh-vs-pit/2025/04/17/2024021311"}]}'
-  recorded_at: 2026-04-11 12:00:07
+  recorded_at: 2026-04-24 01:29:10
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/STL/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:08 GMT
+      date: Fri, 24 Apr 2026 01:29:10 GMT
       content-type: application/json
-      cf-ray: 9ea9d441afe790e5-YYZ
+      cf-ray: 9f1155e25a88cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=7, s-maxage=7
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=4, s-maxage=4
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -9368,19 +9368,19 @@ http_interactions:
         Louis"},"placeNameWithPreposition":{"default":"St. Louis","fr":"de St. Louis"},"abbrev":"STL","logo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_dark.svg","awaySplitSquad":false,"score":3},"homeTeam":{"id":52,"commonName":{"default":"Jets"},"placeName":{"default":"Winnipeg"},"placeNameWithPreposition":{"default":"Winnipeg","fr":"de
         Winnipeg"},"abbrev":"WPG","logo":"https://assets.nhle.com/logos/nhl/svg/WPG_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/WPG_dark.svg","homeSplitSquad":false,"score":4},"periodDescriptor":{"periodType":"OT","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"OT"},"winningGoalie":{"playerId":8476945,"firstInitial":{"default":"C."},"lastName":{"default":"Hellebuyck"}},"winningGoalScorer":{"playerId":8476392,"firstInitial":{"default":"A."},"lastName":{"default":"Lowry"}},"seriesStatus":{"round":1,"seriesAbbrev":"R1","seriesTitle":"1st
         Round","seriesLetter":"E","neededToWin":4,"topSeedWins":4,"bottomSeedWins":3,"gameNumberOfSeries":7},"seriesUrl":"/schedule/playoff-series/2025/series-e/jets-vs-blues","threeMinRecap":"/video/stl-at-wpg-recap-6372354247112","threeMinRecapFr":"/fr/video/stl-vs-wpg-04-05-2025-resume-6372354927112","condensedGameFr":"/fr/video/match-condense-blues-jets-04-05-2025-6372353673112","gameCenterLink":"/gamecenter/stl-vs-wpg/2025/05/04/2024030157"}]}'
-  recorded_at: 2026-04-11 12:00:08
+  recorded_at: 2026-04-24 01:29:11
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/SJS/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:08 GMT
+      date: Fri, 24 Apr 2026 01:29:11 GMT
       content-type: application/json
-      cf-ray: 9ea9d4439b2f90e5-YYZ
+      cf-ray: 9f1155e4ba1ccbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=6, s-maxage=6
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=3, s-maxage=3
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -9746,19 +9746,19 @@ http_interactions:
         Jose"},"neutralSite":false,"startTimeUTC":"2025-04-17T02:30:00Z","easternUTCOffset":"-04:00","venueUTCOffset":"-07:00","venueTimezone":"US/Pacific","gameState":"OFF","gameScheduleState":"OK","tvBroadcasts":[{"id":287,"market":"N","countryCode":"CA","network":"SNE","sequenceNumber":30},{"id":288,"market":"N","countryCode":"CA","network":"SNO","sequenceNumber":31},{"id":289,"market":"N","countryCode":"CA","network":"SNW","sequenceNumber":34},{"id":314,"market":"H","countryCode":"US","network":"NBCSCA","sequenceNumber":393}],"awayTeam":{"id":22,"commonName":{"default":"Oilers"},"placeName":{"default":"Edmonton"},"placeNameWithPreposition":{"default":"Edmonton","fr":"d''Edmonton"},"abbrev":"EDM","logo":"https://assets.nhle.com/logos/nhl/svg/EDM_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/EDM_dark.svg","awaySplitSquad":false,"airlineLink":"https://www.aircanada.com/ca/en/aco/home.html","airlineDesc":"AIR
         CANADA FLIGHTS","score":3},"homeTeam":{"id":28,"commonName":{"default":"Sharks"},"placeName":{"default":"San
         Jose"},"placeNameWithPreposition":{"default":"San Jose","fr":"de San Jose"},"abbrev":"SJS","logo":"https://assets.nhle.com/logos/nhl/svg/SJS_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/SJS_dark.svg","homeSplitSquad":false,"score":0},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8479973,"firstInitial":{"default":"S."},"lastName":{"default":"Skinner"}},"winningGoalScorer":{"playerId":8480834,"firstInitial":{"default":"T."},"lastName":{"default":"Emberson"}},"threeMinRecap":"/video/edm-at-sjs-recap-6371586818112","threeMinRecapFr":"/fr/video/edm-vs-sjs-16-04-2025-resume-6371586158112","gameCenterLink":"/gamecenter/edm-vs-sjs/2025/04/16/2024021306"}]}'
-  recorded_at: 2026-04-11 12:00:08
+  recorded_at: 2026-04-24 01:29:11
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/SEA/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:08 GMT
+      date: Fri, 24 Apr 2026 01:29:11 GMT
       content-type: application/json
-      cf-ray: 9ea9d445f80090e5-YYZ
+      cf-ray: 9f1155e6e88acbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=6, s-maxage=6
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=3, s-maxage=3
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -10136,19 +10136,19 @@ http_interactions:
         Angeles"},"abbrev":"LAK","logo":"https://assets.nhle.com/logos/nhl/svg/LAK_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/LAK_dark.svg","awaySplitSquad":false,"score":6},"homeTeam":{"id":55,"commonName":{"default":"Kraken"},"placeName":{"default":"Seattle"},"placeNameWithPreposition":{"default":"Seattle","fr":"de
         Seattle"},"abbrev":"SEA","logo":"https://assets.nhle.com/logos/nhl/svg/SEA_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/SEA_dark.svg","homeSplitSquad":false,"hotelLink":"https://stayinglevel.com/offers/cpa-fan/?utm_source=kraken-logo-schedule&utm_medium=logo&utm_campaign=level-cpa-kraken&utm_content=","hotelDesc":"Stay
         close to the action at Level","score":5},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8479496,"firstInitial":{"default":"D."},"lastName":{"default":"Rittich"}},"winningGoalScorer":{"playerId":8482726,"firstInitial":{"default":"S."},"lastName":{"default":"Helenius"}},"threeMinRecap":"/video/lak-at-sea-recap-6371545292112","threeMinRecapFr":"/fr/video/lak-vs-sea-15-04-2025-resume-6371546456112","gameCenterLink":"/gamecenter/lak-vs-sea/2025/04/15/2024021300"}]}'
-  recorded_at: 2026-04-11 12:00:08
+  recorded_at: 2026-04-24 01:29:11
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/TBL/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:09 GMT
+      date: Fri, 24 Apr 2026 01:29:12 GMT
       content-type: application/json
-      cf-ray: 9ea9d4487c3f90e5-YYZ
+      cf-ray: 9f1155e9182bcbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=5, s-maxage=5
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=3, s-maxage=3
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -10540,19 +10540,19 @@ http_interactions:
         la Floride"},"abbrev":"FLA","logo":"https://assets.nhle.com/logos/nhl/svg/FLA_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/FLA_dark.svg","awaySplitSquad":false,"score":6},"homeTeam":{"id":14,"commonName":{"default":"Lightning"},"placeName":{"default":"Tampa
         Bay"},"placeNameWithPreposition":{"default":"Tampa Bay","fr":"de Tampa Bay"},"abbrev":"TBL","logo":"https://assets.nhle.com/logos/nhl/svg/TBL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/TBL_dark.svg","homeSplitSquad":false,"score":3},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8475683,"firstInitial":{"default":"S."},"lastName":{"default":"Bobrovsky","cs":"Bobrovskij","fi":"Bobrovski","sk":"Bobrovskij"}},"winningGoalScorer":{"playerId":8477935,"firstInitial":{"default":"S."},"lastName":{"default":"Bennett"}},"seriesStatus":{"round":1,"seriesAbbrev":"R1","seriesTitle":"1st
         Round","seriesLetter":"B","neededToWin":4,"topSeedWins":1,"bottomSeedWins":4,"gameNumberOfSeries":5},"seriesUrl":"/schedule/playoff-series/2025/series-b/lightning-vs-panthers","threeMinRecapFr":"/fr/video/fla-vs-tbl-30-04-2025-resume-6372145653112","condensedGame":"/video/fla-at-tbl-condensed-game-6372143011112","gameCenterLink":"/gamecenter/fla-vs-tbl/2025/04/30/2024030125"}]}'
-  recorded_at: 2026-04-11 12:00:09
+  recorded_at: 2026-04-24 01:29:12
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/TOR/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:09 GMT
+      date: Fri, 24 Apr 2026 01:29:12 GMT
       content-type: application/json
-      cf-ray: 9ea9d44a9fad90e5-YYZ
+      cf-ray: 9f1155eb6ffccbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=5, s-maxage=5
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=2, s-maxage=2
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -11083,19 +11083,19 @@ http_interactions:
         Leafs"},"placeName":{"default":"Toronto"},"placeNameWithPreposition":{"default":"Toronto","fr":"de
         Toronto"},"abbrev":"TOR","logo":"https://assets.nhle.com/logos/nhl/svg/TOR_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/TOR_dark.svg","homeSplitSquad":false,"score":1},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8475683,"firstInitial":{"default":"S."},"lastName":{"default":"Bobrovsky","cs":"Bobrovskij","fi":"Bobrovski","sk":"Bobrovskij"}},"winningGoalScorer":{"playerId":8482113,"firstInitial":{"default":"A."},"lastName":{"default":"Lundell"}},"seriesStatus":{"round":2,"seriesAbbrev":"R2","seriesTitle":"2nd
         Round","seriesLetter":"I","neededToWin":4,"topSeedWins":3,"bottomSeedWins":4,"gameNumberOfSeries":7},"seriesUrl":"/schedule/playoff-series/2025/series-i/mapleleafs-vs-panthers","threeMinRecap":"/video/fla-at-tor-recap-6373040245112","gameCenterLink":"/gamecenter/fla-vs-tor/2025/05/18/2024030217"}]}'
-  recorded_at: 2026-04-11 12:00:09
+  recorded_at: 2026-04-24 01:29:12
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/VAN/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:10 GMT
+      date: Fri, 24 Apr 2026 01:29:12 GMT
       content-type: application/json
-      cf-ray: 9ea9d44d7cbc90e5-YYZ
+      cf-ray: 9f1155ee0fa9cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=5, s-maxage=5
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=2, s-maxage=2
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -11446,19 +11446,19 @@ http_interactions:
         Packages","score":4},"homeTeam":{"id":23,"commonName":{"default":"Canucks"},"placeName":{"default":"Vancouver"},"placeNameWithPreposition":{"default":"Vancouver","fr":"de
         Vancouver"},"abbrev":"VAN","logo":"https://assets.nhle.com/logos/nhl/svg/VAN_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/VAN_dark.svg","homeSplitSquad":false,"airlineLink":"https://www.aircanada.com/home/ca/en/aco/flights","airlineDesc":"Air
         Canada Flights","score":1},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8481033,"firstInitial":{"default":"A."},"lastName":{"default":"Schmid"}},"winningGoalScorer":{"playerId":8481604,"firstInitial":{"default":"P."},"lastName":{"default":"Dorofeyev","cs":"Dorofejev","fi":"Dorofejev","sk":"Dorofejev"}},"threeMinRecap":"/video/vgk-at-van-recap-6371585556112","gameCenterLink":"/gamecenter/vgk-vs-van/2025/04/16/2024021305"}]}'
-  recorded_at: 2026-04-11 12:00:10
+  recorded_at: 2026-04-24 01:29:12
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/VGK/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:10 GMT
+      date: Fri, 24 Apr 2026 01:29:13 GMT
       content-type: application/json
-      cf-ray: 9ea9d44ff8ee90e5-YYZ
+      cf-ray: 9f1155f06e17cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=4, s-maxage=4
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=1, s-maxage=1
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -12100,19 +12100,19 @@ http_interactions:
         Packages","hotelLink":"https://vegasgoldenknights.bookseats.com/build-package/2942054?data-url=Lw==&utm_source=goldenknights&utm_medium=schedule_page&utm_campaign=oilers_goldenknights&utm_term=home","hotelDesc":"Travel
         Packages","score":0},"periodDescriptor":{"periodType":"OT","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"OT"},"winningGoalie":{"playerId":8479973,"firstInitial":{"default":"S."},"lastName":{"default":"Skinner"}},"winningGoalScorer":{"playerId":8477953,"firstInitial":{"default":"K."},"lastName":{"default":"Kapanen"}},"seriesStatus":{"round":2,"seriesAbbrev":"R2","seriesTitle":"2nd
         Round","seriesLetter":"L","neededToWin":4,"topSeedWins":1,"bottomSeedWins":4,"gameNumberOfSeries":5},"seriesUrl":"/schedule/playoff-series/2025/series-l/goldenknights-vs-oilers","threeMinRecap":"/video/edm-at-vgk-recap-6372828827112","threeMinRecapFr":"/fr/video/edm-vs-vgk-14-05-2025-resume-6372826087112","condensedGame":"/video/edm-at-vgk-condensed-game-6372828828112","condensedGameFr":"/fr/video/match-condense-oilers-golden-knights-14-05-2025-6372825881112","gameCenterLink":"/gamecenter/edm-vs-vgk/2025/05/14/2024030245"}]}'
-  recorded_at: 2026-04-11 12:00:10
+  recorded_at: 2026-04-24 01:29:13
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/WSH/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:10 GMT
+      date: Fri, 24 Apr 2026 01:29:13 GMT
       content-type: application/json
-      cf-ray: 9ea9d452ddb990e5-YYZ
+      cf-ray: 9f1155f2fce8cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=4, s-maxage=4
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=1, s-maxage=1
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -12547,19 +12547,19 @@ http_interactions:
         Packages","score":3},"homeTeam":{"id":15,"commonName":{"default":"Capitals"},"placeName":{"default":"Washington"},"placeNameWithPreposition":{"default":"Washington","fr":"de
         Washington"},"abbrev":"WSH","logo":"https://assets.nhle.com/logos/nhl/svg/WSH_secondary_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/WSH_secondary_dark.svg","homeSplitSquad":false,"score":1},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8475883,"firstInitial":{"default":"F."},"lastName":{"default":"Andersen"}},"winningGoalScorer":{"playerId":8480830,"firstInitial":{"default":"A."},"lastName":{"default":"Svechnikov","cs":"Svečnikov","fi":"Svetshnikov","sk":"Svečnikov"}},"seriesStatus":{"round":2,"seriesAbbrev":"R2","seriesTitle":"2nd
         Round","seriesLetter":"J","neededToWin":4,"topSeedWins":1,"bottomSeedWins":4,"gameNumberOfSeries":5},"seriesUrl":"/schedule/playoff-series/2025/series-j/capitals-vs-hurricanes","threeMinRecap":"/video/car-at-wsh-recap-6372874339112","gameCenterLink":"/gamecenter/car-vs-wsh/2025/05/15/2024030225"}]}'
-  recorded_at: 2026-04-11 12:00:10
+  recorded_at: 2026-04-24 01:29:13
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/WPG/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:11 GMT
+      date: Fri, 24 Apr 2026 01:29:14 GMT
       content-type: application/json
-      cf-ray: 9ea9d455cb4290e5-YYZ
+      cf-ray: 9f1155f54bb3cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=3, s-maxage=3
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=1, s-maxage=1
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -12941,99 +12941,99 @@ http_interactions:
         Dallas"},"abbrev":"DAL","logo":"https://assets.nhle.com/logos/nhl/svg/DAL_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/DAL_dark.svg","homeSplitSquad":false,"airlineLink":"https://www.aa.com/homePage.do?c=SPNS|DSP|STR|2025|SCH|_STARS_SCHEDULE_PAGE_HOME","airlineDesc":"Book
         flights with American Airlines","score":2},"periodDescriptor":{"periodType":"OT","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"OT"},"winningGoalie":{"playerId":8479979,"firstInitial":{"default":"J."},"lastName":{"default":"Oettinger"}},"winningGoalScorer":{"playerId":8481581,"firstInitial":{"default":"T."},"lastName":{"default":"Harley"}},"seriesStatus":{"round":2,"seriesAbbrev":"R2","seriesTitle":"2nd
         Round","seriesLetter":"K","neededToWin":4,"topSeedWins":2,"bottomSeedWins":4,"gameNumberOfSeries":6},"seriesUrl":"/schedule/playoff-series/2025/series-k/stars-vs-jets","threeMinRecap":"/video/wpg-at-dal-recap-6373002791112","threeMinRecapFr":"/fr/video/wpg-vs-dal-17-05-2025-resume-6373001219112","gameCenterLink":"/gamecenter/wpg-vs-dal/2025/05/17/2024030236"}]}'
-  recorded_at: 2026-04-11 12:00:11
+  recorded_at: 2026-04-24 01:29:14
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/ATL/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:11 GMT
+      date: Fri, 24 Apr 2026 01:29:14 GMT
       content-type: application/json
       content-length: '79'
-      cf-ray: 9ea9d4589ff490e5-YYZ
+      cf-ray: 9f1155f7cadccbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=3, s-maxage=3
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=0, s-maxage=0
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       accept-ranges: bytes
-      cf-cache-status: EXPIRED
+      cf-cache-status: MISS
       server: cloudflare
     body:
       string: '{"clubTimezone":"US/Eastern","clubUTCOffset":"-04:00","games":[]}'
-  recorded_at: 2026-04-11 12:00:11
+  recorded_at: 2026-04-24 01:29:14
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/HFD/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:11 GMT
+      date: Fri, 24 Apr 2026 01:29:14 GMT
       content-type: application/json
       content-length: '86'
-      cf-ray: 9ea9d45a5b4190e5-YYZ
+      cf-ray: 9f1155f97f05cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=3, s-maxage=3
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=0, s-maxage=0
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       accept-ranges: bytes
-      cf-cache-status: EXPIRED
+      cf-cache-status: MISS
       server: cloudflare
     body:
       string: '{"clubTimezone":"America/New_York","clubUTCOffset":"-04:00","games":[]}'
-  recorded_at: 2026-04-11 12:00:11
+  recorded_at: 2026-04-24 01:29:14
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/MNS/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:12 GMT
+      date: Fri, 24 Apr 2026 01:29:14 GMT
       content-type: application/json
       content-length: '83'
-      cf-ray: 9ea9d45cbfa190e5-YYZ
+      cf-ray: 9f1155fb0b56cbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=2, s-maxage=2
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=0, s-maxage=0
+      etag: W/"69eac76b--gzip"
       content-encoding: gzip
       accept-ranges: bytes
-      cf-cache-status: EXPIRED
+      cf-cache-status: MISS
       server: cloudflare
     body:
       string: '{"clubTimezone":"America/Chicago","clubUTCOffset":"-05:00","games":[]}'
-  recorded_at: 2026-04-11 12:00:12
+  recorded_at: 2026-04-24 01:29:14
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/QUE/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:12 GMT
+      date: Fri, 24 Apr 2026 01:29:15 GMT
       content-type: application/json
       content-length: '85'
-      cf-ray: 9ea9d45e9ad890e5-YYZ
+      cf-ray: 9f1155fca82ecbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=2, s-maxage=2
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=14, s-maxage=14
+      etag: W/"69eac77a--gzip"
       content-encoding: gzip
       accept-ranges: bytes
       cf-cache-status: EXPIRED
       server: cloudflare
     body:
       string: '{"clubTimezone":"America/Toronto","clubUTCOffset":"-04:00","games":[]}'
-  recorded_at: 2026-04-11 12:00:12
+  recorded_at: 2026-04-24 01:29:15
 - request:
     method: GET
     uri: https://api-web.nhle.com/v1/club-schedule-season/UTA/20242025
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:13 GMT
+      date: Fri, 24 Apr 2026 01:29:15 GMT
       content-type: application/json
-      cf-ray: 9ea9d4608e3f90e5-YYZ
+      cf-ray: 9f1155fe5cebcbfd-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=2, s-maxage=2
-      etag: W/"69da37cf--gzip"
+      cache-control: no-transform, max-age=14, s-maxage=14
+      etag: W/"69eac77a--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -13452,5 +13452,5 @@ http_interactions:
         l''Utah"},"abbrev":"UTA","logo":"https://assets.nhle.com/logos/nhl/svg/UTA_20242025-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/UTA_20242025-20242025_dark.svg","awaySplitSquad":false,"score":1},"homeTeam":{"id":19,"commonName":{"default":"Blues"},"placeName":{"default":"St.
         Louis"},"placeNameWithPreposition":{"default":"St. Louis","fr":"de St. Louis"},"abbrev":"STL","logo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/STL_20082009-20242025_dark.svg","homeSplitSquad":false,"hotelLink":"https://www.stlouisunionstation.com/hotel-packages","hotelDesc":"Stay
         at Hilton","score":6},"periodDescriptor":{"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8476412,"firstInitial":{"default":"J."},"lastName":{"default":"Binnington"}},"winningGoalScorer":{"playerId":8477402,"firstInitial":{"default":"P."},"lastName":{"default":"Buchnevich","cs":"Bučněvič","fi":"Butshnevitsh","sk":"Bučněvič"}},"threeMinRecap":"/video/uta-at-stl-recap-6371542830112","gameCenterLink":"/gamecenter/uta-vs-stl/2025/04/15/2024021297"}]}'
-  recorded_at: 2026-04-11 12:00:13
-recorded_with: VCR-vcr/2.0.0
+  recorded_at: 2026-04-24 01:29:15
+recorded_with: VCR-vcr/2.1.0
