@@ -42,3 +42,5 @@ prediction_results
 
 .DS_Store
 tests/testthat/testthat-problems.rds
+
+tests/testthat/_problems/

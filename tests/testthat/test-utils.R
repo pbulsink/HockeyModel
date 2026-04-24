@@ -70,10 +70,22 @@ test_that("Metrics are correctly calculated", {
   expect_equal(accuracy(0.4, 1), 0)
   expect_equal(accuracy(c(0.4, 0.6), c(1, 1)), 0.5)
 
-  expect_error(rmse(c(1, 2, 3), c(1, 2)))
-  expect_error(auc(c(1, 2, 3), c(1, 2)))
-  expect_error(logLoss(c(1, 2, 3), c(1, 2)))
-  expect_error(accuracy(c(1, 2, 3), c(1, 2)))
+  expect_error(
+    rmse(c(1, 2, 3), c(1, 2)),
+    regexp = "Error in HockeyModel::rmse\\(\\)"
+  )
+  expect_error(
+    auc(c(1, 2, 3), c(1, 2)),
+    regexp = "Error in HockeyModel::auc\\(\\)"
+  )
+  expect_error(
+    logLoss(c(1, 2, 3), c(1, 2)),
+    regexp = "Error in HockeyModel::logLoss\\(\\)"
+  )
+  expect_error(
+    accuracy(c(1, 2, 3), c(1, 2)),
+    regexp = "Error in HockeyModel::accuracy\\(\\)"
+  )
 })
 
 # ============ RMSE tests ============
@@ -84,7 +96,10 @@ test_that("rmse calculation is correct", {
 })
 
 test_that("rmse handles mismatched lengths", {
-  expect_error(rmse(c(1, 2), c(1, 2, 3)))
+  expect_error(
+    rmse(c(1, 2), c(1, 2, 3)),
+    regexp = "Error in HockeyModel::rmse\\(\\)"
+  )
 })
 
 # ============ MSE tests ============
@@ -95,7 +110,10 @@ test_that("mse calculation is correct", {
 })
 
 test_that("mse handles mismatched lengths", {
-  expect_error(mse(c(1, 2), c(1, 2, 3)))
+  expect_error(
+    mse(c(1, 2), c(1, 2, 3)),
+    regexp = "Error in HockeyModel::mse\\(\\)"
+  )
 })
 
 # ============ R-Square tests ============
@@ -105,7 +123,10 @@ test_that("rsquare calculation is correct", {
 })
 
 test_that("rsquare handles mismatched lengths", {
-  expect_error(rsquare(c(1, 2), c(1, 2, 3)))
+  expect_error(
+    rsquare(c(1, 2), c(1, 2, 3)),
+    regexp = "Error in HockeyModel::rsquare\\(\\)"
+  )
 })
 
 # ============ Log Loss tests ============

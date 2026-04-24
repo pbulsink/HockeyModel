@@ -828,37 +828,77 @@ playoffSeriesOdds <- function(
   game_to <- ceiling(ngames / 2)
 
   if (length(home_odds) > 1 || length(away_odds) > 1) {
-    stop("handle only one series at a time")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected single values for {.arg home_odds} and {.arg away_odds}, got vectors instead.",
+      "i" = "Please retry with one home odds value and one away odds value."
+    ))
   }
   p1_home <- home_odds
   p1_road <- away_odds
 
   if (p1_home < 0 || p1_home > 1 || p1_road < 0 || p1_road > 1) {
-    stop("impossible odds")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected probabilities between 0 and 1; impossible odds were provided.",
+      "i" = "Please retry with {.arg home_odds} and {.arg away_odds} values in the range [0, 1]."
+    ))
   }
 
-  home_win <- as.integer(home_win)
-  away_win <- as.integer(away_win)
+  home_win_num <- suppressWarnings(as.numeric(home_win))
+  away_win_num <- suppressWarnings(as.numeric(away_win))
 
+  if (
+    length(home_win) != 1 || length(away_win) != 1 ||
+      is.na(home_win_num) || is.na(away_win_num) ||
+      !is.finite(home_win_num) || !is.finite(away_win_num) ||
+      home_win_num != floor(home_win_num) ||
+      away_win_num != floor(away_win_num)
+  ) {
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected single whole-number values for {.arg home_win} and {.arg away_win}.",
+      "i" = "Please retry with one non-negative integer win count for each team."
+    ))
+  }
+
+  home_win <- as.integer(home_win_num)
+  away_win <- as.integer(away_win_num)
   if (home_win < 0 || away_win < 0) {
-    stop("negative number of wins impossible")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected non-negative win counts, got {.arg home_win} = {home_win} and {.arg away_win} = {away_win}.",
+      "i" = "Please retry with zero or positive integers for wins already recorded."
+    ))
   }
   if (home_win >= game_to) {
-    message("series already won")
+    cli::cli_alert_info(
+      "Series already won; returning 1 for the home team win probability."
+    )
     return(1)
   }
   if (away_win >= game_to) {
-    message("series already won")
+    cli::cli_alert_info(
+      "Series already won; returning 0 for the home team win probability."
+    )
     return(0)
   }
 
   games_played <- home_win + away_win
 
   if (games_played > ngames) {
-    stop("total wins greater than games impossible")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected total recorded wins to be less than or equal to {.arg ngames}, got {games_played} wins over {ngames} games.",
+      "i" = "Please retry with win counts that do not exceed the total number of games in the series."
+    ))
   }
   if (games_played == ngames) {
-    stop("nothing to do, series over")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected an unfinished series, but all {ngames} games are already recorded.",
+      "i" = "Please retry with an in-progress series or use the known series outcome directly."
+    ))
   }
 
   x.g <- games_played
