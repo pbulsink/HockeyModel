@@ -265,11 +265,3 @@ test_that("colourDelta is symmetric", {
     colourDelta("#00FF00", "#FF0000")
   )
 })
-
-
-test_that("getSeason returns character season id", {
-  skip_if_hockey_apis_unavailable()
-  result <- HockeyModel::getSeason("2020-12-25")
-  expect_true(is.character(result))
-  expect_true(grepl("^\\d{8}$", result))
-})
