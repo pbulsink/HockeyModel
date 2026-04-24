@@ -100,7 +100,20 @@ test_that("Series is ok", {
   series <- getAPISeries("20182019")
   expect_true(is.data.frame(series))
   expect_equal(nrow(series), 15)
-  expect_equal(ncol(series), 9)
+  expect_true(all(
+    c(
+      "Round",
+      "Series",
+      "HomeTeam",
+      "AwayTeam",
+      "HomeWins",
+      "AwayWins",
+      "HomeSeed",
+      "AwaySeed",
+      "Status"
+    ) %in%
+      colnames(series)
+  ))
   expect_true(all(series$Status == "Complete"))
 })
 
