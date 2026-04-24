@@ -8,25 +8,44 @@ test_that("Schedules are ok", {
   sched <- getNHLSchedule()
   expect_true(is.data.frame(sched))
   expect_equal(ncol(sched), 6)
-  expect_equal(colnames(sched), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus"))
+  expect_equal(
+    colnames(sched),
+    c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+  )
   expect_true(all(sched$GameType %in% c("R", "P")))
 })
 
 test_that("Scores are OK", {
   tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
-  withr::local_file(file.path(tmpdir, "xG.csv"))
-  write.table(data.frame("GameId" = 2020020001, "home_xg" = 4.3, "away_xg" = 3.1),
-    file = file.path(tmpdir, "xG.csv"),
-    row.names = FALSE, col.names = TRUE, sep = ","
+
+  local_mocked_bindings(
+    get_xg = function(gameIds) {
+      data.frame(
+        GameID = as.integer(gameIds),
+        HomexG = 4.3,
+        AwayxG = 3.1
+      )
+    },
+    .package = "HockeyModel"
   )
 
   score <- getNHLScores(2020020001, progress = F)
   expect_true(is.data.frame(score))
   expect_equal(nrow(score), 1)
   required_cols <- c(
-    "Date", "HomeTeam", "AwayTeam", "GameID", "HomeGoals", "AwayGoals",
-    "OTStatus", "GameType", "GameStatus", "Result", "HomexG", "AwayxG"
+    "Date",
+    "HomeTeam",
+    "AwayTeam",
+    "GameID",
+    "HomeGoals",
+    "AwayGoals",
+    "OTStatus",
+    "GameType",
+    "GameStatus",
+    "Result",
+    "HomexG",
+    "AwayxG"
   )
   expect_true(all(required_cols %in% colnames(score)))
   expect_equal(score$GameID[[1]], 2020020001)
@@ -34,8 +53,37 @@ test_that("Scores are OK", {
   expect_true(is.numeric(score$HomexG[[1]]) || is.na(score$HomexG[[1]]))
   expect_true(is.numeric(score$AwayxG[[1]]) || is.na(score$AwayxG[[1]]))
 
-  expect_message(games_today(date = as.Date("2019-11-01")), "Games on today aren't present in Schedule")
+  expect_message(
+    games_today(date = as.Date("2019-11-01")),
+    "Games on today aren't present in Schedule"
+  )
   expect_true(is.null(games_today(date = as.Date("2019-11-01")))) # Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
+})
+
+test_that("get_xg() uses component parser results (#noissue)", {
+  local_mocked_bindings(
+    load_or_get_nst = function(gid) {
+      data.frame(
+        h_a = c("home", "away"),
+        xgf_all = c(2.5, 1.8),
+        gf_all = c(3, 2),
+        cf_all = c(50, 45),
+        xgf_pk = c(0.2, 0.1),
+        gf_pk = c(0, 0),
+        cf_pk = c(4, 3),
+        xgf_pp = c(0.8, 0.6),
+        gf_pp = c(1, 1),
+        cf_pp = c(10, 8)
+      )
+    },
+    .package = "HockeyModel"
+  )
+
+  xg <- get_xg(2020020001)
+  expect_s3_class(xg, "data.frame")
+  expect_equal(xg$GameID[[1]], 2020020001L)
+  expect_equal(xg$HomexG[[1]], 2.5)
+  expect_equal(xg$AwayxG[[1]], 1.8)
 })
 
 test_that("Series is ok", {
@@ -52,7 +100,7 @@ test_that("Series is ok", {
   series <- getAPISeries("20182019")
   expect_true(is.data.frame(series))
   expect_equal(nrow(series), 15)
-  expect_equal(ncol(series), 10)
+  expect_equal(ncol(series), 9)
   expect_true(all(series$Status == "Complete"))
 })
 
@@ -89,7 +137,10 @@ test_that("Other Utility Functions are OK", {
   tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
-  expect_equal(clean_names(c("Chicago Blackhawks", "Toronto Maple Leafs")), c("Chicago Blackhawks", "Toronto Maple Leafs"))
+  expect_equal(
+    clean_names(c("Chicago Blackhawks", "Toronto Maple Leafs")),
+    c("Chicago Blackhawks", "Toronto Maple Leafs")
+  )
   expect_equal(getTeamConferences("Chicago Blackhawks"), "Western")
   expect_equal(getTeamConferences("Toronto Maple Leafs"), "Eastern")
   expect_equal(getTeamDivisions("Toronto Maple Leafs"), "Atlantic")
