@@ -99,6 +99,7 @@ test_that("games_today returns NULL or data frame", {
     games_today(date = as.Date("2019-11-01")),
     "Games on today aren't present in Schedule"
   )
+  expect_null(games_today(date = as.Date("2019-11-01")))
 
   today_games <- games_today(date = as.Date("2019-11-01"), schedule = sched)
   expect_true(is.data.frame(today_games))
@@ -167,10 +168,9 @@ test_that("SeasonID gets seasons ok", {
   expect_true(is.character(season))
   expect_equal(nchar(season), 8)
   expect_true(grepl("^\\d{8}$", season))
-  expect_equal(
-    as.integer(substr(season, 5, 8)) - as.integer(substr(season, 1, 4)),
-    1
-  )
+  first_four <- as.integer(substr(season, 1, 4))
+  last_four <- as.integer(substr(season, 5, 8))
+  expect_equal(last_four - first_four, 1)
 
   expect_equal(getSeason("2018-12-02"), "20182019")
   expect_null(getSeason("2018-09-01"))
