@@ -60,7 +60,7 @@ test_that("Scores are OK", {
   expect_true(is.null(games_today(date = as.Date("2019-11-01")))) # Why null? because games_today only returns 'scheduled' games from a date. NULL return is equivalent to finishing the code anyway (i.e. not an error)
 })
 
-test_that("get_xg() uses component parser results (#noissue)", {
+test_that("get_xg() uses component parser results", {
   local_mocked_bindings(
     load_or_get_nst = function(gid) {
       data.frame(
