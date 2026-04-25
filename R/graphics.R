@@ -13,10 +13,16 @@ plot_prediction_points_by_team <- function(
   past_days = 14,
   teamColours = HockeyModel::teamColours
 ) {
-  stopifnot(all(
-    requireNamespace("ggplot2", quietly = TRUE),
-    requireNamespace("ggforce", quietly = TRUE)
-  ))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
+  if (!requireNamespace("ggforce", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggforce} is required. Install it with {.code install.packages('ggforce')}."
+    )
+  }
   # Trim predictions to fit plot
   all_predictions$predictionDate <- as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -104,10 +110,16 @@ plot_prediction_playoffs_by_team <- function(
   past_days = 14,
   teamColours = HockeyModel::teamColours
 ) {
-  stopifnot(all(
-    requireNamespace("ggplot2", quietly = TRUE),
-    requireNamespace("ggforce", quietly = TRUE)
-  ))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
+  if (!requireNamespace("ggforce", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggforce} is required. Install it with {.code install.packages('ggforce')}."
+    )
+  }
   # Trim predictions to fit plot
   all_predictions$predictionDate <- as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -216,10 +228,16 @@ plot_prediction_presidents_by_team <- function(
   minimum = 0.01,
   teamColours = HockeyModel::teamColours
 ) {
-  stopifnot(all(
-    requireNamespace("ggplot2", quietly = TRUE),
-    requireNamespace("ggforce", quietly = TRUE)
-  ))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
+  if (!requireNamespace("ggforce", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggforce} is required. Install it with {.code install.packages('ggforce')}."
+    )
+  }
   # Trim predictions to fit plot
   all_predictions$predictionDate <- as.Date(all_predictions$predictionDate)
   lastdate <- max(all_predictions$predictionDate)
@@ -327,7 +345,11 @@ plot_pace_by_division <- function(
   prediction_dir = getOption("HockeyModel.prediction.path"),
   scores = HockeyModel::scores
 ) {
-  stopifnot(requireNamespace("ggplot2", quietly = TRUE))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
   sc <- scores[scores$Date >= as.Date(getSeasonStartDate()), ]
   sc <- sc[sc$GameType == "R", ]
 
@@ -512,7 +534,11 @@ plot_pace_by_team <- function(
   prediction_dir = getOption("HockeyModel.prediction.path"),
   scores = HockeyModel::scores
 ) {
-  stopifnot(requireNamespace("ggplot2", quietly = TRUE))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
   sc <- scores[scores$Date >= as.Date(getSeasonStartDate()), ]
 
   teamlist <- unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
@@ -668,7 +694,11 @@ plot_odds_today <- function(
   schedule = HockeyModel::schedule,
   teamColours = HockeyModel::teamColours
 ) {
-  stopifnot(requireNamespace("ggplot2", quietly = TRUE))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
   params <- parse_dc_params(params)
   todayodds <- todayDC(today = today, params, schedule = schedule)
   todayodds$HomeWinOT <- todayodds$AwayWinOT <- 0
@@ -849,12 +879,19 @@ plot_playoff_series_odds <- function(
   params = NULL,
   teamColours = HockeyModel::teamColours
 ) {
-  stopifnot(requireNamespace("ggplot2", quietly = TRUE))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
   params <- parse_dc_params(params)
   series <- series[, c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
-  series$HomeOdds <- apply(series, MARGIN = 1, FUN = function(x) {
-    playoffWin(x[1], x[2], x[3], x[4], params = params)
-  })
+  series$HomeOdds <- purrr::pmap_dbl(
+    series,
+    function(HomeTeam, AwayTeam, HomeWins, AwayWins, ...) {
+      playoffWin(HomeTeam, AwayTeam, HomeWins, AwayWins, params = params)
+    }
+  )
   series$AwayOdds <- 1 - series$HomeOdds
   series2 <- series
   # For now, drop won games:
@@ -985,7 +1022,11 @@ plot_playoff_series_odds <- function(
 #' @return a ggplot object
 #' @export
 plot_game <- function(home, away, params = NULL, maxgoal = 10) {
-  stopifnot(requireNamespace("ggplot2", quietly = TRUE))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
   params <- parse_dc_params(params)
   # Expected goals home
   lambda <- try(
@@ -1145,10 +1186,16 @@ plot_point_likelihood <- function(
   subdir = "pace",
   savefiles = TRUE
 ) {
-  stopifnot(all(
-    requireNamespace("ggplot2", quietly = TRUE),
-    requireNamespace("ggridges", quietly = TRUE)
-  ))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
+  if (!requireNamespace("ggridges", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggridges} is required. Install it with {.code install.packages('ggridges')}."
+    )
+  }
   if (is.null(preds)) {
     # Try this:
     preds <- loopless_sim(nsims = 1e4)$raw_results
@@ -1243,7 +1290,11 @@ plot_point_likelihood <- function(
 #' @return a ggplot2 plot
 #' @export
 plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
-  stopifnot(requireNamespace("ggplot2", quietly = TRUE))
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
+    )
+  }
   if (is.null(teamlist)) {
     teamlist <- as.character(unique(m$data$Team))
   }
@@ -1357,11 +1408,21 @@ plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
 #' getTeamColours("Buffalo Sabres", "Tampa Bay Lightning")
 getTeamColours <- function(home, away, delta = 0.15) {
   teamColours <- HockeyModel::teamColours
-  stopifnot(home %in% teamColours$Team)
-  stopifnot(away %in% teamColours$Team)
-  stopifnot(is.numeric(delta))
-  stopifnot(delta < 1)
-  stopifnot(delta >= 0)
+  if (!home %in% teamColours$Team) {
+    cli::cli_abort("{.arg home} ({.val {home}}) is not a recognized team.")
+  }
+  if (!away %in% teamColours$Team) {
+    cli::cli_abort("{.arg away} ({.val {away}}) is not a recognized team.")
+  }
+  if (!is.numeric(delta)) {
+    cli::cli_abort("{.arg delta} must be numeric.")
+  }
+  if (delta >= 1) {
+    cli::cli_abort("{.arg delta} must be less than 1, got {delta}.")
+  }
+  if (delta < 0) {
+    cli::cli_abort("{.arg delta} must be at least 0, got {delta}.")
+  }
 
   # Get primary & alternate colour for home and away
   hprimary <- teamColours[teamColours$Team == home, "Hex"]
@@ -1438,10 +1499,16 @@ format_playoff_odds <- function(
   trim = TRUE,
   trimcup = FALSE
 ) {
-  stopifnot(all(
-    requireNamespace("gt", quietly = TRUE),
-    requireNamespace("scales", quietly = TRUE)
-  ))
+  if (!requireNamespace("gt", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg gt} is required. Install it with {.code install.packages('gt')}."
+    )
+  }
+  if (!requireNamespace("scales", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg scales} is required. Install it with {.code install.packages('scales')}."
+    )
+  }
   teamColours <- HockeyModel::teamColours
   playoff_odds <- playoff_odds |>
     dplyr::arrange(
@@ -1543,10 +1610,16 @@ daily_odds_table <- function(
   schedule = HockeyModel::schedule,
   include_logo = FALSE
 ) {
-  stopifnot(all(
-    requireNamespace("gt", quietly = TRUE),
-    requireNamespace("scales", quietly = TRUE)
-  ))
+  if (!requireNamespace("gt", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg gt} is required. Install it with {.code install.packages('gt')}."
+    )
+  }
+  if (!requireNamespace("scales", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg scales} is required. Install it with {.code install.packages('scales')}."
+    )
+  }
   params <- parse_dc_params(params)
   todayodds <- todayDC(
     today = as.Date(today),

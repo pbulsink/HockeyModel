@@ -387,7 +387,7 @@ compile_predictions <- function(
   filelist <- list.files(path = dir)
   pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
   pdates <- pdates[pdates != "graphics"]
-  all_predictions <- lapply(pdates, function(f) {
+  all_predictions <- purrr::map(pdates, function(f) {
     readRDS(file.path(dir, (paste0(f, "-predictions.RDS"))))
   }) # Read all the files
   names(all_predictions) <- pdates
@@ -2096,9 +2096,12 @@ getAllHomeAwayOdds <- function(teamlist, params = NULL) {
     stringsAsFactors = FALSE
   )
   homeAwayOdds <- homeAwayOdds[homeAwayOdds$HomeTeam != homeAwayOdds$AwayTeam, ]
-  homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) {
-    playoffWin(x[1], x[2], params = params)
-  })
+  homeAwayOdds$HomeOdds <- purrr::pmap_dbl(
+    homeAwayOdds,
+    function(HomeTeam, AwayTeam, ...) {
+      playoffWin(HomeTeam, AwayTeam, params = params)
+    }
+  )
   return(homeAwayOdds)
 }
 
@@ -2125,7 +2128,9 @@ recordTodaysPredictions <- function(
   draws = TRUE
 ) {
   params <- parse_dc_params(params)
-  stopifnot(is.Date(today))
+  if (!is.Date(today)) {
+    cli::cli_abort("{.arg today} must be a Date or date-like value.")
+  }
   today <- as.Date(today)
   today_sched <- schedule[schedule$Date == today, ]
   if (nrow(today_sched) == 0) {
@@ -2265,8 +2270,12 @@ build_past_predictions <- function(
   include_xG = FALSE,
   draws = TRUE
 ) {
-  stopifnot(is.Date(startDate))
-  stopifnot(is.Date(endDate))
+  if (!is.Date(startDate)) {
+    cli::cli_abort("{.arg startDate} must be a Date or date-like value.")
+  }
+  if (!is.Date(endDate)) {
+    cli::cli_abort("{.arg endDate} must be a Date or date-like value.")
+  }
   startDate <- as.Date(startDate)
   endDate <- as.Date(endDate)
 

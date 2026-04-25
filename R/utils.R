@@ -42,30 +42,19 @@ normalizeOdds <- function(odds) {
 #'
 #' @returns A tibble with season point totals by team.
 historicalPoints <- function(sc) {
-  points <- tibble::tibble(
-    Team = character(),
-    Season = character(),
-    Points = integer()
-  )
-
   sc$Season <- getSeason(sc$Date)
 
   sc <- droplevels(sc)
 
-  for (i in unique(sc$Season)) {
-    if (i == "20122013") {
-      next
-    }
+  seasons_to_process <- setdiff(unique(sc$Season), "20122013")
 
+  points <- purrr::map(seasons_to_process, function(i) {
     s <- sc[sc$Season == i & sc$GameType == "R", ]
     b <- buildStats(s)
     b$Season <- i
-
-    points <- dplyr::bind_rows(
-      points,
-      b[, colnames(b) %in% c("Team", "Season", "Points")]
-    )
-  }
+    b[, colnames(b) %in% c("Team", "Season", "Points")]
+  }) |>
+    dplyr::bind_rows()
 
   return(points)
 }

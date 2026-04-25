@@ -11,11 +11,14 @@ getNHLSchedule <- function(
   season = getCurrentSeason8(),
   teamColours = HockeyModel::teamColours
 ) {
-  stopifnot(seasonValidator(season))
+  if (!seasonValidator(season)) {
+    cli::cli_abort(
+      "{.arg season} must be a valid NHL season ID (e.g. {.val 20202021})."
+    )
+  }
 
   # This is imilar to how Dan Morse did it in hockeyR
-  sched <- NULL
-  for (i in unique(teamColours$ShortCode)) {
+  sched <- purrr::map(unique(teamColours$ShortCode), function(i) {
     url <- paste0(
       "https://api-web.nhle.com/v1/club-schedule-season/",
       i,
@@ -40,7 +43,7 @@ getNHLSchedule <- function(
       sg <- site$games |>
         dplyr::filter(.data$gameType > 1)
 
-      games <- data.frame(
+      data.frame(
         Date = sg$gameDate,
         HomeTeam = getLongTeam(sg$homeTeam$abbrev),
         AwayTeam = getLongTeam(sg$awayTeam$abbrev),
@@ -53,12 +56,11 @@ getNHLSchedule <- function(
         GameStatus = sg$gameState
       ) |>
         dplyr::filter(.data$GameType %in% c("R", "P"))
-
-      sched <- dplyr::bind_rows(sched, games)
     } else {
-      next()
+      NULL
     }
-  }
+  }) |>
+    dplyr::bind_rows()
 
   sched <- sched |>
     unique() |>
@@ -96,7 +98,9 @@ games_today <- function(
   date = Sys.Date(),
   all_games = FALSE
 ) {
-  stopifnot(is.Date(date))
+  if (!is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
   url <- paste0(
     "https://api-web.nhle.com/v1/schedule/",
     as.Date(date, "%Y-%m-%d")
@@ -140,7 +144,9 @@ updateScheduleAPI <- function(save_data = FALSE) {
     currentSeason <- getCurrentSeason8()
   }
   schedule <- getNHLSchedule(currentSeason)
-  stopifnot(!is.null(schedule))
+  if (is.null(schedule)) {
+    cli::cli_abort("Failed to retrieve schedule from NHL API.")
+  }
 
   if (save_data && requireNamespace("usethis", quietly = TRUE)) {
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
@@ -724,10 +730,9 @@ getAPISeries <- function(season = getCurrentSeason8()) {
   playoffSeries <- playoffSeries |>
     dplyr::mutate(
       "Round" = as.integer(.data$Round),
-      "Series" = sapply(
+      "Series" = purrr::map_int(
         .data$Series,
-        function(x) which(LETTERS == x, useNames = FALSE),
-        USE.NAMES = FALSE
+        function(x) which(LETTERS == x, useNames = FALSE)
       ),
       "HomeWins" = as.integer(.data$HomeWins),
       "AwayWins" = as.integer(.data$AwayWins),
@@ -895,7 +900,9 @@ inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
 #' @return TRUE if we're in off-season, else FALSE
 #' @export
 inOffSeason <- function(date = Sys.Date()) {
-  stopifnot(is.Date(date))
+  if (!is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
   date <- as.Date(date)
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>
@@ -921,7 +928,9 @@ inOffSeason <- function(date = Sys.Date()) {
 #' @return Either TRUE/FALSE or a seasonID/FALSE
 #' @export
 inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
-  stopifnot(is.Date(date))
+  if (!is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
   date <- as.Date(date)
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>
@@ -953,7 +962,9 @@ inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
 #' @return a character season id (e.g. 20172018)
 #' @export
 getSeason <- function(gamedate = Sys.Date()) {
-  stopifnot(is.Date(gamedate))
+  if (!is.Date(gamedate)) {
+    cli::cli_abort("{.arg gamedate} must be a Date or date-like value.")
+  }
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>
     httr2::req_cache(tempdir()) |>
@@ -1088,7 +1099,11 @@ getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @keywords internal
 getNumGames <- function(season = getCurrentSeason8()) {
   if (!is.null(season)) {
-    stopifnot(seasonValidator(season))
+    if (!seasonValidator(season)) {
+      cli::cli_abort(
+        "{.arg season} must be a valid NHL season ID (e.g. {.val 20202021})."
+      )
+    }
   } else {
     stop("Season must be supplied")
   }

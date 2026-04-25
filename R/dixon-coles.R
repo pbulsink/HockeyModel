@@ -26,7 +26,9 @@ updateDC <- function(
   save_data = TRUE
 ) {
   message("Calculating new model parameters...")
-  stopifnot(is.Date(currentDate))
+  if (!is.Date(currentDate)) {
+    cli::cli_abort("{.arg currentDate} must be a Date or date-like value.")
+  }
   if (currentDate != Sys.Date()) {
     currentDate <- as.Date(currentDate)
     scores <- scores[scores$Date < currentDate, ]
@@ -67,7 +69,9 @@ todayDC <- function(
   include_xG = FALSE,
   draws = TRUE
 ) {
-  stopifnot(is.Date(today))
+  if (!is.Date(today)) {
+    cli::cli_abort("{.arg today} must be a Date or date-like value.")
+  }
   params <- parse_dc_params(params)
   #games <- games_today(date = today)
   games <- schedule[schedule$Date == today, ]
@@ -509,14 +513,18 @@ getWeibullParams <- function(
     eta <- par[2]
     k <- par[3]
     # This gets multiplied by two because each tie game has 2 teams getting x goals, whereas non-tie games where either team get x goals get pulled in.
-    goalratios <- sapply(1:max(scores$Goals, na.rm = TRUE), FUN = function(x) {
-      (nrow(scores[scores$Goals == x & !is.na(scores$Goals), ]) /
-        nrow(scores[!is.na(scores$Goals), ])) /
-        (nrow(scores[
-          (scores$HomeGoals == x | scores$AwayGoals == x) & is.na(scores$Goals),
-        ]) /
-          nrow(scores[is.na(scores$Goals), ]))
-    }) *
+    goalratios <- purrr::map_dbl(
+      1:max(scores$Goals, na.rm = TRUE),
+      function(x) {
+        (nrow(scores[scores$Goals == x & !is.na(scores$Goals), ]) /
+          nrow(scores[!is.na(scores$Goals), ])) /
+          (nrow(scores[
+            (scores$HomeGoals == x | scores$AwayGoals == x) &
+              is.na(scores$Goals),
+          ]) /
+            nrow(scores[is.na(scores$Goals), ]))
+      }
+    ) *
       2
     weibulldist <- stats::dweibull(
       1:max(scores$Goals, na.rm = TRUE),
@@ -1133,8 +1141,12 @@ dcPredictMultipleDays <- function(
   }
   cores <- parseCores(cores)
 
-  stopifnot(is.Date(start))
-  stopifnot(is.Date(end))
+  if (!is.Date(start)) {
+    cli::cli_abort("{.arg start} must be a Date or date-like value.")
+  }
+  if (!is.Date(end)) {
+    cli::cli_abort("{.arg end} must be a Date or date-like value.")
+  }
   predict_dates <- seq(from = as.Date(end), to = as.Date(start), by = -1) # do it backwards to get the most recent date done first
 
   schedule$Date <- as.Date(schedule$Date)
@@ -1276,8 +1288,12 @@ predictMultipleDaysResultsDC <- function(
   schedule = HockeyModel::schedule,
   scores = HockeyModel::scores
 ) {
-  stopifnot(is.Date(startDate))
-  stopifnot(is.Date(endDate))
+  if (!is.Date(startDate)) {
+    cli::cli_abort("{.arg startDate} must be a Date or date-like value.")
+  }
+  if (!is.Date(endDate)) {
+    cli::cli_abort("{.arg endDate} must be a Date or date-like value.")
+  }
 
   sched <- schedule[
     schedule$Date >= as.Date(startDate) & schedule$Date <= as.Date(endDate),
