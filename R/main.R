@@ -822,7 +822,14 @@ tweetSeries <- function(
   graphic_dir = getOption("HockeyModel.graphics.path"),
   delay = stats::runif(1, min = 1, max = 3) * 60
 ) {
-  stopifnot(requireNamespace("gt", quietly = TRUE))
+  if (!requireNamespace("gt", quietly = TRUE)) {
+    cli::cli_abort(
+      c(
+        "Package {.pkg gt} is required to save the series odds table image.",
+        "i" = "Install it with {.code install.packages('gt')}."
+      )
+    )
+  }
 
   params <- parse_dc_params(params)
   while (grDevices::dev.cur() != 1) {

@@ -1763,13 +1763,63 @@ series_odds_table <- function(
   params = NULL,
   include_logo = FALSE
 ) {
-  stopifnot(all(
-    requireNamespace("gt", quietly = TRUE),
-    requireNamespace("scales", quietly = TRUE)
-  ))
+  if (!requireNamespace("gt", quietly = TRUE)) {
+    cli::cli_abort(
+      c(
+        "Package {.pkg gt} is required by {.fn series_odds_table}.",
+        "i" = "Install it with {.code install.packages('gt')}."
+      )
+    )
+  }
+  if (!requireNamespace("scales", quietly = TRUE)) {
+    cli::cli_abort(
+      c(
+        "Package {.pkg scales} is required by {.fn series_odds_table}.",
+        "i" = "Install it with {.code install.packages('scales')}."
+      )
+    )
+  }
+
+  if (!is.data.frame(series)) {
+    cli::cli_abort("{.arg series} must be a data frame.")
+  }
+
+  required_cols <- c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")
+  missing_cols <- setdiff(required_cols, names(series))
+  if (length(missing_cols) > 0) {
+    cli::cli_abort(c(
+      "{.arg series} must contain the required columns used by {.fn series_odds_table}.",
+      "x" = "Missing columns: {.val {missing_cols}}"
+    ))
+  }
+
+  invalid_cols <- character(0)
+  if (!is.character(series$HomeTeam)) {
+    invalid_cols <- c(invalid_cols, "HomeTeam (expected character)")
+  }
+  if (!is.character(series$AwayTeam)) {
+    invalid_cols <- c(invalid_cols, "AwayTeam (expected character)")
+  }
+  if (!is.numeric(series$HomeWins)) {
+    invalid_cols <- c(invalid_cols, "HomeWins (expected numeric/integer)")
+  }
+  if (!is.numeric(series$AwayWins)) {
+    invalid_cols <- c(invalid_cols, "AwayWins (expected numeric/integer)")
+  }
+  if (length(invalid_cols) > 0) {
+    cli::cli_abort(c(
+      "{.arg series} has required columns with invalid types.",
+      "x" = "Invalid columns: {.val {invalid_cols}}"
+    ))
+  }
+
+  if ("Status" %in% names(series)) {
+    series <- series[series$Status == "Ongoing", , drop = FALSE]
+  }
+
   params <- parse_dc_params(params)
 
-  series <- series[, c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
+  series <- series[, required_cols]
   series$HomeOdds <- mapply(
     function(home, away, hw, aw) {
       playoffWin(home, away, hw, aw, params = params)
