@@ -2164,7 +2164,7 @@ cleanupPredictionsFile <- function(
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv")
 ) {
   if (!file.exists(filepath)) {
-    return(TRUE)
+    return(FALSE)
   }
   dailyodds <- utils::read.csv(filepath)
   dailyodds <- dailyodds |>
@@ -2187,6 +2187,8 @@ cleanupPredictionsFile <- function(
 build_past_predictions <- function(
   startDate,
   endDate,
+  scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule,
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv"),
   include_xG = FALSE,
   draws = TRUE
@@ -2195,8 +2197,6 @@ build_past_predictions <- function(
   stopifnot(is.Date(endDate))
   startDate <- as.Date(startDate)
   endDate <- as.Date(endDate)
-  scores <- HockeyModel::scores
-  schedule <- HockeyModel::schedule
 
   for (day in seq.Date(startDate, endDate, by = 1)) {
     d <- as.Date(day, origin = "1970-01-01")
