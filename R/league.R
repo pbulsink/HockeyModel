@@ -2247,6 +2247,8 @@ cleanupPredictionsFile <- function(
 #'
 #' @param startDate (`Date`) First date to backfill.
 #' @param endDate (`Date`) Last date to backfill.
+#' @param scores scores, if not then HockeyModel::scores is used.
+#' @param schedule schedule, if not then HockeyModel::schedule is used.
 #' @param filepath (`character(1)`) CSV path for recorded predictions.
 #' @param include_xG (`logical(1)`) Whether to include xG columns.
 #' @param draws (`logical(1)`) Whether to store draw probabilities.

@@ -399,3 +399,14 @@ test_that("Playoff Table is ok", {
   expect_equal(p$`_heading`$title, " Playoff Odds")
   expect_equal(p$`_data`$Team[1], "Tampa Bay Lightning")
 })
+
+# ============ todayOddsPlot tests ============
+test_that("todayOddsPlot executes without error", {
+  sched <- HockeyModel::scores
+  sched <- sched[sched$Date > as.Date("2019-10-01"), ]
+  sched <- sched[sched$Date < as.Date("2019-12-31"), ]
+  vcr::use_cassette("todayOdds", {
+    p <- suppressWarnings(todayOddsPlot(date = as.Date("2019-11-01"), schedule = sched))
+    expect_true(ggplot2::is_ggplot(p))
+  })
+})

@@ -95,7 +95,7 @@ test_that("games_today returns NULL or data frame", {
   sched <- sched[sched$Date > as.Date("2019-10-01"), ]
   sched <- sched[sched$Date < as.Date("2019-12-31"), ]
 
-  vcr::use_cassette("games-today-missing", {
+  vcr::use_cassette("games-today", {
     today_missing <- NULL
     expect_message(
       today_missing <- games_today(date = as.Date("2019-11-01")),
@@ -104,7 +104,7 @@ test_that("games_today returns NULL or data frame", {
     expect_null(today_missing)
   })
 
-  vcr::use_cassette("games-today-with-schedule", {
+  vcr::use_cassette("games-today", {
     today_games <- games_today(date = as.Date("2019-11-01"), schedule = sched)
     expect_true(is.data.frame(today_games))
     expect_true(nrow(today_games) > 0)
