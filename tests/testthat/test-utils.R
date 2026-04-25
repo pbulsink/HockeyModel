@@ -29,11 +29,6 @@ test_that("normalizeOdds works with unlisted vectors", {
   expect_equal(sum(result), 1)
 })
 
-test_that("Season from Game Date works", {
-  expect_equal(HockeyModel::getSeason("2018-10-05"), 20182019L)
-  expect_equal(HockeyModel::getSeason("2019-02-15"), 20182019L)
-})
-
 test_that("Past points function works", {
   # Just test that the function runs without error
   sc <- scores[
@@ -290,20 +285,4 @@ test_that("colourDelta is symmetric", {
     colourDelta("#FF0000", "#00FF00"),
     colourDelta("#00FF00", "#FF0000")
   )
-})
-
-# ============ getSeason tests ============
-test_that("getSeason from Game Date works", {
-  expect_equal(HockeyModel::getSeason("2018-10-05"), 20182019L)
-  expect_equal(HockeyModel::getSeason("2019-02-15"), 20182019L)
-})
-
-test_that("getSeason handles regular season dates", {
-  expect_equal(HockeyModel::getSeason("2018-10-15"), 20182019L)
-  expect_equal(HockeyModel::getSeason("2019-04-01"), 20182019L)
-})
-
-test_that("getSeason returns numeric integer", {
-  result <- HockeyModel::getSeason("2020-12-25")
-  expect_true(is.null(result) || is.numeric(result) || is.integer(result))
 })

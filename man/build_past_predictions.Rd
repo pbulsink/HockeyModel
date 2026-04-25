@@ -7,6 +7,8 @@
 build_past_predictions(
   startDate,
   endDate,
+  scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule,
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv"),
   include_xG = FALSE,
   draws = TRUE
@@ -16,6 +18,10 @@ build_past_predictions(
 \item{startDate}{(\code{Date}) First date to backfill.}
 
 \item{endDate}{(\code{Date}) Last date to backfill.}
+
+\item{scores}{scores, if not then HockeyModel::scores is used.}
+
+\item{schedule}{schedule, if not then HockeyModel::schedule is used.}
 
 \item{filepath}{(\code{character(1)}) CSV path for recorded predictions.}
 

@@ -1,4 +1,5 @@
 test_that("iterative functions works", {
+  skip_if_hockey_apis_unavailable()
   it <- iterativeOddsTable()
   expect_equal(colnames(it), c(
     "GameID", "HomeTeam", "AwayTeam", "HomeWin",
@@ -11,7 +12,10 @@ test_that("iterative functions works", {
 
   expect_equal(getTeamRankings("Bob", HockeyModel::iterativeRankings$rankings_wl)$attack, 0)
 
-  it2 <- getIterativeTable(date = as.Date("2018-11-04"))
+  sched <- HockeyModel::scores
+  sched <- sched[sched$Date > as.Date("2018-10-01"),]
+  sched <- sched[sched$Date < as.Date("2018-12-31"),]
+  it2 <- getIterativeTable(date = as.Date("2018-11-04"), schedule = sched)
   expect_equal(nrow(it2), 3)
   expect_equal(colnames(it2), c(
     "GameID", "HomeTeam", "AwayTeam", "HomeWin",

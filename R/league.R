@@ -849,9 +849,12 @@ playoffSeriesOdds <- function(
   away_win_num <- suppressWarnings(as.numeric(away_win))
 
   if (
-    length(home_win) != 1 || length(away_win) != 1 ||
-      is.na(home_win_num) || is.na(away_win_num) ||
-      !is.finite(home_win_num) || !is.finite(away_win_num) ||
+    length(home_win) != 1 ||
+      length(away_win) != 1 ||
+      is.na(home_win_num) ||
+      is.na(away_win_num) ||
+      !is.finite(home_win_num) ||
+      !is.finite(away_win_num) ||
       home_win_num != floor(home_win_num) ||
       away_win_num != floor(away_win_num)
   ) {
@@ -1072,8 +1075,7 @@ simulatePlayoffs <- function(
 
     simresults <- foreach::foreach(
       i = 1:(cores * 100),
-      .combine = "rbind",
-      .packages = "HockeyModel"
+      .combine = "rbind"
     ) %dopar%
       {
         simresults <- playoffSolverEngine(
@@ -2223,7 +2225,7 @@ cleanupPredictionsFile <- function(
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv")
 ) {
   if (!file.exists(filepath)) {
-    return(TRUE)
+    return(FALSE)
   }
   dailyodds <- utils::read.csv(filepath)
   dailyodds <- dailyodds |>
@@ -2247,6 +2249,8 @@ cleanupPredictionsFile <- function(
 #'
 #' @param startDate (`Date`) First date to backfill.
 #' @param endDate (`Date`) Last date to backfill.
+#' @param scores scores, if not then HockeyModel::scores is used.
+#' @param schedule schedule, if not then HockeyModel::schedule is used.
 #' @param filepath (`character(1)`) CSV path for recorded predictions.
 #' @param include_xG (`logical(1)`) Whether to include xG columns.
 #' @param draws (`logical(1)`) Whether to store draw probabilities.
@@ -2255,6 +2259,8 @@ cleanupPredictionsFile <- function(
 build_past_predictions <- function(
   startDate,
   endDate,
+  scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule,
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv"),
   include_xG = FALSE,
   draws = TRUE
@@ -2263,8 +2269,6 @@ build_past_predictions <- function(
   stopifnot(is.Date(endDate))
   startDate <- as.Date(startDate)
   endDate <- as.Date(endDate)
-  scores <- HockeyModel::scores
-  schedule <- HockeyModel::schedule
 
   for (day in seq.Date(startDate, endDate, by = 1)) {
     d <- as.Date(day, origin = "1970-01-01")

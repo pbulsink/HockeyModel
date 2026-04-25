@@ -1486,7 +1486,7 @@ format_playoff_odds <- function(
     ) |>
     gt::data_color(
       columns = 4:8,
-      color = scales::col_numeric(c("#fefffe", "#3ccc3c"), domain = c(0, 1))
+      fn = scales::col_numeric(c("#fefffe", "#3ccc3c"), domain = c(0, 1))
     ) |>
     gt::fmt_percent(columns = 4:8, drop_trailing_zeros = FALSE) |>
     gt::tab_options(heading.align = "left")
@@ -1656,7 +1656,7 @@ daily_odds_table <- function(
     ) |>
     gt::data_color(
       columns = c(5, 6),
-      color = scales::col_numeric(
+      fn = scales::col_numeric(
         palette = c("#cc3c3c", "#ffffff", "#3c3ccc"),
         domain = c(0, 1)
       )

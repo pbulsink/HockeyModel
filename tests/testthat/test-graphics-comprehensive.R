@@ -17,23 +17,124 @@ test_that("plot_team_rating has layers", {
 
 # ============ plot_pace_by_team tests ============
 test_that("plot_pace_by_team executes without error", {
-  expect_error(suppressWarnings(plot_pace_by_team()), NA)
+  tmpdir <- withr::local_tempdir()
+  sc <- data.frame(
+    Date = as.Date(c("2019-10-02", "2019-10-03")),
+    HomeTeam = c("Toronto Maple Leafs", "Edmonton Oilers"),
+    AwayTeam = c("Montreal Canadiens", "Vancouver Canucks"),
+    Result = c(1, 0),
+    GameType = c("R", "R"),
+    GameID = c(1, 2)
+  )
+  preds <- data.frame(
+    Team = unique(c(sc$HomeTeam, sc$AwayTeam)),
+    meanPoints = c(100, 95, 90, 85),
+    sdPoints = c(8, 8, 8, 8)
+  )
+  saveRDS(preds, file.path(tmpdir, "2019-10-01-predictions.RDS"))
+  saveRDS(preds, file.path(tmpdir, "2019-10-03-predictions.RDS"))
+
+  local_mocked_bindings(
+    getSeasonStartDate = function(season = NULL) as.Date("2019-10-01"),
+    getNumGames = function(season = NULL) 82,
+    .package = "HockeyModel"
+  )
+
+  expect_error(
+    suppressWarnings(plot_pace_by_team(
+      graphic_dir = tmpdir,
+      prediction_dir = tmpdir,
+      scores = sc
+    )),
+    NA
+  )
 })
 
 # ============ plot_pace_by_division tests ============
 test_that("plot_pace_by_division executes without error", {
-  expect_error(suppressWarnings(plot_pace_by_division()), NA)
+  tmpdir <- withr::local_tempdir()
+  sc <- data.frame(
+    Date = as.Date(c("2019-10-02", "2019-10-03")),
+    HomeTeam = c("Toronto Maple Leafs", "Edmonton Oilers"),
+    AwayTeam = c("Montreal Canadiens", "Vancouver Canucks"),
+    Result = c(1, 0),
+    GameType = c("R", "R"),
+    GameID = c(1, 2)
+  )
+  preds <- data.frame(
+    Team = unique(c(sc$HomeTeam, sc$AwayTeam)),
+    meanPoints = c(100, 95, 90, 85),
+    sdPoints = c(8, 8, 8, 8)
+  )
+  saveRDS(preds, file.path(tmpdir, "2019-10-01-predictions.RDS"))
+
+  local_mocked_bindings(
+    getSeasonStartDate = function(season = NULL) as.Date("2019-10-01"),
+    getNumGames = function(season = NULL) 82,
+    .package = "HockeyModel"
+  )
+
+  expect_error(
+    suppressWarnings(plot_pace_by_division(
+      graphic_dir = tmpdir,
+      prediction_dir = tmpdir,
+      scores = sc
+    )),
+    NA
+  )
 })
 
 # ============ todayOdds tests ============
 test_that("todayOdds returns data frame or NULL", {
-  result <- suppressWarnings(todayOdds())
-  expect_true(is.data.frame(result) || is.null(result))
+  local_mocked_bindings(
+    todayDC = function(...) {
+      data.frame(
+        Date = as.Date("2019-11-01"),
+        GameID = 2019020196,
+        HomeTeam = "New Jersey Devils",
+        AwayTeam = "Philadelphia Flyers",
+        HomeWin = 0.45,
+        AwayWin = 0.35,
+        Draw = 0.20
+      )
+    },
+    .package = "HockeyModel"
+  )
+  result <- suppressWarnings(todayOdds(today = as.Date("2019-11-01")))
+  expect_true(is.data.frame(result))
 })
 
 # ============ todayOddsPlot tests ============
 test_that("todayOddsPlot executes without error", {
-  p <- suppressWarnings(todayOddsPlot())
+  mock_schedule <- HockeyModel::schedule[
+    HockeyModel::schedule$GameID %in% 2019020196,
+  ]
+  mock_scores <- HockeyModel::scores[
+    HockeyModel::scores$Date <= as.Date("2019-11-01"),
+  ]
+  local_mocked_bindings(
+    games_today = function(schedule, date, all_games = FALSE) {
+      schedule[schedule$GameID %in% 2019020196, ]
+    },
+    todayDC = function(...) {
+      data.frame(
+        Date = as.Date("2019-11-01"),
+        GameID = 2019020196,
+        HomeTeam = "New Jersey Devils",
+        AwayTeam = "Philadelphia Flyers",
+        HomeWin = 0.45,
+        AwayWin = 0.35,
+        Draw = 0.20
+      )
+    },
+    getCurrentSeason8 = function() "20192020",
+    .package = "HockeyModel"
+  )
+  p <- suppressWarnings(todayOddsPlot(
+    date = as.Date("2019-11-01"),
+    schedule = mock_schedule,
+    scores = mock_scores
+  ))
   expect_true(
     ggplot2::is_ggplot(p) || is.list(p) || is.null(p)
   )
