@@ -110,7 +110,10 @@ test_that("todayOdds returns data frame or NULL", {
   sched <- HockeyModel::scores
   sched <- sched[sched$Date > as.Date("2019-10-01"), ]
   sched <- sched[sched$Date < as.Date("2019-12-31"), ]
-  result <- suppressWarnings(todayOdds(today = as.Date("2019-11-01"), schedule = sched))
+  result <- suppressWarnings(todayOdds(
+    today = as.Date("2019-11-01"),
+    schedule = sched
+  ))
   expect_true(is.data.frame(result))
 })
 

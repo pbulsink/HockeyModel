@@ -882,7 +882,11 @@ tweetPlayoffOdds <- function(
   graphic_dir = getOption("HockeyModel.graphics.path"),
   trimcup = FALSE
 ) {
-  stopifnot(requireNamespace("gt", quietly = TRUE))
+  if (!requireNamespace("gt", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg gt} is required. Install it with {.code install.packages('gt')}."
+    )
+  }
 
   params <- parse_dc_params(params)
   playoffodds <- simulatePlayoffs(

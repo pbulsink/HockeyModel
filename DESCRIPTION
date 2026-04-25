@@ -18,6 +18,7 @@ Imports:
     rlang,
     tidyr,
     dtplyr,
+    purrr,
     naturalstattrick,
     httr2,
     atrrr,

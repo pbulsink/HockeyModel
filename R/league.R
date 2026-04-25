@@ -2125,7 +2125,9 @@ recordTodaysPredictions <- function(
   draws = TRUE
 ) {
   params <- parse_dc_params(params)
-  stopifnot(is.Date(today))
+  if (!is.Date(today)) {
+    cli::cli_abort("{.arg today} must be a Date or date-like value.")
+  }
   today <- as.Date(today)
   today_sched <- schedule[schedule$Date == today, ]
   if (nrow(today_sched) == 0) {
@@ -2265,8 +2267,12 @@ build_past_predictions <- function(
   include_xG = FALSE,
   draws = TRUE
 ) {
-  stopifnot(is.Date(startDate))
-  stopifnot(is.Date(endDate))
+  if (!is.Date(startDate)) {
+    cli::cli_abort("{.arg startDate} must be a Date or date-like value.")
+  }
+  if (!is.Date(endDate)) {
+    cli::cli_abort("{.arg endDate} must be a Date or date-like value.")
+  }
   startDate <- as.Date(startDate)
   endDate <- as.Date(endDate)
 

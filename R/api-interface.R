@@ -7,8 +7,15 @@
 #'
 #' @return a data frame of all scheduled games for the season(s) requested, with Date, HomeTeam, AwayTeam, GameID, and GameType.
 #' @export
-getNHLSchedule <- function(season = getCurrentSeason8(), teamColours = HockeyModel::teamColours) {
-  stopifnot(seasonValidator(season))
+getNHLSchedule <- function(
+  season = getCurrentSeason8(),
+  teamColours = HockeyModel::teamColours
+) {
+  if (!seasonValidator(season)) {
+    cli::cli_abort(
+      "{.arg season} must be a valid NHL season ID (e.g. {.val 20202021})."
+    )
+  }
 
   # This is imilar to how Dan Morse did it in hockeyR
   sched <- NULL
@@ -93,7 +100,9 @@ games_today <- function(
   date = Sys.Date(),
   all_games = FALSE
 ) {
-  stopifnot(is.Date(date))
+  if (!is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
   url <- paste0(
     "https://api-web.nhle.com/v1/schedule/",
     as.Date(date, "%Y-%m-%d")
@@ -137,7 +146,9 @@ updateScheduleAPI <- function(save_data = FALSE) {
     currentSeason <- getCurrentSeason8()
   }
   schedule <- getNHLSchedule(currentSeason)
-  stopifnot(!is.null(schedule))
+  if (is.null(schedule)) {
+    cli::cli_abort("Failed to retrieve schedule from NHL API.")
+  }
 
   if (save_data && requireNamespace("usethis", quietly = TRUE)) {
     suppressMessages(usethis::use_data(schedule, overwrite = TRUE))
@@ -170,8 +181,10 @@ getNHLScores <- function(
   }
 
   gameIDs <- gameIDs[gameIDValidator(gameIDs)]
-  if(length(gameIDs) == 0) {
-    cli::cli_abort("Error in HockeyModel::getNHLScores. No valid {.param gameIDs} provided.")
+  if (length(gameIDs) == 0) {
+    cli::cli_abort(
+      "Error in HockeyModel::getNHLScores. No valid {.param gameIDs} provided."
+    )
   }
 
   if (progress) {
@@ -240,8 +253,6 @@ getNHLScores <- function(
   message("Now getting natural stat trick xG results")
 
   gameIDs <- gameIDs[!(gameIDs %in% dropped_gid)]
-
-
 
   scores_xg <- get_xg(gameIds = gameIDs)
   if (!is.null(scores)) {
@@ -699,7 +710,8 @@ getAPISeries <- function(season = getCurrentSeason8()) {
       "HomeWins" = "topSeedWins",
       "AwayWins" = "bottomSeedWins",
       "HomeSeed" = "topSeedRank",
-      "AwaySeed" = "bottomSeedRank") |>
+      "AwaySeed" = "bottomSeedRank"
+    ) |>
     dplyr::mutate(
       "requiredWins" = 4
     )
@@ -891,7 +903,9 @@ inRegularSeason <- function(date = Sys.Date(), boolean = TRUE) {
 #' @return TRUE if we're in off-season, else FALSE
 #' @export
 inOffSeason <- function(date = Sys.Date()) {
-  stopifnot(is.Date(date))
+  if (!is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
   date <- as.Date(date)
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>
@@ -917,7 +931,9 @@ inOffSeason <- function(date = Sys.Date()) {
 #' @return Either TRUE/FALSE or a seasonID/FALSE
 #' @export
 inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
-  stopifnot(is.Date(date))
+  if (!is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
   date <- as.Date(date)
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>
@@ -949,7 +965,9 @@ inPlayoffs <- function(date = Sys.Date(), boolean = TRUE) {
 #' @return a character season id (e.g. 20172018)
 #' @export
 getSeason <- function(gamedate = Sys.Date()) {
-  stopifnot(is.Date(gamedate))
+  if (!is.Date(gamedate)) {
+    cli::cli_abort("{.arg gamedate} must be a Date or date-like value.")
+  }
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>
     httr2::req_cache(tempdir()) |>
@@ -1084,7 +1102,11 @@ getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @keywords internal
 getNumGames <- function(season = getCurrentSeason8()) {
   if (!is.null(season)) {
-    stopifnot(seasonValidator(season))
+    if (!seasonValidator(season)) {
+      cli::cli_abort(
+        "{.arg season} must be a valid NHL season ID (e.g. {.val 20202021})."
+      )
+    }
   } else {
     stop("Season must be supplied")
   }

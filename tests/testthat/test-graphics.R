@@ -406,7 +406,10 @@ test_that("todayOddsPlot executes without error", {
   sched <- sched[sched$Date > as.Date("2019-10-01"), ]
   sched <- sched[sched$Date < as.Date("2019-12-31"), ]
   vcr::use_cassette("todayOdds", {
-    p <- suppressWarnings(todayOddsPlot(date = as.Date("2019-11-01"), schedule = sched))
+    p <- suppressWarnings(todayOddsPlot(
+      date = as.Date("2019-11-01"),
+      schedule = sched
+    ))
     expect_true(ggplot2::is_ggplot(p))
   })
 })

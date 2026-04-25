@@ -578,7 +578,11 @@ iterativeGamePredict <- function(
   home_adv = 0.075073,
   probs_style = "h"
 ) {
-  stopifnot(probs_style %in% c("h", "ha", "hda", "hdda"))
+  if (!probs_style %in% c("h", "ha", "hda", "hdda")) {
+    cli::cli_abort(
+      "{.arg probs_style} must be one of {.val {c('h', 'ha', 'hda', 'hdda')}}, got {.val {probs_style}}."
+    )
+  }
 
   r <- getTeamRankings(home, rankings)
   home_attack <- r$attack
@@ -684,7 +688,9 @@ getIterativePredictions <- function(
   date = Sys.Date(),
   schedule = HockeyModel::schedule
 ) {
-  stopifnot(is.Date(date))
+  if (!is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
   games <- schedule[schedule$Date == date, ]
   if (nrow(games) == 0) {
     return(NULL)
@@ -907,7 +913,11 @@ getNewIterativeRankings <- function(
   target_model = "wl",
   params = HockeyModel::iterativeParameters
 ) {
-  stopifnot(target_model %in% c("wl", "WL", "xG", "xg", "XG"))
+  if (!target_model %in% c("wl", "WL", "xG", "xg", "XG")) {
+    cli::cli_abort(
+      "{.arg target_model} must be one of {.val {c('wl', 'WL', 'xG', 'xg', 'XG')}}, got {.val {target_model}}."
+    )
+  }
 
   if (target_model %in% c("wl", "WL")) {
     params <- params$params_wl
