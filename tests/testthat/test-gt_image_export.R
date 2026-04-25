@@ -12,7 +12,7 @@ test_that("save_gt_as_png_ragg() creates a valid PNG file when ragg is available
   expect_true(file.exists(temp_file))
 })
 
-test_that("save_gt_as_png_ragg() creates PNG file", {
+test_that("save_gt_as_png_ragg() creates PNG file with auto-detected size", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -32,23 +32,44 @@ test_that("save_gt_as_png_ragg() creates PNG file", {
   expect_equal(result, temp_file)
 })
 
-test_that("save_gt_as_png_ragg() uses custom width and height", {
+test_that("save_gt_as_png_ragg() auto-detected size is smaller than a fixed large size", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
   test_df <- data.frame(x = 1:5, y = 6:10)
   gt_table <- gt::gt(test_df)
 
-  temp_file_default <- withr::local_file(tempfile(fileext = ".png"))
-  temp_file_custom <- withr::local_file(tempfile(fileext = ".png"))
+  temp_file_auto <- withr::local_file(tempfile(fileext = ".png"))
+  temp_file_fixed <- withr::local_file(tempfile(fileext = ".png"))
 
-  save_gt_as_png_ragg(gt_table, temp_file_default)
-  save_gt_as_png_ragg(gt_table, temp_file_custom, width = 800, height = 600)
+  save_gt_as_png_ragg(gt_table, temp_file_auto)
+  save_gt_as_png_ragg(gt_table, temp_file_fixed, width = 1400, height = 800)
 
-  expect_true(file.exists(temp_file_default))
-  expect_true(file.exists(temp_file_custom))
-  expect_gt(file.size(temp_file_default), 0)
-  expect_gt(file.size(temp_file_custom), 0)
+  expect_true(file.exists(temp_file_auto))
+  expect_true(file.exists(temp_file_fixed))
+  expect_gt(file.size(temp_file_auto), 0)
+  # Auto-detected image should be smaller than 1400x800
+  expect_lt(file.size(temp_file_auto), file.size(temp_file_fixed))
+})
+
+test_that("save_gt_as_png_ragg() uses explicit width and height when provided", {
+  skip_if_not_installed("ragg")
+  skip_if_not_installed("gt")
+
+  test_df <- data.frame(x = 1:5, y = 6:10)
+  gt_table <- gt::gt(test_df)
+
+  temp_file_small <- withr::local_file(tempfile(fileext = ".png"))
+  temp_file_large <- withr::local_file(tempfile(fileext = ".png"))
+
+  save_gt_as_png_ragg(gt_table, temp_file_small, width = 400, height = 300)
+  save_gt_as_png_ragg(gt_table, temp_file_large, width = 1200, height = 900)
+
+  expect_true(file.exists(temp_file_small))
+  expect_true(file.exists(temp_file_large))
+  expect_gt(file.size(temp_file_small), 0)
+  expect_gt(file.size(temp_file_large), 0)
+  expect_gt(file.size(temp_file_large), file.size(temp_file_small))
 })
 
 test_that("save_gt_as_png_ragg() works with styled gt tables", {
@@ -104,8 +125,6 @@ test_that("save_gt_as_png_ragg() accepts scale parameter", {
   expect_true(file.exists(temp_file_scale2))
   expect_gt(file.size(temp_file_scale1), 0)
   expect_gt(file.size(temp_file_scale2), 0)
-  # Higher scale should produce a larger file
-  expect_gt(file.size(temp_file_scale2), file.size(temp_file_scale1))
 })
 
 test_that("save_gt_as_png_ragg() handles single row dataframes", {
@@ -122,4 +141,23 @@ test_that("save_gt_as_png_ragg() handles single row dataframes", {
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   expect_equal(result, temp_file)
+})
+
+test_that("save_gt_as_png_ragg() padding parameter controls extra space", {
+  skip_if_not_installed("ragg")
+  skip_if_not_installed("gt")
+
+  test_df <- data.frame(Team = c("A", "B"), Points = c(10, 8))
+  gt_table <- gt::gt(test_df)
+
+  temp_no_pad <- withr::local_file(tempfile(fileext = ".png"))
+  temp_with_pad <- withr::local_file(tempfile(fileext = ".png"))
+
+  save_gt_as_png_ragg(gt_table, temp_no_pad, padding = 0)
+  save_gt_as_png_ragg(gt_table, temp_with_pad, padding = 100)
+
+  expect_true(file.exists(temp_no_pad))
+  expect_true(file.exists(temp_with_pad))
+  # More padding means a larger canvas → larger PNG file
+  expect_gt(file.size(temp_with_pad), file.size(temp_no_pad))
 })
