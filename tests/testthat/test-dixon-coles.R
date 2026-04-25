@@ -128,7 +128,7 @@ test_that("dcResult handles various score combinations", {
   expect_equal(dcResult(2, 5), 0)
 })
 
-test_that("remainderSeasonDC returns odds table directly (#noissue)", {
+test_that("remainderSeasonDC returns odds table directly", {
   sched <- HockeyModel::schedule[
     HockeyModel::schedule$Date >= as.Date("2025-10-07") &
       HockeyModel::schedule$Date <= as.Date("2025-10-10"),
@@ -176,7 +176,7 @@ test_that("remainderSeasonDC returns odds table directly (#noissue)", {
   expect_true(nrow(result) > 0)
 })
 
-test_that("loopless_sim returns summary and raw results (#noissue)", {
+test_that("loopless_sim returns summary and raw results", {
   sched <- HockeyModel::schedule[
     HockeyModel::schedule$Date >= as.Date("2025-10-07") &
       HockeyModel::schedule$Date <= as.Date("2025-10-10"),
