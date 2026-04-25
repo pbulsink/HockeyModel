@@ -7,7 +7,10 @@
 #'
 #' @return a data frame of all scheduled games for the season(s) requested, with Date, HomeTeam, AwayTeam, GameID, and GameType.
 #' @export
-getNHLSchedule <- function(season = getCurrentSeason8(), teamColours = HockeyModel::teamColours) {
+getNHLSchedule <- function(
+  season = getCurrentSeason8(),
+  teamColours = HockeyModel::teamColours
+) {
   stopifnot(seasonValidator(season))
 
   # This is imilar to how Dan Morse did it in hockeyR
@@ -170,8 +173,10 @@ getNHLScores <- function(
   }
 
   gameIDs <- gameIDs[gameIDValidator(gameIDs)]
-  if(length(gameIDs) == 0) {
-    cli::cli_abort("Error in HockeyModel::getNHLScores. No valid {.param gameIDs} provided.")
+  if (length(gameIDs) == 0) {
+    cli::cli_abort(
+      "Error in HockeyModel::getNHLScores. No valid {.param gameIDs} provided."
+    )
   }
 
   if (progress) {
@@ -240,8 +245,6 @@ getNHLScores <- function(
   message("Now getting natural stat trick xG results")
 
   gameIDs <- gameIDs[!(gameIDs %in% dropped_gid)]
-
-
 
   scores_xg <- get_xg(gameIds = gameIDs)
   if (!is.null(scores)) {
@@ -699,7 +702,8 @@ getAPISeries <- function(season = getCurrentSeason8()) {
       "HomeWins" = "topSeedWins",
       "AwayWins" = "bottomSeedWins",
       "HomeSeed" = "topSeedRank",
-      "AwaySeed" = "bottomSeedRank") |>
+      "AwaySeed" = "bottomSeedRank"
+    ) |>
     dplyr::mutate(
       "requiredWins" = 4
     )

@@ -813,13 +813,24 @@ tweetMetrics <- function() {
 #'
 #' @param graphic_dir directory to save the image
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param delay Delay in seconds between posts. Default is a random value between 1 and 3 minutes.
 #'
 #' @return NULL
 #' @export
 tweetSeries <- function(
   params = NULL,
-  graphic_dir = getOption("HockeyModel.graphics.path")
+  graphic_dir = getOption("HockeyModel.graphics.path"),
+  delay = stats::runif(1, min = 1, max = 3) * 60
 ) {
+  if (!requireNamespace("gt", quietly = TRUE)) {
+    cli::cli_abort(
+      c(
+        "Package {.pkg gt} is required to save the series odds table image.",
+        "i" = "Install it with {.code install.packages('gt')}."
+      )
+    )
+  }
+
   params <- parse_dc_params(params)
   while (grDevices::dev.cur() != 1) {
     grDevices::dev.off()
@@ -860,6 +871,23 @@ tweetSeries <- function(
       text = status,
       image = file.path(graphic_dir, "series_odds.png"),
       image_alt = "A graphic showing odds for each series' winner"
+    )
+  )
+
+  message("Delaying ", delay, " seconds to space tweets...")
+  Sys.sleep(delay)
+
+  tbl <- series_odds_table(series = series, params = params)
+  gt::gtsave(tbl, filename = file.path(graphic_dir, "series_odds_table.png"))
+
+  try(
+    atrrr::post(
+      text = paste0(
+        "#NHL #StanleyCup Playoff Series Odds table before games on ",
+        Sys.Date()
+      ),
+      image = file.path(graphic_dir, "series_odds_table.png"),
+      image_alt = "A table showing odds for each series' winner"
     )
   )
 }

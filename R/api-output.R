@@ -51,10 +51,11 @@ function() {
   NULL
 }
 
+#* Get a graphical table of playoff series odds
 #* @serializer png
 #* @get /series-odds
 function() {
-  NULL
+  series_odds_table()
 }
 
 
