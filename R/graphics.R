@@ -1817,10 +1817,195 @@ daily_odds_table <- function(
 }
 
 
-#' Placeholder for playoff series odds table output
+#' Series Odds Table
 #'
-#' @returns `NULL`. This helper is not implemented yet.
-#' @keywords internal
-series_odds_table <- function() {
-  NULL # TODO: DO IT
+#' @description Returns a gt table of odds for each active playoff series.
+#'
+#' @param series A data frame with columns HomeTeam, AwayTeam, HomeWins, and
+#'   AwayWins describing the current playoff series. Defaults to
+#'   [getAPISeries()].
+#' @param params The named list containing m, rho, beta, eta, and k. See
+#'   [updateDC] for information on the params list.
+#' @param include_logo Whether to include the Daily Faceoff logo as a source
+#'   note. Default `FALSE`.
+#'
+#' @return a gt table
+#' @export
+series_odds_table <- function(
+  series = getAPISeries(),
+  params = NULL,
+  include_logo = FALSE
+) {
+  if (!requireNamespace("gt", quietly = TRUE)) {
+    cli::cli_abort(
+      c(
+        "Package {.pkg gt} is required by {.fn series_odds_table}.",
+        "i" = "Install it with {.code install.packages('gt')}."
+      )
+    )
+  }
+  if (!requireNamespace("scales", quietly = TRUE)) {
+    cli::cli_abort(
+      c(
+        "Package {.pkg scales} is required by {.fn series_odds_table}.",
+        "i" = "Install it with {.code install.packages('scales')}."
+      )
+    )
+  }
+
+  if (!is.data.frame(series)) {
+    cli::cli_abort("{.arg series} must be a data frame.")
+  }
+
+  required_cols <- c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")
+  missing_cols <- setdiff(required_cols, names(series))
+  if (length(missing_cols) > 0) {
+    cli::cli_abort(c(
+      "{.arg series} must contain the required columns used by {.fn series_odds_table}.",
+      "x" = "Missing columns: {.val {missing_cols}}"
+    ))
+  }
+
+  invalid_cols <- character(0)
+  if (!is.character(series$HomeTeam)) {
+    invalid_cols <- c(invalid_cols, "HomeTeam (expected character)")
+  }
+  if (!is.character(series$AwayTeam)) {
+    invalid_cols <- c(invalid_cols, "AwayTeam (expected character)")
+  }
+  if (!is.numeric(series$HomeWins)) {
+    invalid_cols <- c(invalid_cols, "HomeWins (expected numeric/integer)")
+  }
+  if (!is.numeric(series$AwayWins)) {
+    invalid_cols <- c(invalid_cols, "AwayWins (expected numeric/integer)")
+  }
+  if (length(invalid_cols) > 0) {
+    cli::cli_abort(c(
+      "{.arg series} has required columns with invalid types.",
+      "x" = "Invalid columns: {.val {invalid_cols}}"
+    ))
+  }
+
+  if ("Status" %in% names(series)) {
+    series <- series[series$Status == "Ongoing", , drop = FALSE]
+  }
+
+  params <- parse_dc_params(params)
+
+  series <- series[, required_cols]
+  series$HomeOdds <- mapply(
+    function(home, away, hw, aw) {
+      playoffWin(home, away, hw, aw, params = params)
+    },
+    series$HomeTeam,
+    series$AwayTeam,
+    series$HomeWins,
+    series$AwayWins
+  )
+  series$AwayOdds <- 1 - series$HomeOdds
+
+  teamColours <- HockeyModel::teamColours
+
+  # Resolve a team name to its local logo path (falls back to nhl.gif)
+  team_logo_path <- function(team_name) {
+    candidate <- file.path(
+      getOption("HockeyModel.data.path"),
+      "logos",
+      paste0(tolower(gsub(" ", "_", team_name)), ".gif")
+    )
+    ifelse(
+      file.exists(candidate),
+      candidate,
+      file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
+    )
+  }
+
+  series_gt <- series |>
+    tibble::add_column("homeimage" = "", .before = 1) |>
+    tibble::add_column("homeblock" = "  ", .before = 1) |>
+    tibble::add_column("awayimage" = "") |>
+    tibble::add_column("awayblock" = "  ") |>
+    dplyr::mutate(
+      "homeimage" = .data$HomeTeam,
+      "awayimage" = .data$AwayTeam
+    ) |>
+    gt::gt() |>
+    gt::tab_header(
+      title = "Playoff Series Odds",
+      subtitle = paste0(
+        "Generated ",
+        Sys.Date(),
+        " | P. Bulsink (@bot.bulsink.ca)"
+      )
+    ) |>
+    gt::tab_spanner(
+      label = "Home",
+      columns = c("HomeTeam", "HomeWins", "HomeOdds")
+    ) |>
+    gt::tab_spanner(
+      label = "Away",
+      columns = c("AwayOdds", "AwayWins", "AwayTeam")
+    ) |>
+    gt::cols_label(
+      "homeblock" = " ",
+      "homeimage" = " ",
+      "HomeTeam" = "Team",
+      "HomeWins" = "Wins",
+      "HomeOdds" = "Series Odds",
+      "AwayOdds" = "Series Odds",
+      "AwayWins" = "Wins",
+      "AwayTeam" = "Team",
+      "awayimage" = " ",
+      "awayblock" = " "
+    ) |>
+    gt::data_color(
+      columns = c("HomeOdds", "AwayOdds"),
+      fn = scales::col_numeric(
+        palette = c("#cc3c3c", "#ffffff", "#3c3ccc"),
+        domain = c(0, 1)
+      )
+    ) |>
+    gt::fmt_percent(columns = c("HomeOdds", "AwayOdds"), decimals = 1) |>
+    gt::tab_options(
+      heading.align = "left",
+      table.border.bottom.color = "white",
+      table.border.top.color = "white"
+    )
+
+  for (i in seq_len(nrow(series))) {
+    series_gt <- series_gt |>
+      gt::tab_style(
+        style = gt::cell_fill(
+          color = teamColours[teamColours$Team == series$HomeTeam[i], "Hex"]
+        ),
+        locations = gt::cells_body(columns = "homeblock", rows = i)
+      ) |>
+      gt::tab_style(
+        style = gt::cell_fill(
+          color = teamColours[teamColours$Team == series$AwayTeam[i], "Hex"]
+        ),
+        locations = gt::cells_body(columns = "awayblock", rows = i)
+      ) |>
+      gt::text_transform(
+        locations = gt::cells_body(columns = "homeimage", rows = i),
+        fn = function(x) {
+          gt::local_image(filename = team_logo_path(x), height = "30px")
+        }
+      ) |>
+      gt::text_transform(
+        locations = gt::cells_body(columns = "awayimage", rows = i),
+        fn = function(x) {
+          gt::local_image(filename = team_logo_path(x), height = "30px")
+        }
+      )
+  }
+
+  if (include_logo) {
+    series_gt <- series_gt |>
+      gt::tab_source_note(gt::md(
+        "<img src='https://www.dailyfaceoff.com/wp-content/uploads/2021/06/DFO-Logo-Mobile-Large.png' style='height:35px;'>"
+      ))
+  }
+
+  return(series_gt)
 }

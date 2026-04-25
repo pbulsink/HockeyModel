@@ -6,13 +6,16 @@
 \usage{
 tweetSeries(
   params = NULL,
-  graphic_dir = getOption("HockeyModel.graphics.path")
+  graphic_dir = getOption("HockeyModel.graphics.path"),
+  delay = stats::runif(1, min = 1, max = 3) * 60
 )
 }
 \arguments{
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{graphic_dir}{directory to save the image}
+
+\item{delay}{Delay in seconds between posts. Default is a random value between 1 and 3 minutes.}
 }
 \description{
 Tweet the series odds graphics

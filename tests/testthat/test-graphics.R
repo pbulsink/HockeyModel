@@ -138,6 +138,31 @@ test_that("Series Graphics are OK", {
   expect_identical(p$labels$x, "")
 })
 
+test_that("Series Odds Table is ok", {
+  series <- data.frame(
+    HomeTeam = c(
+      "Tampa Bay Lightning",
+      "Boston Bruins",
+      "Washington Capitals"
+    ),
+    AwayTeam = c(
+      "Columbus Blue Jackets",
+      "Toronto Maple Leafs",
+      "Carolina Hurricanes"
+    ),
+    HomeWins = c(0, 3, 3),
+    AwayWins = c(4, 3, 2)
+  )
+  t <- suppressWarnings(series_odds_table(series = series))
+  expect_true("gt_tbl" %in% class(t))
+  expect_equal(t$`_heading`$title, "Playoff Series Odds")
+  expect_equal(t$`_data`$HomeTeam[1], "Tampa Bay Lightning")
+  expect_equal(t$`_data`$AwayTeam[1], "Columbus Blue Jackets")
+  expect_true(is.numeric(t$`_data`$HomeOdds))
+  expect_true(is.numeric(t$`_data`$AwayOdds))
+  expect_equal(t$`_data`$HomeOdds[1] + t$`_data`$AwayOdds[1], 1)
+})
+
 test_that("Playoff Table is ok", {
   po <- structure(
     list(
