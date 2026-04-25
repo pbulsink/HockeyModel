@@ -18,8 +18,7 @@ getNHLSchedule <- function(
   }
 
   # This is imilar to how Dan Morse did it in hockeyR
-  sched <- NULL
-  for (i in unique(teamColours$ShortCode)) {
+  sched <- purrr::map(unique(teamColours$ShortCode), function(i) {
     url <- paste0(
       "https://api-web.nhle.com/v1/club-schedule-season/",
       i,
@@ -44,7 +43,7 @@ getNHLSchedule <- function(
       sg <- site$games |>
         dplyr::filter(.data$gameType > 1)
 
-      games <- data.frame(
+      data.frame(
         Date = sg$gameDate,
         HomeTeam = getLongTeam(sg$homeTeam$abbrev),
         AwayTeam = getLongTeam(sg$awayTeam$abbrev),
@@ -57,12 +56,11 @@ getNHLSchedule <- function(
         GameStatus = sg$gameState
       ) |>
         dplyr::filter(.data$GameType %in% c("R", "P"))
-
-      sched <- dplyr::bind_rows(sched, games)
     } else {
-      next()
+      NULL
     }
-  }
+  }) |>
+    dplyr::bind_rows()
 
   sched <- sched |>
     unique() |>
@@ -732,10 +730,9 @@ getAPISeries <- function(season = getCurrentSeason8()) {
   playoffSeries <- playoffSeries |>
     dplyr::mutate(
       "Round" = as.integer(.data$Round),
-      "Series" = sapply(
+      "Series" = purrr::map_int(
         .data$Series,
-        function(x) which(LETTERS == x, useNames = FALSE),
-        USE.NAMES = FALSE
+        function(x) which(LETTERS == x, useNames = FALSE)
       ),
       "HomeWins" = as.integer(.data$HomeWins),
       "AwayWins" = as.integer(.data$AwayWins),

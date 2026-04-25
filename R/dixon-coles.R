@@ -513,14 +513,18 @@ getWeibullParams <- function(
     eta <- par[2]
     k <- par[3]
     # This gets multiplied by two because each tie game has 2 teams getting x goals, whereas non-tie games where either team get x goals get pulled in.
-    goalratios <- sapply(1:max(scores$Goals, na.rm = TRUE), FUN = function(x) {
-      (nrow(scores[scores$Goals == x & !is.na(scores$Goals), ]) /
-        nrow(scores[!is.na(scores$Goals), ])) /
-        (nrow(scores[
-          (scores$HomeGoals == x | scores$AwayGoals == x) & is.na(scores$Goals),
-        ]) /
-          nrow(scores[is.na(scores$Goals), ]))
-    }) *
+    goalratios <- purrr::map_dbl(
+      1:max(scores$Goals, na.rm = TRUE),
+      function(x) {
+        (nrow(scores[scores$Goals == x & !is.na(scores$Goals), ]) /
+          nrow(scores[!is.na(scores$Goals), ])) /
+          (nrow(scores[
+            (scores$HomeGoals == x | scores$AwayGoals == x) &
+              is.na(scores$Goals),
+          ]) /
+            nrow(scores[is.na(scores$Goals), ]))
+      }
+    ) *
       2
     weibulldist <- stats::dweibull(
       1:max(scores$Goals, na.rm = TRUE),

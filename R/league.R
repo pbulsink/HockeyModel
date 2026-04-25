@@ -387,7 +387,7 @@ compile_predictions <- function(
   filelist <- list.files(path = dir)
   pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
   pdates <- pdates[pdates != "graphics"]
-  all_predictions <- lapply(pdates, function(f) {
+  all_predictions <- purrr::map(pdates, function(f) {
     readRDS(file.path(dir, (paste0(f, "-predictions.RDS"))))
   }) # Read all the files
   names(all_predictions) <- pdates
@@ -2096,9 +2096,12 @@ getAllHomeAwayOdds <- function(teamlist, params = NULL) {
     stringsAsFactors = FALSE
   )
   homeAwayOdds <- homeAwayOdds[homeAwayOdds$HomeTeam != homeAwayOdds$AwayTeam, ]
-  homeAwayOdds$HomeOdds <- apply(homeAwayOdds, 1, function(x) {
-    playoffWin(x[1], x[2], params = params)
-  })
+  homeAwayOdds$HomeOdds <- purrr::pmap_dbl(
+    homeAwayOdds,
+    function(HomeTeam, AwayTeam, ...) {
+      playoffWin(HomeTeam, AwayTeam, params = params)
+    }
+  )
   return(homeAwayOdds)
 }
 

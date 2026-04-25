@@ -886,9 +886,12 @@ plot_playoff_series_odds <- function(
   }
   params <- parse_dc_params(params)
   series <- series[, c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
-  series$HomeOdds <- apply(series, MARGIN = 1, FUN = function(x) {
-    playoffWin(x[1], x[2], x[3], x[4], params = params)
-  })
+  series$HomeOdds <- purrr::pmap_dbl(
+    series,
+    function(HomeTeam, AwayTeam, HomeWins, AwayWins, ...) {
+      playoffWin(HomeTeam, AwayTeam, HomeWins, AwayWins, params = params)
+    }
+  )
   series$AwayOdds <- 1 - series$HomeOdds
   series2 <- series
   # For now, drop won games:
