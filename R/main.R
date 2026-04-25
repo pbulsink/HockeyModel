@@ -277,7 +277,7 @@ dailySummary <- function(
       params = params,
       schedule = modelparams$schedule
     )
-    gt::gtsave(
+    save_gt_as_png_ragg(
       today_table,
       filename = file.path(graphic_dir, "today_odds_table.png")
     )
@@ -878,7 +878,10 @@ tweetSeries <- function(
   Sys.sleep(delay)
 
   tbl <- series_odds_table(series = series, params = params)
-  gt::gtsave(tbl, filename = file.path(graphic_dir, "series_odds_table.png"))
+  save_gt_as_png_ragg(
+    tbl,
+    filename = file.path(graphic_dir, "series_odds_table.png")
+  )
 
   try(
     atrrr::post(
@@ -926,7 +929,10 @@ tweetPlayoffOdds <- function(
       trim = FALSE,
       trimcup = trimcup
     )
-    gt::gtsave(plt, filename = file.path(graphic_dir, "playoff_odds.png"))
+    save_gt_as_png_ragg(
+      plt,
+      filename = file.path(graphic_dir, "playoff_odds.png")
+    )
 
     status <- paste0(
       "#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ",
@@ -962,7 +968,7 @@ tweetPlayoffOdds <- function(
         trim = FALSE,
         trimcup = trimcup
       )
-      gt::gtsave(
+      save_gt_as_png_ragg(
         plt,
         filename = file.path(
           graphic_dir,
