@@ -1,3 +1,10 @@
+#' Evaluate a Dixon-Coles weighting configuration
+#'
+#' @param xi (`double(1)`) Time-decay slope for historical weighting.
+#' @param upsilon (`double(1)`) Midpoint for the logistic weighting curve.
+#' @returns (`data.frame`) Evaluation schedule with model probabilities for the
+#'   tested period.
+#' @keywords internal
 tune_dc_weight <- function(xi = 0.003, upsilon = 150) {
   message("Determining performance with xi = ", xi, " and upsilon = ", upsilon)
   scores <- HockeyModel::scores

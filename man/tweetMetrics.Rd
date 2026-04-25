@@ -6,6 +6,9 @@
 \usage{
 tweetMetrics()
 }
+\value{
+\code{NULL} (invisibly).
+}
 \description{
 Tweet the metrics (Log Loss and Accuracy)
 }

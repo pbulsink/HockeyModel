@@ -7,8 +7,8 @@
 presidentOdds()
 }
 \value{
-president's odds ggplot object
+A President's Trophy odds \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
 }
 \description{
-Predict President's Odds graphic
+Convenience wrapper around \code{\link[=plot_prediction_presidents_by_team]{plot_prediction_presidents_by_team()}}.
 }

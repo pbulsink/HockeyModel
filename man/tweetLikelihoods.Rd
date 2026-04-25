@@ -20,6 +20,9 @@ tweetLikelihoods(
 
 \item{scores}{updated scores}
 }
+\value{
+\code{NULL} (invisibly).
+}
 \description{
 Tweet Likelihood plots (ggridges)
 }

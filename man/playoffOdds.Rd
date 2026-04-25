@@ -7,8 +7,8 @@
 playoffOdds()
 }
 \value{
-playoff odds ggplot object
+A playoff-odds \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
 }
 \description{
-Predict playoff odds graphic
+Convenience wrapper around \code{\link[=plot_prediction_playoffs_by_team]{plot_prediction_playoffs_by_team()}}.
 }

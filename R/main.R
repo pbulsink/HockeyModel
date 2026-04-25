@@ -90,7 +90,9 @@ todayOddsPlot <- function(
 
 #' Predict playoff odds graphic
 #'
-#' @return playoff odds ggplot object
+#' Convenience wrapper around [plot_prediction_playoffs_by_team()].
+#'
+#' @returns A playoff-odds [ggplot2::ggplot()] object.
 #' @export
 playoffOdds <- function() {
   return(plot_prediction_playoffs_by_team())
@@ -98,7 +100,9 @@ playoffOdds <- function() {
 
 #' Predict President's Odds graphic
 #'
-#' @return president's odds ggplot object
+#' Convenience wrapper around [plot_prediction_presidents_by_team()].
+#'
+#' @returns A President's Trophy odds [ggplot2::ggplot()] object.
 #' @export
 presidentOdds <- function() {
   return(plot_prediction_presidents_by_team())
@@ -106,7 +110,9 @@ presidentOdds <- function() {
 
 #' Predict Points graphic
 #'
-#' @return point prediction ggplot object
+#' Convenience wrapper around [plot_prediction_points_by_team()].
+#'
+#' @returns A point-projection [ggplot2::ggplot()] object.
 #' @export
 pointPredict <- function() {
   return(plot_prediction_points_by_team())
@@ -122,6 +128,14 @@ ratings <- function(m = HockeyModel::m) {
   return(plot_team_rating(m = m))
 }
 
+#' Post daily model graphics to social media
+#'
+#' @param games (`data.frame`) Games to reference for game-specific posts.
+#' @param graphic_dir (`character(1)`) Directory containing generated images.
+#' @param delay (`double(1)`) Delay in seconds between posts.
+#' @param schedule (`data.frame`) Schedule used to determine daily context.
+#' @returns `NULL` (invisibly).
+#' @keywords internal
 tweet <- function(
   games,
   graphic_dir = "./prediction_results/graphics",
@@ -200,6 +214,8 @@ tweet <- function(
       )
     )
   }
+
+  return(invisible(NULL))
 }
 
 #' Daily functions, rolled into one call
@@ -623,7 +639,8 @@ tweetPace <- function(
 #' @param graphic_dir graphics directory
 #' @param subdir subdirectory - usually 'preds'
 #' @param scores updated scores
-#
+#'
+#' @returns `NULL` (invisibly).
 #' @export
 tweetLikelihoods <- function(
   delay = stats::runif(1, min = 3, max = 6) * 60,
@@ -680,6 +697,8 @@ tweetLikelihoods <- function(
       Sys.sleep(delay / 2)
     }
   }
+
+  return(invisible(NULL))
 }
 
 #' Tweet Game Plots
@@ -769,7 +788,7 @@ tweetGames <- function(
 #' Tweet Metrics
 #' @description Tweet the metrics (Log Loss and Accuracy)
 #'
-#' @return NULL
+#' @returns `NULL` (invisibly).
 #' @export
 tweetMetrics <- function() {
   metrics <- getSeasonMetricsDC()

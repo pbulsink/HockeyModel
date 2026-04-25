@@ -2,13 +2,14 @@
 % Please edit documentation in R/api-interface.R
 \name{getCurrentSeason8}
 \alias{getCurrentSeason8}
-\title{Get Current Season}
+\title{Get the latest NHL season ID}
 \usage{
 getCurrentSeason8()
 }
 \value{
-current season (as 20172018 format) based on today's date.
+(\code{character(1)}) Season ID in eight-digit format such as
+\code{"20172018"}.
 }
 \description{
-Get Current Season
+Get the latest NHL season ID
 }

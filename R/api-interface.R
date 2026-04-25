@@ -275,6 +275,11 @@ getNHLScores <- function(
 }
 
 
+#' Load or download a Natural Stat Trick game report
+#'
+#' @param gid (`character(1)` or `numeric(1)`) NHL game ID in ten-digit format.
+#' @returns (`data.frame`) Natural Stat Trick report rows for `gid`.
+#' @keywords internal
 load_or_get_nst <- function(gid) {
   season <- as.numeric(substr(gid, 1, 4))
   game_id <- as.numeric(substr(gid, 5, 10))
@@ -413,23 +418,39 @@ updateScoresAPI <- function(
   return(unique(scores))
 }
 
+#' Update scores for specific game IDs
+#'
+#' @param gameids (`character` or `numeric`) One or more NHL game IDs.
+#' @param save_data (`logical(1)`) Whether to write updated scores into package
+#'   data when `usethis` is available.
+#' @returns (`data.frame`) Invisibly, the updated scores table.
+#' @keywords internal
 updateScoresAPI_byGameID <- function(gameids, save_data = FALSE) {
   updatedSc <- getNHLScores(
     gameids,
     schedule = dplyr::bind_rows(HockeyModel::scores, HockeyModel::schedule)
   )
   if (!is.null(updatedSc)) {
-    scores <- scores |>
+    scores <- HockeyModel::scores |>
       dplyr::filter(!(.data$GameID %in% gameids)) |>
       dplyr::bind_rows(updatedSc) |>
       dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
     if (save_data && requireNamespace("usethis", quietly = TRUE)) {
       suppressMessages(usethis::use_data(scores, overwrite = TRUE))
     }
+  } else {
+    scores <- HockeyModel::scores
   }
   invisible(scores)
 }
 
+#' Normalize team name fields
+#'
+#' @param sc (`vector` or `data.frame`) Values containing team names, or a data
+#'   frame with team-name columns.
+#' @returns (`vector` or `data.frame`) `sc` with normalized historical and
+#'   accented team names.
+#' @keywords internal
 clean_names <- function(sc) {
   if (is.vector(sc)) {
     sc <- stringi::stri_trans_general(str = sc, "latin-ascii")
@@ -713,6 +734,14 @@ getAPISeries <- function(season = getCurrentSeason8()) {
 }
 
 
+#' Parse series status text into home and away win counts
+#'
+#' @param playoffSeries (`data.frame`) Single-row playoff series data with home
+#'   and away teams.
+#' @param seriesStatusShort (`character(1)`) NHL API status string containing
+#'   win counts.
+#' @returns (`numeric`) Length-two vector of home wins and away wins.
+#' @keywords internal
 validateWins <- function(playoffSeries, seriesStatusShort) {
   hometeam <- playoffSeries$HomeTeam
   awayteam <- playoffSeries$AwayTeam
@@ -770,9 +799,10 @@ getSeasonStartDate <- function(season = NULL) {
 }
 
 
-#' Get Current Season
+#' Get the latest NHL season ID
 #'
-#' @return current season (as 20172018 format) based on today's date.
+#' @returns (`character(1)`) Season ID in eight-digit format such as
+#'   `"20172018"`.
 #' @export
 getCurrentSeason8 <- function() {
   url <- "https://api.nhle.com/stats/rest/en/season"
@@ -947,14 +977,32 @@ getSeason <- function(gamedate = Sys.Date()) {
 }
 
 
+#' Get conference names from the team lookup table
+#'
+#' @param teamColours (`data.frame`) Team metadata table with a `Conference`
+#'   column.
+#' @returns (`character`) Unique conference names.
+#' @keywords internal
 getConferences <- function(teamColours = HockeyModel::teamColours) {
   return(unique(teamColours$Conference))
 }
 
+#' Get division names from the team lookup table
+#'
+#' @param teamColours (`data.frame`) Team metadata table with a `Division`
+#'   column.
+#' @returns (`character`) Unique division names.
+#' @keywords internal
 getDivisions <- function(teamColours = HockeyModel::teamColours) {
   return(unique(teamColours$Division))
 }
 
+#' Get conferences for one or more teams
+#'
+#' @param teams (`character`) Team names.
+#' @param teamColours (`data.frame`) Team metadata table.
+#' @returns (`character`) Conference name for each input team.
+#' @keywords internal
 getTeamConferences <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamconf <- function(t, teamColours = HockeyModel::teamColours) {
     return(teamColours[teamColours$Team == t, ]$Conference)
@@ -969,6 +1017,12 @@ getTeamConferences <- function(teams, teamColours = HockeyModel::teamColours) {
   }
 }
 
+#' Get divisions for one or more teams
+#'
+#' @param teams (`character`) Team names.
+#' @param teamColours (`data.frame`) Team metadata table.
+#' @returns (`character`) Division name for each input team.
+#' @keywords internal
 getTeamDivisions <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamdiv <- function(t, teamColours = HockeyModel::teamColours) {
     return(teamColours[teamColours$Team == t, ]$Division)
@@ -983,6 +1037,12 @@ getTeamDivisions <- function(teams, teamColours = HockeyModel::teamColours) {
   }
 }
 
+#' Convert long team names to short codes
+#'
+#' @param teams (`character`) Long-form team names.
+#' @param teamColours (`data.frame`) Team metadata table.
+#' @returns (`character`) Team short code for each input team.
+#' @keywords internal
 getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamshort <- function(t) {
     return(teamColours[teamColours$Team == t, ]$ShortCode)
@@ -997,20 +1057,31 @@ getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
   }
 }
 
+#' Convert short team codes to long names
+#'
+#' @param teams (`character`) Team short codes.
+#' @param teamColours (`data.frame`) Team metadata table.
+#' @returns (`character`) Long-form team name for each input code.
+#' @keywords internal
 getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamlong <- function(t) {
     return(teamColours[teamColours$ShortCode == t, ]$Team)
   }
 
-  v_getteamshort <- Vectorize(getteamlong, "t")
+  v_getteamlong <- Vectorize(getteamlong, "t")
   teams <- clean_names(teams)
   if (length(teams) == 1) {
     return(getteamlong(t = teams))
   } else {
-    return(unname(v_getteamshort(t = teams)))
+    return(unname(v_getteamlong(t = teams)))
   }
 }
 
+#' Get the regular-season game count for a season
+#'
+#' @param season (`character(1)`) Season ID in eight-digit format.
+#' @returns (`numeric(1)`) Number of regular-season games per team.
+#' @keywords internal
 getNumGames <- function(season = getCurrentSeason8()) {
   if (!is.null(season)) {
     stopifnot(seasonValidator(season))
@@ -1030,6 +1101,11 @@ getNumGames <- function(season = getCurrentSeason8()) {
   return(seasons[seasons$id == season, ]$numberOfGames)
 }
 
+#' Fetch an NHL boxscore payload
+#'
+#' @param gid (`character(1)` or `numeric(1)`) NHL game ID.
+#' @returns (`list`) Parsed boxscore response from the NHL API.
+#' @keywords internal
 nhl_boxscore <- function(gid) {
   url <- paste0("https://api-web.nhle.com/v1/gamecenter/", gid, "/boxscore")
   req <- httr2::request(url) |>
