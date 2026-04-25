@@ -1,24 +1,54 @@
+#' Evaluate a Dixon-Coles weighting configuration
+#'
+#' @param xi (`double(1)`) Time-decay slope for historical weighting.
+#' @param upsilon (`double(1)`) Midpoint for the logistic weighting curve.
+#' @returns (`data.frame`) Evaluation schedule with model probabilities for the
+#'   tested period.
+#' @keywords internal
 tune_dc_weight <- function(xi = 0.003, upsilon = 150) {
   message("Determining performance with xi = ", xi, " and upsilon = ", upsilon)
   scores <- HockeyModel::scores
   scores <- unique(scores[scores$Date > as.Date("2010-08-01"), ])
   truth <- scores[scores$Date > as.Date("2022-10-01"), ]
-  schedule <- truth[, c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")]
+  schedule <- truth[, c(
+    "Date",
+    "HomeTeam",
+    "AwayTeam",
+    "GameID",
+    "GameType",
+    "GameStatus"
+  )]
   schedule$GameStatus <- "Scheduled"
   # schedule$HomeWin <- schedule$AwayWin <- NA
 
   get_game_odds <- function(d, schedule, scores, xi, upsilon) {
-    current_m <- getM(scores = scores[scores$Date < d, ], currentDate = d, xi = xi, upsilon = upsilon)
+    current_m <- getM(
+      scores = scores[scores$Date < d, ],
+      currentDate = d,
+      xi = xi,
+      upsilon = upsilon
+    )
     current_rho <- HockeyModel::rho # getRho(m = current_m, scores = scores[scores$Date< d, ])
     # params <- getWeibullParams(m = current_m, rho = current_rho, scores = scores[scores$Date < d,])
     beta <- HockeyModel::beta # params$beta
     eta <- HockeyModel::eta # params$eta
     k <- HockeyModel::k # params$k
-    params <- list("m" = current_m, "rho" = current_rho, "beta" = beta, "eta" = eta, "k" = k)
+    params <- list(
+      "m" = current_m,
+      "rho" = current_rho,
+      "beta" = beta,
+      "eta" = eta,
+      "k" = k
+    )
     sch <- schedule[schedule$Date == d, ]
     sch$HomeWin <- sch$AwayWin <- NA
     for (g in sch$GameID) {
-      odds <- DCPredict(sch[sch$GameID == g, ]$HomeTeam, sch[sch$GameID == g, ]$AwayTeam, params = params, draws = F)
+      odds <- DCPredict(
+        sch[sch$GameID == g, ]$HomeTeam,
+        sch[sch$GameID == g, ]$AwayTeam,
+        params = params,
+        draws = FALSE
+      )
       sch[sch$GameID == g, ]$HomeWin <- odds[1]
       sch[sch$GameID == g, ]$AwayWin <- odds[2]
     }
@@ -29,10 +59,14 @@ tune_dc_weight <- function(xi = 0.003, upsilon = 150) {
   cl <- parallel::makeCluster(4)
   doSNOW::registerDoSNOW(cl)
   `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK
-  `%do%` <- foreach::`%do%`
-  r <- foreach::foreach(i = seq_along(length(unique(schedule$Date))), .combine = "rbind", .packages = c("HockeyModel")) %dopar% (
-    get_game_odds(unique(schedule$Date)[i], schedule, scores, xi, upsilon)
-  )
+  `%do%` <- foreach::`%do%` # This hack passes R CMD CHK
+  i <- 0 # This hack passes R CMD CHK
+  r <- foreach::foreach(
+    i = seq_along(length(unique(schedule$Date))),
+    .combine = "rbind",
+    .packages = c("HockeyModel")
+  ) %dopar%
+    (get_game_odds(unique(schedule$Date)[i], schedule, scores, xi, upsilon))
   parallel::stopCluster(cl)
   schedule <- dplyr::left_join(schedule, r, by = "GameID")
   acc <- accuracy(schedule$HomeWin > 0.5, actual = truth$Result > .5)

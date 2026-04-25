@@ -90,7 +90,9 @@ todayOddsPlot <- function(
 
 #' Predict playoff odds graphic
 #'
-#' @return playoff odds ggplot object
+#' Convenience wrapper around [plot_prediction_playoffs_by_team()].
+#'
+#' @returns A playoff-odds [ggplot2::ggplot()] object.
 #' @export
 playoffOdds <- function() {
   return(plot_prediction_playoffs_by_team())
@@ -98,7 +100,9 @@ playoffOdds <- function() {
 
 #' Predict President's Odds graphic
 #'
-#' @return president's odds ggplot object
+#' Convenience wrapper around [plot_prediction_presidents_by_team()].
+#'
+#' @returns A President's Trophy odds [ggplot2::ggplot()] object.
 #' @export
 presidentOdds <- function() {
   return(plot_prediction_presidents_by_team())
@@ -106,7 +110,9 @@ presidentOdds <- function() {
 
 #' Predict Points graphic
 #'
-#' @return point prediction ggplot object
+#' Convenience wrapper around [plot_prediction_points_by_team()].
+#'
+#' @returns A point-projection [ggplot2::ggplot()] object.
 #' @export
 pointPredict <- function() {
   return(plot_prediction_points_by_team())
@@ -122,6 +128,14 @@ ratings <- function(m = HockeyModel::m) {
   return(plot_team_rating(m = m))
 }
 
+#' Post daily model graphics to social media
+#'
+#' @param games (`data.frame`) Games to reference for game-specific posts.
+#' @param graphic_dir (`character(1)`) Directory containing generated images.
+#' @param delay (`double(1)`) Delay in seconds between posts.
+#' @param schedule (`data.frame`) Schedule used to determine daily context.
+#' @returns `NULL` (invisibly).
+#' @keywords internal
 tweet <- function(
   games,
   graphic_dir = "./prediction_results/graphics",
@@ -200,6 +214,8 @@ tweet <- function(
       )
     )
   }
+
+  return(invisible(NULL))
 }
 
 #' Daily functions, rolled into one call
@@ -475,7 +491,7 @@ tweetPace <- function(
   scores = HockeyModel::scores
 ) {
   # make sure we're working with the most up-to-date info.
-  scores <- updateScoresAPI(save_data = T)
+  scores <- updateScoresAPI(save_data = TRUE)
 
   # Make Pace Plots
   plot_pace_by_team(
@@ -623,7 +639,8 @@ tweetPace <- function(
 #' @param graphic_dir graphics directory
 #' @param subdir subdirectory - usually 'preds'
 #' @param scores updated scores
-#
+#'
+#' @returns `NULL` (invisibly).
 #' @export
 tweetLikelihoods <- function(
   delay = stats::runif(1, min = 3, max = 6) * 60,
@@ -680,6 +697,8 @@ tweetLikelihoods <- function(
       Sys.sleep(delay / 2)
     }
   }
+
+  return(invisible(NULL))
 }
 
 #' Tweet Game Plots
@@ -769,7 +788,7 @@ tweetGames <- function(
 #' Tweet Metrics
 #' @description Tweet the metrics (Log Loss and Accuracy)
 #'
-#' @return NULL
+#' @returns `NULL` (invisibly).
 #' @export
 tweetMetrics <- function() {
   metrics <- getSeasonMetricsDC()
@@ -794,13 +813,24 @@ tweetMetrics <- function() {
 #'
 #' @param graphic_dir directory to save the image
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param delay Delay in seconds between posts. Default is a random value between 1 and 3 minutes.
 #'
 #' @return NULL
 #' @export
 tweetSeries <- function(
   params = NULL,
-  graphic_dir = getOption("HockeyModel.graphics.path")
+  graphic_dir = getOption("HockeyModel.graphics.path"),
+  delay = stats::runif(1, min = 1, max = 3) * 60
 ) {
+  if (!requireNamespace("gt", quietly = TRUE)) {
+    cli::cli_abort(
+      c(
+        "Package {.pkg gt} is required to save the series odds table image.",
+        "i" = "Install it with {.code install.packages('gt')}."
+      )
+    )
+  }
+
   params <- parse_dc_params(params)
   while (grDevices::dev.cur() != 1) {
     grDevices::dev.off()
@@ -841,6 +871,23 @@ tweetSeries <- function(
       text = status,
       image = file.path(graphic_dir, "series_odds.png"),
       image_alt = "A graphic showing odds for each series' winner"
+    )
+  )
+
+  message("Delaying ", delay, " seconds to space tweets...")
+  Sys.sleep(delay)
+
+  tbl <- series_odds_table(series = series, params = params)
+  gt::gtsave(tbl, filename = file.path(graphic_dir, "series_odds_table.png"))
+
+  try(
+    atrrr::post(
+      text = paste0(
+        "#NHL #StanleyCup Playoff Series Odds table before games on ",
+        Sys.Date()
+      ),
+      image = file.path(graphic_dir, "series_odds_table.png"),
+      image_alt = "A table showing odds for each series' winner"
     )
   )
 }

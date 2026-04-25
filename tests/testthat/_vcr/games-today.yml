@@ -5,12 +5,12 @@ http_interactions:
   response:
     status: 200
     headers:
-      date: Sat, 11 Apr 2026 12:00:45 GMT
+      date: Sat, 25 Apr 2026 10:27:01 GMT
       content-type: application/json
-      cf-ray: 9ea9d52a1c4190e5-YYZ
+      cf-ray: 9f1ca71c997e8e83-YYZ
       vary: Accept-Encoding
-      cache-control: no-transform, max-age=14, s-maxage=14
-      etag: W/"69da37fc--gzip"
+      cache-control: no-transform, max-age=13, s-maxage=13
+      etag: W/"69ec9703--gzip"
       content-encoding: gzip
       cf-cache-status: EXPIRED
       server: cloudflare
@@ -189,5 +189,5 @@ http_interactions:
         Jose"},"neutralSite":false,"startTimeUTC":"2019-11-08T03:30:00Z","easternUTCOffset":"-05:00","venueUTCOffset":"-08:00","venueTimezone":"US/Pacific","gameState":"OFF","gameScheduleState":"OK","tvBroadcasts":[{"id":14,"market":"A","countryCode":"US","network":"FS-N","sequenceNumber":306},{"id":145,"market":"A","countryCode":"US","network":"FS-WI","sequenceNumber":327},{"id":314,"market":"H","countryCode":"US","network":"NBCSCA","sequenceNumber":393}],"awayTeam":{"id":30,"commonName":{"default":"Wild"},"placeName":{"default":"Minnesota"},"placeNameWithPreposition":{"default":"Minnesota","fr":"du
         Minnesota"},"abbrev":"MIN","logo":"https://assets.nhle.com/logos/nhl/svg/MIN_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/MIN_dark.svg","awaySplitSquad":false,"score":5},"homeTeam":{"id":28,"commonName":{"default":"Sharks"},"placeName":{"default":"San
         Jose"},"placeNameWithPreposition":{"default":"San Jose","fr":"de San Jose"},"abbrev":"SJS","logo":"https://assets.nhle.com/logos/nhl/svg/SJS_20082009-20232024_light.svg","darkLogo":"https://assets.nhle.com/logos/nhl/svg/SJS_20082009-20232024_dark.svg","homeSplitSquad":false,"score":6},"periodDescriptor":{"number":3,"periodType":"REG","maxRegulationPeriods":3},"gameOutcome":{"lastPeriodType":"REG"},"winningGoalie":{"playerId":8474889,"firstInitial":{"default":"M."},"lastName":{"default":"Jones"}},"winningGoalScorer":{"playerId":8475169,"firstInitial":{"default":"E."},"lastName":{"default":"Kane"}},"threeMinRecap":"/video/recap-min-5-sjs-6-311042670","gameCenterLink":"/gamecenter/min-vs-sjs/2019/11/07/2019020247"}]}],"preSeasonStartDate":"2019-09-15","regularSeasonStartDate":"2019-10-02","regularSeasonEndDate":"2020-03-11","playoffEndDate":"2020-09-28","numberOfGames":52}'
-  recorded_at: 2026-04-11 12:00:45
-recorded_with: VCR-vcr/2.0.0
+  recorded_at: 2026-04-25 10:27:01
+recorded_with: VCR-vcr/2.1.0

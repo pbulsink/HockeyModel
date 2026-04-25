@@ -1,6 +1,6 @@
 Package: HockeyModel
-Title: NHL Hockey Model for 2018-2019
-Version: 0.1.2024.1
+Title: NHL Hockey Model
+Version: 0.1.2026.1
 Authors@R: person("Philip", "Bulsink", email = "bulsinkp@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-9668-2429"))
 Description: Using various techniques, predict the winners of upcoming NHL hockey games, the expected points for the season, and odds for playoffs & cup winning.
 Depends: R (>= 4.1.0)
@@ -12,7 +12,6 @@ Imports:
     utils,
     stats,
     dplyr,
-    magrittr,
     tibble,
     foreach,
     stringi,
@@ -22,7 +21,8 @@ Imports:
     naturalstattrick,
     httr2,
     atrrr,
-    jsonlite
+    jsonlite,
+    cli
 Remotes: pbulsink/naturalstattrick
 URL: https://github.com/pbulsink/HockeyModel
 BugReports: https://github.com/pbulsink/HockeyModel/issues
@@ -46,5 +46,6 @@ Suggests:
     usethis,
     doSNOW,
     rtoot,
-    withr
+    withr,
+    vcr
 VignetteBuilder: knitr

@@ -4,6 +4,8 @@
 [![R-CMD-check](https://github.com/pbulsink/HockeyModel/workflows/R-CMD-check/badge.svg)](https://github.com/pbulsink/HockeyModel/actions)
 [![Codecov test coverage](https://codecov.io/gh/pbulsink/HockeyModel/branch/master/graph/badge.svg)](https://codecov.io/gh/pbulsink/HockeyModel?branch=master)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/1ededd90-c1c2-44cc-8bed-e3d5cea3a284/deploy-status)](https://bulsink.ca)
+[![Codecov test coverage](https://codecov.io/gh/pbulsink/HockeyModel/graph/badge.svg)](https://app.codecov.io/gh/pbulsink/HockeyModel)
+[![R-CMD-check](https://github.com/pbulsink/HockeyModel/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pbulsink/HockeyModel/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 This is a model to predict NHL game winners & their likely performance for the rest of the season.

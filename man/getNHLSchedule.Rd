@@ -4,10 +4,15 @@
 \alias{getNHLSchedule}
 \title{Get NHL Schedule}
 \usage{
-getNHLSchedule(season = getCurrentSeason8())
+getNHLSchedule(
+  season = getCurrentSeason8(),
+  teamColours = HockeyModel::teamColours
+)
 }
 \arguments{
 \item{season}{Season(s) for which the schedule is requested, as YYYY format. Defaults to current season. Accepts single years, ranges e.g.c(2010:2015) or complex ranges e.g. c(2010:2015, 2018).}
+
+\item{teamColours}{the built-in teamColours data set if not otherwise provided.}
 }
 \value{
 a data frame of all scheduled games for the season(s) requested, with Date, HomeTeam, AwayTeam, GameID, and GameType.

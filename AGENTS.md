@@ -42,7 +42,8 @@ For any feature, fix, or refactor:
 6. **Refactor** — clean up, keep tests green.
 7. **Document** — document any new or changed exports.
 8. **Verify**: Run `devtools::test(reporter = "check")`, then `devtools::check(error_on = "warning")`. Resolve warnings, errors, and NOTEs.
-9. **News** — add bullet at top of `NEWS.md` (under dev heading):
+9. **Review**: Evaluate the changes you've made as if you're doing a new code review. Action any obvious improvements and highlight the questionable or unclear bits as if from a code review when writing your summary comment.
+10. **News** — add bullet at top of `NEWS.md` (under dev heading):
    - User-facing changes only. 1 line, end with `.`
    - Present tense, positive framing, function names (backticks + `()`) near start: `` * `fn()` now accepts ... `` not `* Fixed ...`
    - Issue/contributor before final period: `` * `fn()` now accepts ... (@user, #N). `` where `#N` is the GitHub issue number being implemented (e.g. `#42`).

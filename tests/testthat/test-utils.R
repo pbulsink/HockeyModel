@@ -29,11 +29,6 @@ test_that("normalizeOdds works with unlisted vectors", {
   expect_equal(sum(result), 1)
 })
 
-test_that("Season from Game Date works", {
-  expect_equal(HockeyModel::getSeason("2018-10-05"), 20182019L)
-  expect_equal(HockeyModel::getSeason("2019-02-15"), 20182019L)
-})
-
 test_that("Past points function works", {
   # Just test that the function runs without error
   sc <- scores[
@@ -70,10 +65,22 @@ test_that("Metrics are correctly calculated", {
   expect_equal(accuracy(0.4, 1), 0)
   expect_equal(accuracy(c(0.4, 0.6), c(1, 1)), 0.5)
 
-  expect_error(rmse(c(1, 2, 3), c(1, 2)))
-  expect_error(auc(c(1, 2, 3), c(1, 2)))
-  expect_error(logLoss(c(1, 2, 3), c(1, 2)))
-  expect_error(accuracy(c(1, 2, 3), c(1, 2)))
+  expect_error(
+    rmse(c(1, 2, 3), c(1, 2)),
+    regexp = "Error in HockeyModel::rmse\\(\\)"
+  )
+  expect_error(
+    auc(c(1, 2, 3), c(1, 2)),
+    regexp = "Error in HockeyModel::auc\\(\\)"
+  )
+  expect_error(
+    logLoss(c(1, 2, 3), c(1, 2)),
+    regexp = "Error in HockeyModel::logLoss\\(\\)"
+  )
+  expect_error(
+    accuracy(c(1, 2, 3), c(1, 2)),
+    regexp = "Error in HockeyModel::accuracy\\(\\)"
+  )
 })
 
 # ============ RMSE tests ============
@@ -84,7 +91,10 @@ test_that("rmse calculation is correct", {
 })
 
 test_that("rmse handles mismatched lengths", {
-  expect_error(rmse(c(1, 2), c(1, 2, 3)))
+  expect_error(
+    rmse(c(1, 2), c(1, 2, 3)),
+    regexp = "Error in HockeyModel::rmse\\(\\)"
+  )
 })
 
 # ============ MSE tests ============
@@ -95,7 +105,10 @@ test_that("mse calculation is correct", {
 })
 
 test_that("mse handles mismatched lengths", {
-  expect_error(mse(c(1, 2), c(1, 2, 3)))
+  expect_error(
+    mse(c(1, 2), c(1, 2, 3)),
+    regexp = "Error in HockeyModel::mse\\(\\)"
+  )
 })
 
 # ============ R-Square tests ============
@@ -105,7 +118,10 @@ test_that("rsquare calculation is correct", {
 })
 
 test_that("rsquare handles mismatched lengths", {
-  expect_error(rsquare(c(1, 2), c(1, 2, 3)))
+  expect_error(
+    rsquare(c(1, 2), c(1, 2, 3)),
+    regexp = "Error in HockeyModel::rsquare\\(\\)"
+  )
 })
 
 # ============ Log Loss tests ============
@@ -269,20 +285,4 @@ test_that("colourDelta is symmetric", {
     colourDelta("#FF0000", "#00FF00"),
     colourDelta("#00FF00", "#FF0000")
   )
-})
-
-# ============ getSeason tests ============
-test_that("getSeason from Game Date works", {
-  expect_equal(HockeyModel::getSeason("2018-10-05"), 20182019L)
-  expect_equal(HockeyModel::getSeason("2019-02-15"), 20182019L)
-})
-
-test_that("getSeason handles regular season dates", {
-  expect_equal(HockeyModel::getSeason("2018-10-15"), 20182019L)
-  expect_equal(HockeyModel::getSeason("2019-04-01"), 20182019L)
-})
-
-test_that("getSeason returns numeric integer", {
-  result <- HockeyModel::getSeason("2020-12-25")
-  expect_true(is.null(result) || is.numeric(result) || is.integer(result))
 })

@@ -54,9 +54,9 @@ knitr::include_graphics("https://github.com/pbulsink/HockeyModel/raw/master/pred
 There's a playoff solver placed in the package. It works only before the playoffs start through the end of the first round, and returns a tibble of likely playoff position and progression for each team as a `tidyverse::tibble`. The results aren't guaranteed to be accurate. We'll look at what these playoff odds looked like as of the start of the 2021-2022 season. We'll download the predictions file from that date so we don't have to generate it ourselves.
 
 ```{r playoff_solver_example, eval=FALSE}
-simulatePlayoffs(summary_results = readRDS(url("https://github.com/pbulsink/HockeyModel/raw/master/prediction_results/2021-08-12-predictions.RDS", "rb")))
+simulatePlayoffs(summary_results = readRDS(url("https://github.com/pbulsink/HockeyModel/raw/refs/heads/master/data/summary_results_testing.rda", "rb")))
 ```
 ```{r playoff_solver, echo=FALSE}
-po <- simulatePlayoffs(summary_results = HockeyModel::summary_results_testing, nsims = 10, cores = 2)
+po <- simulatePlayoffs(summary_results = HockeyModel::summary_results_testing, nsims = 10, cores = 1)
 knitr::kable(po, caption = "Playoff Simulation from the start of the 2021-2022 season")
 ```

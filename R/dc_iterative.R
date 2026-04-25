@@ -9,6 +9,27 @@
 # where update[n] is a weighted mean of expected goals/expected xg vs actual goals/xg
 # lambda is the amount of influence of the ratings, and gamma the amount of change of the
 
+#' Update iterative attack and defence ratings for one game
+#'
+#' @param home_goals (`double(1)`) Home goals scored.
+#' @param away_goals (`double(1)`) Away goals scored.
+#' @param season_progress (`double(1)`) Fraction of season completed.
+#' @param home_xg (`double(1)` or `NULL`) Home expected goals.
+#' @param away_xg (`double(1)` or `NULL`) Away expected goals.
+#' @param home_attack (`double(1)`) Current home attack rating.
+#' @param home_defence (`double(1)`) Current home defence rating.
+#' @param away_attack (`double(1)`) Current away attack rating.
+#' @param away_defence (`double(1)`) Current away defence rating.
+#' @param home_adv (`double(1)`) Home-advantage term.
+#' @param intercept (`double(1)`) Baseline scoring intercept.
+#' @param gamma (`double(1)`) Learning-rate coefficient.
+#' @param lambda (`double(1)`) Regularization coefficient.
+#' @param rho (`double(1)`) Attack/defence coupling term.
+#' @param sigma (`double(1)`) Season-progress adjustment for `gamma`.
+#' @param attack_mix (`double(1)`) Weight on xG in attack updates.
+#' @param defend_mix (`double(1)`) Weight on xG in defence updates.
+#' @returns (`numeric`) Updated home attack/defence and away attack/defence.
+#' @keywords internal
 updateIterativeRankings <- function(
   home_goals,
   away_goals,
@@ -110,6 +131,21 @@ getTeamRankings <- function(team, rankings) {
 }
 
 
+#' Apply one game to iterative rankings, with optional prediction
+#'
+#' @param game (`data.frame`) Single-row game record.
+#' @param rankings (`data.frame`) Current team ratings.
+#' @param make_predictions (`logical(1)`) Whether to predict before updating.
+#' @param intercept (`double(1)`) Baseline scoring intercept.
+#' @param gamma (`double(1)`) Learning-rate coefficient.
+#' @param lambda (`double(1)`) Regularization coefficient.
+#' @param rho (`double(1)`) Attack/defence coupling term.
+#' @param sigma (`double(1)`) Season-progress adjustment for `gamma`.
+#' @param home_adv (`double(1)`) Home-advantage term.
+#' @param attack_mix (`double(1)`) Weight on xG in attack updates.
+#' @param defend_mix (`double(1)`) Weight on xG in defence updates.
+#' @returns (`list`) Updated rankings and optional game-level predictions.
+#' @keywords internal
 iterateGame <- function(
   game,
   rankings,
@@ -185,6 +221,20 @@ iterateGame <- function(
   ))
 }
 
+#' Train and evaluate iterative rankings over historical seasons
+#'
+#' @param intercept (`double(1)`) Baseline scoring intercept.
+#' @param gamma (`double(1)`) Learning-rate coefficient.
+#' @param lambda (`double(1)`) Regularization coefficient.
+#' @param rho (`double(1)`) Attack/defence coupling term.
+#' @param home_adv (`double(1)`) Home-advantage term.
+#' @param sigma (`double(1)`) Season-progress adjustment for `gamma`.
+#' @param attack_mix (`double(1)`) Weight on xG in attack updates.
+#' @param defend_mix (`double(1)`) Weight on xG in defence updates.
+#' @param scores (`data.frame`) Historical scores with xG fields.
+#' @param verbose (`logical(1)`) Whether to print timing and metrics.
+#' @returns (`list`) Final rankings plus train/test prediction tables.
+#' @keywords internal
 iterateSeason <- function(
   intercept = 1.71418,
   gamma = 0.005142,
@@ -395,6 +445,11 @@ optimizeIterative <- function(
 }
 
 
+#' Objective function for iterative win/loss optimization
+#'
+#' @param params (`double`) Candidate parameter vector.
+#' @returns (`double(1)`) Optimization score (lower is better).
+#' @keywords internal
 optimizeIterative_WL_Internal <- function(params) {
   intercept <- params[1]
   gamma <- params[2]
@@ -444,9 +499,14 @@ optimizeIterative_WL_Internal <- function(params) {
   acc <- accuracy(pre$HomeWin, ifelse(pre$Result > 0.5, 1, 0))
   rocauc <- auc(pre$HomeWin, ifelse(pre$Result > 0.5, 1, 0))
   # ----- CHOOSE EVALUATOR
-  return(rocauc)
+  return(list(ll, acc, rocauc)[1])
 }
 
+#' Objective function for iterative xG optimization
+#'
+#' @param params (`double`) Candidate parameter vector.
+#' @returns (`double(1)`) Optimization score (lower is better).
+#' @keywords internal
 optimizeIterative_XG_Internal <- function(params) {
   intercept <- params[1]
   gamma <- params[2]
@@ -496,7 +556,7 @@ optimizeIterative_XG_Internal <- function(params) {
   r2 <- rsquare(pre$TotalxGPred, pre$TotalGoals)
   mse <- mse(pre$TotalxGPred, pre$TotalGoals)
   # ----- CHOOSE Evaluator
-  return(rmse)
+  return(list(rmse, r2, mse)[1])
 }
 
 #' Predict the outcome of one game using iterative Dixon Coles model
@@ -557,6 +617,13 @@ iterativeGamePredict <- function(
 }
 
 
+#' Save iterative rankings and parameters to disk
+#'
+#' @param rankings (`data.frame`) Team rating table to save.
+#' @param params (`list`) Iterative model parameters to save.
+#' @param filepath (`character(1)`) Directory for output files.
+#' @returns `NULL` (invisibly).
+#' @keywords internal
 saveIterativePredictions <- function(
   rankings,
   params,
@@ -570,9 +637,17 @@ saveIterativePredictions <- function(
     rankparams,
     file = file.path(filepath, paste0(Sys.Date(), "-iterative-rankings.RDS"))
   )
+
+  return(invisible(NULL))
 }
 
 
+#' Load iterative rankings and parameters from disk
+#'
+#' @param filename (`character(1)`) File name to read.
+#' @param filepath (`character(1)`) Directory containing saved files.
+#' @returns (`list`) Saved `Rankings` and `Params`.
+#' @keywords internal
 readIterativePredictions <- function(
   filename,
   filepath = "./prediction_results/iterative_ranking"
@@ -594,6 +669,15 @@ readIterativePredictions <- function(
 }
 
 
+#' Generate iterative predictions for games on one date
+#'
+#' @param rankings (`data.frame`) Team ratings state.
+#' @param params (`list`) Iterative parameters.
+#' @param date (`Date`) Date to predict.
+#' @param schedule (`data.frame`) Schedule containing the target date.
+#' @returns (`list` or `NULL`) Updated rankings and predictions, or `NULL` when
+#'   there are no games.
+#' @keywords internal
 getIterativePredictions <- function(
   rankings,
   params,
@@ -645,6 +729,14 @@ getIterativePredictions <- function(
 }
 
 
+#' Replay completed games to update iterative rankings state
+#'
+#' @param rankings (`data.frame`) Starting rankings.
+#' @param params (`list`) Iterative parameters used for updates.
+#' @param scores (`data.frame`) Historical game results.
+#' @param rankings_date (`Date`) Earliest date to include for replay.
+#' @returns (`data.frame`) Updated rankings.
+#' @keywords internal
 updateRankingsToToday <- function(
   rankings,
   params,
@@ -737,7 +829,11 @@ getIterativeTable <- function(
 }
 
 
-iterateiveDailyUpdate <- function() {
+#' Run daily update pipeline for iterative predictions
+#'
+#' @returns (`data.frame` or `NULL`) Current-day iterative prediction table.
+#' @keywords internal
+iterativeDailyUpdate <- function() {
   scores <- updateScoresAPI()
   schedule <- updateScheduleAPI()
   results <- getIterativeTable(
@@ -749,6 +845,13 @@ iterateiveDailyUpdate <- function() {
 }
 
 
+#' Build iterative-model odds for scheduled season games
+#'
+#' @param schedule (`data.frame`) Schedule to evaluate.
+#' @param rankings (`list`) Iterative rankings object.
+#' @param params (`list`) Iterative parameter object.
+#' @returns (`data.frame`) Odds table with home, away, and draw probabilities.
+#' @keywords internal
 iterativeOddsTable <- function(
   schedule = HockeyModel::schedule,
   rankings = HockeyModel::iterativeRankings,
@@ -793,6 +896,13 @@ iterativeOddsTable <- function(
   return(odds_table)
 }
 
+#' Refit iterative rankings for one target model
+#'
+#' @param target_model (`character(1)`) One of `"wl"` or `"xg"` (case
+#'   insensitive variants accepted).
+#' @param params (`list`) Iterative parameter object.
+#' @returns (`data.frame`) Re-estimated team rankings.
+#' @keywords internal
 getNewIterativeRankings <- function(
   target_model = "wl",
   params = HockeyModel::iterativeParameters
@@ -840,7 +950,7 @@ getReplacementRankings <- function(
     "rankings_date" = Sys.Date()
   )
   if (save_data && requireNamespace("usethis", quietly = TRUE)) {
-    usethis::use_data(iterativeRankings, overwrite = T)
+    usethis::use_data(iterativeRankings, overwrite = TRUE)
   }
   invisible(iterativeRankings)
 }
@@ -880,11 +990,17 @@ getReplacementIterativeParameters <- function(
   )
   iterativeParameters <- list("params_wl" = params_wl, "params_xg" = params_xg)
   if (save_data && requireNamespace("usethis", quietly = TRUE)) {
-    usethis::use_data(iterativeParameters, overwrite = T)
+    usethis::use_data(iterativeParameters, overwrite = TRUE)
   }
   invisible(iterativeParameters)
 }
 
+#' Convert game IDs into coarse season progress values
+#'
+#' @param gameids (`character` or `numeric`) One or more NHL game IDs.
+#' @returns (`double`) Values in `[0, 1]` describing regular-season progress;
+#'   playoff games return `1`.
+#' @keywords internal
 iterative_season_progress <- function(gameids) {
   isp <- function(gid) {
     if (!HockeyModel::gameIDValidator(gid)) {

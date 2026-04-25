@@ -17,3 +17,4 @@ email.Rmd
 email.md
 ^cache$
 ^AGENTS\.md$
+^\.lintr$

@@ -26,7 +26,6 @@
 #'   \item{AwayG}{Advanced Stats Properties}
 #'   \item{AwayGpk}{Advanced Stats Properties}
 #'   \item{AwayGpp}{Advanced Stats Properties}
-#'   \item{AwayxG}{Advanced Stats Properties}
 #'   \item{AwayxGpk}{Advanced Stats Properties}
 #'   \item{AwayxGpp}{Advanced Stats Properties}
 #'   \item{HomeCF}{Advanced Stats Properties}
@@ -130,13 +129,27 @@
 #' @format a tibble
 "example_raw_predictions"
 
+#' Rebuild `teamColours` package data from source CSV
+#'
+#' @returns `NULL` (invisibly). Writes updated data when `usethis` is
+#'   available.
+#' @keywords internal
 buildTeamColours <- function() {
-  teamColours <- utils::read.csv("./data-raw/logos/team_colours.csv", stringsAsFactors = FALSE)
+  teamColours <- utils::read.csv(
+    "./data-raw/logos/team_colours.csv",
+    stringsAsFactors = FALSE
+  )
   teamlist <- unique(teamColours$Team)
-  teamColours$Logo <- file.path("./data-raw", "logos", paste0(tolower(gsub(" ", "_", teamlist)), ".gif"))
+  teamColours$Logo <- file.path(
+    "./data-raw",
+    "logos",
+    paste0(tolower(gsub(" ", "_", teamlist)), ".gif")
+  )
   if (requireNamespace("usethis")) {
     usethis::use_data(teamColours, overwrite = TRUE)
   } else {
-    warning("Can't write teamcolours to file, usethis package must be installed.")
+    warning(
+      "Can't write teamcolours to file, usethis package must be installed."
+    )
   }
 }

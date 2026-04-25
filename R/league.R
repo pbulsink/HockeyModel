@@ -207,7 +207,7 @@ simulateSeasonParallel <- function(
     scores = scores,
     schedule = schedule,
     params = params,
-    odds = T
+    odds = TRUE
   )
 
   odds_table$HOT <- extraTimeSolver(
@@ -450,7 +450,7 @@ loopless_sim <- function(
       schedule = schedule,
       params = params,
       nsims = nsims,
-      odds = T
+      odds = TRUE
     )
   }
 
@@ -828,37 +828,80 @@ playoffSeriesOdds <- function(
   game_to <- ceiling(ngames / 2)
 
   if (length(home_odds) > 1 || length(away_odds) > 1) {
-    stop("handle only one series at a time")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected single values for {.arg home_odds} and {.arg away_odds}, got vectors instead.",
+      "i" = "Please retry with one home odds value and one away odds value."
+    ))
   }
   p1_home <- home_odds
   p1_road <- away_odds
 
   if (p1_home < 0 || p1_home > 1 || p1_road < 0 || p1_road > 1) {
-    stop("impossible odds")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected probabilities between 0 and 1; impossible odds were provided.",
+      "i" = "Please retry with {.arg home_odds} and {.arg away_odds} values in the range [0, 1]."
+    ))
   }
 
-  home_win <- as.integer(home_win)
-  away_win <- as.integer(away_win)
+  home_win_num <- suppressWarnings(as.numeric(home_win))
+  away_win_num <- suppressWarnings(as.numeric(away_win))
 
+  if (
+    length(home_win) != 1 ||
+      length(away_win) != 1 ||
+      is.na(home_win_num) ||
+      is.na(away_win_num) ||
+      !is.finite(home_win_num) ||
+      !is.finite(away_win_num) ||
+      home_win_num != floor(home_win_num) ||
+      away_win_num != floor(away_win_num)
+  ) {
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected single whole-number values for {.arg home_win} and {.arg away_win}.",
+      "i" = "Please retry with one non-negative integer win count for each team."
+    ))
+  }
+
+  home_win <- as.integer(home_win_num)
+  away_win <- as.integer(away_win_num)
   if (home_win < 0 || away_win < 0) {
-    stop("negative number of wins impossible")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected non-negative win counts, got {.arg home_win} = {home_win} and {.arg away_win} = {away_win}.",
+      "i" = "Please retry with zero or positive integers for wins already recorded."
+    ))
   }
   if (home_win >= game_to) {
-    message("series already won")
+    cli::cli_alert_info(
+      "Series already won; returning 1 for the home team win probability."
+    )
     return(1)
   }
   if (away_win >= game_to) {
-    message("series already won")
+    cli::cli_alert_info(
+      "Series already won; returning 0 for the home team win probability."
+    )
     return(0)
   }
 
   games_played <- home_win + away_win
 
   if (games_played > ngames) {
-    stop("total wins greater than games impossible")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected total recorded wins to be less than or equal to {.arg ngames}, got {games_played} wins over {ngames} games.",
+      "i" = "Please retry with win counts that do not exceed the total number of games in the series."
+    ))
   }
   if (games_played == ngames) {
-    stop("nothing to do, series over")
+    cli::cli_abort(c(
+      "Error in HockeyModel::playoffSeriesOdds()",
+      "x" = "Expected an unfinished series, but all {ngames} games are already recorded.",
+      "i" = "Please retry with an in-progress series or use the known series outcome directly."
+    ))
   }
 
   x.g <- games_played
@@ -1032,8 +1075,7 @@ simulatePlayoffs <- function(
 
     simresults <- foreach::foreach(
       i = 1:(cores * 100),
-      .combine = "rbind",
-      .packages = "HockeyModel"
+      .combine = "rbind"
     ) %dopar%
       {
         simresults <- playoffSolverEngine(
@@ -1110,6 +1152,14 @@ simulatePlayoffs <- function(
   return(simodds)
 }
 
+#' Order two teams by predicted seeding priority
+#'
+#' @param team1 (`character(1)`) First team.
+#' @param team2 (`character(1)`) Second team.
+#' @param summary_results (`data.frame`) Simulation summary with `meanPoints`.
+#' @param p1 (`character(1)` or `NULL`) Optional forced first seed.
+#' @returns (`character`) Length-two vector in seeding order.
+#' @keywords internal
 reseedTwoTeams <- function(team1, team2, summary_results, p1 = NULL) {
   t1p <- summary_results[summary_results$Team == team1, ]$meanPoints
   t2p <- summary_results[summary_results$Team == team2, ]$meanPoints
@@ -1222,6 +1272,11 @@ single_series_solver <- function(
   }
 }
 
+#' Build winner/loser summary for completed playoff series
+#'
+#' @param currentSeries (`data.frame`) Series table from [getAPISeries()].
+#' @returns (`data.frame`) Series identifier with winner and loser teams.
+#' @keywords internal
 getCompletedSeries <- function(currentSeries) {
   completedSeries <- currentSeries |>
     dplyr::filter(.data$Status == "Complete") |>
@@ -2027,6 +2082,12 @@ playoffSolverEngine <- function(
   return(simresults)
 }
 
+#' Precompute playoff win odds for all home-away team pairings
+#'
+#' @param teamlist (`character`) Team names to pair.
+#' @param params (`list` or `NULL`) Dixon-Coles parameter list.
+#' @returns (`data.frame`) Pairwise table with `HomeOdds`.
+#' @keywords internal
 getAllHomeAwayOdds <- function(teamlist, params = NULL) {
   params <- parse_dc_params(params)
   homeAwayOdds <- expand.grid(
@@ -2164,7 +2225,7 @@ cleanupPredictionsFile <- function(
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv")
 ) {
   if (!file.exists(filepath)) {
-    return(TRUE)
+    return(FALSE)
   }
   dailyodds <- utils::read.csv(filepath)
   dailyodds <- dailyodds |>
@@ -2184,9 +2245,22 @@ cleanupPredictionsFile <- function(
   return(TRUE)
 }
 
+#' Backfill historical daily prediction records
+#'
+#' @param startDate (`Date`) First date to backfill.
+#' @param endDate (`Date`) Last date to backfill.
+#' @param scores scores, if not then HockeyModel::scores is used.
+#' @param schedule schedule, if not then HockeyModel::schedule is used.
+#' @param filepath (`character(1)`) CSV path for recorded predictions.
+#' @param include_xG (`logical(1)`) Whether to include xG columns.
+#' @param draws (`logical(1)`) Whether to store draw probabilities.
+#' @returns (`logical(1)`) `TRUE` when processing completes.
+#' @keywords internal
 build_past_predictions <- function(
   startDate,
   endDate,
+  scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule,
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv"),
   include_xG = FALSE,
   draws = TRUE
@@ -2195,8 +2269,6 @@ build_past_predictions <- function(
   stopifnot(is.Date(endDate))
   startDate <- as.Date(startDate)
   endDate <- as.Date(endDate)
-  scores <- HockeyModel::scores
-  schedule <- HockeyModel::schedule
 
   for (day in seq.Date(startDate, endDate, by = 1)) {
     d <- as.Date(day, origin = "1970-01-01")

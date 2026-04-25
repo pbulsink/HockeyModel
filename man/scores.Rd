@@ -25,7 +25,6 @@ A data frame with  variables:
 \item{AwayG}{Advanced Stats Properties}
 \item{AwayGpk}{Advanced Stats Properties}
 \item{AwayGpp}{Advanced Stats Properties}
-\item{AwayxG}{Advanced Stats Properties}
 \item{AwayxGpk}{Advanced Stats Properties}
 \item{AwayxGpp}{Advanced Stats Properties}
 \item{HomeCF}{Advanced Stats Properties}
