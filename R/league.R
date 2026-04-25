@@ -849,9 +849,12 @@ playoffSeriesOdds <- function(
   away_win_num <- suppressWarnings(as.numeric(away_win))
 
   if (
-    length(home_win) != 1 || length(away_win) != 1 ||
-      is.na(home_win_num) || is.na(away_win_num) ||
-      !is.finite(home_win_num) || !is.finite(away_win_num) ||
+    length(home_win) != 1 ||
+      length(away_win) != 1 ||
+      is.na(home_win_num) ||
+      is.na(away_win_num) ||
+      !is.finite(home_win_num) ||
+      !is.finite(away_win_num) ||
       home_win_num != floor(home_win_num) ||
       away_win_num != floor(away_win_num)
   ) {
@@ -1072,8 +1075,7 @@ simulatePlayoffs <- function(
 
     simresults <- foreach::foreach(
       i = 1:(cores * 100),
-      .combine = "rbind",
-      .packages = "HockeyModel"
+      .combine = "rbind"
     ) %dopar%
       {
         simresults <- playoffSolverEngine(
