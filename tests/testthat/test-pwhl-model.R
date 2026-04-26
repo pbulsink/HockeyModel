@@ -35,10 +35,11 @@ make_pwhl_scores <- function(n_games = 20) {
   away_goals <- sample(1:5, n_games, replace = TRUE)
   # OT games: ensure goals differ (winner scored extra goal)
   ot_status <- rep("", n_games)
-  n_ot <- max(5L, floor(n_games * 0.2))
+  # Use ~20% OT rate, capped at available diff-goal games, minimum 5 for model fitting
   diff_idx <- which(home_goals != away_goals)
-  ot_idx <- diff_idx[seq_len(min(n_ot, length(diff_idx)))]
-  ot_status[ot_idx] <- sample(c("OT", "SO"), length(ot_idx), replace = TRUE)
+  n_ot <- min(max(5L, floor(n_games * 0.2)), length(diff_idx))
+  ot_idx <- diff_idx[seq_len(n_ot)]
+  ot_status[ot_idx] <- sample(c("OT", "SO"), n_ot, replace = TRUE)
 
   data.frame(
     Date = seq.Date(as.Date("2024-01-01"), by = "3 days", length.out = n_games),
