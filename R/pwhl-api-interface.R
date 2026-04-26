@@ -243,7 +243,7 @@ getPWHLScores <- function(
 #'   ASCII-normalised lookup against `pwhlTeamColours`; falls back to
 #'   `"<city> <nickname>"` if no match is found.
 #'
-#' @param city (`character(1)`) City field from the API (e.g. `"Montréal"`).
+#' @param city (`character(1)`) City field from the API (e.g. `"Montr\u00e9al"`).
 #' @param nickname (`character(1)`) Nickname field from the API
 #'   (e.g. `"Victoire"`).
 #' @param pwhlTeamColours (`data.frame`) PWHL team metadata table.
@@ -255,7 +255,7 @@ pwhl_resolve_team_name <- function(
   pwhlTeamColours = HockeyModel::pwhlTeamColours
 ) {
   candidate <- paste(city, nickname)
-  # Normalise accents before lookup (e.g. "Montréal" -> "Montreal")
+  # Normalise accents before lookup (e.g. "Montr\u00e9al" -> "Montreal")
   candidate_ascii <- stringi::stri_trans_general(candidate, "latin-ascii")
   teams_ascii <- stringi::stri_trans_general(
     pwhlTeamColours$Team,
@@ -435,7 +435,7 @@ updatePWHLScoresAPI <- function(
   save_data = FALSE
 ) {
   if (nrow(schedule) == 0) {
-    cli::cli_alert_info("PWHL schedule is empty — nothing to update.")
+    cli::cli_alert_info("PWHL schedule is empty \u2014 nothing to update.")
     return(unique(pwhlScores))
   }
 

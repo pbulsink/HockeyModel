@@ -11,7 +11,7 @@ pwhl_resolve_team_name(
 )
 }
 \arguments{
-\item{city}{(\code{character(1)}) City field from the API (e.g. \code{"Montréal"}).}
+\item{city}{(\code{character(1)}) City field from the API (e.g. \code{"Montr\\u00e9al"}).}
 
 \item{nickname}{(\code{character(1)}) Nickname field from the API
 (e.g. \code{"Victoire"}).}
