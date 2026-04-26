@@ -1,5 +1,3 @@
-context("test-pwhl-api-interface")
-
 test_that("getPWHLSeasons returns correct structure", {
   vcr::use_cassette("pwhl-seasons", {
     seasons <- getPWHLSeasons()
@@ -20,6 +18,12 @@ test_that("getPWHLSeasons returns correct structure", {
     expect_true(is.integer(seasons$id))
     expect_true(inherits(seasons$start_date, "Date"))
     expect_true(inherits(seasons$end_date, "Date"))
+    # Verify known season data from cassette
+    expect_true(5L %in% seasons$id)
+    expect_true("2024-25 Regular Season" %in% seasons$name)
+    reg_season <- seasons[seasons$id == 5L, ]
+    expect_equal(reg_season$career, 1L)
+    expect_equal(reg_season$playoff, 0L)
   })
 })
 

@@ -143,13 +143,13 @@ getPWHLSchedule <- function(
     ))
   }
 
-  is_playoff <- as.integer(
-    tryCatch(
-      getPWHLSeasons()[
-        getPWHLSeasons()$id == season,
-      ]$playoff,
-      error = function(e) 0L
-    )
+  is_playoff <- tryCatch(
+    {
+      all_seasons <- getPWHLSeasons()
+      row <- all_seasons[all_seasons$id == season, ]
+      if (nrow(row) == 0) 0L else as.integer(row$playoff)
+    },
+    error = function(e) 0L
   )
 
   game_type <- if (isTRUE(is_playoff == 1L)) "P" else "R"
@@ -179,8 +179,6 @@ getPWHLSchedule <- function(
 #' @description Gets scores for one or more PWHL games by their game IDs.
 #'
 #' @param gameIDs (`integer` or `character`) PWHL game ID(s) to retrieve.
-#' @param schedule (`data.frame`) A PWHL schedule data frame, used to look up
-#'   date and team names when the game summary is missing them.
 #' @param progress (`logical(1)`) Whether to show a progress bar. Requires the
 #'   `progress` package.
 #'
@@ -189,7 +187,6 @@ getPWHLSchedule <- function(
 #' @export
 getPWHLScores <- function(
   gameIDs = NULL,
-  schedule = HockeyModel::pwhlSchedule,
   progress = TRUE
 ) {
   if (is.null(gameIDs) || length(gameIDs) == 0) {
@@ -236,6 +233,36 @@ getPWHLScores <- function(
   }
 
   scores
+}
+
+
+#' Resolve a PWHL team name from API city and nickname fields
+#'
+#' @description Constructs a canonical team name from the city and nickname
+#'   fields returned by the HockeyTech game-summary API. First attempts an
+#'   ASCII-normalised lookup against `pwhlTeamColours`; falls back to
+#'   `"<city> <nickname>"` if no match is found.
+#'
+#' @param city (`character(1)`) City field from the API (e.g. `"Montréal"`).
+#' @param nickname (`character(1)`) Nickname field from the API
+#'   (e.g. `"Victoire"`).
+#' @param pwhlTeamColours (`data.frame`) PWHL team metadata table.
+#' @returns (`character(1)`) Canonical team name.
+#' @keywords internal
+pwhl_resolve_team_name <- function(
+  city,
+  nickname,
+  pwhlTeamColours = HockeyModel::pwhlTeamColours
+) {
+  candidate <- paste(city, nickname)
+  # Normalise accents before lookup (e.g. "Montréal" -> "Montreal")
+  candidate_ascii <- stringi::stri_trans_general(candidate, "latin-ascii")
+  teams_ascii <- stringi::stri_trans_general(
+    pwhlTeamColours$Team,
+    "latin-ascii"
+  )
+  idx <- match(candidate_ascii, teams_ascii)
+  if (!is.na(idx)) pwhlTeamColours$Team[idx] else candidate
 }
 
 
@@ -296,8 +323,16 @@ pwhl_game_summary <- function(gid) {
     "OT"
   }
 
-  home_team <- paste(meta$HomeCity, meta$HomeNickname)
-  away_team <- paste(meta$VisitorCity, meta$VisitorNickname)
+  home_team <- pwhl_resolve_team_name(
+    meta$HomeCity,
+    meta$HomeNickname,
+    HockeyModel::pwhlTeamColours
+  )
+  away_team <- pwhl_resolve_team_name(
+    meta$VisitorCity,
+    meta$VisitorNickname,
+    HockeyModel::pwhlTeamColours
+  )
 
   game_type <- ifelse(
     !is.null(meta$playoff) && meta$playoff == "1",
@@ -399,6 +434,11 @@ updatePWHLScoresAPI <- function(
   full_season = FALSE,
   save_data = FALSE
 ) {
+  if (nrow(schedule) == 0) {
+    cli::cli_alert_info("PWHL schedule is empty — nothing to update.")
+    return(unique(pwhlScores))
+  }
+
   if (full_season) {
     needed <- schedule[schedule$Date >= min(schedule$Date), ]$GameID
   } else {
@@ -412,7 +452,7 @@ updatePWHLScoresAPI <- function(
   }
 
   if (length(needed) > 0) {
-    updated <- getPWHLScores(needed, schedule = schedule)
+    updated <- getPWHLScores(needed)
     if (!is.null(updated) && nrow(updated) > 0) {
       pwhlScores <- pwhlScores |>
         dplyr::filter(!(.data$GameID %in% needed)) |>
@@ -487,7 +527,7 @@ buildPWHLTeamColours <- function() {
     "./data-raw/logos/pwhl_team_colours.csv",
     stringsAsFactors = FALSE
   )
-  if (requireNamespace("usethis")) {
+  if (requireNamespace("usethis", quietly = TRUE)) {
     usethis::use_data(pwhlTeamColours, overwrite = TRUE)
   } else {
     warning(

@@ -4,17 +4,10 @@
 \alias{getPWHLScores}
 \title{Get PWHL Scores}
 \usage{
-getPWHLScores(
-  gameIDs = NULL,
-  schedule = HockeyModel::pwhlSchedule,
-  progress = TRUE
-)
+getPWHLScores(gameIDs = NULL, progress = TRUE)
 }
 \arguments{
 \item{gameIDs}{(\code{integer} or \code{character}) PWHL game ID(s) to retrieve.}
-
-\item{schedule}{(\code{data.frame}) A PWHL schedule data frame, used to look up
-date and team names when the game summary is missing them.}
 
 \item{progress}{(\code{logical(1)}) Whether to show a progress bar. Requires the
 \code{progress} package.}
