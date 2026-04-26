@@ -48,5 +48,6 @@ Suggests:
     doSNOW,
     rtoot,
     withr,
-    vcr
+    vcr,
+    ragg
 VignetteBuilder: knitr
