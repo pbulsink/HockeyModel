@@ -1,0 +1,16 @@
+http_interactions:
+- request:
+    method: GET
+    uri: https://lscluster.hockeytech.com/feed/index.php?feed=modulekit&view=seasons&key=446521baf8c38984&client_code=pwhl
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body:
+      string: '{"SiteKit":{"Seasons":[{"season_id":"5","season_name":"2024-25 Regular
+        Season","shortname":"2024-25 Reg","career":"1","playoff":"0","start_date":"2024-11-25","end_date":"2025-05-05"},{"season_id":"4","season_name":"2024-25
+        Preseason","shortname":"2024-25 Pre","career":"0","playoff":"0","start_date":"2024-11-01","end_date":"2024-11-29"},{"season_id":"3","season_name":"2024
+        Playoffs","shortname":"2024 Playoffs","career":"1","playoff":"1","start_date":"2024-05-06","end_date":"2024-06-10"},{"season_id":"1","season_name":"2024
+        Regular Season","shortname":"2024 Reg","career":"1","playoff":"0","start_date":"2024-01-01","end_date":"2024-05-27"}]}}'
+  recorded_at: 2026-04-26 00:00:00
+recorded_with: VCR-vcr/2.1.0

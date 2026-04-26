@@ -2,7 +2,10 @@ Package: HockeyModel
 Title: NHL Hockey Model
 Version: 0.1.2026.1
 Authors@R: person("Philip", "Bulsink", email = "bulsinkp@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-9668-2429"))
-Description: Using various techniques, predict the winners of upcoming NHL hockey games, the expected points for the season, and odds for playoffs & cup winning.
+Description: Using various techniques, predict the winners of upcoming NHL hockey
+    games, the expected points for the season, and odds for playoffs & cup winning.
+    Includes parallel support for PWHL (Professional Women's Hockey League) game
+    data and predictions via the HockeyTech API.
 Depends: R (>= 4.1.0)
 License: GPL-3 + file LICENSE
 Encoding: UTF-8

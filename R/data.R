@@ -99,6 +99,63 @@
 "teamColours"
 
 
+#' PWHL Team Colours
+#'
+#' Primary and secondary hex colours, team short codes, hashtags, and PWHL team
+#' IDs for all six PWHL teams.
+#'
+#' @format A data frame with variables:
+#' \describe{
+#'   \item{Team}{Full team name}
+#'   \item{Hex}{Primary colour hex code}
+#'   \item{AltHex}{Secondary colour hex code}
+#'   \item{Hashtag}{Official social media hashtag}
+#'   \item{ShortCode}{Three-letter (or two-letter) team abbreviation}
+#'   \item{Division}{League division (currently all `"PWHL"`)}
+#'   \item{Conference}{League conference (currently all `"PWHL"`)}
+#'   \item{PWHLID}{Integer team ID used by the HockeyTech API}
+#' }
+#' @source \url{https://www.thepwhl.com/}
+"pwhlTeamColours"
+
+
+#' PWHL Schedule
+#'
+#' Schedule for the current PWHL season (no scores included).
+#'
+#' @format A data frame with variables:
+#' \describe{
+#'   \item{Date}{Date the game is/was played}
+#'   \item{HomeTeam}{Name of the home team}
+#'   \item{AwayTeam}{Name of the visiting team}
+#'   \item{GameID}{Unique PWHL game ID}
+#'   \item{GameType}{`"R"` for regular season, `"P"` for playoff}
+#'   \item{GameStatus}{`"Scheduled"` or `"Final"`}
+#' }
+#' @source \url{https://www.thepwhl.com/}
+"pwhlSchedule"
+
+
+#' PWHL Scores
+#'
+#' Historical PWHL game scores.
+#'
+#' @format A data frame with variables:
+#' \describe{
+#'   \item{Date}{Date the game was played}
+#'   \item{HomeTeam}{Name of the home team}
+#'   \item{AwayTeam}{Name of the visiting team}
+#'   \item{GameID}{Unique PWHL game ID}
+#'   \item{HomeGoals}{Goals scored by the home team}
+#'   \item{AwayGoals}{Goals scored by the away team}
+#'   \item{OTStatus}{Overtime status: `""` (regulation), `"OT"`, or `"SO"`}
+#'   \item{GameType}{`"R"` for regular season, `"P"` for playoff}
+#'   \item{GameStatus}{`"Final"`}
+#' }
+#' @source \url{https://www.thepwhl.com/}
+"pwhlScores"
+
+
 #' Iterative Parameters
 #' Parameters for iterative Dixon-Coles method
 #'

@@ -1,0 +1,12 @@
+http_interactions:
+- request:
+    method: GET
+    uri: https://lscluster.hockeytech.com/feed/index.php?feed=gc&tab=gamesummary&game_id=137&lang=en&key=446521baf8c38984&client_code=pwhl
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body:
+      string: '{"GC":{"Gamesummary":{"meta":{"status":"4","date_played":"2024-11-29","HomeCity":"Toronto","HomeNickname":"Sceptres","VisitorCity":"Boston","VisitorNickname":"Fleet","homeGoals":"2","visitingGoals":"1","playoff":"0"},"scoring":[{"period":"1","home":"1","visitor":"0"},{"period":"2","home":"1","visitor":"1"},{"period":"3","home":"0","visitor":"0"}]}}}'
+  recorded_at: 2026-04-26 00:00:00
+recorded_with: VCR-vcr/2.1.0
