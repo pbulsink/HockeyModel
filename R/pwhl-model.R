@@ -241,6 +241,7 @@ pwhl_loopless_sim <- function(
   season_start <- pwhl_season_start_date(schedule)
 
   if (is.null(odds_table)) {
+    # PWHL schedule has no postponed games, so regression is not needed here.
     odds_table <- remainderSeasonDC(
       scores = scores_rs,
       schedule = schedule[schedule$GameType == "R", ],

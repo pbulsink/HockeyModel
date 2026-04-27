@@ -1744,7 +1744,7 @@ daily_odds_table <- function(
   }
 
   if (league == "PWHL") {
-    teamColours_data <- HockeyModel::pwhlTeamColours
+    teamColours <- HockeyModel::pwhlTeamColours
     table_title <- "PWHL Game Odds"
 
     todayodds_gt <- todayodds |>
@@ -1808,8 +1808,8 @@ daily_odds_table <- function(
       todayodds_gt <- todayodds_gt |>
         gt::tab_style(
           style = gt::cell_fill(
-            color = teamColours_data[
-              teamColours_data$Team == todayodds$HomeTeam[i],
+            color = teamColours[
+              teamColours$Team == todayodds$HomeTeam[i],
               "Hex"
             ]
           ),
@@ -1817,8 +1817,8 @@ daily_odds_table <- function(
         ) |>
         gt::tab_style(
           style = gt::cell_fill(
-            color = teamColours_data[
-              teamColours_data$Team == todayodds$AwayTeam[i],
+            color = teamColours[
+              teamColours$Team == todayodds$AwayTeam[i],
               "Hex"
             ]
           ),
@@ -2053,7 +2053,7 @@ series_odds_table <- function(
   series$AwayOdds <- 1 - series$HomeOdds
 
   if (league == "PWHL") {
-    teamColours_data <- HockeyModel::pwhlTeamColours
+    teamColours <- HockeyModel::pwhlTeamColours
     table_title <- "PWHL Playoff Series Odds"
 
     series_gt <- series |>
@@ -2104,8 +2104,8 @@ series_odds_table <- function(
       series_gt <- series_gt |>
         gt::tab_style(
           style = gt::cell_fill(
-            color = teamColours_data[
-              teamColours_data$Team == series$HomeTeam[i],
+            color = teamColours[
+              teamColours$Team == series$HomeTeam[i],
               "Hex"
             ]
           ),
@@ -2113,8 +2113,8 @@ series_odds_table <- function(
         ) |>
         gt::tab_style(
           style = gt::cell_fill(
-            color = teamColours_data[
-              teamColours_data$Team == series$AwayTeam[i],
+            color = teamColours[
+              teamColours$Team == series$AwayTeam[i],
               "Hex"
             ]
           ),
