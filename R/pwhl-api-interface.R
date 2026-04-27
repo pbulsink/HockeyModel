@@ -517,6 +517,72 @@ pwhl_get_short_team <- function(
 }
 
 
+#' Get active PWHL playoff series
+#'
+#' @description Derives ongoing playoff series from PWHL scores and schedule.
+#'   Returns a data frame compatible with [series_odds_table()] and
+#'   [plot_playoff_series_odds()].
+#'
+#' @param scores (`data.frame`) PWHL scores. Defaults to
+#'   [HockeyModel::pwhlScores].
+#' @param schedule (`data.frame`) PWHL schedule. Defaults to
+#'   [HockeyModel::pwhlSchedule].
+#'
+#' @returns A data frame with columns `HomeTeam`, `AwayTeam`, `HomeWins`,
+#'   `AwayWins`, and `Status` (`"Ongoing"` or `"Complete"`), or `NULL` if
+#'   there are no playoff games.
+#' @export
+getPWHLPlayoffSeries <- function(
+  scores = HockeyModel::pwhlScores,
+  schedule = HockeyModel::pwhlSchedule
+) {
+  playoff_schedule <- schedule[schedule$GameType == "P", ]
+  if (nrow(playoff_schedule) == 0) {
+    return(NULL)
+  }
+
+  playoff_scores <- scores[scores$GameType == "P", ]
+
+  series_pairs <- unique(
+    playoff_schedule[, c("HomeTeam", "AwayTeam")]
+  )
+
+  result <- purrr::map_dfr(seq_len(nrow(series_pairs)), function(i) {
+    home <- series_pairs$HomeTeam[i]
+    away <- series_pairs$AwayTeam[i]
+
+    played <- playoff_scores[
+      (playoff_scores$HomeTeam == home & playoff_scores$AwayTeam == away) |
+        (playoff_scores$HomeTeam == away & playoff_scores$AwayTeam == home),
+    ]
+
+    home_wins <- sum(
+      (played$HomeTeam == home & played$HomeGoals > played$AwayGoals) |
+        (played$AwayTeam == home & played$AwayGoals > played$HomeGoals),
+      na.rm = TRUE
+    )
+    away_wins <- sum(
+      (played$HomeTeam == away & played$HomeGoals > played$AwayGoals) |
+        (played$AwayTeam == away & played$AwayGoals > played$HomeGoals),
+      na.rm = TRUE
+    )
+
+    status <- if (home_wins >= 2 || away_wins >= 2) "Complete" else "Ongoing"
+
+    data.frame(
+      HomeTeam = home,
+      AwayTeam = away,
+      HomeWins = home_wins,
+      AwayWins = away_wins,
+      Status = status,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  result
+}
+
+
 #' Rebuild `pwhlTeamColours` package data from source CSV
 #'
 #' @returns `NULL` (invisibly). Writes updated data when `usethis` is

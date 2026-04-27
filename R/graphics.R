@@ -684,6 +684,8 @@ plot_pace_by_team <- function(
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param teamColours HockeyModel::teamColours or a custom value
+#' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
+#'   `"PWHL"`, the CSV file is not written and PWHL-specific labels are used.
 #'
 #' @return a ggplot image of odds
 #'
@@ -692,7 +694,8 @@ plot_odds_today <- function(
   today = Sys.Date(),
   params = NULL,
   schedule = HockeyModel::schedule,
-  teamColours = HockeyModel::teamColours
+  teamColours = HockeyModel::teamColours,
+  league = "NHL"
 ) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     cli::cli_abort(
@@ -701,6 +704,9 @@ plot_odds_today <- function(
   }
   params <- parse_dc_params(params)
   todayodds <- todayDC(today = today, params, schedule = schedule)
+  if (is.null(todayodds)) {
+    return(NULL)
+  }
   todayodds$HomeWinOT <- todayodds$AwayWinOT <- 0
 
   # add odds for each team in OT/SO
@@ -719,12 +725,14 @@ plot_odds_today <- function(
 
   if (nrow(todayodds) > 0) {
     todayodds$GameID <- as.numeric(todayodds$GameID)
-    utils::write.csv(
-      todayodds,
-      file = paste0("./", getCurrentSeason8(), ".csv"),
-      row.names = FALSE,
-      append = TRUE
-    )
+    if (league != "PWHL") {
+      utils::write.csv(
+        todayodds,
+        file = paste0("./", getCurrentSeason8(), ".csv"),
+        row.names = FALSE,
+        append = TRUE
+      )
+    }
   }
   todayodds$GameID <- NULL
   # Melt data to work with ggplot
@@ -742,6 +750,10 @@ plot_odds_today <- function(
   )
   melted <- melted[melted$variable != "Draw", ]
 
+  if (league == "PWHL") {
+    teamColours <- HockeyModel::pwhlTeamColours
+  }
+
   melted$alpha <- 1
   melted$colour <- ""
   for (i in seq_len(nrow(melted))) {
@@ -752,7 +764,8 @@ plot_odds_today <- function(
     )
     tc <- getTeamColours(
       home = melted[i, ]$HomeTeam,
-      away = melted[i, ]$AwayTeam
+      away = melted[i, ]$AwayTeam,
+      teamColours = teamColours
     )
     melted[i, ]$colour <- ifelse(
       melted[i, ]$variable %in% c("HomeWin", "HomeWinOT"),
@@ -800,7 +813,11 @@ plot_odds_today <- function(
     ggplot2::labs(
       x = "",
       y = "Result Odds",
-      title = "Predictions for Today's Games",
+      title = if (league == "PWHL") {
+        "Predictions for Today's PWHL Games"
+      } else {
+        "Predictions for Today's Games"
+      },
       subtitle = paste0("Games played on ", Sys.Date()),
       caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
     ) +
@@ -870,6 +887,8 @@ plot_odds_today <- function(
 #' @param series A data frame of home team, away team, home wins, away wins
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param teamColours HockeyModel::teamColours or a custom value
+#' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
+#'   `"PWHL"`, PWHL-specific labels are used.
 #'
 #' @return a ggplot image of odds
 #'
@@ -877,7 +896,8 @@ plot_odds_today <- function(
 plot_playoff_series_odds <- function(
   series = getAPISeries(),
   params = NULL,
-  teamColours = HockeyModel::teamColours
+  teamColours = HockeyModel::teamColours,
+  league = "NHL"
 ) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     cli::cli_abort(
@@ -916,7 +936,8 @@ plot_playoff_series_odds <- function(
   for (i in seq_len(nrow(melted))) {
     tc <- getTeamColours(
       home = melted[i, ]$HomeTeam,
-      away = melted[i, ]$AwayTeam
+      away = melted[i, ]$AwayTeam,
+      teamColours = teamColours
     )
     melted[i, ]$colour <- ifelse(
       melted[i, ]$variable == "HomeOdds",
@@ -924,10 +945,6 @@ plot_playoff_series_odds <- function(
       no = tc$away
     )
   }
-
-  # Prepare instructions to read
-  # text_home <- grid::textGrob("Home Win", gp = grid::gpar(fontsize = 10), hjust = 0)
-  # text_away <- grid::textGrob("Away Win", gp = grid::gpar(fontsize = 10), hjust = 1)
 
   # build plot
   p <- ggplot2::ggplot(
@@ -947,7 +964,11 @@ plot_playoff_series_odds <- function(
     ggplot2::labs(
       x = "",
       y = "Series Odds",
-      title = "Predictions for Playoff Series",
+      title = if (league == "PWHL") {
+        "Predictions for PWHL Playoff Series"
+      } else {
+        "Predictions for Playoff Series"
+      },
       subtitle = paste0(
         "Before Games on ",
         Sys.Date(),
@@ -1284,12 +1305,18 @@ plot_point_likelihood <- function(
 #'
 #' @description Produces a plot of offensive and defensive ratings of teams, 0 centred (not scaled).
 #'
-#' @param m HockeyModel::m
+#' @param m HockeyModel::m. Pass [HockeyModel::pwhl_m] for PWHL.
 #' @param teamlist select a subset of teams, if desired
+#' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
+#'   `"PWHL"`, PWHL team colours and title are used.
 #'
 #' @return a ggplot2 plot
 #' @export
-plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
+plot_team_rating <- function(
+  m = HockeyModel::m,
+  teamlist = NULL,
+  league = "NHL"
+) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     cli::cli_abort(
       "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
@@ -1315,8 +1342,13 @@ plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
     stats::sd(team_params$Defence)
 
   # Build and trim team colours for plot
-  teamColoursList <- as.vector(HockeyModel::teamColours$Hex)
-  names(teamColoursList) <- HockeyModel::teamColours$Team
+  colours_source <- if (league == "PWHL") {
+    HockeyModel::pwhlTeamColours
+  } else {
+    HockeyModel::teamColours
+  }
+  teamColoursList <- as.vector(colours_source$Hex)
+  names(teamColoursList) <- colours_source$Team
   teamColoursList <- teamColoursList[names(teamColoursList) %in% teamlist]
 
   p <- ggplot2::ggplot(
@@ -1335,7 +1367,11 @@ plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
     ggplot2::labs(
       x = "Offence",
       y = "Defence",
-      title = "Current Team Offence & Defence Ratings",
+      title = if (league == "PWHL") {
+        "Current PWHL Team Offence & Defence Ratings"
+      } else {
+        "Current Team Offence & Defence Ratings"
+      },
       subtitle = paste0("As of ", Sys.Date()),
       caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
     ) +
@@ -1400,14 +1436,20 @@ plot_team_rating <- function(m = HockeyModel::m, teamlist = NULL) {
 #' @param home Home Team colours to get
 #' @param away Away Team's colours to get
 #' @param delta Colour delta required. Default 0.15. See [colourDelta]. Must be between 0 and 1
+#' @param teamColours Team colours table. Defaults to [HockeyModel::teamColours]. Pass
+#'   [HockeyModel::pwhlTeamColours] for PWHL teams.
 #'
 #' @return a list with two items: home & away, each containing the appropriate hex colour value
 #' @export
 #'
 #' @examples
 #' getTeamColours("Buffalo Sabres", "Tampa Bay Lightning")
-getTeamColours <- function(home, away, delta = 0.15) {
-  teamColours <- HockeyModel::teamColours
+getTeamColours <- function(
+  home,
+  away,
+  delta = 0.15,
+  teamColours = HockeyModel::teamColours
+) {
   if (!home %in% teamColours$Team) {
     cli::cli_abort("{.arg home} ({.val {home}}) is not a recognized team.")
   }
@@ -1487,9 +1529,11 @@ getTeamColours <- function(home, away, delta = 0.15) {
 #'
 #' @param playoff_odds a playoff odds data frame with columns Team, Make_Playoffs, Win_First_Round, Win_Second_Round, Win_Conference, Win_Cup
 #' @param caption_text Additional text to prepend to " Playoff Odds" in table title. E.g. 'Eastern Conference' if only eastteams sent in.
-#'
-#' @param trim Whether to drop teams that have 0 chance of making playoffs. Default true
-#' @param trimcup Whether to drorp teams that have 0 chance of winning cup. Default false
+#' @param trim Whether to drop teams that have 0 chance of making playoffs. Default true (ignored for PWHL)
+#' @param trimcup Whether to drop teams that have 0 chance of winning cup. Default false (ignored for PWHL)
+#' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
+#'   `"PWHL"`, only `Make_Playoffs`, `meanPoints`, and `meanRank` columns are
+#'   formatted and no logo images are included.
 #'
 #' @return a gt table
 #' @export
@@ -1497,7 +1541,8 @@ format_playoff_odds <- function(
   playoff_odds,
   caption_text = "",
   trim = TRUE,
-  trimcup = FALSE
+  trimcup = FALSE,
+  league = "NHL"
 ) {
   if (!requireNamespace("gt", quietly = TRUE)) {
     cli::cli_abort(
@@ -1509,6 +1554,54 @@ format_playoff_odds <- function(
       "Package {.pkg scales} is required. Install it with {.code install.packages('scales')}."
     )
   }
+
+  if (league == "PWHL") {
+    tc <- HockeyModel::pwhlTeamColours
+    playoff_odds <- playoff_odds |>
+      dplyr::arrange(dplyr::desc(.data$Make_Playoffs), .data$Team)
+    playoff_odds_gt <- playoff_odds |>
+      dplyr::select(
+        .data$Team,
+        .data$Make_Playoffs,
+        .data$meanPoints,
+        .data$meanRank
+      ) |>
+      tibble::add_column("block" = "  ", .before = 1) |>
+      gt::gt() |>
+      gt::tab_header(
+        title = paste(caption_text, "Playoff Odds"),
+        subtitle = paste0(
+          "Generated ",
+          Sys.Date(),
+          " | P. Bulsink (@bot.bulsink.ca)"
+        )
+      ) |>
+      gt::cols_label(
+        "block" = " ",
+        "Make_Playoffs" = "Make Playoffs",
+        "meanPoints" = "Mean Points",
+        "meanRank" = "Mean Rank"
+      ) |>
+      gt::data_color(
+        columns = "Make_Playoffs",
+        fn = scales::col_numeric(c("#fefffe", "#3ccc3c"), domain = c(0, 1))
+      ) |>
+      gt::fmt_percent(columns = "Make_Playoffs", drop_trailing_zeros = FALSE) |>
+      gt::fmt_number(columns = c("meanPoints", "meanRank"), decimals = 1) |>
+      gt::tab_options(heading.align = "left")
+
+    for (i in seq_len(nrow(playoff_odds))) {
+      playoff_odds_gt <- playoff_odds_gt |>
+        gt::tab_style(
+          style = gt::cell_fill(
+            color = tc[tc$Team == playoff_odds$Team[i], "Hex"]
+          ),
+          locations = gt::cells_body(columns = "block", rows = i)
+        )
+    }
+    return(playoff_odds_gt)
+  }
+
   teamColours <- HockeyModel::teamColours
   playoff_odds <- playoff_odds |>
     dplyr::arrange(
@@ -1601,6 +1694,9 @@ format_playoff_odds <- function(
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param schedule Schedule, or HockeyModel Schedule
 #' @param include_logo whether to include dailyfaceoff logo
+#' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
+#'   `"PWHL"`, PWHL team colours are used, logo columns are skipped, and the
+#'   title is set to `"PWHL Game Odds"`.
 #'
 #' @return a gt table
 #' @export
@@ -1608,7 +1704,8 @@ daily_odds_table <- function(
   today = Sys.Date(),
   params = NULL,
   schedule = HockeyModel::schedule,
-  include_logo = FALSE
+  include_logo = FALSE,
+  league = "NHL"
 ) {
   if (!requireNamespace("gt", quietly = TRUE)) {
     cli::cli_abort(
@@ -1626,60 +1723,110 @@ daily_odds_table <- function(
     params = params,
     schedule = schedule
   )
+  if (is.null(todayodds)) {
+    return(NULL)
+  }
   todayodds$HomexG <- NA
   todayodds$AwayxG <- NA
 
   for (g in seq_len(nrow(todayodds))) {
-    # Expected goals home
-    lambda <- try(
-      stats::predict(
-        params$m,
-        data.frame(
-          Home = 1,
-          Team = todayodds$HomeTeam[g],
-          Opponent = todayodds$AwayTeam[g]
-        ),
-        type = "response"
-      ),
-      TRUE
+    xg <- dcxG(
+      home = todayodds$HomeTeam[g],
+      away = todayodds$AwayTeam[g],
+      params = params
     )
-
-    # Expected goals away
-    mu <- try(
-      stats::predict(
-        params$m,
-        data.frame(
-          Home = 0,
-          Team = todayodds$AwayTeam[g],
-          Opponent = todayodds$HomeTeam[g]
-        ),
-        type = "response"
-      ),
-      TRUE
-    )
-
-    # fix errors
-    if (!is.numeric(lambda)) {
-      lambda <- DCPredictErrorRecover(
-        team = todayodds$HomeTeam[g],
-        opponent = todayodds$AwayTeam[g],
-        homeiceadv = TRUE
-      )
-    }
-    if (!is.numeric(mu)) {
-      mu <- DCPredictErrorRecover(
-        team = todayodds$AwayTeam[g],
-        opponent = todayodds$HomeTeam[g],
-        homeiceadv = FALSE
-      )
-    }
-
-    todayodds$HomexG[g] <- lambda
-    todayodds$AwayxG[g] <- mu
+    todayodds$HomexG[g] <- xg$home
+    todayodds$AwayxG[g] <- xg$away
     todayodds[g, c("HomeWin", "AwayWin")] <- normalizeOdds(todayodds[
       g,
       c("HomeWin", "AwayWin")
     ])
+  }
+
+  if (league == "PWHL") {
+    teamColours_data <- HockeyModel::pwhlTeamColours
+    table_title <- "PWHL Game Odds"
+
+    todayodds_gt <- todayodds |>
+      dplyr::select(
+        .data$HomeTeam,
+        .data$HomexG,
+        .data$HomeWin,
+        .data$AwayWin,
+        .data$AwayxG,
+        .data$AwayTeam
+      ) |>
+      tibble::add_column("homeblock" = "  ", .before = 1) |>
+      tibble::add_column("awayblock" = "  ") |>
+      gt::gt() |>
+      gt::tab_header(
+        title = table_title,
+        subtitle = paste0(
+          "For games ",
+          today,
+          " | P. Bulsink (@bot.bulsink.ca)"
+        )
+      ) |>
+      gt::tab_spanner(
+        label = "Home",
+        columns = c("HomeTeam", "HomexG", "HomeWin")
+      ) |>
+      gt::tab_spanner(
+        label = "Away",
+        columns = c("AwayWin", "AwayxG", "AwayTeam")
+      ) |>
+      gt::cols_label(
+        "homeblock" = " ",
+        "awayblock" = " ",
+        "HomexG" = "xG",
+        "HomeWin" = "Win",
+        "HomeTeam" = "Team",
+        "AwayxG" = "xG",
+        "AwayWin" = "Win",
+        "AwayTeam" = "Team"
+      ) |>
+      gt::data_color(
+        columns = c(4, 5),
+        fn = scales::col_numeric(
+          palette = c("#cc3c3c", "#ffffff", "#3c3ccc"),
+          domain = c(0, 1)
+        )
+      ) |>
+      gt::fmt_percent(columns = 4:5, decimals = 1) |>
+      gt::fmt_number(
+        columns = c(3, 6),
+        drop_trailing_zeros = FALSE,
+        decimals = 2
+      ) |>
+      gt::tab_options(
+        heading.align = "left",
+        table.border.bottom.color = "white",
+        table.border.top.color = "white"
+      )
+
+    for (i in seq_len(nrow(todayodds))) {
+      todayodds_gt <- todayodds_gt |>
+        gt::tab_style(
+          style = gt::cell_fill(
+            color = teamColours_data[
+              teamColours_data$Team == todayodds$HomeTeam[i],
+              "Hex"
+            ]
+          ),
+          locations = gt::cells_body(columns = "homeblock", rows = i)
+        ) |>
+        gt::tab_style(
+          style = gt::cell_fill(
+            color = teamColours_data[
+              teamColours_data$Team == todayodds$AwayTeam[i],
+              "Hex"
+            ]
+          ),
+          locations = gt::cells_body(columns = "awayblock", rows = i)
+        )
+    }
+
+    return(todayodds_gt)
   }
 
   teamColours <- HockeyModel::teamColours
@@ -1722,7 +1869,6 @@ daily_odds_table <- function(
       "HomexG" = "xG",
       "HomeWin" = "Win",
       "HomeTeam" = "Team",
-      # "Draw" = "OT/SO?",
       "AwayxG" = "xG",
       "AwayWin" = "Win",
       "AwayTeam" = "Team"
@@ -1734,8 +1880,6 @@ daily_odds_table <- function(
         domain = c(0, 1)
       )
     ) |>
-    # gt::data_color(columns = 6, color = scales::col_numeric(palette = c("#fefeff", "#3c3ccc"), domain=c(0,1)))|>
-    # gt::data_color(columns = c(5,7), color = scales::col_bin(palette = c("#fefffe", "#ffffff", "#3ccc3c"), bins = c(0,0.5, 1)))|>
     gt::fmt_percent(columns = 5:6, decimals = 1) |>
     gt::fmt_number(
       columns = c(4, 7),
@@ -1828,13 +1972,17 @@ daily_odds_table <- function(
 #'   [updateDC] for information on the params list.
 #' @param include_logo Whether to include the Daily Faceoff logo as a source
 #'   note. Default `FALSE`.
+#' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
+#'   `"PWHL"`, PWHL team colours are used, logo columns are skipped, and the
+#'   title is set to `"PWHL Playoff Series Odds"`.
 #'
 #' @return a gt table
 #' @export
 series_odds_table <- function(
   series = getAPISeries(),
   params = NULL,
-  include_logo = FALSE
+  include_logo = FALSE,
+  league = "NHL"
 ) {
   if (!requireNamespace("gt", quietly = TRUE)) {
     cli::cli_abort(
@@ -1903,6 +2051,79 @@ series_odds_table <- function(
     series$AwayWins
   )
   series$AwayOdds <- 1 - series$HomeOdds
+
+  if (league == "PWHL") {
+    teamColours_data <- HockeyModel::pwhlTeamColours
+    table_title <- "PWHL Playoff Series Odds"
+
+    series_gt <- series |>
+      tibble::add_column("homeblock" = "  ", .before = 1) |>
+      tibble::add_column("awayblock" = "  ") |>
+      gt::gt() |>
+      gt::tab_header(
+        title = table_title,
+        subtitle = paste0(
+          "Generated ",
+          Sys.Date(),
+          " | P. Bulsink (@bot.bulsink.ca)"
+        )
+      ) |>
+      gt::tab_spanner(
+        label = "Home",
+        columns = c("HomeTeam", "HomeWins", "HomeOdds")
+      ) |>
+      gt::tab_spanner(
+        label = "Away",
+        columns = c("AwayOdds", "AwayWins", "AwayTeam")
+      ) |>
+      gt::cols_label(
+        "homeblock" = " ",
+        "HomeTeam" = "Team",
+        "HomeWins" = "Wins",
+        "HomeOdds" = "Series Odds",
+        "AwayOdds" = "Series Odds",
+        "AwayWins" = "Wins",
+        "AwayTeam" = "Team",
+        "awayblock" = " "
+      ) |>
+      gt::data_color(
+        columns = c("HomeOdds", "AwayOdds"),
+        fn = scales::col_numeric(
+          palette = c("#cc3c3c", "#ffffff", "#3c3ccc"),
+          domain = c(0, 1)
+        )
+      ) |>
+      gt::fmt_percent(columns = c("HomeOdds", "AwayOdds"), decimals = 1) |>
+      gt::tab_options(
+        heading.align = "left",
+        table.border.bottom.color = "white",
+        table.border.top.color = "white"
+      )
+
+    for (i in seq_len(nrow(series))) {
+      series_gt <- series_gt |>
+        gt::tab_style(
+          style = gt::cell_fill(
+            color = teamColours_data[
+              teamColours_data$Team == series$HomeTeam[i],
+              "Hex"
+            ]
+          ),
+          locations = gt::cells_body(columns = "homeblock", rows = i)
+        ) |>
+        gt::tab_style(
+          style = gt::cell_fill(
+            color = teamColours_data[
+              teamColours_data$Team == series$AwayTeam[i],
+              "Hex"
+            ]
+          ),
+          locations = gt::cells_body(columns = "awayblock", rows = i)
+        )
+    }
+
+    return(series_gt)
+  }
 
   teamColours <- HockeyModel::teamColours
 

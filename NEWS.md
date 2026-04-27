@@ -1,5 +1,8 @@
 # HockeyModel (development version)
 
+* `getPWHLPlayoffSeries()` added to derive ongoing PWHL playoff series from scores and schedule, compatible with `series_odds_table()` and `plot_playoff_series_odds()` (#32).
+* `plot_odds_today()`, `daily_odds_table()`, `plot_team_rating()`, `format_playoff_odds()`, `series_odds_table()`, `plot_playoff_series_odds()`, and `getTeamColours()` now accept a `league` parameter (`"NHL"` or `"PWHL"`) to support both leagues from shared functions (#32).
+* `dailyPWHLSummary()` refactored to use shared graphics functions with `league = "PWHL"`; removed PWHL-specific duplicates `pwhl_plot_odds_today()`, `pwhl_daily_odds_table()`, `pwhl_plot_team_rating()`, `pwhl_format_playoff_odds()`, `pwhl_today_dc()`, `pwhl_get_team_colours()`, and `pwhl_remainder_season_dc()` (#32).
 * `save_gt_as_png_ragg()` now saves `gt` tables as PNG using `ragg`, removing the need for `webshot2`/`chromote` (#35).
 * Added PWHL support: new `pwhlTeamColours`, `pwhlSchedule`, and `pwhlScores` datasets plus `getPWHLSeasons()`, `getCurrentPWHLSeason()`, `getPWHLSchedule()`, `getPWHLScores()`, `pwhl_games_today()`, `updatePWHLScheduleAPI()`, and `updatePWHLScoresAPI()` functions to fetch and maintain PWHL data via the HockeyTech API (#32).
 * `dailyPWHLSummary()` now provides a one-liner daily workflow for PWHL, matching `dailySummary()` for NHL: fetches schedule and scores, fits `updatePWHLDC()` model parameters (`pwhl_m`, `pwhl_rho`, `pwhl_beta`, `pwhl_eta`, `pwhl_k`), generates today's odds plot and table via `pwhl_plot_odds_today()` and `pwhl_daily_odds_table()`, posts season-wide playoff-qualification odds from `pwhl_loopless_sim()`, and posts to social media (#32).

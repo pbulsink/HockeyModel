@@ -196,26 +196,32 @@ test_that("pwhl_in_season rejects non-Date input", {
   )
 })
 
-# ── pwhl_today_dc ─────────────────────────────────────────────────────────────
+# ── todayDC (PWHL) ────────────────────────────────────────────────────────────
 
-test_that("pwhl_today_dc returns NULL when no games today", {
+test_that("todayDC returns NULL when no PWHL games today", {
   scores <- make_pwhl_scores(30)
   params <- make_pwhl_params(scores)
   sched <- make_pwhl_schedule(scores)
-  result <- pwhl_today_dc(
+  result <- todayDC(
     params = params,
     today = as.Date("1900-01-01"),
-    schedule = sched
+    schedule = sched,
+    draws = TRUE
   )
   expect_null(result)
 })
 
-test_that("pwhl_today_dc returns correct columns when games exist", {
+test_that("todayDC returns correct columns when PWHL games exist", {
   scores <- make_pwhl_scores(30)
   params <- make_pwhl_params(scores)
   sched <- make_pwhl_schedule(scores)
   today <- sched$Date[1]
-  result <- pwhl_today_dc(params = params, today = today, schedule = sched)
+  result <- todayDC(
+    params = params,
+    today = today,
+    schedule = sched,
+    draws = TRUE
+  )
   expect_true(is.data.frame(result))
   expect_true(all(
     c("HomeTeam", "AwayTeam", "HomeWin", "AwayWin", "Draw", "GameID") %in%
@@ -225,99 +231,54 @@ test_that("pwhl_today_dc returns correct columns when games exist", {
   expect_true(all(result$AwayWin >= 0 & result$AwayWin <= 1))
 })
 
-test_that("pwhl_today_dc rejects non-Date today", {
-  expect_error(pwhl_today_dc(today = "not-a-date"), class = "rlang_error")
+test_that("todayDC rejects non-Date today", {
+  expect_error(todayDC(today = "not-a-date"), class = "rlang_error")
 })
 
-# ── pwhl_get_team_colours ─────────────────────────────────────────────────────
+# ── getTeamColours (PWHL) ─────────────────────────────────────────────────────
 
-test_that("pwhl_get_team_colours returns list with home and away colours", {
-  tc <- pwhl_get_team_colours("Boston Fleet", "Ottawa Charge")
+test_that("getTeamColours returns list with home and away colours for PWHL", {
+  tc <- getTeamColours(
+    "Boston Fleet",
+    "Ottawa Charge",
+    teamColours = HockeyModel::pwhlTeamColours
+  )
   expect_type(tc, "list")
   expect_true(all(c("home", "away") %in% names(tc)))
   expect_match(tc$home, "^#[0-9A-Fa-f]{6}$")
   expect_match(tc$away, "^#[0-9A-Fa-f]{6}$")
 })
 
-test_that("pwhl_get_team_colours rejects unknown teams", {
+test_that("getTeamColours rejects unknown PWHL teams", {
   expect_error(
-    pwhl_get_team_colours("Unknown Team", "Boston Fleet"),
+    getTeamColours(
+      "Unknown Team",
+      "Boston Fleet",
+      teamColours = HockeyModel::pwhlTeamColours
+    ),
     class = "rlang_error"
   )
   expect_error(
-    pwhl_get_team_colours("Boston Fleet", "Unknown Team"),
+    getTeamColours(
+      "Boston Fleet",
+      "Unknown Team",
+      teamColours = HockeyModel::pwhlTeamColours
+    ),
     class = "rlang_error"
   )
 })
 
-test_that("pwhl_get_team_colours returns different colours for all six teams", {
+test_that("getTeamColours returns valid colours for all six PWHL teams", {
   teams <- HockeyModel::pwhlTeamColours$Team
   for (t1 in teams) {
     for (t2 in teams[teams != t1]) {
-      tc <- pwhl_get_team_colours(t1, t2)
+      tc <- getTeamColours(t1, t2, teamColours = HockeyModel::pwhlTeamColours)
       expect_match(tc$home, "^#[0-9A-Fa-f]{6}$")
       expect_match(tc$away, "^#[0-9A-Fa-f]{6}$")
     }
   }
 })
 
-# ── pwhl_remainder_season_dc ──────────────────────────────────────────────────
-
-test_that("pwhl_remainder_season_dc returns correct structure", {
-  scores <- make_pwhl_scores(30)
-  params <- make_pwhl_params(scores)
-  sched <- make_pwhl_schedule(scores)
-  all_sched <- dplyr::bind_rows(
-    scores[, c(
-      "Date",
-      "HomeTeam",
-      "AwayTeam",
-      "GameID",
-      "GameType",
-      "GameStatus"
-    )],
-    sched
-  )
-  result <- pwhl_remainder_season_dc(
-    scores = scores,
-    schedule = all_sched,
-    params = params
-  )
-  expect_true(is.data.frame(result))
-  expect_true(all(
-    c(
-      "HomeTeam",
-      "AwayTeam",
-      "HomeWin",
-      "AwayWin",
-      "Draw",
-      "GameID",
-      "Date"
-    ) %in%
-      names(result)
-  ))
-  expect_true(nrow(result) > 0)
-  expect_true(all(result$HomeWin >= 0 & result$HomeWin <= 1))
-})
-
-test_that("pwhl_remainder_season_dc returns empty frame when no future games", {
-  scores <- make_pwhl_scores(10)
-  past_sched <- scores[, c(
-    "Date",
-    "HomeTeam",
-    "AwayTeam",
-    "GameID",
-    "GameType",
-    "GameStatus"
-  )]
-  result <- pwhl_remainder_season_dc(
-    scores = scores,
-    schedule = past_sched,
-    params = list(m = NULL, rho = NULL, beta = 1, eta = 1, k = 1)
-  )
-  expect_true(is.data.frame(result))
-  expect_equal(nrow(result), 0)
-})
 
 # ── pwhl_loopless_sim ─────────────────────────────────────────────────────────
 

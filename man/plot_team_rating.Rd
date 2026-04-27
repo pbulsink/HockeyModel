@@ -4,12 +4,15 @@
 \alias{plot_team_rating}
 \title{Plot Team Rating}
 \usage{
-plot_team_rating(m = HockeyModel::m, teamlist = NULL)
+plot_team_rating(m = HockeyModel::m, teamlist = NULL, league = "NHL")
 }
 \arguments{
-\item{m}{HockeyModel::m}
+\item{m}{HockeyModel::m. Pass \link{pwhl_m} for PWHL.}
 
 \item{teamlist}{select a subset of teams, if desired}
+
+\item{league}{League identifier. \code{"NHL"} (default) or \code{"PWHL"}. When
+\code{"PWHL"}, PWHL team colours and title are used.}
 }
 \value{
 a ggplot2 plot

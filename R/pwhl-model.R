@@ -207,567 +207,7 @@ pwhl_season_start_date <- function(schedule = HockeyModel::pwhlSchedule) {
 }
 
 
-# ── PWHL-flavoured DC helpers ─────────────────────────────────────────────────
-
-#' PWHL today's odds (internal)
-#'
-#' @description Like [todayDC()] but uses the PWHL schedule and parameters.
-#'
-#' @param params (`list` or `NULL`) DC parameter list (PWHL).
-#' @param today (`Date`) Date to predict. Defaults to today.
-#' @param schedule (`data.frame`) PWHL schedule.
-#'
-#' @returns Data frame with `HomeTeam`, `AwayTeam`, `HomeWin`, `AwayWin`,
-#'   `Draw`, and `GameID`, or `NULL` if no games on `today`.
-#' @keywords internal
-pwhl_today_dc <- function(
-  params = NULL,
-  today = Sys.Date(),
-  schedule = HockeyModel::pwhlSchedule
-) {
-  if (!is.Date(today)) {
-    cli::cli_abort("{.arg today} must be a Date or date-like value.")
-  }
-  params <- parse_pwhl_dc_params(params)
-  games <- schedule[schedule$Date == today, ]
-  if (nrow(games) == 0) {
-    return(NULL)
-  }
-
-  preds <- data.frame(
-    HomeTeam = games$HomeTeam,
-    AwayTeam = games$AwayTeam,
-    HomeWin = 0,
-    AwayWin = 0,
-    Draw = 0,
-    GameID = games$GameID,
-    stringsAsFactors = FALSE
-  )
-
-  for (i in seq_len(nrow(preds))) {
-    p <- DCPredict(
-      preds$HomeTeam[[i]],
-      preds$AwayTeam[[i]],
-      params = params,
-      draws = TRUE
-    )
-    preds$HomeWin[[i]] <- p[[1]]
-    preds$Draw[[i]] <- p[[2]]
-    preds$AwayWin[[i]] <- p[[3]]
-  }
-
-  preds
-}
-
-
-#' Get PWHL team colour pair for a matchup
-#'
-#' @description PWHL-specific wrapper around [getTeamColours()] that uses
-#'   [HockeyModel::pwhlTeamColours].
-#'
-#' @param home (`character(1)`) Home team name.
-#' @param away (`character(1)`) Away team name.
-#' @param delta (`numeric(1)`) Minimum colour distance; see [colourDelta()].
-#'
-#' @returns A list with `home` and `away` hex colour strings.
-#' @keywords internal
-pwhl_get_team_colours <- function(home, away, delta = 0.15) {
-  tc <- HockeyModel::pwhlTeamColours
-  if (!home %in% tc$Team) {
-    cli::cli_abort("{.arg home} ({.val {home}}) is not a recognised PWHL team.")
-  }
-  if (!away %in% tc$Team) {
-    cli::cli_abort("{.arg away} ({.val {away}}) is not a recognised PWHL team.")
-  }
-
-  hprimary <- tc[tc$Team == home, "Hex"]
-  aprimary <- tc[tc$Team == away, "Hex"]
-  halt <- tc[tc$Team == home, "AltHex"]
-  aalt <- tc[tc$Team == away, "AltHex"]
-
-  ppdelta <- colourDelta(hprimary, aprimary)
-  padelta <- colourDelta(hprimary, aalt)
-  apdelta <- colourDelta(halt, aprimary)
-  aadelta <- colourDelta(halt, aalt)
-
-  if (ppdelta >= delta) {
-    return(list(home = hprimary, away = aprimary))
-  }
-  if (padelta >= delta) {
-    return(list(home = hprimary, away = aalt))
-  }
-  if (apdelta >= delta) {
-    return(list(home = halt, away = aprimary))
-  }
-  if (aadelta >= delta) {
-    return(list(home = halt, away = aalt))
-  }
-
-  # All combos too similar; pick the best available
-  bestdelta <- max(c(ppdelta, padelta, apdelta, aadelta))
-  if (ppdelta == bestdelta) {
-    return(list(home = hprimary, away = aprimary))
-  } else if (padelta == bestdelta) {
-    return(list(home = hprimary, away = aalt))
-  } else if (apdelta == bestdelta) {
-    return(list(home = halt, away = aprimary))
-  }
-  list(home = halt, away = aalt)
-}
-
-
-# ── PWHL Graphics ─────────────────────────────────────────────────────────────
-
-#' Plot today's PWHL game odds
-#'
-#' @description Produces a stacked bar chart of home/away/OT win odds for each
-#'   PWHL game scheduled on `today`. Returns `NULL` if there are no games.
-#'
-#' @param today (`Date`) Date to predict. Defaults to today.
-#' @param params (`list` or `NULL`) PWHL DC parameter list.
-#' @param schedule (`data.frame`) PWHL schedule.
-#'
-#' @returns A [ggplot2::ggplot()] object, or `NULL`.
-#' @export
-pwhl_plot_odds_today <- function(
-  today = Sys.Date(),
-  params = NULL,
-  schedule = HockeyModel::pwhlSchedule
-) {
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    cli::cli_abort(
-      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
-    )
-  }
-  params <- parse_pwhl_dc_params(params)
-  todayodds <- pwhl_today_dc(
-    params = params,
-    today = today,
-    schedule = schedule
-  )
-  if (is.null(todayodds) || nrow(todayodds) == 0) {
-    return(NULL)
-  }
-
-  todayodds$HomeWinOT <- todayodds$AwayWinOT <- 0
-  for (g in seq_len(nrow(todayodds))) {
-    ot <- extraTimeSolver(
-      home_win = todayodds$HomeWin[g],
-      away_win = todayodds$AwayWin[g],
-      draw = todayodds$Draw[g]
-    )
-    todayodds$HomeWinOT[g] <- ot[2]
-    todayodds$AwayWinOT[g] <- ot[3]
-  }
-
-  todayodds$GameID <- NULL
-
-  melted <- tidyr::pivot_longer(
-    todayodds,
-    cols = c("HomeWin", "AwayWin", "HomeWinOT", "AwayWinOT", "Draw"),
-    names_to = "variable",
-    values_to = "value"
-  )
-  melted$variable <- factor(
-    x = melted$variable,
-    levels = c("AwayWin", "AwayWinOT", "Draw", "HomeWinOT", "HomeWin"),
-    ordered = TRUE
-  )
-  melted <- melted[melted$variable != "Draw", ]
-
-  melted$alpha <- ifelse(melted$variable %in% c("HomeWin", "AwayWin"), 1, 0.7)
-  melted$colour <- ""
-
-  for (i in seq_len(nrow(melted))) {
-    tc <- pwhl_get_team_colours(
-      home = melted[i, ]$HomeTeam,
-      away = melted[i, ]$AwayTeam
-    )
-    melted[i, ]$colour <- ifelse(
-      melted[i, ]$variable %in% c("HomeWin", "HomeWinOT"),
-      tc$home,
-      tc$away
-    )
-  }
-
-  ggplot2::ggplot(
-    melted,
-    ggplot2::aes(
-      y = .data$value,
-      x = .data$HomeTeam,
-      group = .data$variable
-    )
-  ) +
-    ggplot2::geom_bar(
-      stat = "identity",
-      position = "fill",
-      fill = melted$colour,
-      alpha = melted$alpha,
-      colour = "white"
-    ) +
-    ggplot2::labs(
-      x = "",
-      y = "Result Odds",
-      title = "Predictions for Today's PWHL Games",
-      subtitle = paste0("Games played on ", today),
-      caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
-    ) +
-    ggplot2::theme_bw() +
-    ggplot2::theme(
-      axis.text.y = ggplot2::element_blank(),
-      axis.ticks.y = ggplot2::element_blank(),
-      panel.background = ggplot2::element_rect(fill = "white"),
-      panel.border = ggplot2::element_blank(),
-      panel.grid = ggplot2::element_blank(),
-      plot.margin = ggplot2::unit(c(2, 1, 1, 1), "lines")
-    ) +
-    ggplot2::scale_y_continuous(
-      expand = ggplot2::expansion(add = 0.3),
-      breaks = c(0, 0.5, 1)
-    ) +
-    ggplot2::annotate(
-      "text",
-      x = todayodds$HomeTeam,
-      y = -.01,
-      hjust = 1,
-      label = todayodds$HomeTeam
-    ) +
-    ggplot2::annotate(
-      "text",
-      x = todayodds$HomeTeam,
-      y = 1.01,
-      hjust = 0,
-      label = todayodds$AwayTeam
-    ) +
-    ggplot2::annotate(
-      "label",
-      x = todayodds$HomeTeam,
-      y = 0.01,
-      hjust = 0,
-      label = format(round(todayodds$HomeWin, 3), nsmall = 3)
-    ) +
-    ggplot2::annotate(
-      "label",
-      x = todayodds$HomeTeam,
-      y = 0.99,
-      hjust = 1,
-      label = format(round(todayodds$AwayWin, 3), nsmall = 3)
-    ) +
-    ggplot2::coord_flip()
-}
-
-
-#' PWHL daily odds table
-#'
-#' @description Returns a `gt` table of win odds and expected goals for today's
-#'   (or a specified date's) PWHL games. Returns `NULL` when there are no games.
-#'
-#' @param today (`Date`) Date for games. Defaults to today.
-#' @param params (`list` or `NULL`) PWHL DC parameter list.
-#' @param schedule (`data.frame`) PWHL schedule.
-#'
-#' @returns A `gt` table object, or `NULL`.
-#' @export
-pwhl_daily_odds_table <- function(
-  today = Sys.Date(),
-  params = NULL,
-  schedule = HockeyModel::pwhlSchedule
-) {
-  if (!requireNamespace("gt", quietly = TRUE)) {
-    cli::cli_abort(
-      "Package {.pkg gt} is required. Install it with {.code install.packages('gt')}."
-    )
-  }
-  if (!requireNamespace("scales", quietly = TRUE)) {
-    cli::cli_abort(
-      "Package {.pkg scales} is required. Install it with {.code install.packages('scales')}."
-    )
-  }
-
-  params <- parse_pwhl_dc_params(params)
-  todayodds <- pwhl_today_dc(
-    params = params,
-    today = today,
-    schedule = schedule
-  )
-  if (is.null(todayodds) || nrow(todayodds) == 0) {
-    return(NULL)
-  }
-
-  todayodds$HomexG <- NA_real_
-  todayodds$AwayxG <- NA_real_
-
-  for (g in seq_len(nrow(todayodds))) {
-    xg <- dcxG(
-      home = todayodds$HomeTeam[g],
-      away = todayodds$AwayTeam[g],
-      params = params
-    )
-    todayodds$HomexG[g] <- xg$home
-    todayodds$AwayxG[g] <- xg$away
-    todayodds[g, c("HomeWin", "AwayWin")] <- normalizeOdds(todayodds[
-      g,
-      c("HomeWin", "AwayWin")
-    ])
-  }
-
-  teamColours <- HockeyModel::pwhlTeamColours
-
-  todayodds_gt <- todayodds |>
-    dplyr::select(
-      .data$HomeTeam,
-      .data$HomexG,
-      .data$HomeWin,
-      .data$AwayWin,
-      .data$AwayxG,
-      .data$AwayTeam
-    ) |>
-    tibble::add_column("homeblock" = "  ", .before = 1) |>
-    tibble::add_column("awayblock" = "  ") |>
-    gt::gt() |>
-    gt::tab_header(
-      title = "PWHL Game Odds",
-      subtitle = paste0("For games ", today, " | P. Bulsink (@bot.bulsink.ca)")
-    ) |>
-    gt::tab_spanner(
-      label = "Home",
-      columns = c("HomeTeam", "HomexG", "HomeWin")
-    ) |>
-    gt::tab_spanner(
-      label = "Away",
-      columns = c("AwayWin", "AwayxG", "AwayTeam")
-    ) |>
-    gt::cols_label(
-      "homeblock" = " ",
-      "awayblock" = " ",
-      "HomexG" = "xG",
-      "HomeWin" = "Win",
-      "HomeTeam" = "Team",
-      "AwayxG" = "xG",
-      "AwayWin" = "Win",
-      "AwayTeam" = "Team"
-    ) |>
-    gt::data_color(
-      columns = c(4, 5),
-      fn = scales::col_numeric(
-        palette = c("#cc3c3c", "#ffffff", "#3c3ccc"),
-        domain = c(0, 1)
-      )
-    ) |>
-    gt::fmt_percent(columns = 4:5, decimals = 1) |>
-    gt::fmt_number(
-      columns = c(3, 6),
-      drop_trailing_zeros = FALSE,
-      decimals = 2
-    ) |>
-    gt::tab_options(
-      heading.align = "left",
-      table.border.bottom.color = "white",
-      table.border.top.color = "white"
-    )
-
-  for (i in seq_len(nrow(todayodds))) {
-    todayodds_gt <- todayodds_gt |>
-      gt::tab_style(
-        style = gt::cell_fill(
-          color = teamColours[teamColours$Team == todayodds$HomeTeam[i], "Hex"]
-        ),
-        locations = gt::cells_body(columns = "homeblock", rows = i)
-      ) |>
-      gt::tab_style(
-        style = gt::cell_fill(
-          color = teamColours[teamColours$Team == todayodds$AwayTeam[i], "Hex"]
-        ),
-        locations = gt::cells_body(columns = "awayblock", rows = i)
-      )
-  }
-
-  todayodds_gt
-}
-
-
-#' PWHL team ratings plot
-#'
-#' @description Produces an offence-vs-defence scatter plot for PWHL teams
-#'   using the fitted PWHL model `m`.
-#'
-#' @param m (`glm`) PWHL DC model. Defaults to [HockeyModel::pwhl_m].
-#' @param teamlist (`character`) Subset of teams. `NULL` uses all teams in `m`.
-#'
-#' @returns A [ggplot2::ggplot()] object.
-#' @export
-pwhl_plot_team_rating <- function(m = HockeyModel::pwhl_m, teamlist = NULL) {
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    cli::cli_abort(
-      "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
-    )
-  }
-  if (is.null(m)) {
-    cli::cli_abort(
-      "PWHL model is not fitted yet. Run {.fn updatePWHLDC} first."
-    )
-  }
-  if (is.null(teamlist)) {
-    teamlist <- as.character(unique(m$data$Team))
-  }
-
-  team_params <- data.frame(
-    Attack = as.numeric(m$coefficients[seq_along(teamlist)]),
-    Defence = c(
-      0,
-      -m$coefficients[(length(teamlist) + 1):(length(teamlist) * 2 - 1)]
-    ),
-    Team = sort(teamlist)
-  )
-  team_params$Attack <- (team_params$Attack - mean(team_params$Attack)) /
-    stats::sd(team_params$Attack)
-  team_params$Defence <- (team_params$Defence - mean(team_params$Defence)) /
-    stats::sd(team_params$Defence)
-
-  tc <- HockeyModel::pwhlTeamColours
-  teamColoursList <- as.vector(tc$Hex)
-  names(teamColoursList) <- tc$Team
-  teamColoursList <- teamColoursList[names(teamColoursList) %in% teamlist]
-
-  p <- ggplot2::ggplot(
-    team_params,
-    ggplot2::aes(
-      x = .data$Attack,
-      y = .data$Defence,
-      color = .data$Team,
-      label = .data$Team
-    )
-  ) +
-    ggplot2::geom_hline(yintercept = 0, colour = "grey", linewidth = 1) +
-    ggplot2::geom_vline(xintercept = 0, colour = "grey", linewidth = 1) +
-    ggplot2::geom_point() +
-    ggplot2::scale_colour_manual(values = teamColoursList) +
-    ggplot2::labs(
-      x = "Offence",
-      y = "Defence",
-      title = "Current PWHL Team Offence & Defence Ratings",
-      subtitle = paste0("As of ", Sys.Date()),
-      caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
-    ) +
-    ggplot2::theme_minimal() +
-    ggplot2::coord_cartesian(
-      xlim = c(
-        -max(abs(team_params$Attack)) + 0.1,
-        max(abs(team_params$Attack)) + 0.1
-      ),
-      ylim = c(
-        -max(abs(team_params$Defence)) + 0.1,
-        max(abs(team_params$Defence)) + 0.1
-      )
-    ) +
-    ggplot2::annotate(
-      "label",
-      x = -max(abs(team_params$Attack)),
-      y = -max(abs(team_params$Defence)),
-      hjust = 0,
-      vjust = 0,
-      label = "Bad"
-    ) +
-    ggplot2::annotate(
-      "label",
-      x = max(abs(team_params$Attack)),
-      y = max(abs(team_params$Defence)),
-      hjust = 1,
-      vjust = 1,
-      label = "Good"
-    ) +
-    ggplot2::annotate(
-      "label",
-      x = -max(abs(team_params$Attack)),
-      y = max(abs(team_params$Defence)),
-      hjust = 0,
-      vjust = 1,
-      label = "Calm"
-    ) +
-    ggplot2::annotate(
-      "label",
-      x = max(abs(team_params$Attack)),
-      y = -max(abs(team_params$Defence)),
-      hjust = 1,
-      vjust = 0,
-      label = "Frantic"
-    ) +
-    ggplot2::theme(legend.position = "none")
-
-  if (requireNamespace("ggrepel", quietly = TRUE)) {
-    p <- p + ggrepel::geom_text_repel(force = 2, max.iter = 5000)
-  }
-
-  p
-}
-
-
 # ── PWHL Season Simulation ────────────────────────────────────────────────────
-
-#' Simulate the remainder of the PWHL regular season
-#'
-#' @description Produces a data frame of win odds for all remaining PWHL
-#'   regular-season games, used as input for [pwhl_loopless_sim()].
-#'
-#' @param scores (`data.frame`) PWHL scores with a `Result` column.
-#' @param schedule (`data.frame`) PWHL full-season schedule.
-#' @param params (`list` or `NULL`) PWHL DC parameter list.
-#'
-#' @returns A data frame of `HomeTeam`, `AwayTeam`, `HomeWin`, `AwayWin`,
-#'   `Draw`, `GameID`, and `Date` for un-played games.
-#' @keywords internal
-pwhl_remainder_season_dc <- function(
-  scores,
-  schedule,
-  params = NULL
-) {
-  params <- parse_pwhl_dc_params(params)
-
-  last_game_date <- as.Date(max(scores$Date))
-  remaining <- schedule[
-    schedule$Date > last_game_date & schedule$GameType == "R",
-  ]
-  remaining <- remaining[order(remaining$Date, remaining$GameID), ]
-
-  if (nrow(remaining) == 0) {
-    return(data.frame(
-      HomeTeam = character(),
-      AwayTeam = character(),
-      HomeWin = numeric(),
-      AwayWin = numeric(),
-      Draw = numeric(),
-      GameID = integer(),
-      Date = as.Date(character()),
-      stringsAsFactors = FALSE
-    ))
-  }
-
-  odds_table <- data.frame(
-    HomeTeam = remaining$HomeTeam,
-    AwayTeam = remaining$AwayTeam,
-    HomeWin = 0,
-    AwayWin = 0,
-    Draw = 0,
-    GameID = remaining$GameID,
-    Date = remaining$Date,
-    stringsAsFactors = FALSE
-  )
-
-  for (i in seq_len(nrow(odds_table))) {
-    p <- DCPredict(
-      odds_table$HomeTeam[[i]],
-      odds_table$AwayTeam[[i]],
-      params = params,
-      draws = TRUE
-    )
-    odds_table$HomeWin[[i]] <- p[[1]]
-    odds_table$Draw[[i]] <- p[[2]]
-    odds_table$AwayWin[[i]] <- p[[3]]
-  }
-
-  odds_table
-}
-
 
 #' Simulate the remainder of the PWHL season (loopless)
 #'
@@ -781,7 +221,7 @@ pwhl_remainder_season_dc <- function(
 #'   [HockeyModel::pwhlSchedule].
 #' @param params (`list` or `NULL`) PWHL DC parameter list.
 #' @param odds_table (`data.frame` or `NULL`) Pre-computed odds table. If
-#'   `NULL`, computed via [pwhl_remainder_season_dc()].
+#'   `NULL`, computed via [remainderSeasonDC()].
 #'
 #' @returns A named list with:
 #'   * `summary_results` – per-team season statistics (means, SDs, playoff
@@ -801,10 +241,12 @@ pwhl_loopless_sim <- function(
   season_start <- pwhl_season_start_date(schedule)
 
   if (is.null(odds_table)) {
-    odds_table <- pwhl_remainder_season_dc(
+    odds_table <- remainderSeasonDC(
       scores = scores_rs,
-      schedule = schedule,
-      params = params
+      schedule = schedule[schedule$GameType == "R", ],
+      params = params,
+      odds = TRUE,
+      regress = FALSE
     )
   }
 
@@ -933,75 +375,6 @@ pwhl_loopless_sim <- function(
 }
 
 
-#' Format PWHL playoff odds table
-#'
-#' @description Produces a `gt` table of PWHL team playoff qualification odds,
-#'   suitable for saving as an image.
-#'
-#' @param playoff_odds (`data.frame`) Per-team odds with at least `Team` and
-#'   `Make_Playoffs` columns, as returned by [pwhl_loopless_sim()].
-#' @param caption_text (`character(1)`) Extra caption text.
-#'
-#' @returns A `gt` table.
-#' @export
-pwhl_format_playoff_odds <- function(playoff_odds, caption_text = "PWHL") {
-  if (!requireNamespace("gt", quietly = TRUE)) {
-    cli::cli_abort(
-      "Package {.pkg gt} is required. Install it with {.code install.packages('gt')}."
-    )
-  }
-  if (!requireNamespace("scales", quietly = TRUE)) {
-    cli::cli_abort(
-      "Package {.pkg scales} is required. Install it with {.code install.packages('scales')}."
-    )
-  }
-
-  tc <- HockeyModel::pwhlTeamColours
-  playoff_odds <- playoff_odds |>
-    dplyr::arrange(dplyr::desc(.data$Make_Playoffs), .data$Team)
-
-  playoff_odds_gt <- playoff_odds |>
-    tibble::add_column("block" = "  ", .before = 1) |>
-    gt::gt() |>
-    gt::tab_header(
-      title = paste(caption_text, "Playoff Odds"),
-      subtitle = paste0(
-        "Generated ",
-        Sys.Date(),
-        " | P. Bulsink (@bot.bulsink.ca)"
-      )
-    ) |>
-    gt::cols_label(
-      "block" = " ",
-      "Make_Playoffs" = "Make Playoffs",
-      "meanPoints" = "Mean Points",
-      "meanRank" = "Mean Rank"
-    ) |>
-    gt::data_color(
-      columns = "Make_Playoffs",
-      fn = scales::col_numeric(c("#fefffe", "#3ccc3c"), domain = c(0, 1))
-    ) |>
-    gt::fmt_percent(columns = "Make_Playoffs", drop_trailing_zeros = FALSE) |>
-    gt::fmt_number(
-      columns = c("meanPoints", "meanRank"),
-      decimals = 1
-    ) |>
-    gt::tab_options(heading.align = "left")
-
-  for (i in seq_len(nrow(playoff_odds))) {
-    playoff_odds_gt <- playoff_odds_gt |>
-      gt::tab_style(
-        style = gt::cell_fill(
-          color = tc[tc$Team == playoff_odds$Team[i], "Hex"]
-        ),
-        locations = gt::cells_body(columns = "block", rows = i)
-      )
-  }
-
-  playoff_odds_gt
-}
-
-
 # ── dailyPWHLSummary ──────────────────────────────────────────────────────────
 
 #' Daily PWHL summary — update, predict, and post
@@ -1045,9 +418,10 @@ dailyPWHLSummary <- function(
   # ── Today's games ───────────────────────────────────────────────────────────
   today_games <- pwhl_games_today(schedule = schedule)
   if (!is.null(today_games) && nrow(today_games) > 0) {
-    today_plot <- pwhl_plot_odds_today(
+    today_plot <- plot_odds_today(
       params = params,
-      schedule = schedule
+      schedule = schedule,
+      league = "PWHL"
     )
     if (!is.null(today_plot)) {
       grDevices::png(
@@ -1080,9 +454,10 @@ dailyPWHLSummary <- function(
       )
     }
 
-    today_table <- pwhl_daily_odds_table(
+    today_table <- daily_odds_table(
       params = params,
-      schedule = schedule
+      schedule = schedule,
+      league = "PWHL"
     )
     if (!is.null(today_table)) {
       save_gt_as_png_ragg(
@@ -1112,7 +487,7 @@ dailyPWHLSummary <- function(
     # Team rating plot
     if (!is.null(params$m)) {
       rating_plot <- tryCatch(
-        pwhl_plot_team_rating(m = params$m),
+        plot_team_rating(m = params$m, league = "PWHL"),
         error = function(e) NULL
       )
       if (!is.null(rating_plot)) {
@@ -1150,6 +525,84 @@ dailyPWHLSummary <- function(
     }
   }
 
+  # ── Playoff series ──────────────────────────────────────────────────────────
+  series <- tryCatch(
+    getPWHLPlayoffSeries(scores = scores, schedule = schedule),
+    error = function(e) NULL
+  )
+  if (!is.null(series) && nrow(series) > 0) {
+    series_plot <- tryCatch(
+      plot_playoff_series_odds(
+        series = series,
+        params = params,
+        teamColours = HockeyModel::pwhlTeamColours,
+        league = "PWHL"
+      ),
+      error = function(e) NULL
+    )
+    if (!is.null(series_plot)) {
+      grDevices::png(
+        filename = file.path(graphic_dir, "pwhl_series_odds.png"),
+        width = 11,
+        height = 8.5,
+        units = "in",
+        res = 300
+      )
+      print(series_plot)
+      Sys.sleep(5)
+      while (grDevices::dev.cur() != 1) {
+        grDevices::dev.off()
+      }
+
+      Sys.sleep(delay)
+
+      try(
+        atrrr::post(
+          text = paste0(
+            "#PWHL playoff series odds as of ",
+            Sys.Date(),
+            "."
+          ),
+          image = file.path(graphic_dir, "pwhl_series_odds.png"),
+          image_alt = paste0(
+            "PWHL playoff series odds as of ",
+            Sys.Date(),
+            "."
+          )
+        )
+      )
+    }
+
+    series_tbl <- tryCatch(
+      series_odds_table(series = series, params = params, league = "PWHL"),
+      error = function(e) NULL
+    )
+    if (!is.null(series_tbl)) {
+      save_gt_as_png_ragg(
+        series_tbl,
+        filename = file.path(graphic_dir, "pwhl_series_odds_table.png")
+      )
+
+      Sys.sleep(delay)
+
+      try(
+        atrrr::post(
+          text = paste0(
+            "#PWHL playoff series odds table as of ",
+            Sys.Date(),
+            "."
+          ),
+          image = file.path(graphic_dir, "pwhl_series_odds_table.png"),
+          image_alt = paste0(
+            "PWHL playoff series odds table as of ",
+            Sys.Date(),
+            "."
+          )
+        )
+      )
+    }
+  }
+
   # ── Season-wide predictions (regular season only) ───────────────────────────
   if (pwhl_in_season(schedule = schedule)) {
     remaining_rs <- schedule[
@@ -1173,9 +626,10 @@ dailyPWHLSummary <- function(
 
       if (!is.null(sim_results)) {
         playoff_tbl <- tryCatch(
-          pwhl_format_playoff_odds(
+          format_playoff_odds(
             playoff_odds = sim_results$summary_results,
-            caption_text = "PWHL"
+            caption_text = "PWHL",
+            league = "PWHL"
           ),
           error = function(e) NULL
         )

@@ -24,7 +24,7 @@ pwhl_loopless_sim(
 \item{params}{(\code{list} or \code{NULL}) PWHL DC parameter list.}
 
 \item{odds_table}{(\code{data.frame} or \code{NULL}) Pre-computed odds table. If
-\code{NULL}, computed via \code{\link[=pwhl_remainder_season_dc]{pwhl_remainder_season_dc()}}.}
+\code{NULL}, computed via \code{\link[=remainderSeasonDC]{remainderSeasonDC()}}.}
 }
 \value{
 A named list with:
