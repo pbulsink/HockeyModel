@@ -1565,15 +1565,23 @@ format_playoff_odds <- function(
 
   if (league == "PWHL") {
     playoff_odds <- playoff_odds |>
-      dplyr::arrange(dplyr::desc(.data$Make_Playoffs), .data$Team)
+      dplyr::arrange(
+        dplyr::desc(.data$Win_Cup),
+        dplyr::desc(.data$Make_Finals),
+        dplyr::desc(.data$Make_Playoffs),
+        .data$Team
+      )
     playoff_odds_gt <- playoff_odds |>
       dplyr::select(
         .data$Team,
         .data$Make_Playoffs,
+        .data$Make_Finals,
+        .data$Win_Cup,
         .data$meanPoints,
         .data$meanRank
       ) |>
       tibble::add_column("block" = "  ", .before = 1) |>
+      tibble::add_column("image" = playoff_odds$Team, .after = 1) |>
       gt::gt() |>
       gt::tab_header(
         title = table_title,
@@ -1585,15 +1593,21 @@ format_playoff_odds <- function(
       ) |>
       gt::cols_label(
         "block" = " ",
+        "image" = " ",
         "Make_Playoffs" = "Make Playoffs",
+        "Make_Finals" = "Make Finals",
+        "Win_Cup" = "Win Cup",
         "meanPoints" = "Mean Points",
         "meanRank" = "Mean Rank"
       ) |>
       gt::data_color(
-        columns = "Make_Playoffs",
+        columns = c("Make_Playoffs", "Make_Finals", "Win_Cup"),
         fn = scales::col_numeric(c("#fefffe", "#3ccc3c"), domain = c(0, 1))
       ) |>
-      gt::fmt_percent(columns = "Make_Playoffs", drop_trailing_zeros = FALSE) |>
+      gt::fmt_percent(
+        columns = c("Make_Playoffs", "Make_Finals", "Win_Cup"),
+        drop_trailing_zeros = FALSE
+      ) |>
       gt::fmt_number(columns = c("meanPoints", "meanRank"), decimals = 1) |>
       gt::tab_options(heading.align = "left")
   } else {
@@ -1675,6 +1689,33 @@ format_playoff_odds <- function(
                   getOption("HockeyModel.data.path"),
                   "logos",
                   "nhl.gif"
+                )
+              ),
+              height = "30px"
+            )
+          }
+        )
+    } else {
+      playoff_odds_gt <- playoff_odds_gt |>
+        gt::text_transform(
+          locations = gt::cells_body(columns = "image", rows = i),
+          fn = function(x) {
+            gt::local_image(
+              filename = ifelse(
+                file.exists(file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  paste0(tolower(gsub(" ", "_", x)), ".gif")
+                )),
+                file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  paste0(tolower(gsub(" ", "_", x)), ".gif")
+                ),
+                file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  "pwhl.gif"
                 )
               ),
               height = "30px"

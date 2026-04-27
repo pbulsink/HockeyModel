@@ -308,8 +308,17 @@ test_that("pwhl_loopless_sim returns summary and raw results", {
   expect_true(is.data.frame(result$summary_results))
   expect_true("Team" %in% names(result$summary_results))
   expect_true("Make_Playoffs" %in% names(result$summary_results))
+  expect_true("Make_Finals" %in% names(result$summary_results))
+  expect_true("Win_Cup" %in% names(result$summary_results))
   expect_true(all(result$summary_results$Make_Playoffs >= 0))
   expect_true(all(result$summary_results$Make_Playoffs <= 1))
+  expect_true(all(result$summary_results$Make_Finals >= 0))
+  expect_true(all(result$summary_results$Make_Finals <= 1))
+  expect_true(all(result$summary_results$Win_Cup >= 0))
+  expect_true(all(result$summary_results$Win_Cup <= 1))
+  # Each sim contributes exactly 2 finalists and 1 champion, so sums are exact
+  expect_true(abs(sum(result$summary_results$Make_Finals) - 2) < 0.01)
+  expect_true(abs(sum(result$summary_results$Win_Cup) - 1) < 0.01)
 })
 
 test_that("pwhl_loopless_sim top-4 playoff odds sum to roughly 4", {

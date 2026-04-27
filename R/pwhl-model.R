@@ -114,20 +114,15 @@ updatePWHLDC <- function(
 #' @returns A named list with elements `m`, `rho`, `beta`, `eta`, and `k`.
 #' @keywords internal
 parse_pwhl_dc_params <- function(params = NULL) {
-  while ("params" %in% names(params)) {
-    params <- params$params
-  }
-
-  list(
-    m = if ("m" %in% names(params)) params$m else HockeyModel::pwhl_m,
-    rho = if ("rho" %in% names(params)) params$rho else HockeyModel::pwhl_rho,
-    beta = if ("beta" %in% names(params)) {
-      params$beta
-    } else {
-      HockeyModel::pwhl_beta
-    },
-    eta = if ("eta" %in% names(params)) params$eta else HockeyModel::pwhl_eta,
-    k = if ("k" %in% names(params)) params$k else HockeyModel::pwhl_k
+  parse_dc_params(
+    params,
+    defaults = list(
+      m = HockeyModel::pwhl_m,
+      rho = HockeyModel::pwhl_rho,
+      beta = HockeyModel::pwhl_beta,
+      eta = HockeyModel::pwhl_eta,
+      k = HockeyModel::pwhl_k
+    )
   )
 }
 
@@ -292,6 +287,30 @@ pwhl_loopless_sim <- function(
 
   teamlist <- sort(unique(c(schedule$HomeTeam, schedule$AwayTeam)))
 
+  # Pre-compute best-of-5 series win probabilities for all team pairs
+  series_odds <- outer(
+    teamlist,
+    teamlist,
+    FUN = Vectorize(function(h, a) {
+      if (h == a) {
+        return(NA_real_)
+      }
+      playoffSeriesOdds(
+        home_odds = DCPredict(
+          home = h,
+          away = a,
+          draws = FALSE,
+          params = params
+        )[1],
+        away_odds = 1 -
+          DCPredict(home = a, away = h, draws = FALSE, params = params)[1],
+        ngames = 5,
+        game_home = c(TRUE, TRUE, FALSE, FALSE, TRUE)
+      )
+    })
+  )
+  dimnames(series_odds) <- list(teamlist, teamlist)
+
   # Run simulations
   all_results <- purrr::map_dfr(seq_len(nsims), function(sim) {
     sim_data <- all_season
@@ -316,22 +335,22 @@ pwhl_loopless_sim <- function(
       )
     }
 
-    # Tally results for each team
-    purrr::map_dfr(teamlist, function(team) {
+    # Tally results for each team using 3-2-1-0 PWHL points system
+    team_results <- purrr::map_dfr(teamlist, function(team) {
       home_games <- sim_data[sim_data$HomeTeam == team, ]
       away_games <- sim_data[sim_data$AwayTeam == team, ]
 
       pts <- sum(
-        (home_games$Result == 1) * 2,
-        (home_games$Result == 0.75) * 2,
-        (home_games$Result == 0.6) * 2,
-        (home_games$Result == 0.25),
-        (home_games$Result == 0.4),
-        (away_games$Result == 0) * 2,
-        (away_games$Result == 0.25) * 2,
-        (away_games$Result == 0.4) * 2,
-        (away_games$Result == 0.75),
-        (away_games$Result == 0.6),
+        (home_games$Result == 1) * 3, # regulation win: 3 pts
+        (home_games$Result == 0.75) * 2, # OT win: 2 pts
+        (home_games$Result == 0.6) * 2, # SO win: 2 pts
+        (home_games$Result == 0.25), # OT loss: 1 pt
+        (home_games$Result == 0.4), # SO loss: 1 pt
+        (away_games$Result == 0) * 3, # regulation win: 3 pts
+        (away_games$Result == 0.25) * 2, # OT win: 2 pts
+        (away_games$Result == 0.4) * 2, # SO win: 2 pts
+        (away_games$Result == 0.75), # OT loss: 1 pt
+        (away_games$Result == 0.6), # SO loss: 1 pt
         na.rm = TRUE
       )
       wins <- sum(home_games$Result == 1, away_games$Result == 0, na.rm = TRUE)
@@ -344,23 +363,48 @@ pwhl_loopless_sim <- function(
         stringsAsFactors = FALSE
       )
     })
+
+    # Rank teams within this simulation by points
+    team_results$Rank <- rank(-team_results$Points, ties.method = "random")
+    team_results$MakePlayoffs <- as.integer(team_results$Rank <= 4)
+
+    # Simulate PWHL playoffs (best-of-5, 2-2-1 format)
+    # Seeds by rank; higher seed (lower rank number) has home ice
+    seeds <- team_results$Team[order(team_results$Rank)]
+    s1 <- seeds[1]
+    s2 <- seeds[2]
+    s3 <- seeds[3]
+    s4 <- seeds[4]
+
+    # SF1: seed 1 (home) vs seed 4
+    sf1_win <- stats::runif(1) < series_odds[s1, s4]
+    sf1_winner <- if (sf1_win) s1 else s4
+
+    # SF2: seed 2 (home) vs seed 3
+    sf2_win <- stats::runif(1) < series_odds[s2, s3]
+    sf2_winner <- if (sf2_win) s2 else s3
+
+    # Final: higher seed (lower position in seeds vector) has home ice
+    sf1_pos <- match(sf1_winner, seeds)
+    sf2_pos <- match(sf2_winner, seeds)
+    final_home <- if (sf1_pos < sf2_pos) sf1_winner else sf2_winner
+    final_away <- if (sf1_pos < sf2_pos) sf2_winner else sf1_winner
+    final_win <- stats::runif(1) < series_odds[final_home, final_away]
+    champion <- if (final_win) final_home else final_away
+
+    finalists <- c(sf1_winner, sf2_winner)
+    team_results$Finals <- as.integer(team_results$Team %in% finalists)
+    team_results$Champion <- as.integer(team_results$Team == champion)
+
+    team_results
   })
-
-  # Rank teams within each simulation by points
-  all_results <- all_results |>
-    dplyr::group_by(.data$SimNo) |>
-    dplyr::mutate(
-      Rank = rank(-.data$Points, ties.method = "random")
-    ) |>
-    dplyr::ungroup()
-
-  # PWHL top 4 make playoffs
-  all_results$Playoffs <- as.integer(all_results$Rank <= 4)
 
   summary_results <- all_results |>
     dplyr::group_by(.data$Team) |>
     dplyr::summarise(
-      Make_Playoffs = mean(.data$Playoffs),
+      Make_Playoffs = mean(.data$MakePlayoffs),
+      Make_Finals = mean(.data$Finals),
+      Win_Cup = mean(.data$Champion),
       meanPoints = mean(.data$Points, na.rm = TRUE),
       maxPoints = max(.data$Points, na.rm = TRUE),
       minPoints = min(.data$Points, na.rm = TRUE),

@@ -1326,42 +1326,30 @@ predictMultipleDaysResultsDC <- function(
 #'
 #' @param params (`list` or `NULL`) Candidate parameters, optionally nested
 #'   under a `params` element.
+#' @param defaults (`list` or `NULL`) Default values for `m`, `rho`, `beta`,
+#'   `eta`, and `k`. When `NULL`, NHL package-level defaults are used.
 #' @returns (`list`) Named list containing `m`, `rho`, `beta`, `eta`, and `k`.
 #' @keywords internal
-parse_dc_params <- function(params = NULL) {
-  returnparams <- list()
+parse_dc_params <- function(params = NULL, defaults = NULL) {
   while ("params" %in% names(params)) {
     params <- params$params
   }
 
-  if ("m" %in% names(params)) {
-    returnparams$m <- params$m
-  } else {
-    returnparams$m <- HockeyModel::m
-  }
-  if ("rho" %in% names(params)) {
-    returnparams$rho <- params$rho
-  } else {
-    returnparams$rho <- HockeyModel::rho
-  }
-
-  if ("beta" %in% names(params)) {
-    returnparams$beta <- params$beta
-  } else {
-    returnparams$beta <- HockeyModel::beta
+  if (is.null(defaults)) {
+    defaults <- list(
+      m = HockeyModel::m,
+      rho = HockeyModel::rho,
+      beta = HockeyModel::beta,
+      eta = HockeyModel::eta,
+      k = HockeyModel::k
+    )
   }
 
-  if ("eta" %in% names(params)) {
-    returnparams$eta <- params$eta
-  } else {
-    returnparams$eta <- HockeyModel::eta
-  }
-
-  if ("k" %in% names(params)) {
-    returnparams$k <- params$k
-  } else {
-    returnparams$k <- HockeyModel::k
-  }
-
-  return(returnparams)
+  list(
+    m = if ("m" %in% names(params)) params$m else defaults$m,
+    rho = if ("rho" %in% names(params)) params$rho else defaults$rho,
+    beta = if ("beta" %in% names(params)) params$beta else defaults$beta,
+    eta = if ("eta" %in% names(params)) params$eta else defaults$eta,
+    k = if ("k" %in% names(params)) params$k else defaults$k
+  )
 }

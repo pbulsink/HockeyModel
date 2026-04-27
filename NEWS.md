@@ -1,5 +1,8 @@
 # HockeyModel (development version)
 
+* `pwhl_loopless_sim()` now simulates PWHL playoffs (best-of-5, 2-2-1 format) and returns `Make_Finals` and `Win_Cup` columns; corrects points to the 3-2-1-0 system (@pbulsink, #noissue).
+* `format_playoff_odds()` PWHL branch now shows `Make_Playoffs`, `Make_Finals`, and `Win_Cup` columns with logo images and sorts by Cup odds (@pbulsink, #noissue).
+* `parse_dc_params()` gains a `defaults` parameter so PWHL param parsing can delegate to it, eliminating duplicated logic (@pbulsink, #noissue).
 * `getPWHLPlayoffSeries()` added to derive ongoing PWHL playoff series from scores and schedule, compatible with `series_odds_table()` and `plot_playoff_series_odds()` (#32).
 * `plot_odds_today()`, `daily_odds_table()`, `plot_team_rating()`, `format_playoff_odds()`, `series_odds_table()`, `plot_playoff_series_odds()`, and `getTeamColours()` now accept a `league` parameter (`"NHL"` or `"PWHL"`) to support both leagues from shared functions (#32).
 * `dailyPWHLSummary()` refactored to use shared graphics functions with `league = "PWHL"`; removed PWHL-specific duplicates `pwhl_plot_odds_today()`, `pwhl_daily_odds_table()`, `pwhl_plot_team_rating()`, `pwhl_format_playoff_odds()`, `pwhl_today_dc()`, `pwhl_get_team_colours()`, and `pwhl_remainder_season_dc()` (#32).
