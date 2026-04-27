@@ -2,7 +2,7 @@ test_that("Team Strength Plot Graphics Produce", {
   p <- plot_team_rating()
 
   expect_true(ggplot2::is_ggplot(p))
-  expect_identical(p$labels$title, "Current Team Offence & Defence Ratings")
+  expect_identical(p$labels$title, "Current NHL Team Offence & Defence Ratings")
   expect_identical(p$labels$y, "Defence")
   expect_identical(p$labels$x, "Offence")
 })
@@ -89,13 +89,13 @@ test_that("Today Odds plot OK", {
   if (is.null(p)) {
     skip("No games available for the requested date")
   }
-  expect_identical(p$labels$title, "Predictions for Today's Games")
+  expect_identical(p$labels$title, "Predictions for Today's NHL Games")
   expect_identical(p$labels$y, "Result Odds")
   expect_identical(p$labels$x, "")
 
   p <- suppressWarnings(daily_odds_table(today = as.Date("2019-11-01")))
   expect_true("gt_tbl" %in% class(p))
-  expect_identical(p$`_heading`$title, "Game Odds")
+  expect_identical(p$`_heading`$title, "NHL Game Odds")
 })
 
 test_that("Single Game xG plot OK", {
@@ -133,7 +133,7 @@ test_that("Series Graphics are OK", {
   )
   p <- suppressWarnings(plot_playoff_series_odds(series = series))
   expect_true(ggplot2::is_ggplot(p))
-  expect_identical(p$labels$title, "Predictions for Playoff Series")
+  expect_identical(p$labels$title, "Predictions for NHL Playoff Series")
   expect_identical(p$labels$y, "Series Odds")
   expect_identical(p$labels$x, "")
 })
@@ -155,7 +155,7 @@ test_that("Series Odds Table is ok", {
   )
   t <- suppressWarnings(series_odds_table(series = series))
   expect_true("gt_tbl" %in% class(t))
-  expect_equal(t$`_heading`$title, "Playoff Series Odds")
+  expect_equal(t$`_heading`$title, "NHL Playoff Series Odds")
   expect_equal(t$`_data`$HomeTeam[1], "Tampa Bay Lightning")
   expect_equal(t$`_data`$AwayTeam[1], "Columbus Blue Jackets")
   expect_true(is.numeric(t$`_data`$HomeOdds))
@@ -421,7 +421,7 @@ test_that("Playoff Table is ok", {
 
   p <- format_playoff_odds(po)
   expect_true("gt_tbl" %in% class(p))
-  expect_equal(p$`_heading`$title, " Playoff Odds")
+  expect_equal(p$`_heading`$title, " NHL Playoff Odds")
   expect_equal(p$`_data`$Team[1], "Tampa Bay Lightning")
 })
 

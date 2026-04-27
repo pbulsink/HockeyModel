@@ -816,7 +816,7 @@ plot_odds_today <- function(
       title = if (league == "PWHL") {
         "Predictions for Today's PWHL Games"
       } else {
-        "Predictions for Today's Games"
+        "Predictions for Today's NHL Games"
       },
       subtitle = paste0("Games played on ", Sys.Date()),
       caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
@@ -967,7 +967,7 @@ plot_playoff_series_odds <- function(
       title = if (league == "PWHL") {
         "Predictions for PWHL Playoff Series"
       } else {
-        "Predictions for Playoff Series"
+        "Predictions for NHL Playoff Series"
       },
       subtitle = paste0(
         "Before Games on ",
@@ -1370,7 +1370,7 @@ plot_team_rating <- function(
       title = if (league == "PWHL") {
         "Current PWHL Team Offence & Defence Ratings"
       } else {
-        "Current Team Offence & Defence Ratings"
+        "Current NHL Team Offence & Defence Ratings"
       },
       subtitle = paste0("As of ", Sys.Date()),
       caption = paste0("P. Bulsink (@bot.bulsink.ca) | ", Sys.Date())
@@ -1556,7 +1556,14 @@ format_playoff_odds <- function(
   }
 
   if (league == "PWHL") {
-    tc <- HockeyModel::pwhlTeamColours
+    teamColours <- HockeyModel::pwhlTeamColours
+    table_title <- paste(caption_text, "Playoff Odds")
+  } else {
+    teamColours <- HockeyModel::teamColours
+    table_title <- paste(caption_text, "NHL Playoff Odds")
+  }
+
+  if (league == "PWHL") {
     playoff_odds <- playoff_odds |>
       dplyr::arrange(dplyr::desc(.data$Make_Playoffs), .data$Team)
     playoff_odds_gt <- playoff_odds |>
@@ -1569,7 +1576,7 @@ format_playoff_odds <- function(
       tibble::add_column("block" = "  ", .before = 1) |>
       gt::gt() |>
       gt::tab_header(
-        title = paste(caption_text, "Playoff Odds"),
+        title = table_title,
         subtitle = paste0(
           "Generated ",
           Sys.Date(),
@@ -1589,67 +1596,55 @@ format_playoff_odds <- function(
       gt::fmt_percent(columns = "Make_Playoffs", drop_trailing_zeros = FALSE) |>
       gt::fmt_number(columns = c("meanPoints", "meanRank"), decimals = 1) |>
       gt::tab_options(heading.align = "left")
-
-    for (i in seq_len(nrow(playoff_odds))) {
-      playoff_odds_gt <- playoff_odds_gt |>
-        gt::tab_style(
-          style = gt::cell_fill(
-            color = tc[tc$Team == playoff_odds$Team[i], "Hex"]
-          ),
-          locations = gt::cells_body(columns = "block", rows = i)
-        )
-    }
-    return(playoff_odds_gt)
-  }
-
-  teamColours <- HockeyModel::teamColours
-  playoff_odds <- playoff_odds |>
-    dplyr::arrange(
-      dplyr::desc(.data$Win_Cup),
-      dplyr::desc(.data$Win_Conference),
-      dplyr::desc(.data$Win_Second_Round),
-      dplyr::desc(.data$Win_First_Round),
-      dplyr::desc(.data$Make_Playoffs),
-      .data$Team
-    )
-
-  if (trim) {
+  } else {
     playoff_odds <- playoff_odds |>
-      dplyr::filter(.data$Make_Playoffs > 0)
-  }
-  if (trimcup) {
-    playoff_odds <- playoff_odds |>
-      dplyr::filter(.data$Win_Cup > 0)
-  }
-
-  playoff_odds_gt <- playoff_odds |>
-    tibble::add_column("block" = "  ", .before = 1) |>
-    tibble::add_column("image" = "", .after = 1) |>
-    dplyr::mutate("image" = .data$Team) |>
-    gt::gt() |>
-    gt::tab_header(
-      title = paste(caption_text, "Playoff Odds"),
-      subtitle = paste0(
-        "Generated ",
-        Sys.Date(),
-        " | P. Bulsink (@bot.bulsink.ca)"
+      dplyr::arrange(
+        dplyr::desc(.data$Win_Cup),
+        dplyr::desc(.data$Win_Conference),
+        dplyr::desc(.data$Win_Second_Round),
+        dplyr::desc(.data$Win_First_Round),
+        dplyr::desc(.data$Make_Playoffs),
+        .data$Team
       )
-    ) |>
-    gt::cols_label(
-      "block" = " ",
-      "image" = " ",
-      "Make_Playoffs" = "Make Playoffs",
-      "Win_First_Round" = "Win First Round",
-      "Win_Second_Round" = "Win Second Round",
-      "Win_Conference" = "Win Conference",
-      "Win_Cup" = "Win Cup"
-    ) |>
-    gt::data_color(
-      columns = 4:8,
-      fn = scales::col_numeric(c("#fefffe", "#3ccc3c"), domain = c(0, 1))
-    ) |>
-    gt::fmt_percent(columns = 4:8, drop_trailing_zeros = FALSE) |>
-    gt::tab_options(heading.align = "left")
+
+    if (trim) {
+      playoff_odds <- playoff_odds |>
+        dplyr::filter(.data$Make_Playoffs > 0)
+    }
+    if (trimcup) {
+      playoff_odds <- playoff_odds |>
+        dplyr::filter(.data$Win_Cup > 0)
+    }
+
+    playoff_odds_gt <- playoff_odds |>
+      tibble::add_column("block" = "  ", .before = 1) |>
+      tibble::add_column("image" = "", .after = 1) |>
+      dplyr::mutate("image" = .data$Team) |>
+      gt::gt() |>
+      gt::tab_header(
+        title = table_title,
+        subtitle = paste0(
+          "Generated ",
+          Sys.Date(),
+          " | P. Bulsink (@bot.bulsink.ca)"
+        )
+      ) |>
+      gt::cols_label(
+        "block" = " ",
+        "image" = " ",
+        "Make_Playoffs" = "Make Playoffs",
+        "Win_First_Round" = "Win First Round",
+        "Win_Second_Round" = "Win Second Round",
+        "Win_Conference" = "Win Conference",
+        "Win_Cup" = "Win Cup"
+      ) |>
+      gt::data_color(
+        columns = 4:8,
+        fn = scales::col_numeric(c("#fefffe", "#3ccc3c"), domain = c(0, 1))
+      ) |>
+      gt::fmt_percent(columns = 4:8, drop_trailing_zeros = FALSE) |>
+      gt::tab_options(heading.align = "left")
+  }
 
   for (i in seq_len(nrow(playoff_odds))) {
     playoff_odds_gt <- playoff_odds_gt |>
@@ -1658,28 +1653,35 @@ format_playoff_odds <- function(
           color = teamColours[teamColours$Team == playoff_odds$Team[i], "Hex"]
         ),
         locations = gt::cells_body(columns = "block", rows = i)
-      ) |>
-      gt::text_transform(
-        locations = gt::cells_body(columns = "image", rows = i),
-        fn = function(x) {
-          gt::local_image(
-            filename = ifelse(
-              file.exists(file.path(
-                getOption("HockeyModel.data.path"),
-                "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
-              )),
-              file.path(
-                getOption("HockeyModel.data.path"),
-                "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
-              ),
-              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
-            ),
-            height = "30px"
-          )
-        }
       )
+    if (league != "PWHL") {
+      playoff_odds_gt <- playoff_odds_gt |>
+        gt::text_transform(
+          locations = gt::cells_body(columns = "image", rows = i),
+          fn = function(x) {
+            gt::local_image(
+              filename = ifelse(
+                file.exists(file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  paste0(tolower(gsub(" ", "_", x)), ".gif")
+                )),
+                file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  paste0(tolower(gsub(" ", "_", x)), ".gif")
+                ),
+                file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  "nhl.gif"
+                )
+              ),
+              height = "30px"
+            )
+          }
+        )
+    }
   }
 
   return(playoff_odds_gt)
@@ -1746,92 +1748,14 @@ daily_odds_table <- function(
   if (league == "PWHL") {
     teamColours <- HockeyModel::pwhlTeamColours
     table_title <- "PWHL Game Odds"
-
-    todayodds_gt <- todayodds |>
-      dplyr::select(
-        .data$HomeTeam,
-        .data$HomexG,
-        .data$HomeWin,
-        .data$AwayWin,
-        .data$AwayxG,
-        .data$AwayTeam
-      ) |>
-      tibble::add_column("homeblock" = "  ", .before = 1) |>
-      tibble::add_column("awayblock" = "  ") |>
-      gt::gt() |>
-      gt::tab_header(
-        title = table_title,
-        subtitle = paste0(
-          "For games ",
-          today,
-          " | P. Bulsink (@bot.bulsink.ca)"
-        )
-      ) |>
-      gt::tab_spanner(
-        label = "Home",
-        columns = c("HomeTeam", "HomexG", "HomeWin")
-      ) |>
-      gt::tab_spanner(
-        label = "Away",
-        columns = c("AwayWin", "AwayxG", "AwayTeam")
-      ) |>
-      gt::cols_label(
-        "homeblock" = " ",
-        "awayblock" = " ",
-        "HomexG" = "xG",
-        "HomeWin" = "Win",
-        "HomeTeam" = "Team",
-        "AwayxG" = "xG",
-        "AwayWin" = "Win",
-        "AwayTeam" = "Team"
-      ) |>
-      gt::data_color(
-        columns = c(4, 5),
-        fn = scales::col_numeric(
-          palette = c("#cc3c3c", "#ffffff", "#3c3ccc"),
-          domain = c(0, 1)
-        )
-      ) |>
-      gt::fmt_percent(columns = 4:5, decimals = 1) |>
-      gt::fmt_number(
-        columns = c(3, 6),
-        drop_trailing_zeros = FALSE,
-        decimals = 2
-      ) |>
-      gt::tab_options(
-        heading.align = "left",
-        table.border.bottom.color = "white",
-        table.border.top.color = "white"
-      )
-
-    for (i in seq_len(nrow(todayodds))) {
-      todayodds_gt <- todayodds_gt |>
-        gt::tab_style(
-          style = gt::cell_fill(
-            color = teamColours[
-              teamColours$Team == todayodds$HomeTeam[i],
-              "Hex"
-            ]
-          ),
-          locations = gt::cells_body(columns = "homeblock", rows = i)
-        ) |>
-        gt::tab_style(
-          style = gt::cell_fill(
-            color = teamColours[
-              teamColours$Team == todayodds$AwayTeam[i],
-              "Hex"
-            ]
-          ),
-          locations = gt::cells_body(columns = "awayblock", rows = i)
-        )
-    }
-
-    return(todayodds_gt)
+    include_images <- FALSE
+  } else {
+    teamColours <- HockeyModel::teamColours
+    table_title <- "NHL Game Odds"
+    include_images <- TRUE
   }
 
-  teamColours <- HockeyModel::teamColours
-
-  todayodds_gt <- todayodds |>
+  todayodds_tbl <- todayodds |>
     dplyr::select(
       .data$HomeTeam,
       .data$HomexG,
@@ -1840,18 +1764,31 @@ daily_odds_table <- function(
       .data$AwayxG,
       .data$AwayTeam
     ) |>
-    tibble::add_column("homeimage" = "", .before = 1) |>
     tibble::add_column("homeblock" = "  ", .before = 1) |>
-    tibble::add_column("awayimage" = "") |>
-    tibble::add_column("awayblock" = "  ") |>
-    dplyr::mutate(
-      "homeimage" = .data$HomeTeam,
-      "awayimage" = .data$AwayTeam
-    ) |>
+    tibble::add_column("awayblock" = "  ")
+
+  if (include_images) {
+    todayodds_tbl <- todayodds_tbl |>
+      tibble::add_column("homeimage" = todayodds$HomeTeam, .after = 1) |>
+      tibble::add_column(
+        "awayimage" = todayodds$AwayTeam,
+        .before = "awayblock"
+      ) |>
+      dplyr::mutate(
+        "homeimage" = .data$HomeTeam,
+        "awayimage" = .data$AwayTeam
+      )
+  }
+
+  todayodds_gt <- todayodds_tbl |>
     gt::gt() |>
     gt::tab_header(
-      title = paste0("Game Odds"),
-      subtitle = paste0("For games ", today, " | P. Bulsink (@bot.bulsink.ca)")
+      title = table_title,
+      subtitle = paste0(
+        "For games ",
+        today,
+        " | P. Bulsink (@bot.bulsink.ca)"
+      )
     ) |>
     gt::tab_spanner(
       label = "Home",
@@ -1863,26 +1800,24 @@ daily_odds_table <- function(
     ) |>
     gt::cols_label(
       "homeblock" = " ",
-      "homeimage" = " ",
-      "awayblock" = " ",
-      "awayimage" = " ",
       "HomexG" = "xG",
       "HomeWin" = "Win",
       "HomeTeam" = "Team",
       "AwayxG" = "xG",
       "AwayWin" = "Win",
-      "AwayTeam" = "Team"
+      "AwayTeam" = "Team",
+      "awayblock" = " "
     ) |>
     gt::data_color(
-      columns = c(5, 6),
+      columns = c("HomeWin", "AwayWin"),
       fn = scales::col_numeric(
         palette = c("#cc3c3c", "#ffffff", "#3c3ccc"),
         domain = c(0, 1)
       )
     ) |>
-    gt::fmt_percent(columns = 5:6, decimals = 1) |>
+    gt::fmt_percent(columns = c("HomeWin", "AwayWin"), decimals = 1) |>
     gt::fmt_number(
-      columns = c(4, 7),
+      columns = c("HomexG", "AwayxG"),
       drop_trailing_zeros = FALSE,
       decimals = 2
     ) |>
@@ -1892,62 +1827,84 @@ daily_odds_table <- function(
       table.border.top.color = "white"
     )
 
+  if (include_images) {
+    todayodds_gt <- todayodds_gt |>
+      gt::cols_label("homeimage" = " ", "awayimage" = " ")
+  }
+
   for (i in seq_len(nrow(todayodds))) {
     todayodds_gt <- todayodds_gt |>
       gt::tab_style(
         style = gt::cell_fill(
-          color = teamColours[teamColours$Team == todayodds$HomeTeam[i], "Hex"]
+          color = teamColours[
+            teamColours$Team == todayodds$HomeTeam[i],
+            "Hex"
+          ]
         ),
         locations = gt::cells_body(columns = "homeblock", rows = i)
       ) |>
       gt::tab_style(
         style = gt::cell_fill(
-          color = teamColours[teamColours$Team == todayodds$AwayTeam[i], "Hex"]
+          color = teamColours[
+            teamColours$Team == todayodds$AwayTeam[i],
+            "Hex"
+          ]
         ),
         locations = gt::cells_body(columns = "awayblock", rows = i)
-      ) |>
-      gt::text_transform(
-        locations = gt::cells_body(columns = "homeimage", rows = i),
-        fn = function(x) {
-          gt::local_image(
-            filename = ifelse(
-              file.exists(file.path(
-                getOption("HockeyModel.data.path"),
-                "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
-              )),
-              file.path(
-                getOption("HockeyModel.data.path"),
-                "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
-              ),
-              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
-            ),
-            height = "30px"
-          )
-        }
-      ) |>
-      gt::text_transform(
-        locations = gt::cells_body(columns = "awayimage", rows = i),
-        fn = function(x) {
-          gt::local_image(
-            filename = ifelse(
-              file.exists(file.path(
-                getOption("HockeyModel.data.path"),
-                "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
-              )),
-              file.path(
-                getOption("HockeyModel.data.path"),
-                "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
-              ),
-              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
-            ),
-            height = "30px"
-          )
-        }
       )
+    if (include_images) {
+      todayodds_gt <- todayodds_gt |>
+        gt::text_transform(
+          locations = gt::cells_body(columns = "homeimage", rows = i),
+          fn = function(x) {
+            gt::local_image(
+              filename = ifelse(
+                file.exists(file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  paste0(tolower(gsub(" ", "_", x)), ".gif")
+                )),
+                file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  paste0(tolower(gsub(" ", "_", x)), ".gif")
+                ),
+                file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  "nhl.gif"
+                )
+              ),
+              height = "30px"
+            )
+          }
+        ) |>
+        gt::text_transform(
+          locations = gt::cells_body(columns = "awayimage", rows = i),
+          fn = function(x) {
+            gt::local_image(
+              filename = ifelse(
+                file.exists(file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  paste0(tolower(gsub(" ", "_", x)), ".gif")
+                )),
+                file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  paste0(tolower(gsub(" ", "_", x)), ".gif")
+                ),
+                file.path(
+                  getOption("HockeyModel.data.path"),
+                  "logos",
+                  "nhl.gif"
+                )
+              ),
+              height = "30px"
+            )
+          }
+        )
+    }
   }
 
   if (include_logo) {
@@ -2055,104 +2012,49 @@ series_odds_table <- function(
   if (league == "PWHL") {
     teamColours <- HockeyModel::pwhlTeamColours
     table_title <- "PWHL Playoff Series Odds"
-
-    series_gt <- series |>
-      tibble::add_column("homeblock" = "  ", .before = 1) |>
-      tibble::add_column("awayblock" = "  ") |>
-      gt::gt() |>
-      gt::tab_header(
-        title = table_title,
-        subtitle = paste0(
-          "Generated ",
-          Sys.Date(),
-          " | P. Bulsink (@bot.bulsink.ca)"
-        )
-      ) |>
-      gt::tab_spanner(
-        label = "Home",
-        columns = c("HomeTeam", "HomeWins", "HomeOdds")
-      ) |>
-      gt::tab_spanner(
-        label = "Away",
-        columns = c("AwayOdds", "AwayWins", "AwayTeam")
-      ) |>
-      gt::cols_label(
-        "homeblock" = " ",
-        "HomeTeam" = "Team",
-        "HomeWins" = "Wins",
-        "HomeOdds" = "Series Odds",
-        "AwayOdds" = "Series Odds",
-        "AwayWins" = "Wins",
-        "AwayTeam" = "Team",
-        "awayblock" = " "
-      ) |>
-      gt::data_color(
-        columns = c("HomeOdds", "AwayOdds"),
-        fn = scales::col_numeric(
-          palette = c("#cc3c3c", "#ffffff", "#3c3ccc"),
-          domain = c(0, 1)
-        )
-      ) |>
-      gt::fmt_percent(columns = c("HomeOdds", "AwayOdds"), decimals = 1) |>
-      gt::tab_options(
-        heading.align = "left",
-        table.border.bottom.color = "white",
-        table.border.top.color = "white"
-      )
-
-    for (i in seq_len(nrow(series))) {
-      series_gt <- series_gt |>
-        gt::tab_style(
-          style = gt::cell_fill(
-            color = teamColours[
-              teamColours$Team == series$HomeTeam[i],
-              "Hex"
-            ]
-          ),
-          locations = gt::cells_body(columns = "homeblock", rows = i)
-        ) |>
-        gt::tab_style(
-          style = gt::cell_fill(
-            color = teamColours[
-              teamColours$Team == series$AwayTeam[i],
-              "Hex"
-            ]
-          ),
-          locations = gt::cells_body(columns = "awayblock", rows = i)
-        )
-    }
-
-    return(series_gt)
+    series_note <- "_Best of 5 game series_"
+    include_images <- FALSE
+  } else {
+    teamColours <- HockeyModel::teamColours
+    table_title <- "NHL Playoff Series Odds"
+    series_note <- "_Best of 7 game series_"
+    include_images <- TRUE
   }
 
-  teamColours <- HockeyModel::teamColours
-
-  # Resolve a team name to its local logo path (falls back to nhl.gif)
-  team_logo_path <- function(team_name) {
-    candidate <- file.path(
-      getOption("HockeyModel.data.path"),
-      "logos",
-      paste0(tolower(gsub(" ", "_", team_name)), ".gif")
-    )
-    ifelse(
-      file.exists(candidate),
-      candidate,
-      file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
-    )
-  }
-
-  series_gt <- series |>
-    tibble::add_column("homeimage" = "", .before = 1) |>
+  series_tbl <- series |>
     tibble::add_column("homeblock" = "  ", .before = 1) |>
-    tibble::add_column("awayimage" = "") |>
-    tibble::add_column("awayblock" = "  ") |>
-    dplyr::mutate(
-      "homeimage" = .data$HomeTeam,
-      "awayimage" = .data$AwayTeam
-    ) |>
+    tibble::add_column("awayblock" = "  ")
+
+  if (include_images) {
+    # Resolve a team name to its local logo path (falls back to nhl.gif)
+    team_logo_path <- function(team_name) {
+      candidate <- file.path(
+        getOption("HockeyModel.data.path"),
+        "logos",
+        paste0(tolower(gsub(" ", "_", team_name)), ".gif")
+      )
+      ifelse(
+        file.exists(candidate),
+        candidate,
+        file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
+      )
+    }
+    series_tbl <- series_tbl |>
+      tibble::add_column("homeimage" = series$HomeTeam, .after = 1) |>
+      tibble::add_column(
+        "awayimage" = series$AwayTeam,
+        .before = "awayblock"
+      ) |>
+      dplyr::mutate(
+        "homeimage" = .data$HomeTeam,
+        "awayimage" = .data$AwayTeam
+      )
+  }
+
+  series_gt <- series_tbl |>
     gt::gt() |>
     gt::tab_header(
-      title = "Playoff Series Odds",
+      title = table_title,
       subtitle = paste0(
         "Generated ",
         Sys.Date(),
@@ -2169,14 +2071,12 @@ series_odds_table <- function(
     ) |>
     gt::cols_label(
       "homeblock" = " ",
-      "homeimage" = " ",
       "HomeTeam" = "Team",
       "HomeWins" = "Wins",
       "HomeOdds" = "Series Odds",
       "AwayOdds" = "Series Odds",
       "AwayWins" = "Wins",
       "AwayTeam" = "Team",
-      "awayimage" = " ",
       "awayblock" = " "
     ) |>
     gt::data_color(
@@ -2191,34 +2091,49 @@ series_odds_table <- function(
       heading.align = "left",
       table.border.bottom.color = "white",
       table.border.top.color = "white"
-    )
+    ) |>
+    gt::tab_source_note(gt::md(series_note))
+
+  if (include_images) {
+    series_gt <- series_gt |>
+      gt::cols_label("homeimage" = " ", "awayimage" = " ")
+  }
 
   for (i in seq_len(nrow(series))) {
     series_gt <- series_gt |>
       gt::tab_style(
         style = gt::cell_fill(
-          color = teamColours[teamColours$Team == series$HomeTeam[i], "Hex"]
+          color = teamColours[
+            teamColours$Team == series$HomeTeam[i],
+            "Hex"
+          ]
         ),
         locations = gt::cells_body(columns = "homeblock", rows = i)
       ) |>
       gt::tab_style(
         style = gt::cell_fill(
-          color = teamColours[teamColours$Team == series$AwayTeam[i], "Hex"]
+          color = teamColours[
+            teamColours$Team == series$AwayTeam[i],
+            "Hex"
+          ]
         ),
         locations = gt::cells_body(columns = "awayblock", rows = i)
-      ) |>
-      gt::text_transform(
-        locations = gt::cells_body(columns = "homeimage", rows = i),
-        fn = function(x) {
-          gt::local_image(filename = team_logo_path(x), height = "30px")
-        }
-      ) |>
-      gt::text_transform(
-        locations = gt::cells_body(columns = "awayimage", rows = i),
-        fn = function(x) {
-          gt::local_image(filename = team_logo_path(x), height = "30px")
-        }
       )
+    if (include_images) {
+      series_gt <- series_gt |>
+        gt::text_transform(
+          locations = gt::cells_body(columns = "homeimage", rows = i),
+          fn = function(x) {
+            gt::local_image(filename = team_logo_path(x), height = "30px")
+          }
+        ) |>
+        gt::text_transform(
+          locations = gt::cells_body(columns = "awayimage", rows = i),
+          fn = function(x) {
+            gt::local_image(filename = team_logo_path(x), height = "30px")
+          }
+        )
+    }
   }
 
   if (include_logo) {
