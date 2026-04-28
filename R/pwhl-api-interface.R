@@ -370,8 +370,11 @@ pwhl_games_today <- function(
   schedule = HockeyModel::pwhlSchedule,
   date = Sys.Date()
 ) {
+  if (!inherits(date, c("Date", "character"))) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
   date <- suppressWarnings(as.Date(date))
-  if (!inherits(date, "Date") || length(date) != 1 || is.na(date)) {
+  if (length(date) != 1 || is.na(date)) {
     cli::cli_abort("{.arg date} must be a Date or date-like value.")
   }
   games <- schedule[
@@ -543,13 +546,25 @@ getPWHLPlayoffSeries <- function(
 
   playoff_scores <- scores[scores$GameType == "P", ]
 
-  series_pairs <- unique(
-    playoff_schedule[, c("HomeTeam", "AwayTeam")]
+  # Group games by unordered team pair so each series appears only once
+  series_keys <- apply(
+    playoff_schedule[, c("HomeTeam", "AwayTeam"), drop = FALSE],
+    1,
+    function(teams) paste(sort(teams), collapse = "|||")
   )
+  unique_series_keys <- unique(series_keys)
 
-  result <- purrr::map_dfr(seq_len(nrow(series_pairs)), function(i) {
-    home <- series_pairs$HomeTeam[i]
-    away <- series_pairs$AwayTeam[i]
+  result <- purrr::map_dfr(unique_series_keys, function(series_key) {
+    series_schedule <- playoff_schedule[
+      series_keys == series_key,
+      ,
+      drop = FALSE
+    ]
+
+    # Home-ice advantage belongs to the team that plays the first home game
+    series_schedule_ordered <- series_schedule[order(series_schedule$Date), ]
+    home <- series_schedule_ordered$HomeTeam[1]
+    away <- series_schedule_ordered$AwayTeam[1]
 
     played <- playoff_scores[
       (playoff_scores$HomeTeam == home & playoff_scores$AwayTeam == away) |
@@ -567,7 +582,8 @@ getPWHLPlayoffSeries <- function(
       na.rm = TRUE
     )
 
-    status <- if (home_wins >= 2 || away_wins >= 2) "Complete" else "Ongoing"
+    # Best-of-5: series is complete when either team reaches 3 wins
+    status <- if (home_wins >= 3 || away_wins >= 3) "Complete" else "Ongoing"
 
     data.frame(
       HomeTeam = home,

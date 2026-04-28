@@ -196,3 +196,107 @@ test_that("pwhl_get_long_team returns NA for unknown code", {
   result <- pwhl_get_long_team("XYZ")
   expect_true(is.na(result))
 })
+
+# ── getPWHLPlayoffSeries tests ────────────────────────────────────────────────
+
+test_that("getPWHLPlayoffSeries returns NULL when no playoff games", {
+  sched_no_playoffs <- data.frame(
+    Date = as.Date("2024-01-01"),
+    HomeTeam = "Toronto Sceptres",
+    AwayTeam = "Boston Fleet",
+    GameID = 1L,
+    GameType = "R",
+    GameStatus = "Final",
+    stringsAsFactors = FALSE
+  )
+  scores_empty <- data.frame(
+    Date = as.Date(character(0)),
+    HomeTeam = character(0),
+    AwayTeam = character(0),
+    GameID = integer(0),
+    HomeGoals = integer(0),
+    AwayGoals = integer(0),
+    OTStatus = character(0),
+    GameType = character(0),
+    GameStatus = character(0),
+    stringsAsFactors = FALSE
+  )
+  result <- getPWHLPlayoffSeries(
+    scores = scores_empty,
+    schedule = sched_no_playoffs
+  )
+  expect_null(result)
+})
+
+test_that("getPWHLPlayoffSeries home team is team with first home game", {
+  # Game 1: Boston at Toronto (Toronto is home first)
+  # Game 2: Boston at Toronto again
+  # Game 3: Toronto at Boston (away for Toronto)
+  playoff_schedule <- data.frame(
+    Date = as.Date(c("2024-04-01", "2024-04-03", "2024-04-05")),
+    HomeTeam = c("Toronto Sceptres", "Toronto Sceptres", "Boston Fleet"),
+    AwayTeam = c("Boston Fleet", "Boston Fleet", "Toronto Sceptres"),
+    GameID = c(200L, 201L, 202L),
+    GameType = c("P", "P", "P"),
+    GameStatus = c("Final", "Final", "Scheduled"),
+    stringsAsFactors = FALSE
+  )
+  playoff_scores <- data.frame(
+    Date = as.Date(c("2024-04-01", "2024-04-03")),
+    HomeTeam = c("Toronto Sceptres", "Toronto Sceptres"),
+    AwayTeam = c("Boston Fleet", "Boston Fleet"),
+    GameID = c(200L, 201L),
+    HomeGoals = c(3L, 2L),
+    AwayGoals = c(1L, 4L),
+    OTStatus = c("", ""),
+    GameType = c("P", "P"),
+    GameStatus = c("Final", "Final"),
+    stringsAsFactors = FALSE
+  )
+  result <- getPWHLPlayoffSeries(
+    scores = playoff_scores,
+    schedule = playoff_schedule
+  )
+  expect_true(is.data.frame(result))
+  expect_equal(nrow(result), 1L)
+  # Toronto had the first home game, so Toronto is the series home team
+  expect_equal(result$HomeTeam, "Toronto Sceptres")
+  expect_equal(result$AwayTeam, "Boston Fleet")
+  expect_equal(result$HomeWins, 1L)
+  expect_equal(result$AwayWins, 1L)
+  expect_equal(result$Status, "Ongoing")
+})
+
+test_that("getPWHLPlayoffSeries marks series complete at 3 wins (best-of-5)", {
+  # Toronto wins 3 games to sweep the best-of-5 series
+  # Games 1-2 at Toronto (home), game 3 at Boston (away for Toronto)
+  playoff_schedule <- data.frame(
+    Date = as.Date(c("2024-04-01", "2024-04-03", "2024-04-05")),
+    HomeTeam = c("Toronto Sceptres", "Toronto Sceptres", "Boston Fleet"),
+    AwayTeam = c("Boston Fleet", "Boston Fleet", "Toronto Sceptres"),
+    GameID = c(200L, 201L, 202L),
+    GameType = c("P", "P", "P"),
+    GameStatus = c("Final", "Final", "Final"),
+    stringsAsFactors = FALSE
+  )
+  # Toronto wins all 3: games 1 and 2 at home, game 3 on the road
+  playoff_scores <- data.frame(
+    Date = as.Date(c("2024-04-01", "2024-04-03", "2024-04-05")),
+    HomeTeam = c("Toronto Sceptres", "Toronto Sceptres", "Boston Fleet"),
+    AwayTeam = c("Boston Fleet", "Boston Fleet", "Toronto Sceptres"),
+    GameID = c(200L, 201L, 202L),
+    HomeGoals = c(3L, 2L, 1L),
+    AwayGoals = c(1L, 1L, 4L),
+    OTStatus = c("", "", ""),
+    GameType = c("P", "P", "P"),
+    GameStatus = c("Final", "Final", "Final"),
+    stringsAsFactors = FALSE
+  )
+  result <- getPWHLPlayoffSeries(
+    scores = playoff_scores,
+    schedule = playoff_schedule
+  )
+  expect_equal(result$HomeWins, 3L) # Toronto wins all 3 (2 home + 1 away)
+  expect_equal(result$AwayWins, 0L) # Boston wins 0
+  expect_equal(result$Status, "Complete")
+})

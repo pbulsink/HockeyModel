@@ -39,6 +39,7 @@
 #'
 #' @returns (`double(1)`) Log-loss on the held-out test period (lower is
 #'   better).
+#' @importFrom rlang %||%
 #' @keywords internal
 tune_dc_weight <- function(
   xi = NULL,
