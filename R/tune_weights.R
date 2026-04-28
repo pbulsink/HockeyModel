@@ -39,7 +39,6 @@
 #'
 #' @returns (`double(1)`) Log-loss on the held-out test period (lower is
 #'   better).
-#' @importFrom rlang %||%
 #' @keywords internal
 tune_dc_weight <- function(
   xi = NULL,
@@ -51,9 +50,9 @@ tune_dc_weight <- function(
 
   # League-specific defaults and data
   if (league == "PWHL") {
-    xi <- xi %||% DC_XI_PWHL
-    upsilon <- upsilon %||% DC_UPSILON_PWHL
-    nu <- nu %||% DC_NU_PWHL
+    xi <- if (is.null(xi)) DC_XI_PWHL else xi
+    upsilon <- if (is.null(upsilon)) DC_UPSILON_PWHL else upsilon
+    nu <- if (is.null(nu)) DC_NU_PWHL else nu
     all_scores <- HockeyModel::pwhlScores
     # Validate: need at least two PWHL seasons to have a meaningful hold-out
     if (nrow(all_scores) == 0) {
@@ -71,14 +70,26 @@ tune_dc_weight <- function(
     }
     test_start <- season_starts[length(season_starts)]
     # Fixed rho/beta/eta/k — only m changes during the sweep
-    fixed_rho <- HockeyModel::pwhl_rho %||% -0.25
-    fixed_beta <- HockeyModel::pwhl_beta %||% 2
-    fixed_eta <- HockeyModel::pwhl_eta %||% 3
-    fixed_k <- HockeyModel::pwhl_k %||% 5
+    fixed_rho <- if (is.null(HockeyModel::pwhl_rho)) {
+      -0.25
+    } else {
+      HockeyModel::pwhl_rho
+    }
+    fixed_beta <- if (is.null(HockeyModel::pwhl_beta)) {
+      2
+    } else {
+      HockeyModel::pwhl_beta
+    }
+    fixed_eta <- if (is.null(HockeyModel::pwhl_eta)) {
+      3
+    } else {
+      HockeyModel::pwhl_eta
+    }
+    fixed_k <- if (is.null(HockeyModel::pwhl_k)) 5 else HockeyModel::pwhl_k
   } else {
-    xi <- xi %||% DC_XI_NHL
-    upsilon <- upsilon %||% DC_UPSILON_NHL
-    nu <- nu %||% DC_NU_NHL
+    xi <- if (is.null(xi)) DC_XI_NHL else xi
+    upsilon <- if (is.null(upsilon)) DC_UPSILON_NHL else upsilon
+    nu <- if (is.null(nu)) DC_NU_NHL else nu
     all_scores <- HockeyModel::scores
     all_scores <- unique(all_scores[all_scores$Date > as.Date("2010-08-01"), ])
     test_start <- as.Date("2022-10-01")
