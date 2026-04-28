@@ -42,7 +42,9 @@ normalizeOdds <- function(odds) {
 #'
 #' @returns A tibble with season point totals by team.
 historicalPoints <- function(sc) {
-  sc$Season <- getSeason(sc$Date)
+  sc <- sc |>
+    dplyr::rowwise() |>
+    dplyr::mutate(Season = getSeason(.data$Date))
 
   sc <- droplevels(sc)
 

@@ -130,28 +130,22 @@ test_that("todayOddsPlot executes without error", {
     getCurrentSeason8 = function() "20192020",
     .package = "HockeyModel"
   )
-  p <- suppressWarnings(todayOddsPlot(
+  p <- todayOddsPlot(
     date = as.Date("2019-11-01"),
     schedule = mock_schedule,
     scores = mock_scores
-  ))
-  expect_true(
-    ggplot2::is_ggplot(p) || is.list(p) || is.null(p)
   )
+  expect_true(ggplot2::is_ggplot(p) || is.null(p))
 })
 
 # ============ plot_playoff_series_odds tests ============
 test_that("plot_playoff_series_odds executes gracefully", {
-  tryCatch(
-    expect_error(suppressWarnings(plot_playoff_series_odds()), NA),
-    error = function(e) skip("plot_playoff_series_odds requires data")
-  )
+  p <- plot_playoff_series_odds()
+  expect_true(ggplot2::is_ggplot(p))
 })
 
 # ============ plot_prediction_playoffs_by_team tests ============
 test_that("plot_prediction_playoffs_by_team executes gracefully", {
-  tryCatch(
-    expect_error(suppressWarnings(plot_prediction_playoffs_by_team()), NA),
-    error = function(e) skip("plot_prediction_playoffs_by_team requires data")
-  )
+  p <- plot_prediction_playoffs_by_team()
+  expect_true(ggplot2::is_ggplot(p))
 })

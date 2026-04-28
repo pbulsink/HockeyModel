@@ -44,3 +44,5 @@ prediction_results
 tests/testthat/testthat-problems.rds
 
 tests/testthat/_problems/
+.positai
+20252026.csv
