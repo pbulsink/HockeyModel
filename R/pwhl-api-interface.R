@@ -370,10 +370,10 @@ pwhl_games_today <- function(
   schedule = HockeyModel::pwhlSchedule,
   date = Sys.Date()
 ) {
-  if (!inherits(date, "Date")) {
+  date <- suppressWarnings(as.Date(date))
+  if (!inherits(date, "Date") || length(date) != 1 || is.na(date)) {
     cli::cli_abort("{.arg date} must be a Date or date-like value.")
   }
-  date <- as.Date(date)
   games <- schedule[
     !is.na(schedule$Date) &
       schedule$Date == date &
