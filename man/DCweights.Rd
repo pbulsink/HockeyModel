@@ -4,21 +4,49 @@
 \alias{DCweights}
 \title{Compute sigmoid time-decay weights for historical matches}
 \usage{
-DCweights(dates, currentDate = Sys.Date(), xi = 0.01, upsilon = 365.25)
+DCweights(
+  dates,
+  currentDate = Sys.Date(),
+  xi = DC_XI_NHL,
+  upsilon = DC_UPSILON_NHL,
+  nu = DC_NU_NHL,
+  season_start_dates = NULL
+)
 }
 \arguments{
 \item{dates}{(\code{Date}) Match dates.}
 
 \item{currentDate}{(\code{Date}) Reference date for weighting.}
 
-\item{xi}{(\code{double(1)}) Logistic slope.}
+\item{xi}{(\code{double(1)}) Logistic slope (within-season decay speed).}
 
-\item{upsilon}{(\code{double(1)}) Logistic midpoint.}
+\item{upsilon}{(\code{double(1)}) Logistic midpoint (days). Weights are ≈0.5 at
+this age.}
+
+\item{nu}{(\code{double(1)}) Cross-season exponent.  \code{nu = 0} (default) disables
+cross-season discounting.  \code{nu = 2} is a reasonable starting value for
+leagues with high year-to-year roster volatility (e.g. PWHL).}
+
+\item{season_start_dates}{(\code{Date} or \code{NULL}) A sorted vector of season start
+dates used to determine which season each game belongs to.  Required when
+\code{nu != 0}; if \code{NULL} and \code{nu != 0} an error is raised.  Obtain from
+\code{\link[=derive_season_starts]{derive_season_starts()}}.}
 }
 \value{
-(\code{double}) Weight per input date.
+(\code{double}) Weight per input date in \verb{[0, 1]}.
 }
 \description{
-Compute sigmoid time-decay weights for historical matches
+Computes per-game weights as the product of two components:
+\enumerate{
+\item \strong{Sigmoid within-season decay} — games closer to \code{currentDate} receive
+higher weight.  Controlled by \code{xi} (slope) and \code{upsilon} (midpoint in
+days).
+\item \strong{Cross-season multiplier} \emph{(optional)} — each game's weight is
+multiplied by \code{1 / (1 + s^nu)}, where \code{s} is the number of complete
+seasons between the game and the current season (s = 0 for the current
+season, 1 for the previous season, etc.).  Larger \code{nu} discounts older
+seasons more aggressively.  Set \code{nu = 0} (the default) to disable this
+component.
+}
 }
 \keyword{internal}

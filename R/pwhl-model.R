@@ -37,6 +37,14 @@ pwhl_add_result <- function(scores) {
 #'   [HockeyModel::pwhlScores].
 #' @param currentDate (`Date`) Reference date for time-weighting. Defaults to
 #'   today.
+#' @param xi (`double(1)`) Logistic slope for within-season time-decay
+#'   weighting.  Defaults to [DC_XI_PWHL].
+#' @param upsilon (`double(1)`) Logistic midpoint (days) for within-season
+#'   time-decay weighting.  Defaults to [DC_UPSILON_PWHL].
+#' @param nu (`double(1)`) Cross-season discounting exponent.  Defaults to
+#'   [DC_NU_PWHL] (2), which provides moderate discounting of older seasons to
+#'   account for PWHL expansion-draft roster churn.  See [DCweights()] for
+#'   details.
 #' @param save_data (`logical(1)`) If `TRUE` and `usethis` is installed, writes
 #'   the parameters as package data objects.
 #'
@@ -45,6 +53,9 @@ pwhl_add_result <- function(scores) {
 updatePWHLDC <- function(
   scores = HockeyModel::pwhlScores,
   currentDate = Sys.Date(),
+  xi = DC_XI_PWHL,
+  upsilon = DC_UPSILON_PWHL,
+  nu = DC_NU_PWHL,
   save_data = TRUE
 ) {
   if (!is.Date(currentDate)) {
@@ -70,7 +81,13 @@ updatePWHLDC <- function(
   }
 
   cli::cli_inform("Fitting PWHL Dixon-Coles model (m)...")
-  pwhl_m <- getM(scores = scores, currentDate = currentDate)
+  pwhl_m <- getM(
+    scores = scores,
+    currentDate = currentDate,
+    xi = xi,
+    upsilon = upsilon,
+    nu = nu
+  )
 
   cli::cli_inform("Solving for PWHL low-scoring games (rho)...")
   pwhl_rho <- getRho(m = pwhl_m, scores = scores)

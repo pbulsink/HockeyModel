@@ -1,5 +1,9 @@
 # HockeyModel 2026.0.1.9000 (development version)
 
+* `DCweights()` gains `nu` and `season_start_dates` parameters for compound time × season weighting: the existing sigmoid decay is multiplied by `1/(1 + s^nu)` where `s` counts complete seasons back from the current one. `nu = 0` (default for NHL) disables cross-season discounting; `nu = 2` (default for PWHL) moderately down-weights older seasons to account for expansion-draft roster churn (#noissue).
+* `getM()`, `updateDC()`, and `updatePWHLDC()` now expose `xi`, `upsilon`, and `nu` parameters; defaults come from new explicit package constants (`DC_XI_NHL`, `DC_UPSILON_NHL`, `DC_NU_NHL`, `DC_XI_PWHL`, `DC_UPSILON_PWHL`, `DC_NU_PWHL`) (#noissue).
+* `derive_season_starts()` added as an internal helper that derives first-game-of-season dates from a vector of game dates; used automatically by `getM()` when `nu != 0` (#noissue).
+* `tune_dc_weight()` gains a `league` argument (`"NHL"` or `"PWHL"`) and a `nu` parameter; now returns a scalar log-loss (lower is better) suitable for use with `optim()` over `(xi, upsilon, nu)` (#noissue).
 * `pwhl_loopless_sim()` now simulates PWHL playoffs (best-of-5, 2-2-1 format) and returns `Make_Finals` and `Win_Cup` columns; corrects points to the 3-2-1-0 system (@pbulsink, #noissue).
 * `format_playoff_odds()` PWHL branch now shows `Make_Playoffs`, `Make_Finals`, and `Win_Cup` columns with logo images and sorts by Cup odds (@pbulsink, #noissue).
 * `parse_dc_params()` gains a `defaults` parameter so PWHL param parsing can delegate to it, eliminating duplicated logic (@pbulsink, #noissue).

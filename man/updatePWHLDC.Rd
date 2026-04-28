@@ -7,6 +7,9 @@
 updatePWHLDC(
   scores = HockeyModel::pwhlScores,
   currentDate = Sys.Date(),
+  xi = DC_XI_PWHL,
+  upsilon = DC_UPSILON_PWHL,
+  nu = DC_NU_PWHL,
   save_data = TRUE
 )
 }
@@ -16,6 +19,17 @@ updatePWHLDC(
 
 \item{currentDate}{(\code{Date}) Reference date for time-weighting. Defaults to
 today.}
+
+\item{xi}{(\code{double(1)}) Logistic slope for within-season time-decay
+weighting.  Defaults to \link{DC_XI_PWHL}.}
+
+\item{upsilon}{(\code{double(1)}) Logistic midpoint (days) for within-season
+time-decay weighting.  Defaults to \link{DC_UPSILON_PWHL}.}
+
+\item{nu}{(\code{double(1)}) Cross-season discounting exponent.  Defaults to
+\link{DC_NU_PWHL} (2), which provides moderate discounting of older seasons to
+account for PWHL expansion-draft roster churn.  See \code{\link[=DCweights]{DCweights()}} for
+details.}
 
 \item{save_data}{(\code{logical(1)}) If \code{TRUE} and \code{usethis} is installed, writes
 the parameters as package data objects.}

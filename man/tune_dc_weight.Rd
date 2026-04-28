@@ -4,18 +4,52 @@
 \alias{tune_dc_weight}
 \title{Evaluate a Dixon-Coles weighting configuration}
 \usage{
-tune_dc_weight(xi = 0.003, upsilon = 150)
+tune_dc_weight(xi = NULL, upsilon = NULL, nu = NULL, league = "NHL")
 }
 \arguments{
-\item{xi}{(\code{double(1)}) Time-decay slope for historical weighting.}
+\item{xi}{(\code{double(1)}) Time-decay slope for within-season weighting.
+Defaults to the league-appropriate constant (\link{DC_XI_NHL} / \link{DC_XI_PWHL}).}
 
-\item{upsilon}{(\code{double(1)}) Midpoint for the logistic weighting curve.}
+\item{upsilon}{(\code{double(1)}) Midpoint (days) for the within-season logistic
+curve.  Defaults to the league-appropriate constant.}
+
+\item{nu}{(\code{double(1)}) Cross-season discounting exponent.  \code{0} disables
+cross-season discounting.  Defaults to the league-appropriate constant
+(\link{DC_NU_NHL} / \link{DC_NU_PWHL}).}
+
+\item{league}{(\code{character(1)}) \code{"NHL"} (default) or \code{"PWHL"}.  Determines
+which scores dataset and default parameter values to use.}
 }
 \value{
-(\code{data.frame}) Evaluation schedule with model probabilities for the
-tested period.
+(\code{double(1)}) Log-loss on the held-out test period (lower is
+better).
 }
 \description{
-Evaluate a Dixon-Coles weighting configuration
+Fits the Dixon-Coles model repeatedly over a held-out test
+period, varying \code{xi}, \code{upsilon}, and \code{nu}, and returns the log-loss on
+the test period.  Because the return value is a scalar (lower is better),
+the function can be passed directly to \code{\link[stats:optim]{stats::optim()}} or a similar
+optimiser to find the best weighting parameters.
+
+\strong{Usage with \code{optim()}} (minimize log-loss):
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# NHL
+optim(
+  par = c(DC_XI_NHL, DC_UPSILON_NHL, DC_NU_NHL),
+  fn  = function(p) tune_dc_weight(xi = p[1], upsilon = p[2], nu = p[3]),
+  method = "L-BFGS-B",
+  lower  = c(1e-4, 30,  0),
+  upper  = c(0.05, 730, 5)
+)
+
+# PWHL
+optim(
+  par = c(DC_XI_PWHL, DC_UPSILON_PWHL, DC_NU_PWHL),
+  fn  = function(p) tune_dc_weight(p[1], p[2], p[3], league = "PWHL"),
+  method = "L-BFGS-B",
+  lower  = c(1e-4, 30,  0),
+  upper  = c(0.05, 730, 5)
+)
+}\if{html}{\out{</div>}}
 }
 \keyword{internal}
