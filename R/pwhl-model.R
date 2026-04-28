@@ -215,7 +215,11 @@ pwhl_season_start_date <- function(schedule = HockeyModel::pwhlSchedule) {
   if (nrow(schedule) == 0) {
     return(as.Date(NA_character_))
   }
-  min(schedule[schedule$GameType == "R", ]$Date, na.rm = TRUE)
+  regular_season <- schedule[schedule$GameType == "R", ]
+  if (nrow(regular_season) == 0) {
+    return(as.Date(NA_character_))
+  }
+  min(regular_season$Date, na.rm = TRUE)
 }
 
 
