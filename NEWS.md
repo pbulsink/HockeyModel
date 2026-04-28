@@ -1,4 +1,4 @@
-# HockeyModel (development version)
+# HockeyModel 2026.0.1.9000 (development version)
 
 * `pwhl_loopless_sim()` now simulates PWHL playoffs (best-of-5, 2-2-1 format) and returns `Make_Finals` and `Win_Cup` columns; corrects points to the 3-2-1-0 system (@pbulsink, #noissue).
 * `format_playoff_odds()` PWHL branch now shows `Make_Playoffs`, `Make_Finals`, and `Win_Cup` columns with logo images and sorts by Cup odds (@pbulsink, #noissue).
@@ -9,3 +9,4 @@
 * `save_gt_as_png_ragg()` now saves `gt` tables as PNG using `ragg`, removing the need for `webshot2`/`chromote` (#35).
 * Added PWHL support: new `pwhlTeamColours`, `pwhlSchedule`, and `pwhlScores` datasets plus `getPWHLSeasons()`, `getCurrentPWHLSeason()`, `getPWHLSchedule()`, `getPWHLScores()`, `pwhl_games_today()`, `updatePWHLScheduleAPI()`, and `updatePWHLScoresAPI()` functions to fetch and maintain PWHL data via the HockeyTech API (#32).
 * `dailyPWHLSummary()` now provides a one-liner daily workflow for PWHL, matching `dailySummary()` for NHL: fetches schedule and scores, fits `updatePWHLDC()` model parameters (`pwhl_m`, `pwhl_rho`, `pwhl_beta`, `pwhl_eta`, `pwhl_k`), generates today's odds plot and table via `pwhl_plot_odds_today()` and `pwhl_daily_odds_table()`, posts season-wide playoff-qualification odds from `pwhl_loopless_sim()`, and posts to social media (#32).
+

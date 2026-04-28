@@ -4,11 +4,14 @@
 \alias{parse_dc_params}
 \title{Normalize nested Dixon-Coles parameter lists}
 \usage{
-parse_dc_params(params = NULL)
+parse_dc_params(params = NULL, defaults = NULL)
 }
 \arguments{
 \item{params}{(\code{list} or \code{NULL}) Candidate parameters, optionally nested
 under a \code{params} element.}
+
+\item{defaults}{(\code{list} or \code{NULL}) Default values for \code{m}, \code{rho}, \code{beta},
+\code{eta}, and \code{k}. When \code{NULL}, NHL package-level defaults are used.}
 }
 \value{
 (\code{list}) Named list containing \code{m}, \code{rho}, \code{beta}, \code{eta}, and \code{k}.
