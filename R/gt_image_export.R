@@ -23,7 +23,7 @@
 #'
 #' @return The filename (invisibly)
 #' @export
-save_gt_as_png_ragg <- function(
+save_gt_as_png <- function(
   gt_table,
   filename,
   width = NULL,
@@ -32,6 +32,16 @@ save_gt_as_png_ragg <- function(
   scale = 1,
   padding = 20
 ) {
+  now <- Sys.time()
+  tryCatch(
+    gt::gtsave(gt_table, filename),
+    error = function(e) cli::cli_alert_danger("Couldn't save file with `gtsave`.")
+  )
+
+  if(file.exists(filename) && file.info(filename)$mtime >= now) {
+    return(invisible(filename))
+  }
+
   if (!requireNamespace("ragg", quietly = TRUE)) {
     cli::cli_abort(
       c(

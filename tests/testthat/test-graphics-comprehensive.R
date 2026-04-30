@@ -130,28 +130,34 @@ test_that("todayOddsPlot executes without error", {
     getCurrentSeason8 = function() "20192020",
     .package = "HockeyModel"
   )
-  p <- suppressWarnings(todayOddsPlot(
+  p <- todayOddsPlot(
     date = as.Date("2019-11-01"),
     schedule = mock_schedule,
     scores = mock_scores
-  ))
-  expect_true(
-    ggplot2::is_ggplot(p) || is.list(p) || is.null(p)
   )
+  expect_true(ggplot2::is_ggplot(p) || is.null(p))
 })
 
 # ============ plot_playoff_series_odds tests ============
 test_that("plot_playoff_series_odds executes gracefully", {
-  tryCatch(
-    expect_error(suppressWarnings(plot_playoff_series_odds()), NA),
-    error = function(e) skip("plot_playoff_series_odds requires data")
-  )
+  series <- structure(list(Round = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L), Series = 1:8,
+                           HomeTeam = c("Buffalo Sabres", "Tampa Bay Lightning", "Carolina Hurricanes",
+                                        "Pittsburgh Penguins", "Colorado Avalanche", "Dallas Stars",
+                                        "Vegas Golden Knights", "Edmonton Oilers"), AwayTeam = c("Boston Bruins",
+                                                                                                 "Montreal Canadiens", "Ottawa Senators", "Philadelphia Flyers",
+                                                                                                 "Los Angeles Kings", "Minnesota Wild", "Utah Mammoth", "Anaheim Ducks"
+                                        ), HomeWins = c(3L, 2L, 4L, 1L, 4L, 2L, 1L, 1L), AwayWins = c(1L,
+                                                                                                      2L, 0L, 3L, 0L, 2L, 2L, 3L), HomeSeed = c(1L, 2L, 1L, 2L,
+                                                                                                                                                1L, 2L, 1L, 2L), AwaySeed = c(4L, 3L, 4L, 3L, 4L, 3L, 4L,
+                                                                                                                                                                              3L), Status = c("Ongoing", "Ongoing", "Complete", "Ongoing",
+                                                                                                                                                                                              "Complete", "Ongoing", "Ongoing", "Ongoing")), row.names = c(NA,
+                                                                                                                                                                                                                                                           8L), class = "data.frame")
+  p <- plot_playoff_series_odds(series = series)
+  expect_true(ggplot2::is_ggplot(p))
 })
 
 # ============ plot_prediction_playoffs_by_team tests ============
 test_that("plot_prediction_playoffs_by_team executes gracefully", {
-  tryCatch(
-    expect_error(suppressWarnings(plot_prediction_playoffs_by_team()), NA),
-    error = function(e) skip("plot_prediction_playoffs_by_team requires data")
-  )
+  p <- plot_prediction_playoffs_by_team(all_predictions = example_predictions)
+  expect_true(ggplot2::is_ggplot(p))
 })

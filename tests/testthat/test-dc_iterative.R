@@ -1,5 +1,6 @@
 test_that("iterative functions works", {
-  skip_if_hockey_apis_unavailable()
+
+  vcr::use_cassette("iterative", {
   it <- iterativeOddsTable()
   expect_equal(
     colnames(it),
@@ -46,4 +47,5 @@ test_that("iterative functions works", {
   rr <- suppressMessages(getReplacementRankings(save_data = FALSE))
   expect_equal(Sys.Date(), rr$rankings_date)
   expect_equal(names(rr), names(HockeyModel::iterativeRankings))
+  })
 })

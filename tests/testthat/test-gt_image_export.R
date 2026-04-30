@@ -1,4 +1,4 @@
-test_that("save_gt_as_png_ragg() creates a valid PNG file when ragg is available", {
+test_that("save_gt_as_png() creates a valid PNG file when ragg is available", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -7,12 +7,12 @@ test_that("save_gt_as_png_ragg() creates a valid PNG file when ragg is available
 
   temp_file <- withr::local_file(tempfile(fileext = ".png"))
 
-  result <- save_gt_as_png_ragg(gt_table, temp_file)
+  result <- save_gt_as_png(gt_table, temp_file)
   expect_equal(result, temp_file)
   expect_true(file.exists(temp_file))
 })
 
-test_that("save_gt_as_png_ragg() creates PNG file with auto-detected size", {
+test_that("save_gt_as_png() creates PNG file with auto-detected size", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -25,14 +25,14 @@ test_that("save_gt_as_png_ragg() creates PNG file with auto-detected size", {
 
   temp_file <- withr::local_file(tempfile(fileext = ".png"))
 
-  result <- save_gt_as_png_ragg(gt_table, temp_file)
+  result <- save_gt_as_png(gt_table, temp_file)
 
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   expect_equal(result, temp_file)
 })
 
-test_that("save_gt_as_png_ragg() auto-detected size is smaller than a fixed large size", {
+test_that("save_gt_as_png() auto-detected size is smaller than a fixed large size", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -42,8 +42,8 @@ test_that("save_gt_as_png_ragg() auto-detected size is smaller than a fixed larg
   temp_file_auto <- withr::local_file(tempfile(fileext = ".png"))
   temp_file_fixed <- withr::local_file(tempfile(fileext = ".png"))
 
-  save_gt_as_png_ragg(gt_table, temp_file_auto)
-  save_gt_as_png_ragg(gt_table, temp_file_fixed, width = 1400, height = 800)
+  save_gt_as_png(gt_table, temp_file_auto)
+  save_gt_as_png(gt_table, temp_file_fixed, width = 1400, height = 800)
 
   expect_true(file.exists(temp_file_auto))
   expect_true(file.exists(temp_file_fixed))
@@ -52,7 +52,7 @@ test_that("save_gt_as_png_ragg() auto-detected size is smaller than a fixed larg
   expect_lt(file.size(temp_file_auto), file.size(temp_file_fixed))
 })
 
-test_that("save_gt_as_png_ragg() uses explicit width and height when provided", {
+test_that("save_gt_as_png() uses explicit width and height when provided", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -62,8 +62,8 @@ test_that("save_gt_as_png_ragg() uses explicit width and height when provided", 
   temp_file_small <- withr::local_file(tempfile(fileext = ".png"))
   temp_file_large <- withr::local_file(tempfile(fileext = ".png"))
 
-  save_gt_as_png_ragg(gt_table, temp_file_small, width = 400, height = 300)
-  save_gt_as_png_ragg(gt_table, temp_file_large, width = 1200, height = 900)
+  save_gt_as_png(gt_table, temp_file_small, width = 400, height = 300)
+  save_gt_as_png(gt_table, temp_file_large, width = 1200, height = 900)
 
   expect_true(file.exists(temp_file_small))
   expect_true(file.exists(temp_file_large))
@@ -72,7 +72,7 @@ test_that("save_gt_as_png_ragg() uses explicit width and height when provided", 
   expect_gt(file.size(temp_file_large), file.size(temp_file_small))
 })
 
-test_that("save_gt_as_png_ragg() works with styled gt tables", {
+test_that("save_gt_as_png() works with styled gt tables", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -87,14 +87,14 @@ test_that("save_gt_as_png_ragg() works with styled gt tables", {
 
   temp_file <- withr::local_file(tempfile(fileext = ".png"))
 
-  result <- save_gt_as_png_ragg(gt_table, temp_file)
+  result <- save_gt_as_png(gt_table, temp_file)
 
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   expect_equal(result, temp_file)
 })
 
-test_that("save_gt_as_png_ragg() returns filename invisibly", {
+test_that("save_gt_as_png() returns filename invisibly", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -104,11 +104,11 @@ test_that("save_gt_as_png_ragg() returns filename invisibly", {
   temp_file <- withr::local_file(tempfile(fileext = ".png"))
 
   expect_invisible(
-    save_gt_as_png_ragg(gt_table, temp_file)
+    save_gt_as_png(gt_table, temp_file)
   )
 })
 
-test_that("save_gt_as_png_ragg() accepts scale parameter", {
+test_that("save_gt_as_png() accepts scale parameter", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -118,8 +118,8 @@ test_that("save_gt_as_png_ragg() accepts scale parameter", {
   temp_file_scale1 <- withr::local_file(tempfile(fileext = ".png"))
   temp_file_scale2 <- withr::local_file(tempfile(fileext = ".png"))
 
-  save_gt_as_png_ragg(gt_table, temp_file_scale1, scale = 1)
-  save_gt_as_png_ragg(gt_table, temp_file_scale2, scale = 2)
+  save_gt_as_png(gt_table, temp_file_scale1, scale = 1)
+  save_gt_as_png(gt_table, temp_file_scale2, scale = 2)
 
   expect_true(file.exists(temp_file_scale1))
   expect_true(file.exists(temp_file_scale2))
@@ -127,7 +127,7 @@ test_that("save_gt_as_png_ragg() accepts scale parameter", {
   expect_gt(file.size(temp_file_scale2), 0)
 })
 
-test_that("save_gt_as_png_ragg() handles single row dataframes", {
+test_that("save_gt_as_png() handles single row dataframes", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -136,14 +136,14 @@ test_that("save_gt_as_png_ragg() handles single row dataframes", {
 
   temp_file <- withr::local_file(tempfile(fileext = ".png"))
 
-  result <- save_gt_as_png_ragg(gt_table, temp_file)
+  result <- save_gt_as_png(gt_table, temp_file)
 
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   expect_equal(result, temp_file)
 })
 
-test_that("save_gt_as_png_ragg() padding parameter controls extra space", {
+test_that("save_gt_as_png() padding parameter controls extra space", {
   skip_if_not_installed("ragg")
   skip_if_not_installed("gt")
 
@@ -153,8 +153,8 @@ test_that("save_gt_as_png_ragg() padding parameter controls extra space", {
   temp_no_pad <- withr::local_file(tempfile(fileext = ".png"))
   temp_with_pad <- withr::local_file(tempfile(fileext = ".png"))
 
-  save_gt_as_png_ragg(gt_table, temp_no_pad, padding = 0)
-  save_gt_as_png_ragg(gt_table, temp_with_pad, padding = 100)
+  save_gt_as_png(gt_table, temp_no_pad, padding = 0)
+  save_gt_as_png(gt_table, temp_with_pad, padding = 100)
 
   expect_true(file.exists(temp_no_pad))
   expect_true(file.exists(temp_with_pad))

@@ -34,18 +34,12 @@ test_that("Past points function works", {
   sc <- scores[
     scores$Date > as.Date("2017-11-01") & scores$Date < as.Date("2017-12-01"),
   ]
-  if (nrow(sc) > 0) {
-    tryCatch(
-      {
-        p <- HockeyModel:::historicalPoints(sc = sc)
-        expect_true(is.data.frame(p))
-      },
-      error = function(e) {
-        # Function has type mismatch in buildStats - that's a separate issue
-        skip("historicalPoints has type issues in buildStats")
-      }
-    )
-  }
+
+  p <- HockeyModel:::historicalPoints(sc = sc)
+  expect_true(is.data.frame(p))
+  expect_equal(nrow(p), 31)
+  expect_equal(colnames(p), c("Team", "Points", "Season"))
+
 })
 
 test_that("Metrics are correctly calculated", {

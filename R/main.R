@@ -277,7 +277,7 @@ dailySummary <- function(
       params = params,
       schedule = modelparams$schedule
     )
-    save_gt_as_png_ragg(
+    save_gt_as_png(
       today_table,
       filename = file.path(graphic_dir, "today_odds_table.png")
     )
@@ -878,7 +878,7 @@ tweetSeries <- function(
   Sys.sleep(delay)
 
   tbl <- series_odds_table(series = series, params = params)
-  save_gt_as_png_ragg(
+  save_gt_as_png(
     tbl,
     filename = file.path(graphic_dir, "series_odds_table.png")
   )
@@ -933,7 +933,7 @@ tweetPlayoffOdds <- function(
       trim = FALSE,
       trimcup = trimcup
     )
-    save_gt_as_png_ragg(
+    save_gt_as_png(
       plt,
       filename = file.path(graphic_dir, "playoff_odds.png")
     )
@@ -972,7 +972,7 @@ tweetPlayoffOdds <- function(
         trim = FALSE,
         trimcup = trimcup
       )
-      save_gt_as_png_ragg(
+      save_gt_as_png(
         plt,
         filename = file.path(
           graphic_dir,
