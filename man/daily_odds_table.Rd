@@ -8,7 +8,6 @@ daily_odds_table(
   today = Sys.Date(),
   params = NULL,
   schedule = HockeyModel::schedule,
-  include_logo = FALSE,
   league = "NHL"
 )
 }
@@ -19,11 +18,9 @@ daily_odds_table(
 
 \item{schedule}{Schedule, or HockeyModel Schedule}
 
-\item{include_logo}{whether to include dailyfaceoff logo}
-
 \item{league}{League identifier. \code{"NHL"} (default) or \code{"PWHL"}. When
-\code{"PWHL"}, PWHL team colours are used, logo columns are skipped, and the
-title is set to \code{"PWHL Game Odds"}.}
+\code{"PWHL"}, PWHL team colours and logos are used and the title is set to
+\code{"PWHL Game Odds"}.}
 }
 \value{
 a gt table

@@ -4,12 +4,7 @@
 \alias{series_odds_table}
 \title{Series Odds Table}
 \usage{
-series_odds_table(
-  series = getAPISeries(),
-  params = NULL,
-  include_logo = FALSE,
-  league = "NHL"
-)
+series_odds_table(series = getAPISeries(), params = NULL, league = "NHL")
 }
 \arguments{
 \item{series}{A data frame with columns HomeTeam, AwayTeam, HomeWins, and
@@ -19,12 +14,9 @@ AwayWins describing the current playoff series. Defaults to
 \item{params}{The named list containing m, rho, beta, eta, and k. See
 \link{updateDC} for information on the params list.}
 
-\item{include_logo}{Whether to include the Daily Faceoff logo as a source
-note. Default \code{FALSE}.}
-
 \item{league}{League identifier. \code{"NHL"} (default) or \code{"PWHL"}. When
-\code{"PWHL"}, PWHL team colours are used, logo columns are skipped, and the
-title is set to \code{"PWHL Playoff Series Odds"}.}
+\code{"PWHL"}, PWHL team colours and logos are used and the title is set to
+\code{"PWHL Playoff Series Odds"}.}
 }
 \value{
 a gt table

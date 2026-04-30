@@ -1532,8 +1532,8 @@ getTeamColours <- function(
 #' @param trim Whether to drop teams that have 0 chance of making playoffs. Default true (ignored for PWHL)
 #' @param trimcup Whether to drop teams that have 0 chance of winning cup. Default false (ignored for PWHL)
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
-#'   `"PWHL"`, only `Make_Playoffs`, `meanPoints`, and `meanRank` columns are
-#'   formatted and no logo images are included.
+#'   `"PWHL"`, only `Make_Playoffs`, `Make_Finals`, and `Win_Cup` columns are
+#'   formatted; team logos are included using the PWHL logo set.
 #'
 #' @return a gt table
 #' @export
@@ -1661,6 +1661,7 @@ format_playoff_odds <- function(
   }
 
   for (i in seq_len(nrow(playoff_odds))) {
+    fallback_logo <- if (league == "PWHL") "pwhl.png" else "nhl.png"
     playoff_odds_gt <- playoff_odds_gt |>
       gt::tab_style(
         style = gt::cell_fill(
@@ -1683,67 +1684,16 @@ format_playoff_odds <- function(
                 "logos",
                 paste0(tolower(gsub(" ", "_", x)), ".png")
               ),
-              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.png")
+              file.path(
+                getOption("HockeyModel.data.path"),
+                "logos",
+                fallback_logo
+              )
             ),
             height = "30px"
           )
         }
       )
-    if (league != "PWHL") {
-      playoff_odds_gt <- playoff_odds_gt |>
-        gt::text_transform(
-          locations = gt::cells_body(columns = "image", rows = i),
-          fn = function(x) {
-            gt::local_image(
-              filename = ifelse(
-                file.exists(file.path(
-                  getOption("HockeyModel.data.path"),
-                  "logos",
-                  paste0(tolower(gsub(" ", "_", x)), ".png")
-                )),
-                file.path(
-                  getOption("HockeyModel.data.path"),
-                  "logos",
-                  paste0(tolower(gsub(" ", "_", x)), ".png")
-                ),
-                file.path(
-                  getOption("HockeyModel.data.path"),
-                  "logos",
-                  "nhl.png"
-                )
-              ),
-              height = "30px"
-            )
-          }
-        )
-    } else {
-      playoff_odds_gt <- playoff_odds_gt |>
-        gt::text_transform(
-          locations = gt::cells_body(columns = "image", rows = i),
-          fn = function(x) {
-            gt::local_image(
-              filename = ifelse(
-                file.exists(file.path(
-                  getOption("HockeyModel.data.path"),
-                  "logos",
-                  paste0(tolower(gsub(" ", "_", x)), ".png")
-                )),
-                file.path(
-                  getOption("HockeyModel.data.path"),
-                  "logos",
-                  paste0(tolower(gsub(" ", "_", x)), ".png")
-                ),
-                file.path(
-                  getOption("HockeyModel.data.path"),
-                  "logos",
-                  "pwhl.png"
-                )
-              ),
-              height = "30px"
-            )
-          }
-        )
-    }
   }
 
   return(playoff_odds_gt)
@@ -1757,10 +1707,9 @@ format_playoff_odds <- function(
 #' @param today A date for games to create a table. Defaults to today.
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param schedule Schedule, or HockeyModel Schedule
-#' @param include_logo whether to include dailyfaceoff logo
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
-#'   `"PWHL"`, PWHL team colours are used, logo columns are skipped, and the
-#'   title is set to `"PWHL Game Odds"`.
+#'   `"PWHL"`, PWHL team colours and logos are used and the title is set to
+#'   `"PWHL Game Odds"`.
 #'
 #' @return a gt table
 #' @export
@@ -1768,7 +1717,6 @@ daily_odds_table <- function(
   today = Sys.Date(),
   params = NULL,
   schedule = HockeyModel::schedule,
-  include_logo = FALSE,
   league = "NHL"
 ) {
   if (!requireNamespace("gt", quietly = TRUE)) {
@@ -1810,7 +1758,7 @@ daily_odds_table <- function(
   if (league == "PWHL") {
     teamColours <- HockeyModel::pwhlTeamColours
     table_title <- "PWHL Game Odds"
-    include_images <- FALSE
+    include_images <- TRUE
   } else {
     teamColours <- HockeyModel::teamColours
     table_title <- "NHL Game Odds"
@@ -1934,7 +1882,7 @@ daily_odds_table <- function(
                 file.path(
                   getOption("HockeyModel.data.path"),
                   "logos",
-                  paste0(tolower(league, ".png"))
+                  paste0(tolower(league), ".png")
                 )
               ),
               height = "30px"
@@ -1959,7 +1907,7 @@ daily_odds_table <- function(
                 file.path(
                   getOption("HockeyModel.data.path"),
                   "logos",
-                  paste0(tolower(league, ".png"))
+                  paste0(tolower(league), ".png")
                 )
               ),
               height = "30px"
@@ -1967,13 +1915,6 @@ daily_odds_table <- function(
           }
         )
     }
-  }
-
-  if (include_logo) {
-    todayodds_gt <- todayodds_gt |>
-      gt::tab_source_note(gt::md(
-        "<img src='https://www.dailyfaceoff.com/wp-content/uploads/2021/06/DFO-Logo-Mobile-Large.png' style='height:35px;'>"
-      ))
   }
 
   return(todayodds_gt)
@@ -1989,18 +1930,15 @@ daily_odds_table <- function(
 #'   [getAPISeries()].
 #' @param params The named list containing m, rho, beta, eta, and k. See
 #'   [updateDC] for information on the params list.
-#' @param include_logo Whether to include the Daily Faceoff logo as a source
-#'   note. Default `FALSE`.
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
-#'   `"PWHL"`, PWHL team colours are used, logo columns are skipped, and the
-#'   title is set to `"PWHL Playoff Series Odds"`.
+#'   `"PWHL"`, PWHL team colours and logos are used and the title is set to
+#'   `"PWHL Playoff Series Odds"`.
 #'
 #' @return a gt table
 #' @export
 series_odds_table <- function(
   series = getAPISeries(),
   params = NULL,
-  include_logo = FALSE,
   league = "NHL"
 ) {
   if (!requireNamespace("gt", quietly = TRUE)) {
@@ -2075,7 +2013,7 @@ series_odds_table <- function(
     teamColours <- HockeyModel::pwhlTeamColours
     table_title <- "PWHL Playoff Series Odds"
     series_note <- gt::md("*Best of 5 game series*")
-    include_images <- FALSE
+    include_images <- TRUE
   } else {
     teamColours <- HockeyModel::teamColours
     table_title <- "NHL Playoff Series Odds"
@@ -2207,13 +2145,6 @@ series_odds_table <- function(
           }
         )
     }
-  }
-
-  if (include_logo) {
-    series_gt <- series_gt |>
-      gt::tab_source_note(gt::md(
-        "<img src='https://www.dailyfaceoff.com/wp-content/uploads/2021/06/DFO-Logo-Mobile-Large.png' style='height:35px;'>"
-      ))
   }
 
   return(series_gt)

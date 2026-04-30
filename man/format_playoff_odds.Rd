@@ -22,8 +22,8 @@ format_playoff_odds(
 \item{trimcup}{Whether to drop teams that have 0 chance of winning cup. Default false (ignored for PWHL)}
 
 \item{league}{League identifier. \code{"NHL"} (default) or \code{"PWHL"}. When
-\code{"PWHL"}, only \code{Make_Playoffs}, \code{meanPoints}, and \code{meanRank} columns are
-formatted and no logo images are included.}
+\code{"PWHL"}, only \code{Make_Playoffs}, \code{Make_Finals}, and \code{Win_Cup} columns are
+formatted; team logos are included using the PWHL logo set.}
 }
 \value{
 a gt table
