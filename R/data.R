@@ -143,7 +143,7 @@ buildTeamColours <- function() {
   teamColours$Logo <- file.path(
     "./data-raw",
     "logos",
-    paste0(tolower(gsub(" ", "_", teamlist)), ".gif")
+    paste0(tolower(gsub(" ", "_", teamlist)), ".png")
   )
   if (requireNamespace("usethis")) {
     usethis::use_data(teamColours, overwrite = TRUE)

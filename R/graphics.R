@@ -1574,14 +1574,14 @@ format_playoff_odds <- function(
               file.exists(file.path(
                 getOption("HockeyModel.data.path"),
                 "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
+                paste0(tolower(gsub(" ", "_", x)), ".png")
               )),
               file.path(
                 getOption("HockeyModel.data.path"),
                 "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
+                paste0(tolower(gsub(" ", "_", x)), ".png")
               ),
-              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
+              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.png")
             ),
             height = "30px"
           )
@@ -1770,14 +1770,14 @@ daily_odds_table <- function(
               file.exists(file.path(
                 getOption("HockeyModel.data.path"),
                 "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
+                paste0(tolower(gsub(" ", "_", x)), ".png")
               )),
               file.path(
                 getOption("HockeyModel.data.path"),
                 "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
+                paste0(tolower(gsub(" ", "_", x)), ".png")
               ),
-              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
+              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.png")
             ),
             height = "30px"
           )
@@ -1791,14 +1791,14 @@ daily_odds_table <- function(
               file.exists(file.path(
                 getOption("HockeyModel.data.path"),
                 "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
+                paste0(tolower(gsub(" ", "_", x)), ".png")
               )),
               file.path(
                 getOption("HockeyModel.data.path"),
                 "logos",
-                paste0(tolower(gsub(" ", "_", x)), ".gif")
+                paste0(tolower(gsub(" ", "_", x)), ".png")
               ),
-              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
+              file.path(getOption("HockeyModel.data.path"), "logos", "nhl.png")
             ),
             height = "30px"
           )
@@ -1906,17 +1906,17 @@ series_odds_table <- function(
 
   teamColours <- HockeyModel::teamColours
 
-  # Resolve a team name to its local logo path (falls back to nhl.gif)
+  # Resolve a team name to its local logo path (falls back to nhl or pwhl logo)
   team_logo_path <- function(team_name) {
     candidate <- file.path(
       getOption("HockeyModel.data.path"),
       "logos",
-      paste0(tolower(gsub(" ", "_", team_name)), ".gif")
+      paste0(tolower(gsub(" ", "_", team_name)), ".png")
     )
     ifelse(
       file.exists(candidate),
       candidate,
-      file.path(getOption("HockeyModel.data.path"), "logos", "nhl.gif")
+      file.path(getOption("HockeyModel.data.path"), "logos", "nhl.png")
     )
   }
 
