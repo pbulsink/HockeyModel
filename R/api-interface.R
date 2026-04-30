@@ -296,33 +296,86 @@ load_or_get_nst <- function(gid) {
   season <- paste0(season, season + 1)
   season <- as.numeric(season)
 
-  if (
-    system2(
-      "grep",
-      paste0('-l "', gid, '" ', "~/Documents/natstattrick.csv"),
-      stdout = FALSE
-    ) ==
-      0
-  ) {
-    nstall <- utils::read.csv("~/Documents/natstattrick.csv")
-    nstdf <- nstall |>
-      dplyr::filter(.data$game_id == gid)
-  } else {
-    nstdf <- naturalstattrick::nst_report_df(
-      season = season,
-      game_id = game_id
+  # Use a configurable path for cached Natural Stat Trick data. Allows users to
+  # provide a CSV with previously fetched nst reports. Default matches prior
+  # behavior (~/Documents/natstattrick.csv).
+  xg_path <- getOption("HockeyModel.xg.path", "~/Documents/natstattrick.csv")
+  xg_path <- path.expand(xg_path)
+
+  if (file.exists(xg_path)) {
+    nstdf <- tryCatch(
+      {
+        header <- readLines(xg_path, n = 1, warn = FALSE)
+        if (length(header) == 0) {
+          return(NULL)
+        }
+
+        gid_pattern <- paste0("^", gid, ",")
+        grep_bin <- Sys.which("grep")
+        matched_lines <- if (nzchar(grep_bin)) {
+          system2(
+            grep_bin,
+            args = c("-E", gid_pattern, xg_path),
+            stdout = TRUE,
+            stderr = FALSE
+          )
+        } else {
+          grep(gid_pattern, readLines(xg_path, warn = FALSE), value = TRUE)
+        }
+
+        if (length(matched_lines) == 0) {
+          return(NULL)
+        }
+
+        utils::read.csv(
+          text = paste(c(header, matched_lines), collapse = "\n"),
+          stringsAsFactors = FALSE
+        )
+      },
+      error = function(e) NULL
     )
-    nstdf <- nstdf |>
-      dplyr::mutate("game_id" = gid)
-    utils::write.table(
-      nstdf,
-      file = "~/Documents/natstattrick.csv",
-      append = TRUE,
-      row.names = FALSE,
-      col.names = FALSE,
-      sep = ","
-    )
+    if (!is.null(nstdf) && "game_id" %in% names(nstdf) && nrow(nstdf) > 0) {
+      return(nstdf)
+    }
   }
+
+  # Fallback: fetch from naturalstattrick package
+  nstdf <- naturalstattrick::nst_report_df(
+    season = season,
+    game_id = game_id
+  )
+  nstdf <- nstdf |>
+    dplyr::mutate("game_id" = gid)
+
+  # Attempt to cache result to the configured path.  If writing fails, warn
+  # but continue and return the fetched data.
+  tryCatch(
+    {
+      if (file.exists(xg_path)) {
+        utils::write.table(
+          nstdf,
+          file = xg_path,
+          append = TRUE,
+          row.names = FALSE,
+          col.names = FALSE,
+          sep = ","
+        )
+      } else {
+        utils::write.table(
+          nstdf,
+          file = xg_path,
+          append = FALSE,
+          row.names = FALSE,
+          col.names = TRUE,
+          sep = ","
+        )
+      }
+    },
+    error = function(e) {
+      message("Warning: could not write xG cache to ", xg_path, ": ", e$message)
+    }
+  )
+
   closeAllConnections()
 
   return(nstdf)
