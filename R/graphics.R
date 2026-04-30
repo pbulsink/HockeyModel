@@ -1934,7 +1934,7 @@ daily_odds_table <- function(
                 file.path(
                   getOption("HockeyModel.data.path"),
                   "logos",
-                  paste0(tolower(league,".png"))
+                  paste0(tolower(league, ".png"))
                 )
               ),
               height = "30px"
@@ -1959,7 +1959,7 @@ daily_odds_table <- function(
                 file.path(
                   getOption("HockeyModel.data.path"),
                   "logos",
-                  paste0(tolower(league,".png"))
+                  paste0(tolower(league, ".png"))
                 )
               ),
               height = "30px"
@@ -2071,7 +2071,17 @@ series_odds_table <- function(
   )
   series$AwayOdds <- 1 - series$HomeOdds
 
-  teamColours <- HockeyModel::teamColours
+  if (league == "PWHL") {
+    teamColours <- HockeyModel::pwhlTeamColours
+    table_title <- "PWHL Playoff Series Odds"
+    series_note <- gt::md("*Best of 5 game series*")
+    include_images <- FALSE
+  } else {
+    teamColours <- HockeyModel::teamColours
+    table_title <- "NHL Playoff Series Odds"
+    series_note <- gt::md("*Best of 7 game series*")
+    include_images <- TRUE
+  }
 
   # Resolve a team name to its local logo path (falls back to nhl or pwhl logo)
   team_logo_path <- function(team_name, league) {
@@ -2083,7 +2093,11 @@ series_odds_table <- function(
     ifelse(
       file.exists(candidate),
       candidate,
-      file.path(getOption("HockeyModel.data.path"), "logos", paste0(tolower(league,".png")))
+      file.path(
+        getOption("HockeyModel.data.path"),
+        "logos",
+        paste0(tolower(league), ".png")
+      )
     )
   }
 
@@ -2177,13 +2191,19 @@ series_odds_table <- function(
         gt::text_transform(
           locations = gt::cells_body(columns = "homeimage", rows = i),
           fn = function(x) {
-            gt::local_image(filename = team_logo_path(x, league), height = "30px")
+            gt::local_image(
+              filename = team_logo_path(x, league),
+              height = "30px"
+            )
           }
         ) |>
         gt::text_transform(
           locations = gt::cells_body(columns = "awayimage", rows = i),
           fn = function(x) {
-            gt::local_image(filename = team_logo_path(x, league), height = "30px")
+            gt::local_image(
+              filename = team_logo_path(x, league),
+              height = "30px"
+            )
           }
         )
     }

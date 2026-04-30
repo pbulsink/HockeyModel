@@ -39,7 +39,6 @@ test_that("Past points function works", {
   expect_true(is.data.frame(p))
   expect_equal(nrow(p), 31)
   expect_equal(colnames(p), c("Team", "Points", "Season"))
-
 })
 
 test_that("Metrics are correctly calculated", {

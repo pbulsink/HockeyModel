@@ -526,7 +526,7 @@ dailyPWHLSummary <- function(
       league = "PWHL"
     )
     if (!is.null(today_table)) {
-      save_gt_as_png_ragg(
+      save_gt_as_png(
         today_table,
         filename = file.path(graphic_dir, "pwhl_today_odds_table.png")
       )
@@ -644,7 +644,7 @@ dailyPWHLSummary <- function(
       error = function(e) NULL
     )
     if (!is.null(series_tbl)) {
-      save_gt_as_png_ragg(
+      save_gt_as_png(
         series_tbl,
         filename = file.path(graphic_dir, "pwhl_series_odds_table.png")
       )
@@ -700,7 +700,7 @@ dailyPWHLSummary <- function(
           error = function(e) NULL
         )
         if (!is.null(playoff_tbl)) {
-          save_gt_as_png_ragg(
+          save_gt_as_png(
             playoff_tbl,
             filename = file.path(graphic_dir, "pwhl_playoff_odds.png")
           )
