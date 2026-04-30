@@ -140,6 +140,7 @@ tune_dc_weight <- function(
   }
 
   cl <- parallel::makeCluster(4)
+  on.exit(parallel::stopCluster(cl), add = TRUE)
   doSNOW::registerDoSNOW(cl)
   `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK
   `%do%` <- foreach::`%do%` # This hack passes R CMD CHK
@@ -149,7 +150,6 @@ tune_dc_weight <- function(
     .combine = "rbind"
   ) %dopar%
     (get_game_odds(test_dates[i], all_scores, xi, upsilon, nu))
-  parallel::stopCluster(cl)
 
   schedule <- dplyr::left_join(
     truth[, c("GameID", "Date", "HomeTeam", "AwayTeam", "Result")],

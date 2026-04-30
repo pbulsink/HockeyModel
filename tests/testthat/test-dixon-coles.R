@@ -341,21 +341,25 @@ test_that("derive_season_starts handles a single season", {
 test_that("DCweights with nu = 0 equals legacy sigmoid weights", {
   dates <- as.Date(c("2025-01-01", "2024-06-01", "2023-10-01"))
   current <- as.Date("2025-03-01")
+  xi <- 0.005
+  upsilon <- 300L
+
+  # Compute expected weights using the sigmoid formula directly, without calling
+  # DCweights().  This guards against regressions in the implementation.
+  # Formula: w = 1 - 1 / (1 + exp(-xi * (datediffs - upsilon)))
+  # where datediffs = (currentDate - date) in days (positive = past game).
+  datediffs <- as.numeric(as.Date(current) - dates)
+  w_expected <- 1 - 1 / (1 + exp(-xi * (datediffs - upsilon)))
+  w_expected[datediffs <= 0] <- 0 # Future dates get weight 0
+
   w_new <- DCweights(
     dates,
     currentDate = current,
-    xi = 0.005,
-    upsilon = 300,
+    xi = xi,
+    upsilon = upsilon,
     nu = 0
   )
-  w_leg <- DCweights(
-    dates,
-    currentDate = current,
-    xi = 0.005,
-    upsilon = 300,
-    nu = 0
-  )
-  expect_equal(w_new, w_leg)
+  expect_equal(w_new, w_expected)
 })
 
 test_that("DCweights with nu > 0 reduces weight for older seasons", {

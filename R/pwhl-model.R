@@ -256,6 +256,20 @@ pwhl_loopless_sim <- function(
   scores_rs <- scores[scores$GameType == "R", ]
   season_start <- pwhl_season_start_date(schedule)
 
+  if (is.na(season_start)) {
+    cli::cli_abort(
+      "Cannot simulate PWHL season: no regular-season games found in {.arg schedule}."
+    )
+  }
+
+  n_teams <- length(unique(c(scores_rs$HomeTeam, scores_rs$AwayTeam)))
+  if (n_teams < 4) {
+    cli::cli_abort(
+      "Cannot simulate PWHL playoffs: fewer than 4 teams found in scores \\
+      (need at least 4 for semi-finals). Got {n_teams}."
+    )
+  }
+
   if (is.null(odds_table)) {
     # PWHL schedule has no postponed games, so regression is not needed here.
     odds_table <- remainderSeasonDC(
