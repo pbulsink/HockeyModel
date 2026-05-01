@@ -188,6 +188,6 @@ test_that("plot wrappers route PWHL prediction data through shared graphics (#39
   expect_identical(playoff_plot$kind, "playoffs")
   expect_identical(president_plot$kind, "presidents")
   expect_identical(point_plot$kind, "points")
-  expect_true(all(c("Boston Fleet") %in% playoff_plot$teams))
+  expect_true("Boston Fleet" %in% playoff_plot$teams)
   expect_s3_class(playoff_plot$data$predictionDate, "Date")
 })
