@@ -4,7 +4,16 @@
 \alias{playoffOdds}
 \title{Predict playoff odds graphic}
 \usage{
-playoffOdds()
+playoffOdds(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
+  league = NULL
+)
+}
+\arguments{
+\item{data_dir}{directory of saved prediction snapshots}
+
+\item{league}{which league front-end to run: \code{NULL}, \code{NA}, or \code{"both"} runs
+both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
 }
 \value{
 A playoff-odds \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.

@@ -386,7 +386,7 @@ compile_predictions <- function(
   # Find the files
   filelist <- list.files(path = dir)
   pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-  pdates <- pdates[pdates != "graphics"]
+  pdates <- pdates[!is.na(as.Date(pdates))]
   all_predictions <- purrr::map(pdates, function(f) {
     readRDS(file.path(dir, (paste0(f, "-predictions.RDS"))))
   }) # Read all the files
@@ -961,7 +961,7 @@ simulatePlayoffs <- function(
   if (is.null(summary_results)) {
     filelist <- list.files(path = getOption("HockeyModel.prediction.path"))
     pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-    pdates <- pdates[pdates != "graphics"]
+    pdates <- pdates[!is.na(as.Date(pdates))]
     lastp <- as.Date(max(pdates))
     summary_results <- readRDS(file.path(
       getOption("HockeyModel.prediction.path"),

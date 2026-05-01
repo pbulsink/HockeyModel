@@ -1,52 +1,203 @@
 # Hosts main functions
 # Calls to data and prediction calculations, produce figures & tables
 
-#' Update Model
-#' @description updates the schedule, scores, and model parameters (m, rho, theta, gamma). Returns them in a list of named values
+#' Resolve requested front-end leagues
 #'
-#' @param save_data whether to save data to the package file
+#' @param league (`character(1)` or `NULL`) Requested league selector. `NULL`,
+#'   `NA`, and `"both"` expand to both leagues.
+#' @returns (`character`) Normalised league names.
+#' @keywords internal
+.resolve_frontend_leagues <- function(league = NULL) {
+  if (is.null(league) || (length(league) == 1 && is.na(league))) {
+    return(c("NHL", "PWHL"))
+  }
+
+  if (!is.character(league) || length(league) != 1) {
+    cli::cli_abort(
+      "{.arg league} must be NULL, NA, {.val both}, {.val nhl}, or {.val pwhl}."
+    )
+  }
+
+  league <- toupper(league)
+  if (league == "BOTH") {
+    return(c("NHL", "PWHL"))
+  }
+
+  if (league %in% c("NHL", "PWHL")) {
+    return(league)
+  }
+
+  cli::cli_abort(
+    "{.arg league} must be NULL, NA, {.val both}, {.val nhl}, or {.val pwhl}."
+  )
+}
+
+
+#' Simplify multi-league front-end results
 #'
-#' @return a list of scores, schedule, and param named list
+#' @param result (`list`) Per-league result list.
+#' @param leagues (`character`) Normalised league names from
+#'   `.resolve_frontend_leagues()`.
+#' @returns Either a single-league result or the original named list.
+#' @keywords internal
+.simplify_frontend_result <- function(result, leagues) {
+  if (length(leagues) == 1) {
+    return(result[[tolower(leagues)]])
+  }
+
+  result
+}
+
+
+#' Select a league-specific front-end value
 #'
-#' @export
-updateModel <- function(save_data = TRUE) {
+#' @param x (`any`) Candidate input value.
+#' @param league (`character(1)`) Normalised league name.
+#' @param default (`any`) Fallback value used when `x` is `NULL`.
+#' @returns A league-specific value.
+#' @keywords internal
+.frontend_value_for_league <- function(x, league, default = NULL) {
+  if (is.null(x)) {
+    return(default)
+  }
+
+  if (is.list(x) && !is.data.frame(x) && !is.null(names(x))) {
+    league_name <- tolower(league)
+    if (league_name %in% names(x)) {
+      return(x[[league_name]])
+    }
+
+    upper_names <- toupper(names(x))
+    if (league %in% upper_names) {
+      return(x[[which(upper_names == league)[1]]])
+    }
+  }
+
+  x
+}
+
+
+#' Compute front-end prediction directories
+#'
+#' @param data_dir (`character(1)`) Root prediction directory.
+#' @returns (`list`) Named NHL and PWHL prediction directories.
+#' @keywords internal
+.frontend_prediction_dirs <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results")
+) {
+  list(
+    nhl = data_dir,
+    pwhl = file.path(data_dir, "pwhl")
+  )
+}
+
+
+#' Convert PWHL simulations to saved prediction snapshots
+#'
+#' @param sim_results (`list`) Output from [pwhl_loopless_sim()].
+#' @returns A [tibble::tibble()] with `Team`, `Playoffs`, `meanPoints`, and
+#'   `Presidents` columns.
+#' @keywords internal
+.pwhl_prediction_summary <- function(sim_results) {
+  presidents <- sim_results$raw_results |>
+    dplyr::group_by(.data$Team) |>
+    dplyr::summarise(
+      Presidents = mean(.data$Rank == 1, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  sim_results$summary_results |>
+    dplyr::select(
+      "Team",
+      Playoffs = "Make_Playoffs",
+      "meanPoints"
+    ) |>
+    dplyr::left_join(presidents, by = "Team") |>
+    tibble::as_tibble()
+}
+
+
+#' Update the NHL front-end model payload
+#'
+#' @param save_data (`logical(1)`) Whether to persist refreshed package data.
+#' @returns (`list`) NHL `scores`, `schedule`, and `params`.
+#' @keywords internal
+.update_model_nhl <- function(save_data = TRUE) {
   cli::cli_inform("Updating Schedule")
   schedule <- updateScheduleAPI(save_data = save_data)
   cli::cli_inform("Updating Scores")
   scores <- updateScoresAPI(schedule = schedule, save_data = save_data)
   cli::cli_inform("Refitting Model Parameters")
   params <- updateDC(scores = scores, save_data = save_data)
-  return(list(
-    "scores" = scores,
-    "schedule" = HockeyModel::schedule,
-    "params" = params
-  ))
+  list(
+    scores = scores,
+    schedule = schedule,
+    params = params
+  )
 }
 
-#' Update predictions
+#' Update Model
+#' @description Updates the requested league model data. With `league = NULL`,
+#'   `NA`, or `"both"`, both NHL and PWHL models are updated in one call.
 #'
-#' @param data_dir directory of predictions
-#' @param scores HockeyModel::scores or a custom value
-#' @param schedule HockeyModel::schedule or a custom value
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param save_data whether to save data to the package file
+#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#'   both leagues; `"nhl"` and `"pwhl"` run one league only
 #'
-#' @return NULL
+#' @return For a single league, a list of scores, schedule, and params. For
+#'   both leagues, a named list with `nhl` and `pwhl` entries of that same form.
 #'
 #' @export
-updatePredictions <- function(
-  data_dir = getOption("HockeyModel.prediction.path"),
+updateModel <- function(save_data = TRUE, league = NULL) {
+  leagues <- .resolve_frontend_leagues(league)
+  result <- list()
+
+  if ("NHL" %in% leagues) {
+    result$nhl <- .update_model_nhl(save_data = save_data)
+  }
+  if ("PWHL" %in% leagues) {
+    result$pwhl <- updatePWHLModel(save_data = save_data)
+  }
+
+  .simplify_frontend_result(result, leagues)
+}
+
+
+#' Update saved NHL prediction snapshots
+#'
+#' @param data_dir (`character(1)`) Directory of saved NHL prediction files.
+#' @param scores (`data.frame`) NHL scores.
+#' @param schedule (`data.frame`) NHL schedule.
+#' @param params (`list` or `NULL`) NHL model parameters.
+#' @returns `NULL` (invisibly).
+#' @keywords internal
+.update_predictions_nhl <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
   scores = HockeyModel::scores,
   schedule = HockeyModel::schedule,
   params = NULL
 ) {
   params <- parse_dc_params(params)
 
+  if (!dir.exists(data_dir)) {
+    dir.create(data_dir, recursive = TRUE)
+  }
+
   if (scores$Date[nrow(scores)] < (Sys.Date())) {
     updateScoresAPI(save_data = TRUE)
   }
   filelist <- list.files(path = data_dir)
   pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-  pdates <- pdates[pdates != "graphics"]
+  pdates <- pdates[!is.na(as.Date(pdates))]
+  if (length(pdates) == 0) {
+    dcPredictMultipleDays(
+      start = Sys.Date(),
+      scores = scores,
+      schedule = schedule,
+      filedir = data_dir
+    )
+    return(invisible(NULL))
+  }
   lastp <- as.Date(max(pdates))
   if (lastp != Sys.Date()) {
     dcPredictMultipleDays(
@@ -56,18 +207,128 @@ updatePredictions <- function(
       filedir = data_dir
     )
   }
+
+  invisible(NULL)
 }
 
-#' Today's game odds graphic
+
+#' Update saved PWHL prediction snapshots
 #'
-#' @param date date to predict odds. Default today
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
-#' @param schedule HockeyModel::schedule or a custom value
+#' @param data_dir (`character(1)`) Directory of saved PWHL prediction files.
+#' @param scores (`data.frame`) PWHL scores.
+#' @param schedule (`data.frame`) PWHL schedule.
+#' @param params (`list` or `NULL`) PWHL model parameters.
+#' @returns `NULL` (invisibly).
+#' @keywords internal
+.update_predictions_pwhl <- function(
+  data_dir = file.path(
+    getOption("HockeyModel.prediction.path", "./prediction_results"),
+    "pwhl"
+  ),
+  scores = HockeyModel::pwhlScores,
+  schedule = HockeyModel::pwhlSchedule,
+  params = NULL
+) {
+  params <- parse_pwhl_dc_params(params)
+
+  if (!dir.exists(data_dir)) {
+    dir.create(data_dir, recursive = TRUE)
+  }
+
+  if (nrow(schedule) == 0) {
+    return(invisible(NULL))
+  }
+
+  prediction_file <- file.path(data_dir, paste0(Sys.Date(), "-predictions.RDS"))
+  if (file.exists(prediction_file)) {
+    return(invisible(NULL))
+  }
+
+  sim_results <- pwhl_loopless_sim(
+    scores = scores,
+    schedule = schedule,
+    params = params
+  )
+  saveRDS(.pwhl_prediction_summary(sim_results), prediction_file)
+
+  invisible(NULL)
+}
+
+#' Update predictions
+#'
+#' @param data_dir directory of predictions
 #' @param scores HockeyModel::scores or a custom value
+#' @param schedule HockeyModel::schedule or a custom value
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#'   both leagues; `"nhl"` and `"pwhl"` run one league only
 #'
-#' @return today's odds ggplot object
+#' @return NULL
+#'
 #' @export
-todayOddsPlot <- function(
+updatePredictions <- function(
+  data_dir = getOption("HockeyModel.prediction.path"),
+  scores = HockeyModel::scores,
+  schedule = HockeyModel::schedule,
+  params = NULL,
+  league = NULL
+) {
+  leagues <- .resolve_frontend_leagues(league)
+  data_dirs <- .frontend_prediction_dirs(data_dir)
+  result <- list()
+
+  if ("NHL" %in% leagues) {
+    nhl_data_dir <- if (is.list(data_dir) && !is.data.frame(data_dir)) {
+      .frontend_value_for_league(data_dir, "NHL", data_dirs$nhl)
+    } else {
+      data_dirs$nhl
+    }
+    result$nhl <- .update_predictions_nhl(
+      data_dir = nhl_data_dir,
+      scores = .frontend_value_for_league(scores, "NHL", HockeyModel::scores),
+      schedule = .frontend_value_for_league(
+        schedule,
+        "NHL",
+        HockeyModel::schedule
+      ),
+      params = .frontend_value_for_league(params, "NHL", NULL)
+    )
+  }
+  if ("PWHL" %in% leagues) {
+    pwhl_data_dir <- if (is.list(data_dir) && !is.data.frame(data_dir)) {
+      .frontend_value_for_league(data_dir, "PWHL", data_dirs$pwhl)
+    } else {
+      data_dirs$pwhl
+    }
+    result$pwhl <- .update_predictions_pwhl(
+      data_dir = pwhl_data_dir,
+      scores = .frontend_value_for_league(
+        scores,
+        "PWHL",
+        HockeyModel::pwhlScores
+      ),
+      schedule = .frontend_value_for_league(
+        schedule,
+        "PWHL",
+        HockeyModel::pwhlSchedule
+      ),
+      params = .frontend_value_for_league(params, "PWHL", NULL)
+    )
+  }
+
+  invisible(.simplify_frontend_result(result, leagues))
+}
+
+
+#' Build the NHL today-odds plot
+#'
+#' @param date (`Date`) Target date.
+#' @param params (`list` or `NULL`) NHL model parameters.
+#' @param schedule (`data.frame`) NHL schedule.
+#' @param scores (`data.frame`) NHL scores.
+#' @returns A [ggplot2::ggplot()] object or `NULL`.
+#' @keywords internal
+.today_odds_plot_nhl <- function(
   date = Sys.Date(),
   params = NULL,
   schedule = HockeyModel::schedule,
@@ -76,56 +337,342 @@ todayOddsPlot <- function(
   params <- parse_dc_params(params)
 
   if (scores$Date[nrow(scores)] < (date - 7)) {
-    message(
+    cli::cli_alert_info(
       "Scores may be out of date. This can affect predictions. Please update if midseason."
     )
   }
   games <- games_today(schedule = schedule, date = date)
   if (is.null(games) || nrow(games) == 0) {
-    message("No games today.")
+    cli::cli_alert_info("No games today.")
     return(NULL)
   }
-  return(plot_odds_today(today = date, params = params, schedule = schedule))
+  plot_odds_today(
+    today = date,
+    params = params,
+    schedule = schedule,
+    league = "NHL"
+  )
+}
+
+
+#' Build the PWHL today-odds plot
+#'
+#' @param date (`Date`) Target date.
+#' @param params (`list` or `NULL`) PWHL model parameters.
+#' @param schedule (`data.frame`) PWHL schedule.
+#' @param scores (`data.frame`) PWHL scores.
+#' @returns A [ggplot2::ggplot()] object or `NULL`.
+#' @keywords internal
+.today_odds_plot_pwhl <- function(
+  date = Sys.Date(),
+  params = NULL,
+  schedule = HockeyModel::pwhlSchedule,
+  scores = HockeyModel::pwhlScores
+) {
+  params <- parse_pwhl_dc_params(params)
+
+  if (nrow(scores) > 0 && scores$Date[nrow(scores)] < (date - 7)) {
+    cli::cli_alert_info(
+      "PWHL scores may be out of date. This can affect predictions."
+    )
+  }
+  games <- pwhl_games_today(schedule = schedule, date = date)
+  if (is.null(games) || nrow(games) == 0) {
+    cli::cli_alert_info("No PWHL games today.")
+    return(NULL)
+  }
+  plot_odds_today(
+    today = date,
+    params = params,
+    schedule = schedule,
+    league = "PWHL"
+  )
+}
+
+#' Today's game odds graphic
+#'
+#' @param date date to predict odds. Default today
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param schedule HockeyModel::schedule or a custom value
+#' @param scores HockeyModel::scores or a custom value
+#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#'   both leagues; `"nhl"` and `"pwhl"` run one league only
+#'
+#' @return Today's odds ggplot object for a single league, or a named list of
+#'   league plots when both leagues are requested.
+#' @export
+todayOddsPlot <- function(
+  date = Sys.Date(),
+  params = NULL,
+  schedule = HockeyModel::schedule,
+  scores = HockeyModel::scores,
+  league = NULL
+) {
+  leagues <- .resolve_frontend_leagues(league)
+  result <- list()
+
+  if ("NHL" %in% leagues) {
+    result$nhl <- .today_odds_plot_nhl(
+      date = date,
+      params = .frontend_value_for_league(params, "NHL", NULL),
+      schedule = .frontend_value_for_league(
+        schedule,
+        "NHL",
+        HockeyModel::schedule
+      ),
+      scores = .frontend_value_for_league(scores, "NHL", HockeyModel::scores)
+    )
+  }
+  if ("PWHL" %in% leagues) {
+    result$pwhl <- .today_odds_plot_pwhl(
+      date = date,
+      params = .frontend_value_for_league(params, "PWHL", NULL),
+      schedule = .frontend_value_for_league(
+        schedule,
+        "PWHL",
+        HockeyModel::pwhlSchedule
+      ),
+      scores = .frontend_value_for_league(
+        scores,
+        "PWHL",
+        HockeyModel::pwhlScores
+      )
+    )
+  }
+
+  .simplify_frontend_result(result, leagues)
+}
+
+
+#' Load saved league predictions
+#'
+#' @param league (`character(1)`) Either `"NHL"` or `"PWHL"`.
+#' @param data_dir (`character(1)`) Root prediction directory.
+#' @returns A prediction history data frame.
+#' @keywords internal
+.league_predictions <- function(
+  league = "NHL",
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results")
+) {
+  dirs <- .frontend_prediction_dirs(data_dir)
+  compile_predictions(
+    dir = if (league == "PWHL") dirs$pwhl else dirs$nhl
+  )
+}
+
+
+#' Build the NHL playoff-odds plot
+#'
+#' @param data_dir (`character(1)`) Root prediction directory.
+#' @returns A [ggplot2::ggplot()] object.
+#' @keywords internal
+.playoff_odds_nhl <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results")
+) {
+  plot_prediction_playoffs_by_team(
+    all_predictions = .league_predictions("NHL", data_dir = data_dir)
+  )
+}
+
+
+#' Build the PWHL playoff-odds plot
+#'
+#' @param data_dir (`character(1)`) Root prediction directory.
+#' @returns A [ggplot2::ggplot()] object.
+#' @keywords internal
+.playoff_odds_pwhl <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results")
+) {
+  plot_prediction_playoffs_by_team(
+    all_predictions = .league_predictions("PWHL", data_dir = data_dir),
+    teamColours = HockeyModel::pwhlTeamColours
+  )
 }
 
 #' Predict playoff odds graphic
 #'
 #' Convenience wrapper around [plot_prediction_playoffs_by_team()].
 #'
+#' @param data_dir directory of saved prediction snapshots
+#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#'   both leagues; `"nhl"` and `"pwhl"` run one league only
+#'
 #' @returns A playoff-odds [ggplot2::ggplot()] object.
 #' @export
-playoffOdds <- function() {
-  return(plot_prediction_playoffs_by_team())
+playoffOdds <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
+  league = NULL
+) {
+  leagues <- .resolve_frontend_leagues(league)
+  result <- list()
+
+  if ("NHL" %in% leagues) {
+    result$nhl <- .playoff_odds_nhl(data_dir = data_dir)
+  }
+  if ("PWHL" %in% leagues) {
+    result$pwhl <- .playoff_odds_pwhl(data_dir = data_dir)
+  }
+
+  .simplify_frontend_result(result, leagues)
+}
+
+
+#' Build the NHL first-place plot
+#'
+#' @param data_dir (`character(1)`) Root prediction directory.
+#' @returns A [ggplot2::ggplot()] object.
+#' @keywords internal
+.president_odds_nhl <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results")
+) {
+  plot_prediction_presidents_by_team(
+    all_predictions = .league_predictions("NHL", data_dir = data_dir)
+  )
+}
+
+
+#' Build the PWHL first-place plot
+#'
+#' @param data_dir (`character(1)`) Root prediction directory.
+#' @returns A [ggplot2::ggplot()] object.
+#' @keywords internal
+.president_odds_pwhl <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results")
+) {
+  plot_prediction_presidents_by_team(
+    all_predictions = .league_predictions("PWHL", data_dir = data_dir),
+    teamColours = HockeyModel::pwhlTeamColours
+  )
 }
 
 #' Predict President's Odds graphic
 #'
 #' Convenience wrapper around [plot_prediction_presidents_by_team()].
 #'
+#' @param data_dir directory of saved prediction snapshots
+#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#'   both leagues; `"nhl"` and `"pwhl"` run one league only
+#'
 #' @returns A President's Trophy odds [ggplot2::ggplot()] object.
 #' @export
-presidentOdds <- function() {
-  return(plot_prediction_presidents_by_team())
+presidentOdds <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
+  league = NULL
+) {
+  leagues <- .resolve_frontend_leagues(league)
+  result <- list()
+
+  if ("NHL" %in% leagues) {
+    result$nhl <- .president_odds_nhl(data_dir = data_dir)
+  }
+  if ("PWHL" %in% leagues) {
+    result$pwhl <- .president_odds_pwhl(data_dir = data_dir)
+  }
+
+  .simplify_frontend_result(result, leagues)
+}
+
+
+#' Build the NHL points projection plot
+#'
+#' @param data_dir (`character(1)`) Root prediction directory.
+#' @returns A [ggplot2::ggplot()] object.
+#' @keywords internal
+.point_predict_nhl <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results")
+) {
+  plot_prediction_points_by_team(
+    all_predictions = .league_predictions("NHL", data_dir = data_dir)
+  )
+}
+
+
+#' Build the PWHL points projection plot
+#'
+#' @param data_dir (`character(1)`) Root prediction directory.
+#' @returns A [ggplot2::ggplot()] object.
+#' @keywords internal
+.point_predict_pwhl <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results")
+) {
+  plot_prediction_points_by_team(
+    all_predictions = .league_predictions("PWHL", data_dir = data_dir),
+    teamColours = HockeyModel::pwhlTeamColours
+  )
 }
 
 #' Predict Points graphic
 #'
 #' Convenience wrapper around [plot_prediction_points_by_team()].
 #'
+#' @param data_dir directory of saved prediction snapshots
+#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#'   both leagues; `"nhl"` and `"pwhl"` run one league only
+#'
 #' @returns A point-projection [ggplot2::ggplot()] object.
 #' @export
-pointPredict <- function() {
-  return(plot_prediction_points_by_team())
+pointPredict <- function(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
+  league = NULL
+) {
+  leagues <- .resolve_frontend_leagues(league)
+  result <- list()
+
+  if ("NHL" %in% leagues) {
+    result$nhl <- .point_predict_nhl(data_dir = data_dir)
+  }
+  if ("PWHL" %in% leagues) {
+    result$pwhl <- .point_predict_pwhl(data_dir = data_dir)
+  }
+
+  .simplify_frontend_result(result, leagues)
+}
+
+
+#' Build the NHL ratings plot
+#'
+#' @param m (`any`) NHL model `m`.
+#' @returns A [ggplot2::ggplot()] object.
+#' @keywords internal
+.ratings_nhl <- function(m = HockeyModel::m) {
+  plot_team_rating(m = m, league = "NHL")
+}
+
+
+#' Build the PWHL ratings plot
+#'
+#' @param m (`any`) PWHL model `m`.
+#' @returns A [ggplot2::ggplot()] object.
+#' @keywords internal
+.ratings_pwhl <- function(m = HockeyModel::pwhl_m) {
+  plot_team_rating(m = m, league = "PWHL")
 }
 
 #' Current ratings
 #'
 #' @param m HockeyModel::m or a custom value
+#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#'   both leagues; `"nhl"` and `"pwhl"` run one league only
 #'
-#' @return today's ratings ggplot object
+#' @return Today's ratings ggplot object for a single league, or a named list of
+#'   league plots when both leagues are requested.
 #' @export
-ratings <- function(m = HockeyModel::m) {
-  return(plot_team_rating(m = m))
+ratings <- function(m = HockeyModel::m, league = NULL) {
+  leagues <- .resolve_frontend_leagues(league)
+  result <- list()
+
+  if ("NHL" %in% leagues) {
+    result$nhl <- .ratings_nhl(
+      m = .frontend_value_for_league(m, "NHL", HockeyModel::m)
+    )
+  }
+  if ("PWHL" %in% leagues) {
+    result$pwhl <- .ratings_pwhl(
+      m = .frontend_value_for_league(m, "PWHL", HockeyModel::pwhl_m)
+    )
+  }
+
+  .simplify_frontend_result(result, leagues)
 }
 
 #' Post daily model graphics to social media
@@ -223,9 +770,9 @@ tweet <- function(
 #' @param graphic_dir Directory for graphic files
 #' @param subdir subdirectory to `graphic_dir` for pace plots
 #' @param delay delay between tweet posts
-#'
-#' @export
-dailySummary <- function(
+#' @returns `NULL` (invisibly).
+#' @keywords internal
+.daily_summary_nhl <- function(
   graphic_dir = "./prediction_results/graphics",
   subdir = "pace",
   delay = stats::runif(1, min = 2, max = 6) * 60
@@ -474,6 +1021,57 @@ dailySummary <- function(
   }
 }
 
+
+#' Daily front-end summary
+#'
+#' Runs the daily front-end workflow for NHL, PWHL, or both leagues.
+#'
+#' @param graphic_dir (`character(1)`) Directory for graphic files.
+#' @param subdir (`character(1)`) Subdirectory to `graphic_dir` for pace plots.
+#' @param delay (`double(1)`) Delay between social-media posts in seconds.
+#' @param league (`character(1)` or `NULL`) Which league front-end to run. Can
+#'   be one of:
+#'   * `NULL`, `NA`, or `"both"`: Run both leagues.
+#'   * `"nhl"`: Run the NHL workflow only.
+#'   * `"pwhl"`: Run the PWHL workflow only.
+#'
+#' @returns For a single league, `NULL` (invisibly). For both leagues, a named
+#'   list with `nhl` and `pwhl` entries.
+#' @export
+dailySummary <- function(
+  graphic_dir = "./prediction_results/graphics",
+  subdir = "pace",
+  delay = stats::runif(1, min = 2, max = 6) * 60,
+  league = NULL
+) {
+  leagues <- .resolve_frontend_leagues(league)
+  result <- list()
+
+  if ("NHL" %in% leagues) {
+    result$nhl <- .daily_summary_nhl(
+      graphic_dir = .frontend_value_for_league(
+        graphic_dir,
+        "NHL",
+        "./prediction_results/graphics"
+      ),
+      subdir = subdir,
+      delay = delay
+    )
+  }
+  if ("PWHL" %in% leagues) {
+    result$pwhl <- dailyPWHLSummary(
+      graphic_dir = .frontend_value_for_league(
+        graphic_dir,
+        "PWHL",
+        graphic_dir
+      ),
+      delay = delay
+    )
+  }
+
+  .simplify_frontend_result(result, leagues)
+}
+
 #' Tweet Pace Plots
 #'
 #' @param delay Delay between posted tweets
@@ -503,7 +1101,7 @@ tweetPace <- function(
 
   filelist <- list.files(path = prediction_dir)
   pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-  pdates <- pdates[pdates != "graphics"]
+  pdates <- pdates[!is.na(as.Date(pdates))]
   lastp <- as.Date(max(pdates))
   current_preds <- readRDS(file.path(
     prediction_dir,

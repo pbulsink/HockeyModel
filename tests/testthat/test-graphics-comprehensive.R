@@ -133,7 +133,8 @@ test_that("todayOddsPlot executes without error", {
   p <- todayOddsPlot(
     date = as.Date("2019-11-01"),
     schedule = mock_schedule,
-    scores = mock_scores
+    scores = mock_scores,
+    league = "nhl"
   )
   expect_true(ggplot2::is_ggplot(p) || is.null(p))
 })

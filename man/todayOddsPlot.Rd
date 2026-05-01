@@ -8,7 +8,8 @@ todayOddsPlot(
   date = Sys.Date(),
   params = NULL,
   schedule = HockeyModel::schedule,
-  scores = HockeyModel::scores
+  scores = HockeyModel::scores,
+  league = NULL
 )
 }
 \arguments{
@@ -19,9 +20,13 @@ todayOddsPlot(
 \item{schedule}{HockeyModel::schedule or a custom value}
 
 \item{scores}{HockeyModel::scores or a custom value}
+
+\item{league}{which league front-end to run: \code{NULL}, \code{NA}, or \code{"both"} runs
+both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
 }
 \value{
-today's odds ggplot object
+Today's odds ggplot object for a single league, or a named list of
+league plots when both leagues are requested.
 }
 \description{
 Today's game odds graphic

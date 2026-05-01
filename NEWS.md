@@ -1,5 +1,6 @@
 # HockeyModel 2026.0.1.9000 (development version)
 
+* `updateModel()`, `updatePredictions()`, `todayOddsPlot()`, `playoffOdds()`, `presidentOdds()`, `pointPredict()`, `ratings()`, and `dailySummary()` now accept `league = NULL` / `NA` / `"both"` to run NHL and PWHL front-end workflows together, while still supporting single-league calls (@pbulsink, #39).
 * `DCweights()` gains `nu` and `season_start_dates` parameters for compound time × season weighting: the existing sigmoid decay is multiplied by `1/(1 + s^nu)` where `s` counts complete seasons back from the current one. `nu = 0` (default for NHL) disables cross-season discounting; `nu = 2` (default for PWHL) moderately down-weights older seasons to account for expansion-draft roster churn (#noissue).
 * `getM()`, `updateDC()`, and `updatePWHLDC()` now expose `xi`, `upsilon`, and `nu` parameters; defaults come from new explicit package constants (`DC_XI_NHL`, `DC_UPSILON_NHL`, `DC_NU_NHL`, `DC_XI_PWHL`, `DC_UPSILON_PWHL`, `DC_NU_PWHL`) (#noissue).
 * `derive_season_starts()` added as an internal helper that derives first-game-of-season dates from a vector of game dates; used automatically by `getM()` when `nu != 0` (#noissue).

@@ -433,7 +433,8 @@ test_that("todayOddsPlot executes without error", {
   vcr::use_cassette("todayOdds", {
     p <- suppressWarnings(todayOddsPlot(
       date = as.Date("2019-11-01"),
-      schedule = sched
+      schedule = sched,
+      league = "nhl"
     ))
     expect_true(ggplot2::is_ggplot(p))
   })

@@ -35,7 +35,10 @@ plot_prediction_points_by_team <- function(
   teams <- unique(all_predictions$Team)
   dates <- as.Date(unique(all_predictions$predictionDate))
   # Get division
-  all_predictions$Division <- getTeamDivisions(all_predictions$Team)
+  all_predictions$Division <- getTeamDivisions(
+    all_predictions$Team,
+    teamColours = teamColours
+  )
   # Set divisions to logical order
   all_predictions$facet <- factor(
     x = all_predictions$Division,
@@ -45,7 +48,7 @@ plot_prediction_points_by_team <- function(
   all_predictions$label <- ifelse(
     all_predictions$predictionDate == max(all_predictions$predictionDate),
     as.character(paste0(
-      getShortTeam(all_predictions$Team),
+      getShortTeam(all_predictions$Team, teamColours = teamColours),
       "\n",
       round(all_predictions$meanPoints, digits = 0)
     )),
@@ -131,7 +134,10 @@ plot_prediction_playoffs_by_team <- function(
   # extract constants
   teams <- unique(all_predictions$Team)
   # Get division
-  all_predictions$Division <- getTeamDivisions(all_predictions$Team)
+  all_predictions$Division <- getTeamDivisions(
+    all_predictions$Team,
+    teamColours = teamColours
+  )
   # Set divisions to logical order
   all_predictions$facet <- factor(
     x = all_predictions$Division,
@@ -155,7 +161,8 @@ plot_prediction_playoffs_by_team <- function(
 
   label <- paste0(
     getShortTeam(
-      all_predictions[all_predictions$predictionDate == lastdate, ]$Team
+      all_predictions[all_predictions$predictionDate == lastdate, ]$Team,
+      teamColours = teamColours
     ),
     "\n",
     label,
@@ -257,7 +264,10 @@ plot_prediction_presidents_by_team <- function(
   teams <- unique(all_predictions$Team)
   dates <- as.Date(unique(all_predictions$predictionDate))
   # Get division
-  all_predictions$Division <- getTeamDivisions(all_predictions$Team)
+  all_predictions$Division <- getTeamDivisions(
+    all_predictions$Team,
+    teamColours = teamColours
+  )
   # Set divisions to logical order
   all_predictions$facet <- factor(
     x = all_predictions$Division,
@@ -267,7 +277,7 @@ plot_prediction_presidents_by_team <- function(
   all_predictions$label <- ifelse(
     all_predictions$predictionDate == max(all_predictions$predictionDate),
     as.character(paste0(
-      getShortTeam(all_predictions$Team),
+      getShortTeam(all_predictions$Team, teamColours = teamColours),
       "\n",
       signif(all_predictions$Presidents * 100, digits = 2),
       "%"
@@ -551,7 +561,7 @@ plot_pace_by_team <- function(
 
   filelist <- list.files(path = prediction_dir)
   pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-  pdates <- pdates[pdates != "graphics"]
+  pdates <- pdates[!is.na(as.Date(pdates))]
   lastp <- as.Date(max(pdates))
   q <- readRDS(file.path(prediction_dir, paste0(lastp, "-predictions.RDS")))
 
