@@ -8,7 +8,8 @@ format_playoff_odds(
   playoff_odds,
   caption_text = "",
   trim = TRUE,
-  trimcup = FALSE
+  trimcup = FALSE,
+  league = "NHL"
 )
 }
 \arguments{
@@ -16,9 +17,13 @@ format_playoff_odds(
 
 \item{caption_text}{Additional text to prepend to " Playoff Odds" in table title. E.g. 'Eastern Conference' if only eastteams sent in.}
 
-\item{trim}{Whether to drop teams that have 0 chance of making playoffs. Default true}
+\item{trim}{Whether to drop teams that have 0 chance of making playoffs. Default true (ignored for PWHL)}
 
-\item{trimcup}{Whether to drorp teams that have 0 chance of winning cup. Default false}
+\item{trimcup}{Whether to drop teams that have 0 chance of winning cup. Default false (ignored for PWHL)}
+
+\item{league}{League identifier. \code{"NHL"} (default) or \code{"PWHL"}. When
+\code{"PWHL"}, only \code{Make_Playoffs}, \code{Make_Finals}, and \code{Win_Cup} columns are
+formatted; team logos are included using the PWHL logo set.}
 }
 \value{
 a gt table

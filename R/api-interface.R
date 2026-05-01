@@ -742,7 +742,7 @@ getAPISeries <- function(season = getCurrentSeason8()) {
     dplyr::filter(
       .data$HomeTeam != "TBD",
       .data$AwayTeam != "TBD"
-      )
+    )
 
   return(playoffSeries[stats::complete.cases(playoffSeries), ])
 }

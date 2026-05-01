@@ -7,6 +7,9 @@
 updateDC(
   scores = HockeyModel::scores,
   currentDate = Sys.Date(),
+  xi = DC_XI_NHL,
+  upsilon = DC_UPSILON_NHL,
+  nu = DC_NU_NHL,
   save_data = TRUE
 )
 }
@@ -14,6 +17,16 @@ updateDC(
 \item{scores}{scores, if not then HockeyModel::scores is used}
 
 \item{currentDate}{Current Date, usually today but useful to set a different date if back calculating results}
+
+\item{xi}{(\code{double(1)}) Logistic slope for within-season time-decay
+weighting.  Defaults to \link{DC_XI_NHL}.}
+
+\item{upsilon}{(\code{double(1)}) Logistic midpoint (days) for within-season
+time-decay weighting.  Defaults to \link{DC_UPSILON_NHL}.}
+
+\item{nu}{(\code{double(1)}) Cross-season discounting exponent.  \code{0} (default
+\link{DC_NU_NHL}) disables cross-season discounting.  See \code{\link[=DCweights]{DCweights()}} for
+details.}
 
 \item{save_data}{Whether to save parameters to the package.}
 }
@@ -31,5 +44,6 @@ This function updates the model parameters to best fit the provided data. The pa
 }
 }
 \seealso{
-\link{m}, \link{rho}, \link{beta}, \link{eta}, \link{k}
+\link{m}, \link{rho}, \link{beta}, \link{eta}, \link{k}, \link{DC_XI_NHL}, \link{DC_UPSILON_NHL},
+\link{DC_NU_NHL}
 }

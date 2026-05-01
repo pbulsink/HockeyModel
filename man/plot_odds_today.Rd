@@ -8,7 +8,8 @@ plot_odds_today(
   today = Sys.Date(),
   params = NULL,
   schedule = HockeyModel::schedule,
-  teamColours = HockeyModel::teamColours
+  teamColours = HockeyModel::teamColours,
+  league = "NHL"
 )
 }
 \arguments{
@@ -19,6 +20,9 @@ plot_odds_today(
 \item{schedule}{HockeyModel::schedule or a custom value}
 
 \item{teamColours}{HockeyModel::teamColours or a custom value}
+
+\item{league}{League identifier. \code{"NHL"} (default) or \code{"PWHL"}. When
+\code{"PWHL"}, the CSV file is not written and PWHL-specific labels are used.}
 }
 \value{
 a ggplot image of odds

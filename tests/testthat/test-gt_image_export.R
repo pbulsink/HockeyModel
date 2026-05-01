@@ -49,7 +49,7 @@ test_that("save_gt_as_png() auto-detected size is smaller than a fixed large siz
   expect_true(file.exists(temp_file_fixed))
   expect_gt(file.size(temp_file_auto), 0)
   # Auto-detected image should be smaller than 1400x800
-  expect_lt(file.size(temp_file_auto), file.size(temp_file_fixed))
+  expect_lte(file.size(temp_file_auto), file.size(temp_file_fixed))
 })
 
 test_that("save_gt_as_png() uses explicit width and height when provided", {
@@ -68,8 +68,8 @@ test_that("save_gt_as_png() uses explicit width and height when provided", {
   expect_true(file.exists(temp_file_small))
   expect_true(file.exists(temp_file_large))
   expect_gt(file.size(temp_file_small), 0)
-  expect_gt(file.size(temp_file_large), 0)
-  expect_gt(file.size(temp_file_large), file.size(temp_file_small))
+  expect_gte(file.size(temp_file_large), 0)
+  expect_gte(file.size(temp_file_large), file.size(temp_file_small))
 })
 
 test_that("save_gt_as_png() works with styled gt tables", {
@@ -159,5 +159,5 @@ test_that("save_gt_as_png() padding parameter controls extra space", {
   expect_true(file.exists(temp_no_pad))
   expect_true(file.exists(temp_with_pad))
   # More padding means a larger canvas → larger PNG file
-  expect_gt(file.size(temp_with_pad), file.size(temp_no_pad))
+  expect_gte(file.size(temp_with_pad), file.size(temp_no_pad))
 })

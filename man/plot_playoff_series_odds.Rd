@@ -7,7 +7,8 @@
 plot_playoff_series_odds(
   series = getAPISeries(),
   params = NULL,
-  teamColours = HockeyModel::teamColours
+  teamColours = HockeyModel::teamColours,
+  league = "NHL"
 )
 }
 \arguments{
@@ -16,6 +17,9 @@ plot_playoff_series_odds(
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 
 \item{teamColours}{HockeyModel::teamColours or a custom value}
+
+\item{league}{League identifier. \code{"NHL"} (default) or \code{"PWHL"}. When
+\code{"PWHL"}, PWHL-specific labels are used.}
 }
 \value{
 a ggplot image of odds

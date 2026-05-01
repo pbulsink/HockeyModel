@@ -7,8 +7,9 @@
 getM(
   scores = HockeyModel::scores,
   currentDate = Sys.Date(),
-  xi = 0.00426,
-  upsilon = 365
+  xi = DC_XI_NHL,
+  upsilon = DC_UPSILON_NHL,
+  nu = DC_NU_NHL
 )
 }
 \arguments{
@@ -16,9 +17,16 @@ getM(
 
 \item{currentDate}{(for date weight adjustment)}
 
-\item{xi}{aggressiveness of date weighting}
+\item{xi}{(\code{double(1)}) Logistic slope for within-season time decay.
+Defaults to \link{DC_XI_NHL}.}
 
-\item{upsilon}{date weight cliff}
+\item{upsilon}{(\code{double(1)}) Logistic midpoint (days) for within-season time
+decay.  Defaults to \link{DC_UPSILON_NHL}.}
+
+\item{nu}{(\code{double(1)}) Cross-season discounting exponent.  \code{0} (the default
+\link{DC_NU_NHL}) disables cross-season discounting.  Pass \code{DC_NU_PWHL} (or a
+custom value) to discount older seasons for leagues with high year-to-year
+roster volatility.}
 }
 \value{
 a model 'm' of Dixon-Coles' type parameters.

@@ -13,16 +13,27 @@
 #'
 #' @param scores scores, if not then HockeyModel::scores is used
 #' @param currentDate Current Date, usually today but useful to set a different date if back calculating results
+#' @param xi (`double(1)`) Logistic slope for within-season time-decay
+#'   weighting.  Defaults to [DC_XI_NHL].
+#' @param upsilon (`double(1)`) Logistic midpoint (days) for within-season
+#'   time-decay weighting.  Defaults to [DC_UPSILON_NHL].
+#' @param nu (`double(1)`) Cross-season discounting exponent.  `0` (default
+#'   [DC_NU_NHL]) disables cross-season discounting.  See [DCweights()] for
+#'   details.
 #' @param save_data Whether to save parameters to the package.
 #'
 #' @return a named list containing m, rho, beta, eta and k values for the model.
 #'
-#' @seealso [m], [rho], [beta], [eta], [k]
+#' @seealso [m], [rho], [beta], [eta], [k], [DC_XI_NHL], [DC_UPSILON_NHL],
+#'   [DC_NU_NHL]
 #'
 #' @export
 updateDC <- function(
   scores = HockeyModel::scores,
   currentDate = Sys.Date(),
+  xi = DC_XI_NHL,
+  upsilon = DC_UPSILON_NHL,
+  nu = DC_NU_NHL,
   save_data = TRUE
 ) {
   message("Calculating new model parameters...")
@@ -34,7 +45,13 @@ updateDC <- function(
     scores <- scores[scores$Date < currentDate, ]
     save_data <- FALSE
   }
-  m <- getM(scores = scores, currentDate = currentDate)
+  m <- getM(
+    scores = scores,
+    currentDate = currentDate,
+    xi = xi,
+    upsilon = upsilon,
+    nu = nu
+  )
   message("Solving for low scoring games...")
   rho <- getRho(m = m, scores = scores)
   message("Enhancing Tie Games")
@@ -370,38 +387,45 @@ tau <- Vectorize(tau_singular, c("xx", "yy", "lambda", "mu"))
 #'
 #' @param scores the historical scores to evaluate
 #' @param currentDate (for date weight adjustment)
-#' @param xi aggressiveness of date weighting
-#' @param upsilon date weight cliff
+#' @param xi (`double(1)`) Logistic slope for within-season time decay.
+#'   Defaults to [DC_XI_NHL].
+#' @param upsilon (`double(1)`) Logistic midpoint (days) for within-season time
+#'   decay.  Defaults to [DC_UPSILON_NHL].
+#' @param nu (`double(1)`) Cross-season discounting exponent.  `0` (the default
+#'   [DC_NU_NHL]) disables cross-season discounting.  Pass `DC_NU_PWHL` (or a
+#'   custom value) to discount older seasons for leagues with high year-to-year
+#'   roster volatility.
 #'
 #' @export
 #' @return a model 'm' of Dixon-Coles' type parameters.
 getM <- function(
   scores = HockeyModel::scores,
   currentDate = Sys.Date(),
-  xi = 0.00426,
-  upsilon = 365
+  xi = DC_XI_NHL,
+  upsilon = DC_UPSILON_NHL,
+  nu = DC_NU_NHL
 ) {
   # stopifnot(is.Date(currentDate))
   currentDate <- as.Date(currentDate)
 
   scores <- scores[scores$Date >= (currentDate - 4000), ] # auto-trim to ~11 years of data, past then the model doesn't get better, just bigger
+
+  # Derive per-season start dates when cross-season discounting is active
+  season_start_dates <- if (nu != 0) derive_season_starts(scores$Date) else NULL
+
+  weights <- DCweights(
+    dates = scores$Date,
+    currentDate = currentDate,
+    xi = xi,
+    upsilon = upsilon,
+    nu = nu,
+    season_start_dates = season_start_dates
+  )
+
   df.indep <- data.frame(
     Date = c(scores$Date, scores$Date),
     GameID = c(scores$GameID, scores$GameID),
-    Weight = c(
-      DCweights(
-        dates = scores$Date,
-        currentDate = currentDate,
-        xi = xi,
-        upsilon = upsilon
-      ),
-      DCweights(
-        dates = scores$Date,
-        currentDate = currentDate,
-        xi = xi,
-        upsilon = upsilon
-      )
-    ),
+    Weight = c(weights, weights),
     Team = as.factor(c(
       as.character(scores$HomeTeam),
       as.character(scores$AwayTeam)
@@ -1018,24 +1042,95 @@ DCweights_old <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
   return(w)
 }
 
+#' Derive season start dates from a vector of game dates
+#'
+#' @description Groups game dates by "season year" — the calendar year of the
+#'   season's end — and returns the first game date in each season.  Games
+#'   played in or after `season_month_cutoff` (default August) are assigned to
+#'   the **following** season year (e.g. a game in October 2024 belongs to the
+#'   2024-25 season, season year 2025).
+#'
+#' @param dates (`Date`) Vector of game dates.
+#' @param season_month_cutoff (`integer(1)`) Month number (inclusive) from
+#'   which a new season is considered to begin.  Games in this month or later
+#'   are assigned to the next calendar year.  Default `8L` (August).
+#'
+#' @returns A sorted `Date` vector with one entry per season, each being the
+#'   first game date of that season.
+#' @keywords internal
+derive_season_starts <- function(dates, season_month_cutoff = 8L) {
+  dates <- as.Date(dates)
+  year <- as.integer(format(dates, "%Y"))
+  month <- as.integer(format(dates, "%m"))
+  # Games in or after the cutoff month start a new season (season year = year+1)
+  season_year <- ifelse(month >= season_month_cutoff, year + 1L, year)
+  # First game date per season year (unname to drop tapply's season-year names)
+  starts <- tapply(as.numeric(dates), season_year, min)
+  sort(as.Date(unname(starts), origin = "1970-01-01"))
+}
+
+
 #' Compute sigmoid time-decay weights for historical matches
+#'
+#' @description Computes per-game weights as the product of two components:
+#'
+#'   1. **Sigmoid within-season decay** — games closer to `currentDate` receive
+#'      higher weight.  Controlled by `xi` (slope) and `upsilon` (midpoint in
+#'      days).
+#'
+#'   2. **Cross-season multiplier** *(optional)* — each game's weight is
+#'      multiplied by `1 / (1 + s^nu)`, where `s` is the number of complete
+#'      seasons between the game and the current season (s = 0 for the current
+#'      season, 1 for the previous season, etc.).  Larger `nu` discounts older
+#'      seasons more aggressively.  Set `nu = 0` (the default) to disable this
+#'      component.
 #'
 #' @param dates (`Date`) Match dates.
 #' @param currentDate (`Date`) Reference date for weighting.
-#' @param xi (`double(1)`) Logistic slope.
-#' @param upsilon (`double(1)`) Logistic midpoint.
-#' @returns (`double`) Weight per input date.
+#' @param xi (`double(1)`) Logistic slope (within-season decay speed).
+#' @param upsilon (`double(1)`) Logistic midpoint (days). Weights are ≈0.5 at
+#'   this age.
+#' @param nu (`double(1)`) Cross-season exponent.  `nu = 0` (default) disables
+#'   cross-season discounting.  `nu = 2` is a reasonable starting value for
+#'   leagues with high year-to-year roster volatility (e.g. PWHL).
+#' @param season_start_dates (`Date` or `NULL`) A sorted vector of season start
+#'   dates used to determine which season each game belongs to.  Required when
+#'   `nu != 0`; if `NULL` and `nu != 0` an error is raised.  Obtain from
+#'   [derive_season_starts()].
+#'
+#' @returns (`double`) Weight per input date in `[0, 1]`.
 #' @keywords internal
 DCweights <- function(
   dates,
   currentDate = Sys.Date(),
-  xi = .01,
-  upsilon = 365.25
+  xi = DC_XI_NHL,
+  upsilon = DC_UPSILON_NHL,
+  nu = DC_NU_NHL,
+  season_start_dates = NULL
 ) {
   datediffs <- dates - as.Date(currentDate)
   datediffs <- as.numeric(datediffs * -1)
+  # Component 1: sigmoid within-season decay
   w <- 1 - 1 / (1 + exp(-xi * (datediffs - upsilon)))
   w[datediffs <= 0] <- 0 # Future dates should have zero weights
+
+  # Component 2: cross-season multiplier (skipped when nu == 0)
+  if (nu != 0) {
+    if (is.null(season_start_dates) || length(season_start_dates) == 0) {
+      cli::cli_abort(
+        "{.arg season_start_dates} must be supplied when {.arg nu} != 0."
+      )
+    }
+    sorted_starts <- as.numeric(sort(as.Date(season_start_dates)))
+    # Index of the season containing currentDate (1-based)
+    current_idx <- findInterval(as.numeric(as.Date(currentDate)), sorted_starts)
+    # Index of the season containing each game date
+    game_idx <- findInterval(as.numeric(as.Date(dates)), sorted_starts)
+    # s = how many seasons back; clamped to >= 0
+    s <- pmax(current_idx - game_idx, 0L)
+    w <- w * (1 / (1 + s^nu))
+  }
+
   return(w)
 }
 
@@ -1326,42 +1421,30 @@ predictMultipleDaysResultsDC <- function(
 #'
 #' @param params (`list` or `NULL`) Candidate parameters, optionally nested
 #'   under a `params` element.
+#' @param defaults (`list` or `NULL`) Default values for `m`, `rho`, `beta`,
+#'   `eta`, and `k`. When `NULL`, NHL package-level defaults are used.
 #' @returns (`list`) Named list containing `m`, `rho`, `beta`, `eta`, and `k`.
 #' @keywords internal
-parse_dc_params <- function(params = NULL) {
-  returnparams <- list()
+parse_dc_params <- function(params = NULL, defaults = NULL) {
   while ("params" %in% names(params)) {
     params <- params$params
   }
 
-  if ("m" %in% names(params)) {
-    returnparams$m <- params$m
-  } else {
-    returnparams$m <- HockeyModel::m
-  }
-  if ("rho" %in% names(params)) {
-    returnparams$rho <- params$rho
-  } else {
-    returnparams$rho <- HockeyModel::rho
-  }
-
-  if ("beta" %in% names(params)) {
-    returnparams$beta <- params$beta
-  } else {
-    returnparams$beta <- HockeyModel::beta
+  if (is.null(defaults)) {
+    defaults <- list(
+      m = HockeyModel::m,
+      rho = HockeyModel::rho,
+      beta = HockeyModel::beta,
+      eta = HockeyModel::eta,
+      k = HockeyModel::k
+    )
   }
 
-  if ("eta" %in% names(params)) {
-    returnparams$eta <- params$eta
-  } else {
-    returnparams$eta <- HockeyModel::eta
-  }
-
-  if ("k" %in% names(params)) {
-    returnparams$k <- params$k
-  } else {
-    returnparams$k <- HockeyModel::k
-  }
-
-  return(returnparams)
+  list(
+    m = if ("m" %in% names(params)) params$m else defaults$m,
+    rho = if ("rho" %in% names(params)) params$rho else defaults$rho,
+    beta = if ("beta" %in% names(params)) params$beta else defaults$beta,
+    eta = if ("eta" %in% names(params)) params$eta else defaults$eta,
+    k = if ("k" %in% names(params)) params$k else defaults$k
+  )
 }

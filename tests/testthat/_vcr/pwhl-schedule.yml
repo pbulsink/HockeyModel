@@ -1,0 +1,18 @@
+http_interactions:
+- request:
+    method: GET
+    uri: https://lscluster.hockeytech.com/feed/index.php?feed=modulekit&view=schedule&season_id=5&key=446521baf8c38984&client_code=pwhl
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body:
+      string: '{"SiteKit":{"Schedule":[{"id":"137","date_played":"2024-11-29","home_team":{"id":"6","code":"TOR","city":"Toronto","name":"Toronto
+        Sceptres","nickname":"Sceptres"},"visiting_team":{"id":"1","code":"BOS","city":"Boston","name":"Boston
+        Fleet","nickname":"Fleet"},"home_goal_count":"2","visiting_goal_count":"1","game_status":"4"},{"id":"138","date_played":"2024-11-29","home_team":{"id":"5","code":"OTT","city":"Ottawa","name":"Ottawa
+        Charge","nickname":"Charge"},"visiting_team":{"id":"2","code":"MIN","city":"Minnesota","name":"Minnesota
+        Frost","nickname":"Frost"},"home_goal_count":"3","visiting_goal_count":"2","game_status":"4"},{"id":"200","date_played":"2025-01-15","home_team":{"id":"3","code":"MTL","city":"Montreal","name":"Montreal
+        Victoire","nickname":"Victoire"},"visiting_team":{"id":"4","code":"NY","city":"New
+        York","name":"New York Sirens","nickname":"Sirens"},"home_goal_count":"","visiting_goal_count":"","game_status":"1"}]}}'
+  recorded_at: 2026-04-26 00:00:00
+recorded_with: VCR-vcr/2.1.0

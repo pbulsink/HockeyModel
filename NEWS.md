@@ -1,3 +1,15 @@
-# HockeyModel (development version)
+# HockeyModel 2026.0.1.9000 (development version)
 
-* `save_gt_as_png()` now saves `gt` tables as PNG using `ragg`, removing the need for `webshot2`/`chromote` (#35).
+* `DCweights()` gains `nu` and `season_start_dates` parameters for compound time × season weighting: the existing sigmoid decay is multiplied by `1/(1 + s^nu)` where `s` counts complete seasons back from the current one. `nu = 0` (default for NHL) disables cross-season discounting; `nu = 2` (default for PWHL) moderately down-weights older seasons to account for expansion-draft roster churn (#noissue).
+* `getM()`, `updateDC()`, and `updatePWHLDC()` now expose `xi`, `upsilon`, and `nu` parameters; defaults come from new explicit package constants (`DC_XI_NHL`, `DC_UPSILON_NHL`, `DC_NU_NHL`, `DC_XI_PWHL`, `DC_UPSILON_PWHL`, `DC_NU_PWHL`) (#noissue).
+* `derive_season_starts()` added as an internal helper that derives first-game-of-season dates from a vector of game dates; used automatically by `getM()` when `nu != 0` (#noissue).
+* `tune_dc_weight()` gains a `league` argument (`"NHL"` or `"PWHL"`) and a `nu` parameter; now returns a scalar log-loss (lower is better) suitable for use with `optim()` over `(xi, upsilon, nu)` (#noissue).
+* `pwhl_loopless_sim()` now simulates PWHL playoffs (best-of-5, 2-2-1 format) and returns `Make_Finals` and `Win_Cup` columns; corrects points to the 3-2-1-0 system (@pbulsink, #noissue).
+* `format_playoff_odds()` PWHL branch now shows `Make_Playoffs`, `Make_Finals`, and `Win_Cup` columns with logo images and sorts by Cup odds (@pbulsink, #noissue).
+* `parse_dc_params()` gains a `defaults` parameter so PWHL param parsing can delegate to it, eliminating duplicated logic (@pbulsink, #noissue).
+* `getPWHLPlayoffSeries()` added to derive ongoing PWHL playoff series from scores and schedule, compatible with `series_odds_table()` and `plot_playoff_series_odds()` (#32).
+* `plot_odds_today()`, `daily_odds_table()`, `plot_team_rating()`, `format_playoff_odds()`, `series_odds_table()`, `plot_playoff_series_odds()`, and `getTeamColours()` now accept a `league` parameter (`"NHL"` or `"PWHL"`) to support both leagues from shared functions (#32).
+* `dailyPWHLSummary()` refactored to use shared graphics functions with `league = "PWHL"`; removed PWHL-specific duplicates `pwhl_plot_odds_today()`, `pwhl_daily_odds_table()`, `pwhl_plot_team_rating()`, `pwhl_format_playoff_odds()`, `pwhl_today_dc()`, `pwhl_get_team_colours()`, and `pwhl_remainder_season_dc()` (#32).
+* `save_gt_as_png()` and `save_gt_as_png_ragg()` now save `gt` tables as PNG using `ragg`, removing the need for `webshot2`/`chromote` (#35).
+* Added PWHL support: new `pwhlTeamColours`, `pwhlSchedule`, and `pwhlScores` datasets plus `getPWHLSeasons()`, `getCurrentPWHLSeason()`, `getPWHLSchedule()`, `getPWHLScores()`, `pwhl_games_today()`, `updatePWHLScheduleAPI()`, and `updatePWHLScoresAPI()` functions to fetch and maintain PWHL data via the HockeyTech API (#32).
+* `dailyPWHLSummary()` now provides a one-liner daily workflow for PWHL, matching `dailySummary()` for NHL: fetches schedule and scores, fits `updatePWHLDC()` model parameters (`pwhl_m`, `pwhl_rho`, `pwhl_beta`, `pwhl_eta`, `pwhl_k`), generates today's odds plot and table via `plot_odds_today()` and `daily_odds_table()` with `league = "PWHL"`, posts season-wide playoff-qualification odds from `pwhl_loopless_sim()`, and posts to social media (#32).
