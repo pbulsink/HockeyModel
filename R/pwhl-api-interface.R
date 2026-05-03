@@ -77,8 +77,8 @@ getCurrentPWHLSeason <- function() {
     return(NULL)
   }
 
-  # Use only regular (non-playoff, career-counting) seasons
-  reg <- seasons[seasons$career == 1 & seasons$playoff == 0, ]
+  # Use only regular or playoff seasons
+  reg <- seasons[seasons$career == 1,]
   if (nrow(reg) == 0) {
     return(NULL)
   }
@@ -236,33 +236,32 @@ getPWHLScores <- function(
 }
 
 
-#' Resolve a PWHL team name from API city and nickname fields
+#' Resolve a PWHL team name from PWHLID
 #'
-#' @description Constructs a canonical team name from the city and nickname
-#'   fields returned by the HockeyTech game-summary API. First attempts an
-#'   ASCII-normalised lookup against `pwhlTeamColours`; falls back to
-#'   `"<city> <nickname>"` if no match is found.
+#' @description Determines the PWHL Team Name given the PWHLID from API calls
 #'
-#' @param city (`character(1)`) City field from the API (e.g. `"Montr\u00e9al"`).
-#' @param nickname (`character(1)`) Nickname field from the API
-#'   (e.g. `"Victoire"`).
-#' @param pwhlTeamColours (`data.frame`) PWHL team metadata table.
+#' @param pwhlID the numeric pwhlID
+#' @param pwhlTeamColours Built-in PWHL Team Colours data
 #' @returns (`character(1)`) Canonical team name.
 #' @keywords internal
 pwhl_resolve_team_name <- function(
-  city,
-  nickname,
+  pwhlID,
   pwhlTeamColours = HockeyModel::pwhlTeamColours
 ) {
-  candidate <- paste(city, nickname)
-  # Normalise accents before lookup (e.g. "Montr\u00e9al" -> "Montreal")
-  candidate_ascii <- stringi::stri_trans_general(candidate, "latin-ascii")
-  teams_ascii <- stringi::stri_trans_general(
-    pwhlTeamColours$Team,
-    "latin-ascii"
-  )
-  idx <- match(candidate_ascii, teams_ascii)
-  if (!is.na(idx)) pwhlTeamColours$Team[idx] else candidate
+  getteamname <- function(t) {
+    if(t %in% pwhlTeamColours$PWHLID) {
+      return(pwhlTeamColours[pwhlTeamColours$PWHLID == t, ]$Team)
+    } else {
+      return(NA_character_)
+    }
+  }
+
+  v_getteamname <- Vectorize(getteamname, "t")
+  if (length(pwhlID) == 1) {
+    return(getteamname(t = pwhlID))
+  } else {
+    return(unname(v_getteamname(t = pwhlID)))
+  }
 }
 
 
@@ -486,32 +485,29 @@ getPWHLPlayoffSeries <- function(season_id = NULL) {
       jsonlite::fromJSON(),
     error = function(e) return(NULL)
   )
-  if (is.null(resp) || is.null(resp$brackets)) {
+  if (is.null(resp) || is.null(resp$SiteKit$Brackets)) {
     return(NULL)
   }
 
   # Parse series info
-  brackets <- resp$brackets
-  if (length(brackets) == 0) {
+  matchups <- resp$SiteKit$Brackets$rounds$matchups
+  if (length(matchups) == 0) {
     return(NULL)
   }
 
+  nmatchups <- length(matchups[[1]]$series_letter)
+
   # Flatten all rounds/series
-  series_list <- purrr::map_dfr(brackets, function(round) {
-    purrr::map_dfr(round$series, function(series) {
-      data.frame(
-        HomeTeam = series$homeTeamName,
-        AwayTeam = series$awayTeamName,
-        HomeWins = as.integer(series$homeWins),
-        AwayWins = as.integer(series$awayWins),
-        Status = ifelse(series$complete, "Complete", "Ongoing"),
-        stringsAsFactors = FALSE
-      )
-    })
-  })
+  series_list <- data.frame(
+    HomeTeam = pwhl_resolve_team_name(matchups[[1]]$team1),
+    AwayTeam = pwhl_resolve_team_name(matchups[[1]]$team2),
+    HomeWins = as.integer(matchups[[1]]$team1_wins),
+    AwayWins = as.integer(matchups[[1]]$team2_wins)
+  )
   if (nrow(series_list) == 0) {
     return(NULL)
   }
+  series_list$Status <- ifelse((series_list$HomeWins >= 3 | series_list$AwayWins >= 3), "Complete", "Ongoing")
   series_list
 }
 

@@ -2,29 +2,19 @@
 % Please edit documentation in R/pwhl-api-interface.R
 \name{pwhl_resolve_team_name}
 \alias{pwhl_resolve_team_name}
-\title{Resolve a PWHL team name from API city and nickname fields}
+\title{Resolve a PWHL team name from PWHLID}
 \usage{
-pwhl_resolve_team_name(
-  city,
-  nickname,
-  pwhlTeamColours = HockeyModel::pwhlTeamColours
-)
+pwhl_resolve_team_name(pwhlID, pwhlTeamColours = HockeyModel::pwhlTeamColours)
 }
 \arguments{
-\item{city}{(\code{character(1)}) City field from the API (e.g. \code{"Montr\\u00e9al"}).}
+\item{pwhlID}{the numeric pwhlID}
 
-\item{nickname}{(\code{character(1)}) Nickname field from the API
-(e.g. \code{"Victoire"}).}
-
-\item{pwhlTeamColours}{(\code{data.frame}) PWHL team metadata table.}
+\item{pwhlTeamColours}{Built-in PWHL Team Colours data}
 }
 \value{
 (\code{character(1)}) Canonical team name.
 }
 \description{
-Constructs a canonical team name from the city and nickname
-fields returned by the HockeyTech game-summary API. First attempts an
-ASCII-normalised lookup against \code{pwhlTeamColours}; falls back to
-\code{"<city> <nickname>"} if no match is found.
+Determines the PWHL Team Name given the PWHLID from API calls
 }
 \keyword{internal}
