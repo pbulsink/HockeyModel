@@ -317,7 +317,8 @@ pwhl_game_summary <- function(gid) {
   home_team <- getLongTeam(gs$home$team_code, HockeyModel::pwhlTeamColours)
   away_team <- getLongTeam(gs$visitor$team_code, HockeyModel::pwhlTeamColours)
 
-  gt <- pwhlSchedule[pwhlSchedule$GameID == gid, ]$GameType
+  sched <- HockeyModel::pwhlSchedule
+  gt <- sched[sched$GameID == gid, ]$GameType
 
   game_type <- ifelse(length(gt) == 1, gt, "")
 

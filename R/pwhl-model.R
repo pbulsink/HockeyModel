@@ -607,7 +607,7 @@ dailyPWHLSummary <- function(
 
   # ── Playoff series ──────────────────────────────────────────────────────────
   series <- tryCatch(
-    getPWHLPlayoffSeries(scores = scores, schedule = schedule),
+    getPWHLPlayoffSeries(),
     error = function(e) NULL
   )
   if (!is.null(series) && nrow(series) > 0) {
