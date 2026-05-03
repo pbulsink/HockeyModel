@@ -1,0 +1,14 @@
+http_interactions:
+- request:
+    method: GET
+    uri: https://lscluster.hockeytech.com/feed/index.php?feed=modulekit&view=brackets&season_id=3&key=446521baf8c38984&client_code=pwhl
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body:
+      string: '{"brackets":{"round1":{"series":{"1":{"homeTeamName":"Toronto Sceptres","awayTeamName":"Boston
+        Fleet","homeWins":2,"awayWins":1,"complete":false},"2":{"homeTeamName":"Minnesota
+        Frost","awayTeamName":"Ottawa Charge","homeWins":3,"awayWins":0,"complete":true}}}}}'
+  recorded_at: 2026-04-26 00:00:00
+recorded_with: VCR-vcr/2.1.0

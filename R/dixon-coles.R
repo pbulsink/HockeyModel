@@ -562,7 +562,8 @@ getWeibullParams <- function(
   res <- stats::optim(
     par = c(3, 1, 6),
     fn = DCoptimTheta.fast,
-    lower = c(-Inf, 0, -Inf),
+    lower = c(1e-6, 1e-6, -2),
+    upper = c(10,10, 100),
     # control = list(fnscale=-1),
     method = "L-BFGS-B"
   )

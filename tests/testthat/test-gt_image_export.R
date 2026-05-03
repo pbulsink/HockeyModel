@@ -158,6 +158,6 @@ test_that("save_gt_as_png() padding parameter controls extra space", {
 
   expect_true(file.exists(temp_no_pad))
   expect_true(file.exists(temp_with_pad))
-  # More padding means a larger canvas → larger PNG file
+  # More padding means a larger canvas → larger PNG file unless optimized?
   expect_gte(file.size(temp_with_pad), file.size(temp_no_pad))
 })
