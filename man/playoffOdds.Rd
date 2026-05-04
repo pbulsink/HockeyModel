@@ -16,7 +16,11 @@ playoffOdds(
 both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
 }
 \value{
-A playoff-odds \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
+If \code{league} is \code{"nhl"} or \code{"pwhl"}, a playoff-odds
+\code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object. If \code{league} is
+\code{NULL}, \code{NA}, or \code{"both"}, a named list with elements
+\code{nhl} and \code{pwhl}, each containing the corresponding playoff-odds
+plot.
 }
 \description{
 Convenience wrapper around \code{\link[=plot_prediction_playoffs_by_team]{plot_prediction_playoffs_by_team()}}.
