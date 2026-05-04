@@ -68,6 +68,26 @@ test_that("Presidents Predictions by Team Graphics Produce", {
   expect_identical(p$labels$x, "Date")
 })
 
+test_that("Presidents predictions keep a PWHL facet", {
+  skip_if_not_installed("ggforce")
+
+  all_predictions <- tibble::tibble(
+    predictionDate = as.Date(c("2025-01-14", "2025-01-15")),
+    Team = c("Boston Fleet", "Boston Fleet"),
+    Presidents = c(0.15, 0.2)
+  )
+
+  p <- plot_prediction_presidents_by_team(
+    all_predictions = all_predictions,
+    past_days = 14,
+    minimum = 0.01,
+    teamColours = HockeyModel::pwhlTeamColours
+  )
+
+  expect_false(any(is.na(p$data$facet)))
+  expect_identical(as.character(unique(p$data$facet)), "PWHL")
+})
+
 test_that("Today Odds plot OK", {
   local_mocked_bindings(
     todayDC = function(...) {

@@ -1,5 +1,20 @@
 # Graphics
 
+#' Order prediction facet levels
+#'
+#' @param divisions (`character`) Division values present in the plot data.
+#' @returns (`character`) Facet levels with NHL divisions in their usual order
+#'   followed by any other divisions.
+#' @keywords internal
+.prediction_facet_levels <- function(divisions) {
+  nhl_divisions <- c("Pacific", "Central", "Metropolitan", "Atlantic")
+  c(
+    nhl_divisions[nhl_divisions %in% divisions],
+    setdiff(unique(divisions), nhl_divisions)
+  )
+}
+
+
 #' Plot Predicted Points
 #'
 #' @param all_predictions the compiled predictions
@@ -42,7 +57,7 @@ plot_prediction_points_by_team <- function(
   # Set divisions to logical order
   all_predictions$facet <- factor(
     x = all_predictions$Division,
-    levels = c("Pacific", "Central", "Metropolitan", "Atlantic")
+    levels = .prediction_facet_levels(all_predictions$Division)
   )
   # make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(
@@ -141,7 +156,7 @@ plot_prediction_playoffs_by_team <- function(
   # Set divisions to logical order
   all_predictions$facet <- factor(
     x = all_predictions$Division,
-    levels = c("Pacific", "Central", "Metropolitan", "Atlantic")
+    levels = .prediction_facet_levels(all_predictions$Division)
   )
   # make team label appear properly later with ggrepel
   playoff_odds <- all_predictions[
@@ -271,7 +286,7 @@ plot_prediction_presidents_by_team <- function(
   # Set divisions to logical order
   all_predictions$facet <- factor(
     x = all_predictions$Division,
-    levels = c("Pacific", "Central", "Metropolitan", "Atlantic")
+    levels = .prediction_facet_levels(all_predictions$Division)
   )
   # make team label appear properly later with ggrepel
   all_predictions$label <- ifelse(
