@@ -5,7 +5,7 @@
 \title{Daily functions, rolled into one call}
 \usage{
 .daily_summary_nhl(
-  graphic_dir = "./prediction_results/graphics",
+  graphic_dir = .default_nhl_graphics_dir(),
   subdir = "pace",
   delay = stats::runif(1, min = 2, max = 6) * 60
 )

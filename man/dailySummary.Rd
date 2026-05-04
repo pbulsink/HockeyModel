@@ -5,14 +5,16 @@
 \title{Daily front-end summary}
 \usage{
 dailySummary(
-  graphic_dir = "./prediction_results/graphics",
+  graphic_dir = .default_nhl_graphics_dir(),
   subdir = "pace",
   delay = stats::runif(1, min = 2, max = 6) * 60,
   league = NULL
 )
 }
 \arguments{
-\item{graphic_dir}{(\code{character(1)}) Directory for graphic files.}
+\item{graphic_dir}{(\code{character(1)}) Directory for graphic files. When
+omitted, NHL uses \code{\link[=getOption]{getOption()}} \code{HockeyModel.graphics.path} and PWHL uses
+\code{file.path(getOption("HockeyModel.prediction.path"), "pwhl_graphics")}.}
 
 \item{subdir}{(\code{character(1)}) Subdirectory to \code{graphic_dir} for pace plots.}
 

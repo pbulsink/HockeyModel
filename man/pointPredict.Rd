@@ -10,16 +10,16 @@ pointPredict(
 )
 }
 \arguments{
-\item{data_dir}{directory of saved prediction snapshots}
+\item{data_dir}{(\code{character(1)}) Directory of saved prediction snapshots.}
 
-\item{league}{which league front-end to run: \code{NULL}, \code{NA}, or \code{"both"} runs
-both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
+\item{league}{(\code{character(1)} or \code{NULL}) Which league front-end to run.
+\code{NULL}, \code{NA}, and \code{"both"} run both leagues; \code{"nhl"} and \code{"pwhl"} run one
+league only.}
 }
 \value{
 If \code{league} is \code{"nhl"} or \code{"pwhl"}, a point-projection
-\code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object. If \code{league} is
-\code{NULL}, \code{NA}, or \code{"both"}, a named list of point-projection
-\code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} objects for both leagues.
+\code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object. If \code{league} is \code{NULL}, \code{NA}, or \code{"both"}, a
+named list with \code{nhl} and \code{pwhl} point-projection plots.
 }
 \description{
 Convenience wrapper around \code{\link[=plot_prediction_points_by_team]{plot_prediction_points_by_team()}}.

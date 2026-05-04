@@ -92,6 +92,29 @@
 }
 
 
+#' Default NHL graphics directory
+#'
+#' @returns (`character(1)`) NHL graphics directory derived from package
+#'   options.
+#' @keywords internal
+.default_nhl_graphics_dir <- function() {
+  getOption("HockeyModel.graphics.path", "./prediction_results/graphics")
+}
+
+
+#' Default PWHL graphics directory
+#'
+#' @returns (`character(1)`) PWHL graphics directory derived from package
+#'   options.
+#' @keywords internal
+.default_pwhl_graphics_dir <- function() {
+  file.path(
+    getOption("HockeyModel.prediction.path", "./prediction_results"),
+    "pwhl_graphics"
+  )
+}
+
+
 #' Convert PWHL simulations to saved prediction snapshots
 #'
 #' @param sim_results (`list`) Output from [pwhl_loopless_sim()].
@@ -493,11 +516,14 @@ todayOddsPlot <- function(
 #'
 #' Convenience wrapper around [plot_prediction_playoffs_by_team()].
 #'
-#' @param data_dir directory of saved prediction snapshots
-#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
-#'   both leagues; `"nhl"` and `"pwhl"` run one league only
+#' @param data_dir (`character(1)`) Directory of saved prediction snapshots.
+#' @param league (`character(1)` or `NULL`) Which league front-end to run.
+#'   `NULL`, `NA`, and `"both"` run both leagues; `"nhl"` and `"pwhl"` run one
+#'   league only.
 #'
-#' @returns A playoff-odds [ggplot2::ggplot()] object.
+#' @returns If `league` is `"nhl"` or `"pwhl"`, a playoff-odds
+#'   [ggplot2::ggplot()] object. If `league` is `NULL`, `NA`, or `"both"`, a
+#'   named list with `nhl` and `pwhl` playoff-odds plots.
 #' @export
 playoffOdds <- function(
   data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
@@ -549,11 +575,14 @@ playoffOdds <- function(
 #'
 #' Convenience wrapper around [plot_prediction_presidents_by_team()].
 #'
-#' @param data_dir directory of saved prediction snapshots
-#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
-#'   both leagues; `"nhl"` and `"pwhl"` run one league only
+#' @param data_dir (`character(1)`) Directory of saved prediction snapshots.
+#' @param league (`character(1)` or `NULL`) Which league front-end to run.
+#'   `NULL`, `NA`, and `"both"` run both leagues; `"nhl"` and `"pwhl"` run one
+#'   league only.
 #'
-#' @returns A President's Trophy odds [ggplot2::ggplot()] object.
+#' @returns If `league` is `"nhl"` or `"pwhl"`, a President's Trophy odds
+#'   [ggplot2::ggplot()] object. If `league` is `NULL`, `NA`, or `"both"`, a
+#'   named list with `nhl` and `pwhl` President's Trophy odds plots.
 #' @export
 presidentOdds <- function(
   data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
@@ -605,11 +634,14 @@ presidentOdds <- function(
 #'
 #' Convenience wrapper around [plot_prediction_points_by_team()].
 #'
-#' @param data_dir directory of saved prediction snapshots
-#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
-#'   both leagues; `"nhl"` and `"pwhl"` run one league only
+#' @param data_dir (`character(1)`) Directory of saved prediction snapshots.
+#' @param league (`character(1)` or `NULL`) Which league front-end to run.
+#'   `NULL`, `NA`, and `"both"` run both leagues; `"nhl"` and `"pwhl"` run one
+#'   league only.
 #'
-#' @returns A point-projection [ggplot2::ggplot()] object.
+#' @returns If `league` is `"nhl"` or `"pwhl"`, a point-projection
+#'   [ggplot2::ggplot()] object. If `league` is `NULL`, `NA`, or `"both"`, a
+#'   named list with `nhl` and `pwhl` point-projection plots.
 #' @export
 pointPredict <- function(
   data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
@@ -685,7 +717,7 @@ ratings <- function(m = HockeyModel::m, league = NULL) {
 #' @keywords internal
 tweet <- function(
   games,
-  graphic_dir = "./prediction_results/graphics",
+  graphic_dir = .default_nhl_graphics_dir(),
   delay = stats::runif(1, min = 2, max = 6) * 60,
   schedule = HockeyModel::schedule
 ) {
@@ -773,7 +805,7 @@ tweet <- function(
 #' @returns `NULL` (invisibly).
 #' @keywords internal
 .daily_summary_nhl <- function(
-  graphic_dir = "./prediction_results/graphics",
+  graphic_dir = .default_nhl_graphics_dir(),
   subdir = "pace",
   delay = stats::runif(1, min = 2, max = 6) * 60
 ) {
@@ -1026,7 +1058,9 @@ tweet <- function(
 #'
 #' Runs the daily front-end workflow for NHL, PWHL, or both leagues.
 #'
-#' @param graphic_dir (`character(1)`) Directory for graphic files.
+#' @param graphic_dir (`character(1)`) Directory for graphic files. When
+#'   omitted, NHL uses [getOption()] `HockeyModel.graphics.path` and PWHL uses
+#'   `file.path(getOption("HockeyModel.prediction.path"), "pwhl_graphics")`.
 #' @param subdir (`character(1)`) Subdirectory to `graphic_dir` for pace plots.
 #' @param delay (`double(1)`) Delay between social-media posts in seconds.
 #' @param league (`character(1)` or `NULL`) Which league front-end to run. Can
@@ -1039,11 +1073,12 @@ tweet <- function(
 #'   list with `nhl` and `pwhl` entries.
 #' @export
 dailySummary <- function(
-  graphic_dir = "./prediction_results/graphics",
+  graphic_dir = .default_nhl_graphics_dir(),
   subdir = "pace",
   delay = stats::runif(1, min = 2, max = 6) * 60,
   league = NULL
 ) {
+  graphic_dir_missing <- missing(graphic_dir)
   leagues <- .resolve_frontend_leagues(league)
   result <- list()
 
@@ -1052,19 +1087,24 @@ dailySummary <- function(
       graphic_dir = .frontend_value_for_league(
         graphic_dir,
         "NHL",
-        "./prediction_results/graphics"
+        .default_nhl_graphics_dir()
       ),
       subdir = subdir,
       delay = delay
     )
   }
   if ("PWHL" %in% leagues) {
-    result$pwhl <- dailyPWHLSummary(
-      graphic_dir = .frontend_value_for_league(
+    pwhl_graphic_dir <- if (graphic_dir_missing) {
+      .default_pwhl_graphics_dir()
+    } else {
+      .frontend_value_for_league(
         graphic_dir,
         "PWHL",
-        graphic_dir
-      ),
+        .default_pwhl_graphics_dir()
+      )
+    }
+    result$pwhl <- dailyPWHLSummary(
+      graphic_dir = pwhl_graphic_dir,
       delay = delay
     )
   }
