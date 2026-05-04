@@ -16,7 +16,10 @@ presidentOdds(
 both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
 }
 \value{
-A President's Trophy odds \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
+If a single league is requested, a President's Trophy odds
+\code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object. If both leagues are
+requested, a named list of plots, \code{list(nhl = ..., pwhl = ...)}, where
+each element is a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
 }
 \description{
 Convenience wrapper around \code{\link[=plot_prediction_presidents_by_team]{plot_prediction_presidents_by_team()}}.
