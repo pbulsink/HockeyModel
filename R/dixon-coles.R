@@ -1027,21 +1027,6 @@ dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
   }
 }
 
-#' DC Weight
-#'
-#' @param dates list of dates to calculate weights.
-#' @param currentDate date from which to calculate weight
-#' @param xi tuning factor
-#'
-#' @return list of weights corresponding to dates
-#' @keywords internal
-DCweights_old <- function(dates, currentDate = Sys.Date(), xi = 0.00426) {
-  datediffs <- dates - as.Date(currentDate)
-  datediffs <- as.numeric(datediffs * -1)
-  w <- exp(-1 * xi * datediffs)
-  w[datediffs <= 0] <- 0 # Future dates should have zero weights
-  return(w)
-}
 
 #' Derive season start dates from a vector of game dates
 #'

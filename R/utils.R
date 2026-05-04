@@ -62,22 +62,6 @@ historicalPoints <- function(sc) {
 }
 
 
-#' Conditional Mutate
-#' @description Mutate at condition. useful in dplyr pipes.
-#' From StackOverflow https://stackoverflow.com/a/34096575/3933405
-#'
-#' @param .data Data passed in
-#' @param condition Condition whether to peform mutate
-#' @param ... mutate to happen
-#' @param envir environment to cary through.
-#' @export
-mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
-  condition <- eval(substitute(condition), .data, envir)
-  .data[condition, ] <- .data[condition, ] |> dplyr::mutate(...)
-  .data
-}
-
-
 validate_metric_inputs <- function(predicted, actual, fn_name) {
   if (length(predicted) != length(actual)) {
     cli::cli_abort(c(
@@ -568,24 +552,6 @@ add_postponed_to_schedule_end <- function(schedule = HockeyModel::schedule) {
   return(schedule)
 }
 
-
-#' Validate one NHL game ID value
-#'
-#' @param gameId (`numeric(1)`) Candidate game ID.
-#' @returns (`logical(1)`) `TRUE` when the ID matches expected NHL format.
-#' @keywords internal
-gId <- function(gameId) {
-  if (!is.numeric(gameId)) {
-    return(FALSE)
-  } else if (!nchar(gameId) == 10) {
-    return(FALSE)
-  } else if (!grepl(pattern = "20[1,2][0-9]0[2,3][0-9]{4}", gameId)) {
-    return(FALSE)
-  } else {
-    return(TRUE)
-  }
-}
-is_valid_gameId <- Vectorize(gId)
 
 #' Resolve a safe worker-core count
 #'
