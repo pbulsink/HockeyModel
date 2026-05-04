@@ -16,7 +16,10 @@ pointPredict(
 both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
 }
 \value{
-A point-projection \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
+If \code{league} is \code{"nhl"} or \code{"pwhl"}, a point-projection
+\code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object. If \code{league} is
+\code{NULL}, \code{NA}, or \code{"both"}, a named list of point-projection
+\code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} objects for both leagues.
 }
 \description{
 Convenience wrapper around \code{\link[=plot_prediction_points_by_team]{plot_prediction_points_by_team()}}.
