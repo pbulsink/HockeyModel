@@ -963,6 +963,9 @@ simulatePlayoffs <- function(
     pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
     pdates <- pdates[pdates != "graphics"]
     lastp <- as.Date(max(pdates))
+    if(as.Date(lastp) < Sys.Date()-7){
+      return(NULL)
+    }
     summary_results <- readRDS(file.path(
       getOption("HockeyModel.prediction.path"),
       paste0(lastp, "-predictions.RDS")
