@@ -659,11 +659,15 @@ parseCores <- function(cores) {
 get_prediction_dates <- function(
   dir = getOption("HockeyModel.prediction.path")
 ) {
+  if (is.null(dir) || !dir.exists(dir)) {
+    cli::cli_abort("Prediction directory does not exist: {.path {dir}}")
+  }
   filelist <- list.files(path = dir, full.names = FALSE)
   filelist <- filelist[
     grepl("^\\d{4}-\\d{2}-\\d{2}-predictions\\.RDS$", filelist)
   ]
-  sort(as.Date(substr(filelist, 1, 10)))
+  dates <- as.Date(substr(filelist, 1, 10))
+  sort(dates[!is.na(dates)])
 }
 
 

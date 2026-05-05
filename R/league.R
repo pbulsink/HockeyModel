@@ -969,7 +969,7 @@ simulatePlayoffs <- function(
     lastp <- max(pdates)
     if (lastp < Sys.Date() - 7) {
       cli::cli_alert_info(
-        "Most recent prediction ({lastp}) is more than 7 days old; skipping playoff simulation."
+        "Most recent prediction ({.val {lastp}}) is more than 7 days old; skipping playoff simulation."
       )
       return(invisible(NULL))
     }
