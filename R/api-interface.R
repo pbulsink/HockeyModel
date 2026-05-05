@@ -427,31 +427,6 @@ updateScoresAPI <- function(
   return(unique(scores))
 }
 
-#' Update scores for specific game IDs
-#'
-#' @param gameids (`character` or `numeric`) One or more NHL game IDs.
-#' @param save_data (`logical(1)`) Whether to write updated scores into package
-#'   data when `usethis` is available.
-#' @returns (`data.frame`) Invisibly, the updated scores table.
-#' @keywords internal
-updateScoresAPI_byGameID <- function(gameids, save_data = FALSE) {
-  updatedSc <- getNHLScores(
-    gameids,
-    schedule = dplyr::bind_rows(HockeyModel::scores, HockeyModel::schedule)
-  )
-  if (!is.null(updatedSc)) {
-    scores <- HockeyModel::scores |>
-      dplyr::filter(!(.data$GameID %in% gameids)) |>
-      dplyr::bind_rows(updatedSc) |>
-      dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
-    if (save_data && requireNamespace("usethis", quietly = TRUE)) {
-      suppressMessages(usethis::use_data(scores, overwrite = TRUE))
-    }
-  } else {
-    scores <- HockeyModel::scores
-  }
-  invisible(scores)
-}
 
 #' Normalize team name fields
 #'
@@ -748,43 +723,6 @@ getAPISeries <- function(season = getCurrentSeason8()) {
 }
 
 
-#' Parse series status text into home and away win counts
-#'
-#' @param playoffSeries (`data.frame`) Single-row playoff series data with home
-#'   and away teams.
-#' @param seriesStatusShort (`character(1)`) NHL API status string containing
-#'   win counts.
-#' @returns (`numeric`) Length-two vector of home wins and away wins.
-#' @keywords internal
-validateWins <- function(playoffSeries, seriesStatusShort) {
-  hometeam <- playoffSeries$HomeTeam
-  awayteam <- playoffSeries$AwayTeam
-
-  homeshort <- getShortTeam(hometeam)
-  awayshort <- getShortTeam(awayteam)
-
-  statusteam <- ifelse(
-    grepl(homeshort, seriesStatusShort),
-    homeshort,
-    ifelse(grepl(awayshort, seriesStatusShort), awayshort, NA)
-  )
-  wins <- unlist(strsplit(seriesStatusShort, "-"))
-  wins[1] <- unlist(strsplit(wins[1], " "))[length(unlist(strsplit(
-    wins[1],
-    " "
-  )))]
-  if (is.na(statusteam)) {
-    # Tied
-    return(as.numeric(c(wins[1], wins[2])))
-  } else if (statusteam == awayshort) {
-    # Away leading, invert (as response is homewins, awaywins)
-    return(as.numeric(c(wins[2], wins[1])))
-  } else {
-    return(as.numeric(c(wins[1], wins[2])))
-  }
-}
-
-
 #' getSeasonStartDate
 #'
 #' @param season Season (8 character code) or NULL for current/most recent season
@@ -1065,7 +1003,7 @@ getTeamDivisions <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @keywords internal
 getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamshort <- function(t) {
-    if(t %in% teamColours$Team) {
+    if (t %in% teamColours$Team) {
       return(teamColours[teamColours$Team == t, ]$ShortCode)
     } else {
       return(NA_character_)
@@ -1089,7 +1027,7 @@ getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @keywords internal
 getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamlong <- function(t) {
-    if (t %in% teamColours$ShortCode){
+    if (t %in% teamColours$ShortCode) {
       return(teamColours[teamColours$ShortCode == t, ]$Team)
     } else {
       return(NA_character_)

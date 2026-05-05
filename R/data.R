@@ -201,18 +201,6 @@
 "pwhl_k"
 
 
-#' Iterative Parameters
-#' Parameters for iterative Dixon-Coles method
-#'
-#' @format a list of lists of parameters for win/loss and xG versions
-"iterativeParameters"
-
-#' Iterative Rankings
-#' Current rankings for iterative Dixon-Coles methods
-#'
-#' @format a list of data frames and a date value of the last rankings update
-"iterativeRankings"
-
 #' Summary Results (Testing)
 #' A testing dataset from 2021 presesason. Not for regular use.
 #'

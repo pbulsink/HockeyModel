@@ -36,7 +36,6 @@ Suggests:
     progress,
     markdown,
     covr,
-    tictoc,
     parallel,
     ggrepel,
     gt,
