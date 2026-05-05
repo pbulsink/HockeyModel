@@ -383,16 +383,6 @@ simulateSeasonParallel <- function(
 compile_predictions <- function(
   dir = getOption("HockeyModel.prediction.path")
 ) {
-<<<<<<< copilot/update-main-r-for-pwhl-support
-  # Find the files
-  filelist <- list.files(path = dir)
-  pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-  pdates <- pdates[!is.na(as.Date(pdates))]
-  all_predictions <- purrr::map(pdates, function(f) {
-    readRDS(file.path(dir, (paste0(f, "-predictions.RDS"))))
-  }) # Read all the files
-  names(all_predictions) <- pdates
-=======
   pdates <- get_prediction_dates(dir)
   if (length(pdates) == 0L) {
     cli::cli_abort("No prediction files found in {.path {dir}}.")
@@ -401,7 +391,6 @@ compile_predictions <- function(
     readRDS(file.path(dir, paste0(f, "-predictions.RDS")))
   })
   names(all_predictions) <- as.character(pdates)
->>>>>>> master
   all_predictions <- dplyr::bind_rows(all_predictions, .id = "predictionDate")
   return(all_predictions)
 }
@@ -970,12 +959,6 @@ simulatePlayoffs <- function(
   cores <- parseCores(cores)
   # TODO use compile_predictions for this?
   if (is.null(summary_results)) {
-<<<<<<< copilot/update-main-r-for-pwhl-support
-    filelist <- list.files(path = getOption("HockeyModel.prediction.path"))
-    pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-    pdates <- pdates[!is.na(as.Date(pdates))]
-    lastp <- as.Date(max(pdates))
-=======
     pdates <- get_prediction_dates(getOption("HockeyModel.prediction.path"))
     if (length(pdates) == 0L) {
       cli::cli_alert_info(
@@ -990,7 +973,6 @@ simulatePlayoffs <- function(
       )
       return(invisible(NULL))
     }
->>>>>>> master
     summary_results <- readRDS(file.path(
       getOption("HockeyModel.prediction.path"),
       paste0(lastp, "-predictions.RDS")

@@ -574,18 +574,11 @@ plot_pace_by_team <- function(
     paste0(getSeasonStartDate(), "-predictions.RDS")
   ))
 
-<<<<<<< copilot/update-main-r-for-pwhl-support
-  filelist <- list.files(path = prediction_dir)
-  pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-  pdates <- pdates[!is.na(as.Date(pdates))]
-  lastp <- as.Date(max(pdates))
-=======
   pdates <- get_prediction_dates(prediction_dir)
   if (length(pdates) == 0L) {
     cli::cli_abort("No prediction files found in {.path {prediction_dir}}.")
   }
   lastp <- max(pdates)
->>>>>>> master
   q <- readRDS(file.path(prediction_dir, paste0(lastp, "-predictions.RDS")))
 
   if (!dir.exists(file.path(graphic_dir, subdir))) {
