@@ -21,7 +21,7 @@ pwhl_add_result <- function(scores) {
     scores$HomeGoals < scores$AwayGoals & scores$OTStatus == "SO" ~ 0.4,
     scores$HomeGoals < scores$AwayGoals & scores$OTStatus == "OT" ~ 0.25,
     scores$HomeGoals < scores$AwayGoals & scores$OTStatus == "" ~ 0,
-    TRUE ~ 0.5  # Somehow a tie?
+    TRUE ~ 0.5 # Somehow a tie?
   )
   scores
 }

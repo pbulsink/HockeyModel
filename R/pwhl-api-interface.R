@@ -78,7 +78,7 @@ getCurrentPWHLSeason <- function() {
   }
 
   # Use only regular or playoff seasons
-  reg <- seasons[seasons$career == 1,]
+  reg <- seasons[seasons$career == 1, ]
   if (nrow(reg) == 0) {
     return(NULL)
   }
@@ -249,7 +249,7 @@ pwhl_resolve_team_name <- function(
   pwhlTeamColours = HockeyModel::pwhlTeamColours
 ) {
   getteamname <- function(t) {
-    if(t %in% pwhlTeamColours$PWHLID) {
+    if (t %in% pwhlTeamColours$PWHLID) {
       return(pwhlTeamColours[pwhlTeamColours$PWHLID == t, ]$Team)
     } else {
       return(NA_character_)
@@ -507,7 +507,11 @@ getPWHLPlayoffSeries <- function(season_id = NULL) {
   if (nrow(series_list) == 0) {
     return(NULL)
   }
-  series_list$Status <- ifelse((series_list$HomeWins >= 3 | series_list$AwayWins >= 3), "Complete", "Ongoing")
+  series_list$Status <- ifelse(
+    (series_list$HomeWins >= 3 | series_list$AwayWins >= 3),
+    "Complete",
+    "Ongoing"
+  )
   series_list
 }
 

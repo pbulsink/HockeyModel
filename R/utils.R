@@ -645,6 +645,28 @@ parseCores <- function(cores) {
   invisible()
 }
 
+#' List valid prediction file dates
+#'
+#' @description Returns a sorted vector of `Date` objects for every
+#' `YYYY-MM-DD-predictions.RDS` file found in `dir`. Subdirectories and any
+#' other files (e.g. graphics, PWHL subdirectory) are ignored.
+#'
+#' @param dir Directory to search. Defaults to
+#'   `getOption("HockeyModel.prediction.path")`.
+#'
+#' @return A (possibly empty) sorted `Date` vector.
+#' @keywords internal
+get_prediction_dates <- function(
+  dir = getOption("HockeyModel.prediction.path")
+) {
+  filelist <- list.files(path = dir, full.names = FALSE)
+  filelist <- filelist[
+    grepl("^\\d{4}-\\d{2}-\\d{2}-predictions\\.RDS$", filelist)
+  ]
+  sort(as.Date(substr(filelist, 1, 10)))
+}
+
+
 #' Print package startup message on attach
 #'
 #' @param libname (`character(1)`) Library path provided by R.

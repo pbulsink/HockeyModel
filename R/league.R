@@ -383,14 +383,14 @@ simulateSeasonParallel <- function(
 compile_predictions <- function(
   dir = getOption("HockeyModel.prediction.path")
 ) {
-  # Find the files
-  filelist <- list.files(path = dir)
-  pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-  pdates <- pdates[pdates != "graphics"]
-  all_predictions <- purrr::map(pdates, function(f) {
-    readRDS(file.path(dir, (paste0(f, "-predictions.RDS"))))
-  }) # Read all the files
-  names(all_predictions) <- pdates
+  pdates <- get_prediction_dates(dir)
+  if (length(pdates) == 0L) {
+    cli::cli_abort("No prediction files found in {.path {dir}}.")
+  }
+  all_predictions <- purrr::map(as.character(pdates), function(f) {
+    readRDS(file.path(dir, paste0(f, "-predictions.RDS")))
+  })
+  names(all_predictions) <- as.character(pdates)
   all_predictions <- dplyr::bind_rows(all_predictions, .id = "predictionDate")
   return(all_predictions)
 }
@@ -959,12 +959,19 @@ simulatePlayoffs <- function(
   cores <- parseCores(cores)
   # TODO use compile_predictions for this?
   if (is.null(summary_results)) {
-    filelist <- list.files(path = getOption("HockeyModel.prediction.path"))
-    pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
-    pdates <- pdates[pdates != "graphics"]
-    lastp <- as.Date(max(pdates))
-    if(as.Date(lastp) < Sys.Date()-7){
-      return(NULL)
+    pdates <- get_prediction_dates(getOption("HockeyModel.prediction.path"))
+    if (length(pdates) == 0L) {
+      cli::cli_alert_info(
+        "No prediction files found; skipping playoff simulation."
+      )
+      return(invisible(NULL))
+    }
+    lastp <- max(pdates)
+    if (lastp < Sys.Date() - 7) {
+      cli::cli_alert_info(
+        "Most recent prediction ({lastp}) is more than 7 days old; skipping playoff simulation."
+      )
+      return(invisible(NULL))
     }
     summary_results <- readRDS(file.path(
       getOption("HockeyModel.prediction.path"),

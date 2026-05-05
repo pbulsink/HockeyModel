@@ -1003,7 +1003,7 @@ getTeamDivisions <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @keywords internal
 getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamshort <- function(t) {
-    if(t %in% teamColours$Team) {
+    if (t %in% teamColours$Team) {
       return(teamColours[teamColours$Team == t, ]$ShortCode)
     } else {
       return(NA_character_)
@@ -1027,7 +1027,7 @@ getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @keywords internal
 getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
   getteamlong <- function(t) {
-    if (t %in% teamColours$ShortCode){
+    if (t %in% teamColours$ShortCode) {
       return(teamColours[teamColours$ShortCode == t, ]$Team)
     } else {
       return(NA_character_)
