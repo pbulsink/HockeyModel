@@ -139,6 +139,54 @@ test_that("todayOddsPlot and dailySummary fan out by league (#39)", {
   )
 })
 
+test_that("PWHL front ends use league defaults for omitted inputs", {
+  observed <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    .update_predictions_pwhl = function(data_dir, scores, schedule, params) {
+      observed$prediction_dir <- data_dir
+      observed$prediction_scores <- scores
+      observed$prediction_schedule <- schedule
+      observed$prediction_params <- params
+      invisible(NULL)
+    },
+    .today_odds_plot_pwhl = function(date, params, schedule, scores) {
+      observed$today_date <- date
+      observed$today_params <- params
+      observed$today_schedule <- schedule
+      observed$today_scores <- scores
+      "pwhl-today"
+    },
+    .ratings_pwhl = function(m) {
+      observed$ratings_m <- m
+      "pwhl-ratings"
+    },
+    .package = "HockeyModel"
+  )
+
+  prediction_dir <- withr::local_tempdir()
+
+  expect_identical(
+    updatePredictions(data_dir = prediction_dir, league = "pwhl"),
+    invisible(NULL)
+  )
+  expect_identical(
+    todayOddsPlot(date = as.Date("2025-01-15"), league = "pwhl"),
+    "pwhl-today"
+  )
+  expect_identical(ratings(league = "pwhl"), "pwhl-ratings")
+
+  expect_identical(observed$prediction_dir, file.path(prediction_dir, "pwhl"))
+  expect_identical(observed$prediction_scores, HockeyModel::pwhlScores)
+  expect_identical(observed$prediction_schedule, HockeyModel::pwhlSchedule)
+  expect_null(observed$prediction_params)
+  expect_identical(observed$today_date, as.Date("2025-01-15"))
+  expect_identical(observed$today_schedule, HockeyModel::pwhlSchedule)
+  expect_identical(observed$today_scores, HockeyModel::pwhlScores)
+  expect_null(observed$today_params)
+  expect_identical(observed$ratings_m, HockeyModel::pwhl_m)
+})
+
 test_that("dailySummary uses option-based graphic defaults for both leagues (#39)", {
   withr::local_options(
     list(

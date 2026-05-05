@@ -53,11 +53,18 @@
 #'
 #' @param x (`any`) Candidate input value.
 #' @param league (`character(1)`) Normalised league name.
+#' @param use_default (`logical(1)`) Whether the caller omitted the argument and
+#'   should therefore use the league-specific default.
 #' @param default (`any`) Fallback value used when `x` is `NULL`.
 #' @returns A league-specific value.
 #' @keywords internal
-.frontend_value_for_league <- function(x, league, default = NULL) {
-  if (is.null(x)) {
+.frontend_value_for_league <- function(
+  x,
+  league,
+  use_default = FALSE,
+  default = NULL
+) {
+  if (isTRUE(use_default) || is.null(x)) {
     return(default)
   }
 
@@ -297,6 +304,8 @@ updatePredictions <- function(
   league = NULL
 ) {
   leagues <- .resolve_frontend_leagues(league)
+  scores_missing <- missing(scores)
+  schedule_missing <- missing(schedule)
   data_dirs <- .frontend_prediction_dirs(data_dir)
   result <- list()
 
@@ -308,11 +317,17 @@ updatePredictions <- function(
     }
     result$nhl <- .update_predictions_nhl(
       data_dir = nhl_data_dir,
-      scores = .frontend_value_for_league(scores, "NHL", HockeyModel::scores),
+      scores = .frontend_value_for_league(
+        scores,
+        "NHL",
+        use_default = scores_missing,
+        default = HockeyModel::scores
+      ),
       schedule = .frontend_value_for_league(
         schedule,
         "NHL",
-        HockeyModel::schedule
+        use_default = schedule_missing,
+        default = HockeyModel::schedule
       ),
       params = .frontend_value_for_league(params, "NHL", NULL)
     )
@@ -328,12 +343,14 @@ updatePredictions <- function(
       scores = .frontend_value_for_league(
         scores,
         "PWHL",
-        HockeyModel::pwhlScores
+        use_default = scores_missing,
+        default = HockeyModel::pwhlScores
       ),
       schedule = .frontend_value_for_league(
         schedule,
         "PWHL",
-        HockeyModel::pwhlSchedule
+        use_default = schedule_missing,
+        default = HockeyModel::pwhlSchedule
       ),
       params = .frontend_value_for_league(params, "PWHL", NULL)
     )
@@ -432,6 +449,8 @@ todayOddsPlot <- function(
   league = NULL
 ) {
   leagues <- .resolve_frontend_leagues(league)
+  schedule_missing <- missing(schedule)
+  scores_missing <- missing(scores)
   result <- list()
 
   if ("NHL" %in% leagues) {
@@ -441,9 +460,15 @@ todayOddsPlot <- function(
       schedule = .frontend_value_for_league(
         schedule,
         "NHL",
-        HockeyModel::schedule
+        use_default = schedule_missing,
+        default = HockeyModel::schedule
       ),
-      scores = .frontend_value_for_league(scores, "NHL", HockeyModel::scores)
+      scores = .frontend_value_for_league(
+        scores,
+        "NHL",
+        use_default = scores_missing,
+        default = HockeyModel::scores
+      )
     )
   }
   if ("PWHL" %in% leagues) {
@@ -453,12 +478,14 @@ todayOddsPlot <- function(
       schedule = .frontend_value_for_league(
         schedule,
         "PWHL",
-        HockeyModel::pwhlSchedule
+        use_default = schedule_missing,
+        default = HockeyModel::pwhlSchedule
       ),
       scores = .frontend_value_for_league(
         scores,
         "PWHL",
-        HockeyModel::pwhlScores
+        use_default = scores_missing,
+        default = HockeyModel::pwhlScores
       )
     )
   }
@@ -691,16 +718,27 @@ pointPredict <- function(
 #' @export
 ratings <- function(m = HockeyModel::m, league = NULL) {
   leagues <- .resolve_frontend_leagues(league)
+  m_missing <- missing(m)
   result <- list()
 
   if ("NHL" %in% leagues) {
     result$nhl <- .ratings_nhl(
-      m = .frontend_value_for_league(m, "NHL", HockeyModel::m)
+      m = .frontend_value_for_league(
+        m,
+        "NHL",
+        use_default = m_missing,
+        default = HockeyModel::m
+      )
     )
   }
   if ("PWHL" %in% leagues) {
     result$pwhl <- .ratings_pwhl(
-      m = .frontend_value_for_league(m, "PWHL", HockeyModel::pwhl_m)
+      m = .frontend_value_for_league(
+        m,
+        "PWHL",
+        use_default = m_missing,
+        default = HockeyModel::pwhl_m
+      )
     )
   }
 

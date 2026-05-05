@@ -4,12 +4,15 @@
 \alias{.frontend_value_for_league}
 \title{Select a league-specific front-end value}
 \usage{
-.frontend_value_for_league(x, league, default = NULL)
+.frontend_value_for_league(x, league, use_default = FALSE, default = NULL)
 }
 \arguments{
 \item{x}{(\code{any}) Candidate input value.}
 
 \item{league}{(\code{character(1)}) Normalised league name.}
+
+\item{use_default}{(\code{logical(1)}) Whether the caller omitted the argument and
+should therefore use the league-specific default.}
 
 \item{default}{(\code{any}) Fallback value used when \code{x} is \code{NULL}.}
 }
