@@ -4,10 +4,22 @@
 \alias{presidentOdds}
 \title{Predict President's Odds graphic}
 \usage{
-presidentOdds()
+presidentOdds(
+  data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
+  league = NULL
+)
+}
+\arguments{
+\item{data_dir}{(\code{character(1)}) Directory of saved prediction snapshots.}
+
+\item{league}{(\code{character(1)} or \code{NULL}) Which league front-end to run.
+\code{NULL}, \code{NA}, and \code{"both"} run both leagues; \code{"nhl"} and \code{"pwhl"} run one
+league only.}
 }
 \value{
-A President's Trophy odds \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object.
+If \code{league} is \code{"nhl"} or \code{"pwhl"}, a President's Trophy odds
+\code{\link[ggplot2:ggplot]{ggplot2::ggplot()}} object. If \code{league} is \code{NULL}, \code{NA}, or \code{"both"}, a
+named list with \code{nhl} and \code{pwhl} President's Trophy odds plots.
 }
 \description{
 Convenience wrapper around \code{\link[=plot_prediction_presidents_by_team]{plot_prediction_presidents_by_team()}}.

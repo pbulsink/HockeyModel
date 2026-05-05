@@ -2,21 +2,36 @@
 % Please edit documentation in R/main.R
 \name{dailySummary}
 \alias{dailySummary}
-\title{Daily functions, rolled into one call}
+\title{Daily front-end summary}
 \usage{
 dailySummary(
-  graphic_dir = "./prediction_results/graphics",
+  graphic_dir = .default_nhl_graphics_dir(),
   subdir = "pace",
-  delay = stats::runif(1, min = 2, max = 6) * 60
+  delay = stats::runif(1, min = 2, max = 6) * 60,
+  league = NULL
 )
 }
 \arguments{
-\item{graphic_dir}{Directory for graphic files}
+\item{graphic_dir}{(\code{character(1)}) Directory for graphic files. When
+omitted, NHL uses \code{\link[=getOption]{getOption()}} \code{HockeyModel.graphics.path} and PWHL uses
+\code{file.path(getOption("HockeyModel.prediction.path"), "pwhl_graphics")}.}
 
-\item{subdir}{subdirectory to \code{graphic_dir} for pace plots}
+\item{subdir}{(\code{character(1)}) Subdirectory to \code{graphic_dir} for pace plots.}
 
-\item{delay}{delay between tweet posts}
+\item{delay}{(\code{double(1)}) Delay between social-media posts in seconds.}
+
+\item{league}{(\code{character(1)} or \code{NULL}) Which league front-end to run. Can
+be one of:
+\itemize{
+\item \code{NULL}, \code{NA}, or \code{"both"}: Run both leagues.
+\item \code{"nhl"}: Run the NHL workflow only.
+\item \code{"pwhl"}: Run the PWHL workflow only.
+}}
+}
+\value{
+For a single league, \code{NULL} (invisibly). For both leagues, a named
+list with \code{nhl} and \code{pwhl} entries.
 }
 \description{
-Daily functions, rolled into one call
+Runs the daily front-end workflow for NHL, PWHL, or both leagues.
 }

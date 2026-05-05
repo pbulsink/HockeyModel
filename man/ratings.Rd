@@ -4,13 +4,17 @@
 \alias{ratings}
 \title{Current ratings}
 \usage{
-ratings(m = HockeyModel::m)
+ratings(m = HockeyModel::m, league = NULL)
 }
 \arguments{
 \item{m}{HockeyModel::m or a custom value}
+
+\item{league}{which league front-end to run: \code{NULL}, \code{NA}, or \code{"both"} runs
+both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
 }
 \value{
-today's ratings ggplot object
+Today's ratings ggplot object for a single league, or a named list of
+league plots when both leagues are requested.
 }
 \description{
 Current ratings

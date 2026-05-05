@@ -6,7 +6,7 @@
 \usage{
 tweet(
   games,
-  graphic_dir = "./prediction_results/graphics",
+  graphic_dir = .default_nhl_graphics_dir(),
   delay = stats::runif(1, min = 2, max = 6) * 60,
   schedule = HockeyModel::schedule
 )
