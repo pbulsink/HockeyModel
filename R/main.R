@@ -867,8 +867,8 @@ tweetPlayoffOdds <- function(
     params = params
   )
 
-  if(is.null(playoffodds)){
-    return(NULL)
+  if (is.null(playoffodds)) {
+    return(invisible(NULL))
   }
 
   playoffodds$Conference <- getTeamConferences(playoffodds$Team)
