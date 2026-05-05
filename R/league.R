@@ -383,6 +383,7 @@ simulateSeasonParallel <- function(
 compile_predictions <- function(
   dir = getOption("HockeyModel.prediction.path")
 ) {
+<<<<<<< copilot/update-main-r-for-pwhl-support
   # Find the files
   filelist <- list.files(path = dir)
   pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
@@ -391,6 +392,16 @@ compile_predictions <- function(
     readRDS(file.path(dir, (paste0(f, "-predictions.RDS"))))
   }) # Read all the files
   names(all_predictions) <- pdates
+=======
+  pdates <- get_prediction_dates(dir)
+  if (length(pdates) == 0L) {
+    cli::cli_abort("No prediction files found in {.path {dir}}.")
+  }
+  all_predictions <- purrr::map(as.character(pdates), function(f) {
+    readRDS(file.path(dir, paste0(f, "-predictions.RDS")))
+  })
+  names(all_predictions) <- as.character(pdates)
+>>>>>>> master
   all_predictions <- dplyr::bind_rows(all_predictions, .id = "predictionDate")
   return(all_predictions)
 }
@@ -959,10 +970,27 @@ simulatePlayoffs <- function(
   cores <- parseCores(cores)
   # TODO use compile_predictions for this?
   if (is.null(summary_results)) {
+<<<<<<< copilot/update-main-r-for-pwhl-support
     filelist <- list.files(path = getOption("HockeyModel.prediction.path"))
     pdates <- substr(filelist, 1, 10) # gets the dates list of prediction
     pdates <- pdates[!is.na(as.Date(pdates))]
     lastp <- as.Date(max(pdates))
+=======
+    pdates <- get_prediction_dates(getOption("HockeyModel.prediction.path"))
+    if (length(pdates) == 0L) {
+      cli::cli_alert_info(
+        "No prediction files found; skipping playoff simulation."
+      )
+      return(invisible(NULL))
+    }
+    lastp <- max(pdates)
+    if (lastp < Sys.Date() - 7) {
+      cli::cli_alert_info(
+        "Most recent prediction ({.val {lastp}}) is more than 7 days old; skipping playoff simulation."
+      )
+      return(invisible(NULL))
+    }
+>>>>>>> master
     summary_results <- readRDS(file.path(
       getOption("HockeyModel.prediction.path"),
       paste0(lastp, "-predictions.RDS")
@@ -1720,194 +1748,6 @@ playoffSolverEngine <- function(
         l8 <- serieslist[["l4"]]
       }
       rm(wr, serieslist, westseries)
-
-      # if('series1' %in% completedSeries$Series){
-      #   series1 <- completedSeries[completedSeries$Series == 'series1', ]$Winner
-      #   l1 <- completedSeries[completedSeries$Series == 'series1', ]$Loser
-      #   er<-er[er$Team != series1,]
-      #   er<-er[er$Team != l1,]
-      # } else if (1 %in% currentSeries$SeriesID){
-      #   e1.1 <- currentSeries[currentSeries$SeriesID == 1, ]$HomeTeam
-      #   er<-er[er$Team != e1.1,]
-      #   ewc2 <- currentSeries[currentSeries$SeriesID == 1, ]$AwayTeam
-      #   er<-er[er$Team != ewc2,]
-      #   odds<-playoffWin(e1.1, ewc2, currentSeries[currentSeries$SeriesID == 1, ]$HomeWins,
-      #                    currentSeries[currentSeries$SeriesID == 1, ]$AwayWins, params = params)
-      #   series1<-sample(c(e1.1, ewc2), size = 1, prob = c(odds, 1-odds))
-      #   l1 <- ifelse(series4 == e1.1, ewc2, e1.1) #If winner = a, then b, else a
-      # } else {
-      #   e1.1<-er[sample(1:nrow(er), size = 1, prob = er$p_rank1),]$Team
-      #   er<-er[er$Team != e1.1,]
-      #   ewc2<-er[sample(1:nrow(er), size = 1, prob = er$p_rank8),]$Team
-      #   er<-er[er$Team != ewc2,]
-      #   series1 <- single_series_solver(series_number = 1, currentSeries = currentSeries, homeTeam = e1.1, awayTeam = ewc2, homeAwayOdds = homeAwayOdds)
-      #   l1 <- ifelse(series1 == e1.1, ewc2, e1.1) #If winner = a, then b, else a
-      # }
-      # p1div<-getTeamDivisions(e1.1)
-      #
-      # if('series2' %in% completedSeries$Series){
-      #   series2 <- completedSeries[completedSeries$Series == 'series2', ]$Winner
-      #   l2 <- completedSeries[completedSeries$Series == 'series2', ]$Loser
-      #   er<-er[er$Team != series2,]
-      #   er<-er[er$Team != l2,]
-      # } else if (2 %in% currentSeries$SeriesID){
-      #   e1.2 <- currentSeries[currentSeries$SeriesID == 2, ]$HomeTeam
-      #   er<-er[er$Team != e1.1,]
-      #   e1.3 <- currentSeries[currentSeries$SeriesID == 2, ]$AwayTeam
-      #   er<-er[er$Team != e1.3,]
-      #   odds<-playoffWin(e1.2, e1.3, currentSeries[currentSeries$SeriesID == 2, ]$HomeWins,
-      #                    currentSeries[currentSeries$SeriesID == 2, ]$AwayWins, params = params)
-      #   series2<-sample(c(e1.2, e1.3), size = 1, prob = c(odds, 1-odds))
-      #   l2 <- ifelse(series2 == e1.2, e1.3, e1.2) #If winner = a, then b, else a
-      # } else {
-      #   e1.2<-er[er$Div == p1div,]$Team[sample(1:nrow(er[er$Div == p1div, ]), size = 1, prob = er[er$Div == p1div, ]$p_rank_34)]
-      #   er<-er[er$Team != e1.2,]
-      #   e1.3<-er[er$Div == p1div,]$Team[sample(1:nrow(er[er$Div == p1div, ]), size = 1, prob = er[er$Div == p1div, ]$p_rank_56)]
-      #   er<-er[er$Team != e1.3,]
-      #   series2 <- single_series_solver(series_number = 2, currentSeries = currentSeries, homeTeam = e1.2, awayTeam = e1.3, homeAwayOdds = homeAwayOdds)
-      #   l2 <- ifelse(series2 == e1.2, e1.3, e1.2) #If winner = a, then b, else a
-      # }
-      #
-      # if('series3' %in% completedSeries$Series){
-      #   series3 <- completedSeries[completedSeries$Series == 'series3', ]$Winner
-      #   l3 <- completedSeries[completedSeries$Series == 'series3', ]$Loser
-      #   er<-er[er$Team != series3,]
-      #   er<-er[er$Team != l3,]
-      # } else if (3 %in% currentSeries$SeriesID){
-      #   e2.1 <- currentSeries[currentSeries$SeriesID == 3, ]$HomeTeam
-      #   er<-er[er$Team != e2.1,]
-      #   ewc1 <- currentSeries[currentSeries$SeriesID == 3, ]$AwayTeam
-      #   er<-er[er$Team != ewc1,]
-      #   odds<-playoffWin(e2.1, ewc1, currentSeries[currentSeries$SeriesID == 3, ]$HomeWins,
-      #                    currentSeries[currentSeries$SeriesID == 3, ]$AwayWins, params = params)
-      #   series3<-sample(c(e2.1, ewc1), size = 1, prob = c(odds, 1-odds))
-      #   l3 <- ifelse(series3 == e2.2, e2.3, e2.2) #If winner = a, then b, else a
-      # } else {
-      #   e2.1<-er[sample(1:nrow(er), size = 1, prob = er$p_rank2),]$Team
-      #   er<-er[er$Team != e2.1,]
-      #   ewc1<-er[sample(1:nrow(er), size = 1, prob = er$p_rank7),]$Team
-      #   er<-er[er$Team != ewc1,]
-      #   series3 <- single_series_solver(series_number = 3, currentSeries = currentSeries, homeTeam = e2.1, awayTeam = ewc1, homeAwayOdds = homeAwayOdds)
-      #   l3 <- ifelse(series3 == e2.1, ewc1, e2.1) #If winner = a, then b, else a
-      # }
-      #
-      # if('series4' %in% completedSeries$Series){
-      #   series4 <- completedSeries[completedSeries$Series == 'series4', ]$Winner
-      #   l4 <- completedSeries[completedSeries$Series == 'series4', ]$Loser
-      #   er<-er[er$Team != series4,]
-      #   er<-er[er$Team != l4,]
-      # } else if (4 %in% currentSeries$SeriesID){
-      #   e2.2 <- currentSeries[currentSeries$SeriesID == 4, ]$HomeTeam
-      #   er<-er[er$Team != e2.2,]
-      #   e2.3 <- currentSeries[currentSeries$SeriesID == 4, ]$AwayTeam
-      #   er<-er[er$Team != e2.3,]
-      #   odds<-playoffWin(e2.2, e2.3, currentSeries[currentSeries$SeriesID == 4, ]$HomeWins,
-      #                    currentSeries[currentSeries$SeriesID == 4, ]$AwayWins, params = params)
-      #   series4<-sample(c(e2.2, e2.3), size = 1, prob = c(odds, 1-odds))
-      #   l4 <- ifelse(series4 == e2.2, e2.3, e2.2) #If winner = a, then b, else a
-      # } else {
-      #   e2.2<-er[er$Div != p1div,]$Team[sample(1:nrow(er[er$Div != p1div, ]), size = 1, prob = er[er$Div != p1div, ]$p_rank_34)]
-      #   er<-er[er$Team != e2.2,]
-      #   e2.3<-er[er$Div != p1div,]$Team[sample(1:nrow(er[er$Div != p1div, ]), size = 1, prob = er[er$Div != p1div, ]$p_rank_56)]
-      #   er<-er[er$Team != e2.3,]
-      #   series4 <- single_series_solver(series_number = 4, currentSeries = currentSeries, homeTeam = e2.2, awayTeam = e2.3, homeAwayOdds = homeAwayOdds)
-      #   l4 <- ifelse(series4 == e2.2, e2.3, e2.2) #If winner = a, then b, else a
-      # }
-      #
-      # wr<-west_results
-      #
-      # if('series5' %in% completedSeries$Series){
-      #   series5 <- completedSeries[completedSeries$Series == 'series5', ]$Winner
-      #   l5 <- completedSeries[completedSeries$Series == 'series5', ]$Loser
-      #   wr<-wr[wr$Team != series5,]
-      #   wr<-wr[wr$Team != l5,]
-      # } else if (5 %in% currentSeries$SeriesID){
-      #   w1.1 <- currentSeries[currentSeries$SeriesID == 5, ]$HomeTeam
-      #   wr<-wr[wr$Team != w1.1,]
-      #   wwc2 <- currentSeries[currentSeries$SeriesID == 5, ]$AwayTeam
-      #   wr<-wr[wr$Team != wwc2,]
-      #   odds<-playoffWin(w1.1, wwc2, currentSeries[currentSeries$SeriesID == 5, ]$HomeWins,
-      #                    currentSeries[currentSeries$SeriesID == 5, ]$AwayWins, params = params)
-      #   series5<-sample(c(w1.1, wwc2), size = 1, prob = c(odds, 1-odds))
-      #   l5 <- ifelse(series5 == w1.1, wwc2, w1.1) #If winner = a, then b, else a
-      # } else {
-      #   w1.1<-wr[sample(1:nrow(wr), size = 1, prob = wr$p_rank1),]$Team
-      #   wr<-wr[wr$Team != w1.1,]
-      #   wwc2<-wr[sample(1:nrow(wr), size = 1, prob = wr$p_rank8),]$Team
-      #   wr<-wr[wr$Team != wwc2,]
-      #   series5 <- single_series_solver(series_number = 5, currentSeries = currentSeries, homeTeam = w1.1, awayTeam = wwc2, homeAwayOdds = homeAwayOdds)
-      #   l5 <- ifelse(series5 == w1.1, wwc2, w1.1) #If winner = a, then b, else a
-      # }
-      # p1div<-getTeamDivisions(w1.1)
-      #
-      # if('series6' %in% completedSeries$Series){
-      #   series6 <- completedSeries[completedSeries$Series == 'series6', ]$Winner
-      #   l6 <- completedSeries[completedSeries$Series == 'series6', ]$Loser
-      #   wr<-wr[wr$Team != series6,]
-      #   wr<-wr[wr$Team != l6,]
-      # } else if (6 %in% currentSeries$SeriesID) {
-      #   w1.2 <- currentSeries[currentSeries$SeriesID == 6, ]$HomeTeam
-      #   wr<-wr[wr$Team != w1.1,]
-      #   w1.3 <- currentSeries[currentSeries$SeriesID == 6, ]$AwayTeam
-      #   wr<-wr[wr$Team != w1.3,]
-      #   odds<-playoffWin(w1.2, w1.3, currentSeries[currentSeries$SeriesID == 6, ]$HomeWins,
-      #                    currentSeries[currentSeries$SeriesID == 6, ]$AwayWins, params = params)
-      #   series6<-sample(c(w1.2, w1.3), size = 1, prob = c(odds, 1-odds))
-      #   l6 <- ifelse(series6 == w1.2, w1.3, w1.2) #If winner = a, then b, else a
-      # } else {
-      #   w1.2<-wr[wr$Div == p1div,]$Team[sample(1:nrow(wr[wr$Div == p1div, ]), size = 1, prob = wr[wr$Div == p1div, ]$p_rank_34)]
-      #   wr<-wr[wr$Team != w1.2,]
-      #   w1.3<-wr[wr$Div == p1div,]$Team[sample(1:nrow(wr[wr$Div == p1div, ]), size = 1, prob = wr[wr$Div == p1div, ]$p_rank_56)]
-      #   wr<-wr[wr$Team != w1.3,]
-      #   series6 <- single_series_solver(series_number = 6, currentSeries = currentSeries, homeTeam = w1.2, awayTeam = w1.3, homeAwayOdds = homeAwayOdds)
-      #   l6 <- ifelse(series6 == w1.2, w1.3, w1.2) #If winner = a, then b, else a
-      # }
-      #
-      # if('series7' %in% completedSeries$Series){
-      #   series7 <- completedSeries[completedSeries$Series == 'series7', ]$Winner
-      #   l7 <- completedSeries[completedSeries$Series == 'series7', ]$Loser
-      #   wr<-wr[wr$Team != series7,]
-      #   wr<-wr[wr$Team != l7,]
-      # } else if (7 %in% currentSeries$SeriesID){
-      #   w2.1 <- currentSeries[currentSeries$SeriesID == 7, ]$HomeTeam
-      #   wr<-wr[wr$Team != w1.1,]
-      #   wwc1 <- currentSeries[currentSeries$SeriesID == 7, ]$AwayTeam
-      #   wr<-wr[wr$Team != wwc1,]
-      #   odds<-playoffWin(w2.1, wwc1, currentSeries[currentSeries$SeriesID == 7, ]$HomeWins,
-      #                    currentSeries[currentSeries$SeriesID == 7, ]$AwayWins, params = params)
-      #   series7<-sample(c(w2.1, wwc1), size = 1, prob = c(odds, 1-odds))
-      #   l7 <- ifelse(series7 == w2.1, wwc1, w2.1) #If winner = a, then b, else a
-      # } else {
-      #   w2.1<-wr[sample(1:nrow(wr), size = 1, prob = wr$p_rank2),]$Team
-      #   wr<-wr[wr$Team != w2.1,]
-      #   wwc1<-wr[sample(1:nrow(wr), size = 1, prob = wr$p_rank7),]$Team
-      #   wr<-wr[wr$Team != wwc1,]
-      #   series7 <- single_series_solver(series_number = 7, currentSeries = currentSeries, homeTeam = w2.1, awayTeam = wwc1, homeAwayOdds = homeAwayOdds)
-      #   l7 <- ifelse(series7 == w2.1, wwc1, w2.1) #If winner = a, then b, else a
-      # }
-      #
-      # if('series8' %in% completedSeries$Series){
-      #   series8 <- completedSeries[completedSeries$Series == 'series8', ]$Winner
-      #   l8 <- completedSeries[completedSeries$Series == 'series8', ]$Loser
-      #   wr<-wr[wr$Team != series8,]
-      #   wr<-wr[wr$Team != l8,]
-      # } else if (8 %in% currentSeries$SeriesID){
-      #   w2.2 <- currentSeries[currentSeries$SeriesID == 8, ]$HomeTeam
-      #   wr<-wr[wr$Team != w2.2,]
-      #   w2.3 <- currentSeries[currentSeries$SeriesID == 8, ]$AwayTeam
-      #   wr<-wr[wr$Team != w2.3,]
-      #   odds<-playoffWin(w2.2, w2.3, currentSeries[currentSeries$SeriesID == 8, ]$HomeWins,
-      #                    currentSeries[currentSeries$SeriesID == 8, ]$AwayWins, params = params)
-      #   series8<-sample(c(w2.2, w2.3), size = 1, prob = c(odds, 1-odds))
-      #   l8 <- ifelse(series8 == w2.2, w2.3, w2.2) #If winner = a, then b, else a
-      # } else {
-      #   w2.2<-wr[wr$Div != p1div,]$Team[sample(1:nrow(wr[wr$Div != p1div, ]), size = 1, prob = wr[wr$Div != p1div, ]$p_rank_34)]
-      #   wr<-wr[wr$Team != w2.2,]
-      #   w2.3<-wr[wr$Div != p1div,]$Team[sample(1:nrow(wr[wr$Div != p1div, ]), size = 1, prob = wr[wr$Div != p1div, ]$p_rank_56)]
-      #   wr<-wr[wr$Team != w2.3,]
-      #   series8 <- single_series_solver(series_number = 4, currentSeries = currentSeries, homeTeam = w2.2, awayTeam = w2.3, homeAwayOdds = homeAwayOdds)
-      #   l8 <- ifelse(series8 == w2.2, w2.3, w2.2) #If winner = a, then b, else a
-      # }
     }
 
     # No reseeding for round 2 (but in reality yeah there is, wildCard doesn't have home advantage)

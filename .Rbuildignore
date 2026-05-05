@@ -21,3 +21,5 @@ email.md
 ^\.positai$
 ^\.claude$
 20252026.csv
+^\.vscode$
+^cobertura.xml$

@@ -1,0 +1,55 @@
+http_interactions:
+- request:
+    method: GET
+    uri: https://lscluster.hockeytech.com/feed/index.php?feed=modulekit&view=brackets&season_id=3&key=446521baf8c38984&client_code=pwhl
+  response:
+    status: 200
+    headers:
+      Cache-Control: max-age=240
+      Content-Encoding: gzip
+      Content-Type: application/json; charset=utf-8
+      Date: Sun, 03 May 2026 02:00:03 GMT
+      Expires: Thu, 19 Nov 1981 08:52:00 GMT
+      Pragma: no-cache
+      Server: Apache/2.4.54 () PHP/8.2.30
+      Set-Cookie: PHPSESSID=u6s4j9a5us43lhb830316sgrv6; path=/
+      Vary: Accept-Encoding
+      X-Cache-Status: MISS
+      X-Powered-By: PHP/8.2.30
+      Content-Length: '1480'
+      Connection: keep-alive
+    body:
+      string: '{"SiteKit":{"Parameters":{"feed":"modulekit","view":"brackets","season_id":3,"key":"446521baf8c38984","client_code":"pwhl","league_id":"1"},"Brackets":{"teams":{"1":{"id":"1","city":"Boston","team_code":"BOS","name":"PWHL
+        Boston","division_long_name":"PWHL","division_short_name":"PWHL","conf_id":"1","logo":"https:\/\/assets.leaguestat.com\/pwhl\/logos\/1.png"},"2":{"id":"2","city":"Minnesota","team_code":"MIN","name":"PWHL
+        Minnesota","division_long_name":"PWHL","division_short_name":"PWHL","conf_id":"1","logo":"https:\/\/assets.leaguestat.com\/pwhl\/logos\/2.jpg"},"3":{"id":"3","city":"Montreal","team_code":"MTL","name":"PWHL
+        Montreal","division_long_name":"PWHL","division_short_name":"PWHL","conf_id":"1","logo":"https:\/\/assets.leaguestat.com\/pwhl\/logos\/3.png"},"4":{"id":"4","city":"New
+        York","team_code":"NY","name":"PWHL New York","division_long_name":"PWHL","division_short_name":"PWHL","conf_id":"1","logo":"https:\/\/assets.leaguestat.com\/pwhl\/logos\/4.png"},"5":{"id":"5","city":"Ottawa","team_code":"OTT","name":"PWHL
+        Ottawa","division_long_name":"PWHL","division_short_name":"PWHL","conf_id":"1","logo":"https:\/\/assets.leaguestat.com\/pwhl\/logos\/5.png"},"6":{"id":"6","city":"Toronto","team_code":"TOR","name":"PWHL
+        Toronto","division_long_name":"PWHL","division_short_name":"PWHL","conf_id":"1","logo":"https:\/\/assets.leaguestat.com\/pwhl\/logos\/6.png"},"7":{"id":"7","city":"TBD","team_code":"TBD","name":"TBD","division_long_name":"PWHL","division_short_name":"PWHL","conf_id":"1","logo":"https:\/\/lscluster.hockeytech.com\/download.php?file_path=img\/logos\/7.jpg&liaf=1&client_code=pwhl&w=40"}},"rounds":[{"round":"1","round_name":"Semi-Finals","season_id":"3","round_type_id":"1","round_type_name":"Regular
+        Playoff Series","matchups":[{"series_letter":"A","series_name":"Semi-Finals","series_logo":"","round":"1","active":"1","feeder_series1":"N\/A","feeder_series2":"N\/A","team1":"6","team2":"2","content_en":"","content_fr":"","winner":"","games":[{"game_id":"84","home_team":"6","home_goal_count":"4","visiting_team":"2","visiting_goal_count":"0","status":"4","game_status":"Final","date_time":"2024-05-08
+        19:00:00","GameDateISO8601":"2024-05-08T19:00:00-04:00","if_necessary":"0","game_notes":"","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"86","home_team":"6","home_goal_count":"2","visiting_team":"2","visiting_goal_count":"0","status":"4","game_status":"Final","date_time":"2024-05-10
+        19:00:00","GameDateISO8601":"2024-05-10T19:00:00-04:00","if_necessary":"0","game_notes":"","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"88","home_team":"2","home_goal_count":"2","visiting_team":"6","visiting_goal_count":"0","status":"4","game_status":"Final","date_time":"2024-05-13
+        20:00:00","GameDateISO8601":"2024-05-13T20:00:00-04:00","if_necessary":"0","game_notes":"","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"90","home_team":"2","home_goal_count":"1","visiting_team":"6","visiting_goal_count":"0","status":"4","game_status":"Final
+        OT2","date_time":"2024-05-15 20:00:00","GameDateISO8601":"2024-05-15T20:00:00-04:00","if_necessary":"0","game_notes":"","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"92","home_team":"6","home_goal_count":"1","visiting_team":"2","visiting_goal_count":"4","status":"4","game_status":"Final","date_time":"2024-05-17
+        19:00:00","GameDateISO8601":"2024-05-17T19:00:00-04:00","if_necessary":"0","game_notes":"Didn''t
+        have access to clock for the first 4 min of 2 nd period","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""}],"team1_wins":2,"team2_wins":3,"ties":0},{"series_letter":"B","series_name":"Semi-Finals","series_logo":"","round":"1","active":"1","feeder_series1":"N\/A","feeder_series2":"N\/A","team1":"3","team2":"1","content_en":"","content_fr":"","winner":"","games":[{"game_id":"85","home_team":"3","home_goal_count":"1","visiting_team":"1","visiting_goal_count":"2","status":"4","game_status":"Final
+        OT1","date_time":"2024-05-09 19:00:00","GameDateISO8601":"2024-05-09T19:00:00-04:00","if_necessary":"0","game_notes":"","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"87","home_team":"3","home_goal_count":"1","visiting_team":"1","visiting_goal_count":"2","status":"4","game_status":"Final
+        OT3","date_time":"2024-05-11 19:00:00","GameDateISO8601":"2024-05-11T19:00:00-04:00","if_necessary":"0","game_notes":"The
+        match penalty at 6:20 of OT1 is for checking to the head.","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"89","home_team":"1","home_goal_count":"3","visiting_team":"3","visiting_goal_count":"2","status":"4","game_status":"Final
+        OT1","date_time":"2024-05-14 19:00:00","GameDateISO8601":"2024-05-14T19:00:00-04:00","if_necessary":"0","game_notes":"Boston
+        goal at 16:17 of third period was a shorthanded goal","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""}],"team1_wins":0,"team2_wins":3,"ties":0}]},{"round":"2","round_name":"PWHL
+        Finals","season_id":"3","round_type_id":"1","round_type_name":"Regular Playoff
+        Series","matchups":[{"series_letter":"C","series_name":"PWHL Finals","series_logo":"","round":"2","active":"1","feeder_series1":"A","feeder_series2":"B","team1":"1","team2":"2","content_en":"","content_fr":"","winner":"","games":[{"game_id":"94","home_team":"1","home_goal_count":"4","visiting_team":"2","visiting_goal_count":"3","status":"4","game_status":"Final","date_time":"2024-05-19
+        17:00:00","GameDateISO8601":"2024-05-19T17:00:00-04:00","if_necessary":"0","game_notes":"Minnesota
+        time out with 1:35 remaining in third","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"95","home_team":"1","home_goal_count":"0","visiting_team":"2","visiting_goal_count":"3","status":"4","game_status":"Final","date_time":"2024-05-21
+        19:00:00","GameDateISO8601":"2024-05-21T19:00:00-04:00","if_necessary":"0","game_notes":"","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"96","home_team":"2","home_goal_count":"4","visiting_team":"1","visiting_goal_count":"1","status":"4","game_status":"Final","date_time":"2024-05-24
+        18:00:00","GameDateISO8601":"2024-05-24T18:00:00-05:00","if_necessary":"0","game_notes":"","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"97","home_team":"2","home_goal_count":"0","visiting_team":"1","visiting_goal_count":"1","status":"4","game_status":"Final
+        OT2","date_time":"2024-05-26 17:00:00","GameDateISO8601":"2024-05-26T17:00:00-05:00","if_necessary":"0","game_notes":"","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""},{"game_id":"98","home_team":"1","home_goal_count":"0","visiting_team":"2","visiting_goal_count":"3","status":"4","game_status":"Final","date_time":"2024-05-29
+        19:00:00","GameDateISO8601":"2024-05-29T19:00:00-04:00","if_necessary":"0","game_notes":"Boston
+        takes timeout with 2:24 left in the third period\nMinnesota goal with 2:06
+        left in third period was an Empty Net goal \nMinnesota 3rd Goal, #23 passed
+        the puck and then got off. She gets an assist and not a +.","flo_hockey_url":"","flo_core_event_id":"","flo_live_event_id":""}],"team1_wins":2,"team2_wins":3,"ties":0}]}],"logo":"https:\/\/lscluster.hockeytech.com\/download.php?file_path=img\/playoffs_3.jpg&client_code=pwhl","show_ties":false},"Copyright":{"required_copyright":"Official
+        statistics provided by Professional Women''s Hockey League","required_link":"http:\/\/leaguestat.com","powered_by":"Powered
+        by HockeyTech.com","powered_by_url":"http:\/\/hockeytech.com"}}}'
+  recorded_at: 2026-05-03 02:00:03
+recorded_with: VCR-vcr/2.1.0

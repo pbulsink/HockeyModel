@@ -2,27 +2,17 @@
 % Please edit documentation in R/pwhl-api-interface.R
 \name{getPWHLPlayoffSeries}
 \alias{getPWHLPlayoffSeries}
-\title{Get active PWHL playoff series}
+\title{Get active PWHL playoff series from API}
 \usage{
-getPWHLPlayoffSeries(
-  scores = HockeyModel::pwhlScores,
-  schedule = HockeyModel::pwhlSchedule
-)
+getPWHLPlayoffSeries(season_id = NULL)
 }
 \arguments{
-\item{scores}{(\code{data.frame}) PWHL scores. Defaults to
-\link{pwhlScores}.}
-
-\item{schedule}{(\code{data.frame}) PWHL schedule. Defaults to
-\link{pwhlSchedule}.}
+\item{season_id}{(integer) PWHL season ID. Defaults to latest season.}
 }
 \value{
-A data frame with columns \code{HomeTeam}, \code{AwayTeam}, \code{HomeWins},
-\code{AwayWins}, and \code{Status} (\code{"Ongoing"} or \code{"Complete"}), or \code{NULL} if
-there are no playoff games.
+A data frame with columns \code{HomeTeam}, \code{AwayTeam}, \code{HomeWins}, \code{AwayWins}, and \code{Status} ("Ongoing" or "Complete"), or \code{NULL} if no playoff series found.
 }
 \description{
-Derives ongoing playoff series from PWHL scores and schedule.
-Returns a data frame compatible with \code{\link[=series_odds_table]{series_odds_table()}} and
-\code{\link[=plot_playoff_series_odds]{plot_playoff_series_odds()}}.
+Fetches ongoing playoff series from the PWHL HockeyTech API brackets endpoint.
+Returns a data frame compatible with \code{\link[=series_odds_table]{series_odds_table()}} and \code{\link[=plot_playoff_series_odds]{plot_playoff_series_odds()}}.
 }

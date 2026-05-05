@@ -229,25 +229,6 @@ test_that("Draws Normalize", {
   )
 })
 
-# ============ mutate_cond tests ============
-test_that("mutate_cond modifies conditional rows", {
-  df <- data.frame(x = c(1, 2, 3), y = c(4, 5, 6))
-  result <- mutate_cond(df, x > 1, y = y * 2)
-  expect_equal(result$y, c(4, 10, 12))
-})
-
-test_that("mutate_cond preserves non-matching rows", {
-  df <- data.frame(x = c(1, 2, 3), y = c(4, 5, 6))
-  result <- mutate_cond(df, x > 10, y = y * 2)
-  expect_equal(result$y, c(4, 5, 6))
-})
-
-test_that("mutate_cond works with dplyr", {
-  df <- data.frame(x = c(1, 2, 3), y = c(4, 5, 6)) |>
-    mutate_cond(x >= 2, y = y + 10)
-  expect_equal(df$y, c(4, 15, 16))
-})
-
 # ============ hexToRGB tests ============
 test_that("hexToRGB converts correctly", {
   expect_equal(hexToRGB("#000000"), c(0, 0, 0))

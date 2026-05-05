@@ -21,7 +21,7 @@ pwhl_add_result <- function(scores) {
     scores$HomeGoals < scores$AwayGoals & scores$OTStatus == "SO" ~ 0.4,
     scores$HomeGoals < scores$AwayGoals & scores$OTStatus == "OT" ~ 0.25,
     scores$HomeGoals < scores$AwayGoals & scores$OTStatus == "" ~ 0,
-    TRUE ~ NA_real_
+    TRUE ~ 0.5 # Somehow a tie?
   )
   scores
 }
@@ -607,7 +607,7 @@ dailyPWHLSummary <- function(
 
   # ── Playoff series ──────────────────────────────────────────────────────────
   series <- tryCatch(
-    getPWHLPlayoffSeries(scores = scores, schedule = schedule),
+    getPWHLPlayoffSeries(),
     error = function(e) NULL
   )
   if (!is.null(series) && nrow(series) > 0) {

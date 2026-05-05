@@ -42,12 +42,12 @@ DC_NU_NHL <- 0
 #' Default PWHL Dixon-Coles sigmoid time-decay slope
 #'
 #' @keywords internal
-DC_XI_PWHL <- 0.00426
+DC_XI_PWHL <- 0.0500
 
 #' Default PWHL Dixon-Coles sigmoid time-decay midpoint
 #'
 #' @keywords internal
-DC_UPSILON_PWHL <- 365
+DC_UPSILON_PWHL <- 461.0156
 
 #' Default PWHL Dixon-Coles cross-season discounting exponent
 #'
@@ -55,4 +55,4 @@ DC_UPSILON_PWHL <- 365
 #' the high year-to-year roster volatility from expansion drafts.  Tune with
 #' `tune_dc_weight(league = "PWHL")`.
 #' @keywords internal
-DC_NU_PWHL <- 2
+DC_NU_PWHL <- 5

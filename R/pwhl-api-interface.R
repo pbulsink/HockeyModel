@@ -77,8 +77,8 @@ getCurrentPWHLSeason <- function() {
     return(NULL)
   }
 
-  # Use only regular (non-playoff, career-counting) seasons
-  reg <- seasons[seasons$career == 1 & seasons$playoff == 0, ]
+  # Use only regular or playoff seasons
+  reg <- seasons[seasons$career == 1, ]
   if (nrow(reg) == 0) {
     return(NULL)
   }
@@ -156,14 +156,14 @@ getPWHLSchedule <- function(
 
   sched <- data.frame(
     Date = as.Date(games$date_played),
-    HomeTeam = pwhl_get_long_team(games$home_team$code, pwhlTeamColours),
-    AwayTeam = pwhl_get_long_team(games$visiting_team$code, pwhlTeamColours),
+    HomeTeam = getLongTeam(games$home_team_code, pwhlTeamColours),
+    AwayTeam = getLongTeam(games$visiting_team_code, pwhlTeamColours),
     GameID = as.integer(games$id),
     GameType = game_type,
     GameStatus = ifelse(
-      games$game_status == "4",
+      games$status == "4",
       "Final",
-      ifelse(games$game_status == "1", "Scheduled", games$game_status)
+      ifelse(games$status == "1", "Scheduled", games$game_status)
     ),
     stringsAsFactors = FALSE
   )
@@ -236,33 +236,32 @@ getPWHLScores <- function(
 }
 
 
-#' Resolve a PWHL team name from API city and nickname fields
+#' Resolve a PWHL team name from PWHLID
 #'
-#' @description Constructs a canonical team name from the city and nickname
-#'   fields returned by the HockeyTech game-summary API. First attempts an
-#'   ASCII-normalised lookup against `pwhlTeamColours`; falls back to
-#'   `"<city> <nickname>"` if no match is found.
+#' @description Determines the PWHL Team Name given the PWHLID from API calls
 #'
-#' @param city (`character(1)`) City field from the API (e.g. `"Montr\u00e9al"`).
-#' @param nickname (`character(1)`) Nickname field from the API
-#'   (e.g. `"Victoire"`).
-#' @param pwhlTeamColours (`data.frame`) PWHL team metadata table.
+#' @param pwhlID the numeric pwhlID
+#' @param pwhlTeamColours Built-in PWHL Team Colours data
 #' @returns (`character(1)`) Canonical team name.
 #' @keywords internal
 pwhl_resolve_team_name <- function(
-  city,
-  nickname,
+  pwhlID,
   pwhlTeamColours = HockeyModel::pwhlTeamColours
 ) {
-  candidate <- paste(city, nickname)
-  # Normalise accents before lookup (e.g. "Montr\u00e9al" -> "Montreal")
-  candidate_ascii <- stringi::stri_trans_general(candidate, "latin-ascii")
-  teams_ascii <- stringi::stri_trans_general(
-    pwhlTeamColours$Team,
-    "latin-ascii"
-  )
-  idx <- match(candidate_ascii, teams_ascii)
-  if (!is.na(idx)) pwhlTeamColours$Team[idx] else candidate
+  getteamname <- function(t) {
+    if (t %in% pwhlTeamColours$PWHLID) {
+      return(pwhlTeamColours[pwhlTeamColours$PWHLID == t, ]$Team)
+    } else {
+      return(NA_character_)
+    }
+  }
+
+  v_getteamname <- Vectorize(getteamname, "t")
+  if (length(pwhlID) == 1) {
+    return(getteamname(t = pwhlID))
+  } else {
+    return(unname(v_getteamname(t = pwhlID)))
+  }
 }
 
 
@@ -300,45 +299,27 @@ pwhl_game_summary <- function(gid) {
     return(NULL)
   }
 
-  scoring <- gs$scoring
-  home_goals <- if (!is.null(scoring)) {
-    sum(as.integer(scoring$home[!is.na(scoring$home)]))
-  } else {
-    as.integer(meta$homeGoals)
-  }
-  away_goals <- if (!is.null(scoring)) {
-    sum(as.integer(scoring$visitor[!is.na(scoring$visitor)]))
-  } else {
-    as.integer(meta$visitingGoals)
-  }
+  home_goals <- gs$goalCount$home
+  away_goals <- gs$goalCount$visitor
 
-  n_periods <- if (!is.null(scoring)) nrow(scoring) else 3L
+  n_periods <- meta$period
   ot_status <- if (n_periods == 3L) {
     ""
   } else if (n_periods == 4L) {
     # Check for shootout
-    shootout <- gs$shootout
+    shootout <- gs$shootoutDetail
     if (!is.null(shootout) && length(shootout) > 0) "SO" else "OT"
   } else {
     "OT"
   }
 
-  home_team <- pwhl_resolve_team_name(
-    meta$HomeCity,
-    meta$HomeNickname,
-    HockeyModel::pwhlTeamColours
-  )
-  away_team <- pwhl_resolve_team_name(
-    meta$VisitorCity,
-    meta$VisitorNickname,
-    HockeyModel::pwhlTeamColours
-  )
+  home_team <- getLongTeam(gs$home$team_code, HockeyModel::pwhlTeamColours)
+  away_team <- getLongTeam(gs$visitor$team_code, HockeyModel::pwhlTeamColours)
 
-  game_type <- ifelse(
-    !is.null(meta$playoff) && meta$playoff == "1",
-    "P",
-    "R"
-  )
+  sched <- HockeyModel::pwhlSchedule
+  gt <- sched[sched$GameID == gid, ]$GameType
+
+  game_type <- ifelse(length(gt) == 1, gt, "")
 
   data.frame(
     Date = as.Date(meta$date_played),
@@ -478,124 +459,60 @@ updatePWHLScoresAPI <- function(
 }
 
 
-#' Convert PWHL short team codes to full team names
+#' Get active PWHL playoff series from API
 #'
-#' @param codes (`character`) PWHL team short code(s).
-#' @param pwhlTeamColours (`data.frame`) PWHL team metadata table.
-#' @returns (`character`) Full team name(s).
-#' @keywords internal
-pwhl_get_long_team <- function(
-  codes,
-  pwhlTeamColours = HockeyModel::pwhlTeamColours
-) {
-  get_one <- function(code) {
-    row <- pwhlTeamColours[pwhlTeamColours$ShortCode == code, ]
-    if (nrow(row) == 0) {
-      return(NA_character_)
-    }
-    row$Team
-  }
-  vapply(codes, get_one, character(1L), USE.NAMES = FALSE)
-}
-
-
-#' Convert PWHL full team names to short codes
-#'
-#' @param teams (`character`) Full PWHL team name(s).
-#' @param pwhlTeamColours (`data.frame`) PWHL team metadata table.
-#' @returns (`character`) Short team code(s).
-#' @keywords internal
-pwhl_get_short_team <- function(
-  teams,
-  pwhlTeamColours = HockeyModel::pwhlTeamColours
-) {
-  get_one <- function(team) {
-    row <- pwhlTeamColours[pwhlTeamColours$Team == team, ]
-    if (nrow(row) == 0) {
-      return(NA_character_)
-    }
-    row$ShortCode
-  }
-  vapply(teams, get_one, character(1L), USE.NAMES = FALSE)
-}
-
-
-#' Get active PWHL playoff series
-#'
-#' @description Derives ongoing playoff series from PWHL scores and schedule.
-#'   Returns a data frame compatible with [series_odds_table()] and
-#'   [plot_playoff_series_odds()].
-#'
-#' @param scores (`data.frame`) PWHL scores. Defaults to
-#'   [HockeyModel::pwhlScores].
-#' @param schedule (`data.frame`) PWHL schedule. Defaults to
-#'   [HockeyModel::pwhlSchedule].
-#'
-#' @returns A data frame with columns `HomeTeam`, `AwayTeam`, `HomeWins`,
-#'   `AwayWins`, and `Status` (`"Ongoing"` or `"Complete"`), or `NULL` if
-#'   there are no playoff games.
+#' @description Fetches ongoing playoff series from the PWHL HockeyTech API brackets endpoint.
+#'   Returns a data frame compatible with [series_odds_table()] and [plot_playoff_series_odds()].
+#' @param season_id (integer) PWHL season ID. Defaults to latest season.
+#' @returns A data frame with columns `HomeTeam`, `AwayTeam`, `HomeWins`, `AwayWins`, and `Status` ("Ongoing" or "Complete"), or `NULL` if no playoff series found.
 #' @export
-getPWHLPlayoffSeries <- function(
-  scores = HockeyModel::pwhlScores,
-  schedule = HockeyModel::pwhlSchedule
-) {
-  playoff_schedule <- schedule[schedule$GameType == "P", ]
-  if (nrow(playoff_schedule) == 0) {
+getPWHLPlayoffSeries <- function(season_id = NULL) {
+  # Get latest season if not provided
+  if (is.null(season_id)) {
+    seasons <- getPWHLSeasons()
+    season_id <- max(seasons$id[seasons$playoff == 1], na.rm = TRUE)
+  }
+
+  # Build API request for brackets
+  resp <- tryCatch(
+    pwhl_api_request(list(
+      feed = "modulekit",
+      view = "brackets",
+      season_id = season_id
+    )) |>
+      httr2::req_perform() |>
+      httr2::resp_body_string() |>
+      jsonlite::fromJSON(),
+    error = function(e) return(NULL)
+  )
+  if (is.null(resp) || is.null(resp$SiteKit$Brackets)) {
     return(NULL)
   }
 
-  playoff_scores <- scores[scores$GameType == "P", ]
+  # Parse series info
+  matchups <- resp$SiteKit$Brackets$rounds$matchups
+  if (length(matchups) == 0) {
+    return(NULL)
+  }
 
-  # Group games by unordered team pair so each series appears only once
-  series_keys <- apply(
-    playoff_schedule[, c("HomeTeam", "AwayTeam"), drop = FALSE],
-    1,
-    function(teams) paste(sort(teams), collapse = "|||")
+  nmatchups <- length(matchups[[1]]$series_letter)
+
+  # Flatten all rounds/series
+  series_list <- data.frame(
+    HomeTeam = pwhl_resolve_team_name(matchups[[1]]$team1),
+    AwayTeam = pwhl_resolve_team_name(matchups[[1]]$team2),
+    HomeWins = as.integer(matchups[[1]]$team1_wins),
+    AwayWins = as.integer(matchups[[1]]$team2_wins)
   )
-  unique_series_keys <- unique(series_keys)
-
-  result <- purrr::map_dfr(unique_series_keys, function(series_key) {
-    series_schedule <- playoff_schedule[
-      series_keys == series_key,
-      ,
-      drop = FALSE
-    ]
-
-    # Home-ice advantage belongs to the team that plays the first home game
-    series_schedule_ordered <- series_schedule[order(series_schedule$Date), ]
-    home <- series_schedule_ordered$HomeTeam[1]
-    away <- series_schedule_ordered$AwayTeam[1]
-
-    played <- playoff_scores[
-      (playoff_scores$HomeTeam == home & playoff_scores$AwayTeam == away) |
-        (playoff_scores$HomeTeam == away & playoff_scores$AwayTeam == home),
-    ]
-
-    home_wins <- sum(
-      (played$HomeTeam == home & played$HomeGoals > played$AwayGoals) |
-        (played$AwayTeam == home & played$AwayGoals > played$HomeGoals),
-      na.rm = TRUE
-    )
-    away_wins <- sum(
-      (played$HomeTeam == away & played$HomeGoals > played$AwayGoals) |
-        (played$AwayTeam == away & played$AwayGoals > played$HomeGoals),
-      na.rm = TRUE
-    )
-
-    # Best-of-5: series is complete when either team reaches 3 wins
-    status <- if (home_wins >= 3 || away_wins >= 3) "Complete" else "Ongoing"
-
-    data.frame(
-      HomeTeam = home,
-      AwayTeam = away,
-      HomeWins = home_wins,
-      AwayWins = away_wins,
-      Status = status,
-      stringsAsFactors = FALSE
-    )
-  })
-
-  result
+  if (nrow(series_list) == 0) {
+    return(NULL)
+  }
+  series_list$Status <- ifelse(
+    (series_list$HomeWins >= 3 | series_list$AwayWins >= 3),
+    "Complete",
+    "Ongoing"
+  )
+  series_list
 }
 
 

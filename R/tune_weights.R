@@ -23,7 +23,8 @@
 #'     fn  = function(p) tune_dc_weight(p[1], p[2], p[3], league = "PWHL"),
 #'     method = "L-BFGS-B",
 #'     lower  = c(1e-4, 30,  0),
-#'     upper  = c(0.05, 730, 5)
+#'     upper  = c(0.05, 730, 5),
+#'     control = list(parscale = c(0.01, 10000, 10))
 #'   )
 #'   ```
 #'
@@ -139,7 +140,7 @@ tune_dc_weight <- function(
     return(sch[, c("GameID", "HomeWin", "AwayWin")])
   }
 
-  cl <- parallel::makeCluster(4)
+  cl <- parallel::makeCluster(parseCores(4))
   on.exit(parallel::stopCluster(cl), add = TRUE)
   doSNOW::registerDoSNOW(cl)
   `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK

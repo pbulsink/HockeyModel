@@ -48,7 +48,8 @@ optim(
   fn  = function(p) tune_dc_weight(p[1], p[2], p[3], league = "PWHL"),
   method = "L-BFGS-B",
   lower  = c(1e-4, 30,  0),
-  upper  = c(0.05, 730, 5)
+  upper  = c(0.05, 730, 5),
+  control = list(parscale = c(0.01, 10000, 10))
 )
 }\if{html}{\out{</div>}}
 }
