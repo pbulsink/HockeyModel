@@ -48,3 +48,4 @@ tests/testthat/_problems/
 20252026.csv
 .vscode/tasks.json
 cobertura.xml
+tests/testthat/*.csv

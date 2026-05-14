@@ -9,6 +9,17 @@ test_that("Team Strength Plot Graphics Produce", {
 
 test_that("Points Predictions by Team Graphics Produce", {
   skip_if_not_installed("ggforce")
+  if (!requireNamespace('ggforce')) {
+    expect_error(
+      suppressWarnings(plot_prediction_points_by_team(
+        all_predictions = HockeyModel::example_predictions,
+        past_days = Sys.Date() - as.Date("2021-01-12")
+      )),
+      "Package ggforce is required"
+    )
+    skip("No `ggforce` package.")
+  }
+
   # Using the example predictions file, past 'n' days is today - 2021-01-12 (the first day of predictions)
   p <- suppressWarnings(plot_prediction_points_by_team(
     all_predictions = HockeyModel::example_predictions,
@@ -48,7 +59,18 @@ test_that("Playoffs Predictions by Team Graphics Produce", {
 })
 
 test_that("Presidents Predictions by Team Graphics Produce", {
-  skip_if_not_installed("ggforce")
+  if (!requireNamespace('ggforce')) {
+    expect_error(
+      suppressWarnings(plot_prediction_presidents_by_team(
+        all_predictions = HockeyModel::example_predictions,
+        past_days = Sys.Date() - as.Date("2021-01-12"),
+        minimum = 0.01
+      )),
+      "Package ggforce is required"
+    )
+    skip("No `ggforce` package.")
+  }
+
   # Using the example predictions file, past 'n' days is today - 2021-01-12 (the first day of predictions)
   p <- suppressWarnings(plot_prediction_presidents_by_team(
     all_predictions = HockeyModel::example_predictions,
@@ -69,13 +91,24 @@ test_that("Presidents Predictions by Team Graphics Produce", {
 })
 
 test_that("Presidents predictions keep a PWHL facet", {
-  skip_if_not_installed("ggforce")
-
   all_predictions <- tibble::tibble(
     predictionDate = as.Date(c("2025-01-14", "2025-01-15")),
     Team = c("Boston Fleet", "Boston Fleet"),
     Presidents = c(0.15, 0.2)
   )
+
+  if (!requireNamespace('ggforce')) {
+    expect_error(
+      suppressWarnings(plot_prediction_presidents_by_team(
+        all_predictions = all_predictions,
+        past_days = 14,
+        minimum = 0.01,
+        teamColours = HockeyModel::pwhlTeamColours
+      )),
+      "Package ggforce is required"
+    )
+    skip("No `ggridges` package.")
+  }
 
   p <- plot_prediction_presidents_by_team(
     all_predictions = all_predictions,
@@ -104,6 +137,7 @@ test_that("Today Odds plot OK", {
     getCurrentSeason8 = function() "20192020",
     .package = "HockeyModel"
   )
+
   p <- suppressWarnings(plot_odds_today(today = as.Date("2019-11-01")))
   expect_true(is.null(p) || ggplot2::is_ggplot(p))
   if (is.null(p)) {
@@ -113,6 +147,13 @@ test_that("Today Odds plot OK", {
   expect_identical(p$labels$y, "Result Odds")
   expect_identical(p$labels$x, "")
 
+  if (!requireNamespace('gt')) {
+    expect_error(
+      suppressWarnings(daily_odds_table(today = as.Date("2019-11-01"))),
+      "Package gt is required"
+    )
+    skip("No `gt` package.")
+  }
   p <- suppressWarnings(daily_odds_table(today = as.Date("2019-11-01")))
   expect_true("gt_tbl" %in% class(p))
   expect_identical(p$`_heading`$title, "NHL Game Odds")
@@ -128,6 +169,14 @@ test_that("Single Game xG plot OK", {
 
 test_that("Predicted Points plot OK", {
   preds <- HockeyModel::example_raw_predictions
+
+  if (!requireNamespace('ggridges')) {
+    expect_error(
+      suppressWarnings(plot_point_likelihood(preds = preds, savefiles = FALSE)),
+      "Package ggridges is required"
+    )
+    skip("No `ggridges` package.")
+  }
   p <- suppressWarnings(plot_point_likelihood(preds = preds, savefiles = FALSE))
   for (i in seq_along(length(p))) {
     expect_true(ggplot2::is_ggplot(p[[i]]))
@@ -173,6 +222,10 @@ test_that("Series Odds Table is ok", {
     HomeWins = c(0, 3, 3),
     AwayWins = c(4, 3, 2)
   )
+  if (!requireNamespace('gt')) {
+    expect_error(series_odds_table(series = series), "Package gt is required")
+    skip("No `gt` package.")
+  }
   t <- suppressWarnings(series_odds_table(series = series))
   expect_true("gt_tbl" %in% class(t))
   expect_equal(t$`_heading`$title, "NHL Playoff Series Odds")
@@ -439,6 +492,10 @@ test_that("Playoff Table is ok", {
     class = "data.frame"
   )
 
+  if(!requireNamespace('gt')) {
+    expect_error(format_playoff_odds(po), "Package gt is required")
+    skip("No `gt` package.")
+  }
   p <- format_playoff_odds(po)
   expect_true("gt_tbl" %in% class(p))
   expect_equal(p$`_heading`$title, " NHL Playoff Odds")

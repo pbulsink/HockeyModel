@@ -189,6 +189,10 @@ test_that("plot_playoff_series_odds executes gracefully", {
 
 # ============ plot_prediction_playoffs_by_team tests ============
 test_that("plot_prediction_playoffs_by_team executes gracefully", {
+  if(!requireNamespace('ggforce')){
+    expect_error(plot_prediction_playoffs_by_team(all_predictions = example_predictions), "Package ggforce is required")
+    skip("No `ggforce` package.")
+  }
   p <- plot_prediction_playoffs_by_team(all_predictions = example_predictions)
   expect_true(ggplot2::is_ggplot(p))
 })

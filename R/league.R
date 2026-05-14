@@ -1077,6 +1077,12 @@ simulatePlayoffs <- function(
     }
   }
 
+  if (cores > 1 & !requireNamespace('doSNOW', quietly = TRUE)) {
+    cli::cli_warn(
+      "Warning: package {.pkg doSNOW} not installed. Reverting to single-core processing."
+    )
+    cores <- 1
+  }
   if (cores > 1) {
     cl <- parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)

@@ -33,6 +33,13 @@ test_that("Playoff Sim finishes OK", {
   expect_equal(sum(playoffResults$Win_Conference), 2)
   expect_equal(sum(playoffResults$Win_Cup), 1)
 
+  if(!requireNamespace('doSNOW')){
+    expect_warning(simulatePlayoffs(
+    summary_results = summary_results,
+    nsims = 4,
+    cores = 2
+  ), "Reverting to single-core processing")
+  }
   playoffResults <- simulatePlayoffs(
     summary_results = summary_results,
     nsims = 4,
