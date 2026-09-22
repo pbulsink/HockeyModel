@@ -4,10 +4,18 @@
 \alias{load_or_get_nst}
 \title{Load or download a Natural Stat Trick game report}
 \usage{
-load_or_get_nst(gid)
+load_or_get_nst(
+  gid,
+  cache_path = getOption("HockeyModel.nst.cache.path", "~/Documents/natstattrick.csv")
+)
 }
 \arguments{
 \item{gid}{(\code{character(1)} or \code{numeric(1)}) NHL game ID in ten-digit format.}
+
+\item{cache_path}{(\code{character(1)}) Path to the local Natural Stat Trick
+report cache CSV. Defaults to the \code{HockeyModel.nst.cache.path} option,
+falling back to \verb{~/Documents/natstattrick.csv} if unset. Exposed as a
+parameter so tests can point it at a temporary file.}
 }
 \value{
 (\code{data.frame}) Natural Stat Trick report rows for \code{gid}.

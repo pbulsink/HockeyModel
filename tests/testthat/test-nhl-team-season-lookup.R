@@ -30,3 +30,29 @@ test_that("SeasonID gets seasons ok", {
     }
   })
 })
+
+test_that("getSeasonStartDate returns dates", {
+  vcr::use_cassette("season-start-date", {
+    start <- getSeasonStartDate(season = "20182019")
+    expect_s3_class(start, "Date")
+    expect_equal(start, as.Date("2018-10-03"))
+
+    latest <- getSeasonStartDate()
+    expect_s3_class(latest, "Date")
+  })
+
+  vcr::use_cassette("season-start-date", {
+    expect_error(getSeasonStartDate(season = "not-a-season"))
+  })
+})
+
+test_that("getNumGames returns a game count", {
+  vcr::use_cassette("num-games", {
+    n <- getNumGames(season = "20182019")
+    expect_true(is.numeric(n))
+    expect_length(n, 1)
+    expect_true(n > 0)
+  })
+
+  expect_error(getNumGames(season = "not-a-season"))
+})

@@ -90,6 +90,23 @@ test_that("get_xg() uses component parser results", {
   expect_equal(xg$AwayxG[[1]], 1.8)
 })
 
+test_that("load_or_get_nst() fetches and caches a Natural Stat Trick report", {
+  cache_file <- withr::local_tempfile(fileext = ".csv")
+
+  vcr::use_cassette("nst-report", {
+    nst <- load_or_get_nst(2020020001, cache_path = cache_file)
+  })
+
+  expect_s3_class(nst, "data.frame")
+  expect_setequal(nst$h_a, c("home", "away"))
+  expect_true(all(c("xgf_all", "gf_all", "cf_all") %in% colnames(nst)))
+  # Result should now be served from the cache file, not the network.
+  expect_true(file.exists(cache_file))
+
+  nst_cached <- load_or_get_nst(2020020001, cache_path = cache_file)
+  expect_equal(nst_cached$xgf_all, nst$xgf_all)
+})
+
 test_that("games_today returns NULL or data frame", {
   sched <- HockeyModel::scores
   sched <- sched[sched$Date > as.Date("2019-10-01"), ]

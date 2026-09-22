@@ -289,9 +289,19 @@ getNHLScores <- function(
 #' Load or download a Natural Stat Trick game report
 #'
 #' @param gid (`character(1)` or `numeric(1)`) NHL game ID in ten-digit format.
+#' @param cache_path (`character(1)`) Path to the local Natural Stat Trick
+#'   report cache CSV. Defaults to the `HockeyModel.nst.cache.path` option,
+#'   falling back to `~/Documents/natstattrick.csv` if unset. Exposed as a
+#'   parameter so tests can point it at a temporary file.
 #' @returns (`data.frame`) Natural Stat Trick report rows for `gid`.
 #' @keywords internal
-load_or_get_nst <- function(gid) {
+load_or_get_nst <- function(
+  gid,
+  cache_path = getOption(
+    "HockeyModel.nst.cache.path",
+    "~/Documents/natstattrick.csv"
+  )
+) {
   season <- as.numeric(substr(gid, 1, 4))
   game_id <- as.numeric(substr(gid, 5, 10))
 
@@ -299,14 +309,15 @@ load_or_get_nst <- function(gid) {
   season <- as.numeric(season)
 
   if (
-    system2(
-      "grep",
-      paste0('-l "', gid, '" ', "~/Documents/natstattrick.csv"),
-      stdout = FALSE
-    ) ==
-      0
+    file.exists(cache_path) &&
+      system2(
+        "grep",
+        paste0('-l "', gid, '" ', cache_path),
+        stdout = FALSE
+      ) ==
+        0
   ) {
-    nstall <- utils::read.csv("~/Documents/natstattrick.csv")
+    nstall <- utils::read.csv(cache_path)
     nstdf <- nstall |>
       dplyr::filter(.data$game_id == gid)
   } else {
@@ -316,14 +327,29 @@ load_or_get_nst <- function(gid) {
     )
     nstdf <- nstdf |>
       dplyr::mutate("game_id" = gid)
-    utils::write.table(
-      nstdf,
-      file = "~/Documents/natstattrick.csv",
-      append = TRUE,
-      row.names = FALSE,
-      col.names = FALSE,
-      sep = ","
-    )
+    # write.table() warns whenever append=TRUE and col.names=TRUE, even if
+    # the file doesn't exist yet, so the header row is written separately
+    # on first use rather than via append.
+    is_new_cache <- !file.exists(cache_path) || file.size(cache_path) == 0
+    if (is_new_cache) {
+      utils::write.table(
+        nstdf,
+        file = cache_path,
+        append = FALSE,
+        row.names = FALSE,
+        col.names = TRUE,
+        sep = ","
+      )
+    } else {
+      utils::write.table(
+        nstdf,
+        file = cache_path,
+        append = TRUE,
+        row.names = FALSE,
+        col.names = FALSE,
+        sep = ","
+      )
+    }
   }
   closeAllConnections()
 
