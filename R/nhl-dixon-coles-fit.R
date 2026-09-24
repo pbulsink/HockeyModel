@@ -88,23 +88,30 @@ getRho <- function(m = HockeyModel::m, scores = HockeyModel::scores) {
   weights <- m$data$Weight[seq_len(nrow(scores))]
 
   DCoptimRhoFn.fast <- function(par) {
-    rho <- par[1]
-    DCRhoLogLik(
+    -DCRhoLogLik(
       y1 = scores$HomeGoals,
       y2 = scores$AwayGoals,
       mu = home.expected,
       lambda = away.expected,
-      rho = rho,
+      rho = par,
       weights = weights
     )
   }
 
   res <- stats::optim(
-    par = c(-0.1),
+    par = 0,
     fn = DCoptimRhoFn.fast,
-    # control = list(fnscale = -1),
-    method = "BFGS"
+    method = "Brent",
+    lower = -0.5,
+    upper = 0.5
   )
+
+  if (res$convergence != 0) {
+    warning(
+      "Rho estimation did not converge. Parameter estimates are unreliable."
+    )
+  }
+
   return(res$par)
 
   # of course, res$par is rho. Ranges from -0.2779 for last decade, -0.175 for 20152016 or 0.09 fo the whole league's history

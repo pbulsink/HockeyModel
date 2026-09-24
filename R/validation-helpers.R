@@ -38,6 +38,67 @@ normalizeOdds <- function(odds) {
 }
 
 
+#' Validate a Dixon-Coles probability matrix or result-probability vector
+#'
+#' @description Checks that all entries are finite, within tolerance of
+#'   `[0, 1]`, and sum to 1 (within tolerance). Small negative/over-1 values
+#'   are clamped silently -- these arise both from floating point error and
+#'   from the Dixon-Coles tau adjustment itself, which can push a boundary
+#'   cell (e.g. 0-0/1-0 goals) slightly negative for some `rho`/lambda/mu
+#'   combinations (see Dixon & Coles 1997). Larger violations raise an error
+#'   since they indicate a modeling bug (e.g. a mis-normalized matrix) rather
+#'   than an expected small artifact.
+#'
+#' @param x (`numeric`) A probability matrix or vector, expected to sum to 1.
+#' @param tol (`double(1)`) Tolerance for the sum-to-1 check.
+#' @param clamp_tol (`double(1)`) Magnitude of out-of-range values that are
+#'   silently clamped into `[0, 1]` rather than raising an error.
+#' @param context (`character(1)`) Label used in error messages to identify
+#'   the caller.
+#' @returns `x`, with any within-tolerance out-of-range values clamped into
+#'   `[0, 1]`.
+#' @keywords internal
+validateProbMatrix <- function(
+  x,
+  tol = 1e-6,
+  clamp_tol = 1e-3,
+  context = "probability"
+) {
+  if (any(!is.finite(x))) {
+    stop(context, ": contains non-finite values (NA/NaN/Inf).")
+  }
+
+  out_of_range <- x < -clamp_tol | x > 1 + clamp_tol
+  if (any(out_of_range)) {
+    stop(
+      context,
+      ": contains invalid probabilities outside [0, 1] (min=",
+      signif(min(x), 4),
+      ", max=",
+      signif(max(x), 4),
+      ")."
+    )
+  }
+  # Clamp small negative/over-1 values (floating point noise, or the known
+  # small negative artifacts from the tau adjustment) into range.
+  x[x < 0] <- 0
+  x[x > 1] <- 1
+
+  total <- sum(x)
+  if (abs(total - 1) > max(tol, clamp_tol)) {
+    stop(
+      context,
+      ": probabilities sum to ",
+      signif(total, 8),
+      ", expected 1."
+    )
+  }
+  # Renormalize after clamping so the returned probabilities sum to exactly 1;
+  # clamping alone (without this) can leave the sum off by up to `clamp_tol`.
+  x / total
+}
+
+
 #' Get Historical Points for all teams listed in a scores frame
 #'
 #' @param sc scores frame

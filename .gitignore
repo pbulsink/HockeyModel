@@ -49,3 +49,4 @@ tests/testthat/_problems/
 .vscode/tasks.json
 cobertura.xml
 tests/testthat/*.csv
+reference/*.pdf

@@ -20,7 +20,7 @@
       stop("Offseason")
     }
   }
-  modelparams <- updateModel()
+  modelparams <- updateModel(league = "NHL")
   sc <- modelparams$schedule
   params <- parse_dc_params(params = modelparams)
 
@@ -116,7 +116,8 @@
     updatePredictions(
       scores = modelparams$scores,
       schedule = modelparams$schedule,
-      params = params
+      params = params,
+      league = "NHL"
     )
     playoff <- playoffOdds()
     president <- presidentOdds()
@@ -196,7 +197,7 @@
   }
 
   message("Posting Tweets...")
-  tweet(graphic_dir, delay = delay, graphic_dir = graphic_dir) # , games_today = Sys.Date() %in% sc[sc$GameStatus != "Postponed", ]$Date)
+  tweet(graphic_dir = graphic_dir, delay = delay)
 
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)

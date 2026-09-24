@@ -16,7 +16,8 @@ prob_matrix(lambda, mu, params, maxgoal)
 \item{maxgoal}{max goals per game}
 }
 \value{
-a square matrix of maxgoal:maxgoal
+a square matrix of maxgoal:maxgoal, with all entries in \verb{[0, 1]} and
+summing to 1 (see \link{validateProbMatrix})
 }
 \description{
 Given a mu, lambda, rho, and theta, generate a probability matrix. Differs from dcProbMatrix in that no regresson or solving for supplied teams happens

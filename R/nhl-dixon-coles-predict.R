@@ -186,7 +186,8 @@ dcProbMatrix <- function(
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param maxgoal max goals per game
 #'
-#' @return a square matrix of maxgoal:maxgoal
+#' @return a square matrix of maxgoal:maxgoal, with all entries in `[0, 1]` and
+#'   summing to 1 (see [validateProbMatrix])
 prob_matrix <- function(lambda, mu, params, maxgoal) {
   params <- parse_dc_params(params)
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*%
@@ -204,6 +205,12 @@ prob_matrix <- function(lambda, mu, params, maxgoal) {
     nrow = 2
   )
   probability_matrix[1:2, 1:2] <- probability_matrix[1:2, 1:2] * scaling_matrix
+  # The tau adjustment can push the (0,0)/(0,1)/(1,0)/(1,1) cells slightly
+  # negative near the edges of rho's valid range (a known Dixon-Coles
+  # boundary artifact -- see Dixon & Coles 1997). Clamp here, before the
+  # diagonal/off-diagonal renormalization below, so a negative low-goal cell
+  # can't leak into the final matrix or corrupt the renormalization sums.
+  probability_matrix[1:2, 1:2][probability_matrix[1:2, 1:2] < 0] <- 0
 
   diag(probability_matrix) <- diag(probability_matrix) *
     stats::dweibull(
@@ -219,7 +226,26 @@ prob_matrix <- function(lambda, mu, params, maxgoal) {
   # probability_matrix <- probability_matrix/sum(probability_matrix)  # turn into a sum=1 matrix
   #  #  Normalizing the whole matrix reduces the effect of the tie enhancement.
 
-  renorm <- 1 - sum(diag(probability_matrix))
+  diag_sum <- sum(diag(probability_matrix))
+  if (diag_sum >= 1) {
+    # The Weibull tie-enhancement (params$k/beta/eta) can inflate the diagonal
+    # past 1 for extreme inputs (e.g. very low/high expected goals combined
+    # with a large k). Renormalizing the off-diagonal by (1 - diag_sum) would
+    # then divide by a negative number and flip legitimate probabilities
+    # negative. Cap the diagonal so it leaves a small positive remainder for
+    # the off-diagonal (win/loss) outcomes instead.
+    warning(
+      "prob_matrix: tie-enhanced diagonal probability (",
+      signif(diag_sum, 4),
+      ") reached or exceeded 1; capping to leave room for win/loss outcomes."
+    )
+    diag(probability_matrix) <- diag(probability_matrix) *
+      (1 - 1e-6) /
+      diag_sum
+    diag_sum <- sum(diag(probability_matrix))
+  }
+
+  renorm <- 1 - diag_sum
   normfact <- sum(
     probability_matrix[upper.tri(probability_matrix)],
     probability_matrix[lower.tri(probability_matrix)]
@@ -233,7 +259,7 @@ prob_matrix <- function(lambda, mu, params, maxgoal) {
     probability_matrix
   )] <- probability_matrix[lower.tri(probability_matrix)] / normfact
 
-  return(probability_matrix)
+  validateProbMatrix(probability_matrix, context = "prob_matrix")
 }
 
 #' DC Sample
@@ -271,13 +297,13 @@ dcSample <- function(
     maxgoal = maxgoal
   )
 
-  # sometimes there's negative probabilities. This handles that with fakign a very low value instead
-  pm2 <- pm
-  pm2[pm2 < 0] <- 1e-8
+  # prob_matrix() already guarantees valid probabilities (see validateProbMatrix);
+  # re-validate here in case pm was constructed/modified by a caller.
+  pm <- validateProbMatrix(pm, context = "dcSample probability matrix")
 
   goals <- as.vector(arrayInd(
-    sample(seq_along(pm2), size = 1, prob = pm2),
-    .dim = dim(pm2)
+    sample(seq_along(pm), size = 1, prob = pm),
+    .dim = dim(pm)
   )) -
     1
 
@@ -352,8 +378,12 @@ dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
       otwinnerprob[1] * 0.6858606,
       otwinnerprob[1] * 0.3141394,
       otwinnerprob[2] * 0.3141394,
-      otwinnerprob[1] * 0.6858606,
+      otwinnerprob[2] * 0.6858606,
       awaywinprob
+    )
+    resultprob <- validateProbMatrix(
+      resultprob,
+      context = "dcResult resultprob"
     )
     results <- sample(
       c(1, 0.75, 0.6, 0.4, 0.25, 0),
@@ -435,10 +465,13 @@ dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
       otwinnerprob[1] * 0.6858606,
       otwinnerprob[1] * 0.3141394,
       otwinnerprob[2] * 0.3141394,
-      otwinnerprob[1] * 0.6858606,
+      otwinnerprob[2] * 0.6858606,
       awaywinprob
     )
-    return(resultprob)
+    return(validateProbMatrix(
+      resultprob,
+      context = "dcExpandedOdds resultprob"
+    ))
   }
 
   v_dceo <- Vectorize(dceo, c("lambda", "mu"))

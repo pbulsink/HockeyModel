@@ -5,8 +5,9 @@ test_that("Model params generate OK", {
   expect_true(is.list(params))
   expect_true(all(c("m", "rho", "beta", "eta", "k") %in% names(params)))
 
-  expect_lt(params$rho, 0)
-  expect_gt(params$rho, -0.5)
+  # rho is in [-0.5, 0.5] per Dixon-Coles bounds (goalmodel convention)
+  expect_gte(params$rho, -0.5)
+  expect_lte(params$rho, 0.5)
 
   expect_lt(params$beta, 10)
   expect_gt(params$beta, 1)

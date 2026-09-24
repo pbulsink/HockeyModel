@@ -2,17 +2,13 @@
 
 #' Post daily model graphics to social media
 #'
-#' @param games (`data.frame`) Games to reference for game-specific posts.
 #' @param graphic_dir (`character(1)`) Directory containing generated images.
 #' @param delay (`double(1)`) Delay in seconds between posts.
-#' @param schedule (`data.frame`) Schedule used to determine daily context.
 #' @returns `NULL` (invisibly).
 #' @keywords internal
 tweet <- function(
-  games,
   graphic_dir = .default_nhl_graphics_dir(),
-  delay = stats::runif(1, min = 2, max = 6) * 60,
-  schedule = HockeyModel::schedule
+  delay = stats::runif(1, min = 2, max = 6) * 60
 ) {
   if (inRegularSeason()) {
     # Only runs if schedule has regular season games remaining
@@ -161,7 +157,7 @@ tweetPace <- function(
     )
 
     message("Delaying ", delay, " seconds to space tweets...")
-    Sys.sleep(stats::runif(1, min = 1, max = 3) * 60)
+    Sys.sleep(delay)
   }
   pacediff <- data.frame(
     "Team" = current_preds$Team,

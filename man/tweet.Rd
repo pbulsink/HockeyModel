@@ -5,20 +5,14 @@
 \title{Post daily model graphics to social media}
 \usage{
 tweet(
-  games,
   graphic_dir = .default_nhl_graphics_dir(),
-  delay = stats::runif(1, min = 2, max = 6) * 60,
-  schedule = HockeyModel::schedule
+  delay = stats::runif(1, min = 2, max = 6) * 60
 )
 }
 \arguments{
-\item{games}{(\code{data.frame}) Games to reference for game-specific posts.}
-
 \item{graphic_dir}{(\code{character(1)}) Directory containing generated images.}
 
 \item{delay}{(\code{double(1)}) Delay in seconds between posts.}
-
-\item{schedule}{(\code{data.frame}) Schedule used to determine daily context.}
 }
 \value{
 \code{NULL} (invisibly).
