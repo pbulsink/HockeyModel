@@ -125,6 +125,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   - Consider `tryCatch()` with condition handling
   - Provide user-facing error summary
 - **Test:** Verify failed posts are reported, not silently swallowed
+- **Status:** Deferred (not yet started)
 
 #### Issue 2.5: `tweetPlayoffOdds()` Dead Code
 - **File:** `frontend-social.R:518-521`
@@ -159,6 +160,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **Problem:** When `gameIDs = NULL`, code subsets `gameIDs` itself (creating empty vector) instead of deriving from schedule
 - **Fix:** Extract game IDs from schedule when `gameIDs = NULL`
 - **Test:** Test with `gameIDs = NULL`
+- **Status:** ✅ Fixed
 
 #### Issue 3.5: Progress Bar Not Advanced on Failures
 - **File:** `nhl-api-fetch.R:204-249`
@@ -171,6 +173,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **Problem:** `closeAllConnections()` closes unrelated code's connections
 - **Fix:** Close only connections opened by this function
 - **Test:** Verify no side effects on other R code
+- **Status:** ✅ Fixed (removed the call entirely; observed live that it closed the interactive console's own stdout connection during a test run)
 
 #### Issue 3.7: Unreachable Shootout Detection
 - **File:** `nhl-api-fetch.R:264-269`
@@ -178,6 +181,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **Effect:** Shootout branch unreachable
 - **Fix:** Reorder case_when conditions; put specific cases first
 - **Test:** Test SO detection with real SO data
+- **Status:** ✅ Fixed
 
 #### Issue 3.8: Mixed Data Types in `OTStatus`
 - **File:** `nhl-api-fetch.R:228-231, 264-280`
@@ -190,18 +194,21 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **Problem:** No fallback branch; unrecognized status/score combinations produce NA
 - **Fix:** Add `.default = NA` or explicit error for unexpected values
 - **Test:** Test with unexpected OTStatus values
+- **Status:** ✅ Fixed (added explicit `.default = NA` branches plus `cli_abort()` checks that error on any resulting NA in `OTStatus` or `Result`)
 
 #### Issue 3.10: Tied Score Handling Without Validation
 - **File:** `nhl-api-fetch.R:272-280`
 - **Problem:** Tied final scores (Result = 0.5) included without checking if game is SO or incomplete
 - **Fix:** Validate game is actually tied/shootout before assigning 0.5
 - **Test:** Test tied score detection
+- **Status:** ✅ Fixed (modern NHL games are never a final tie; `getNHLScores()` now errors on any tied final score instead of assigning `Result = 0.5`)
 
 #### Issue 3.11: xG Request After Potential Score Fetch Failure
 - **File:** `nhl-api-fetch.R:253-285`
 - **Problem:** xG request proceeds even if `getNHLScores()` failed; joining NULL with xG may fail
 - **Fix:** Validate scores exist before fetching xG; handle gracefully
 - **Test:** Test with missing scores
+- **Status:** ✅ Fixed (xG lookup is now driven off `scores$GameID`, after validation, and is skipped entirely when no scores were retrieved)
 
 #### Issue 3.12: Fragile xG Column Detection
 - **File:** `nhl-api-fetch.R:374-395`
@@ -220,6 +227,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **Problem:** Playoff series hardcoded to 4 wins; doesn't generalize to format changes
 - **Fix:** Make configurable or derive from series data
 - **Test:** Document assumption; plan for future format changes
+- **Status:** ✅ Fixed (`getAPISeries()` gained a `wins_required = 4` parameter; the API doesn't report series format so this is a configurable default rather than a derived value)
 
 #### Issue 3.15: Hardcoded Field Names Throughout
 - **Files:** `nhl-api-fetch.R` (many locations)
@@ -236,6 +244,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **Problem:** Assumes series are `A–Z`; breaks for localized or renamed identifiers
 - **Fix:** Handle arbitrary series identifiers; don't assume letter mapping
 - **Test:** Test with non-letter series IDs
+- **Status:** ✅ Fixed (`Series` is now returned as an opaque character column instead of being mapped through `which(LETTERS == x)`)
 
 ---
 

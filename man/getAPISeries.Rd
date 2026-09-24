@@ -4,10 +4,15 @@
 \alias{getAPISeries}
 \title{Get Playoff Series using the NHL API}
 \usage{
-getAPISeries(season = getCurrentSeason8())
+getAPISeries(season = getCurrentSeason8(), wins_required = 4)
 }
 \arguments{
 \item{season}{Optional, the season's playoff series to retrieve}
+
+\item{wins_required}{Number of wins needed to clinch a series. The NHL
+playoff-bracket API does not report the series format, so this defaults
+to \code{4} (best-of-seven, the NHL's current format) but can be overridden if
+the format ever changes.}
 }
 \value{
 a data frame with Round, Series, Home and Away Teams, number of wins each, playoff ranking/seed and

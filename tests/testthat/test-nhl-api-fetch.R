@@ -160,3 +160,162 @@ test_that("Series is ok", {
 test_that("getAPISeries handles integer input", {
   expect_error(getAPISeries(season = 1))
 })
+
+test_that("getNHLScores derives gameIDs from schedule when gameIDs = NULL (#3.4)", {
+  schedule <- data.frame(
+    Date = as.Date(c("2020-01-01", "2020-01-02")),
+    GameID = c(2020020001, 2020020002)
+  )
+
+  local_mocked_bindings(
+    gameIDValidator = function(x) rep(TRUE, length(x)),
+    nhl_boxscore = function(gid) {
+      list(
+        gameState = "OFF",
+        gameDate = "2020-01-01",
+        id = as.numeric(gid),
+        homeTeam = list(
+          placeName = list("Home"),
+          commonName = list("Team"),
+          score = 3
+        ),
+        awayTeam = list(
+          placeName = list("Away"),
+          commonName = list("Team"),
+          score = 1
+        ),
+        periodDescriptor = list(number = 3)
+      )
+    },
+    get_xg = function(gameIds) {
+      data.frame(GameID = as.integer(gameIds), HomexG = 1, AwayxG = 1)
+    },
+    .package = "HockeyModel"
+  )
+
+  score <- getNHLScores(gameIDs = NULL, schedule = schedule, progress = FALSE)
+  expect_true(is.data.frame(score))
+  expect_equal(sort(score$GameID), sort(schedule$GameID))
+})
+
+test_that("getNHLScores detects shootout games (#3.7)", {
+  local_mocked_bindings(
+    gameIDValidator = function(x) rep(TRUE, length(x)),
+    nhl_boxscore = function(gid) {
+      list(
+        gameState = "OFF",
+        gameDate = "2020-01-01",
+        id = as.numeric(gid),
+        homeTeam = list(
+          placeName = list("Home"),
+          commonName = list("Team"),
+          score = 3
+        ),
+        awayTeam = list(
+          placeName = list("Away"),
+          commonName = list("Team"),
+          score = 2
+        ),
+        periodDescriptor = list(number = 5)
+      )
+    },
+    get_xg = function(gameIds) {
+      data.frame(GameID = as.integer(gameIds), HomexG = 1, AwayxG = 1)
+    },
+    .package = "HockeyModel"
+  )
+
+  score <- getNHLScores(gameIDs = 2020020001, progress = FALSE)
+  expect_equal(score$OTStatus, "SO")
+  expect_equal(score$Result, 0.6)
+})
+
+test_that("getNHLScores errors on unrecognized OTStatus values (#3.9)", {
+  local_mocked_bindings(
+    gameIDValidator = function(x) rep(TRUE, length(x)),
+    nhl_boxscore = function(gid) {
+      list(
+        gameState = "OFF",
+        gameDate = "2020-01-01",
+        id = as.numeric(gid),
+        homeTeam = list(
+          placeName = list("Home"),
+          commonName = list("Team"),
+          score = 3
+        ),
+        awayTeam = list(
+          placeName = list("Away"),
+          commonName = list("Team"),
+          score = 2
+        ),
+        # A missing/unparseable period number falls through every case_when
+        # branch and must error rather than silently produce NA.
+        periodDescriptor = list(number = NA_real_)
+      )
+    },
+    get_xg = function(gameIds) {
+      data.frame(GameID = as.integer(gameIds), HomexG = 1, AwayxG = 1)
+    },
+    .package = "HockeyModel"
+  )
+
+  expect_error(
+    getNHLScores(gameIDs = 2020020001, progress = FALSE),
+    "unrecognized"
+  )
+})
+
+test_that("getNHLScores rejects tied final scores (#3.10)", {
+  local_mocked_bindings(
+    gameIDValidator = function(x) rep(TRUE, length(x)),
+    nhl_boxscore = function(gid) {
+      list(
+        gameState = "OFF",
+        gameDate = "2020-01-01",
+        id = as.numeric(gid),
+        homeTeam = list(
+          placeName = list("Home"),
+          commonName = list("Team"),
+          score = 2
+        ),
+        awayTeam = list(
+          placeName = list("Away"),
+          commonName = list("Team"),
+          score = 2
+        ),
+        periodDescriptor = list(number = 3)
+      )
+    },
+    get_xg = function(gameIds) {
+      data.frame(GameID = as.integer(gameIds), HomexG = 1, AwayxG = 1)
+    },
+    .package = "HockeyModel"
+  )
+
+  expect_error(
+    getNHLScores(gameIDs = 2020020001, progress = FALSE),
+    "tied final scores"
+  )
+})
+
+test_that("getNHLScores skips xG lookup when no final scores are retrieved (#3.11)", {
+  called <- FALSE
+  local_mocked_bindings(
+    gameIDValidator = function(x) rep(TRUE, length(x)),
+    nhl_boxscore = function(gid) {
+      list(gameState = "FUT", gameScheduleState = "OK")
+    },
+    get_xg = function(gameIds) {
+      called <<- TRUE
+      data.frame(GameID = integer(0), HomexG = numeric(0), AwayxG = numeric(0))
+    },
+    .package = "HockeyModel"
+  )
+
+  score <- suppressWarnings(getNHLScores(
+    gameIDs = 2020020001,
+    progress = FALSE
+  ))
+  expect_null(score)
+  expect_false(called)
+})

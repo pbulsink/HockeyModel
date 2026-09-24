@@ -175,9 +175,7 @@ getNHLScores <- function(
 ) {
   scores <- NULL
   if (is.null(gameIDs)) {
-    gameIDs <- gameIDs[
-      gameIDs %in% schedule[schedule$Date < Sys.Date(), "GameID"]
-    ]
+    gameIDs <- schedule[schedule$Date < Sys.Date(), "GameID"]
   }
 
   gameIDs <- gameIDs[gameIDValidator(gameIDs)]
@@ -199,7 +197,6 @@ getNHLScores <- function(
       show_after = 5
     )
   }
-  dropped_gid <- c()
 
   for (g in gameIDs) {
     sc <- NA
@@ -243,44 +240,74 @@ getNHLScores <- function(
         "\nGame schedule state is ",
         sc$gameScheduleState
       )
-      dropped_gid <- c(dropped_gid, g)
       next
     }
     if (progress) {
       pb$tick()
     }
   }
-  message("Now getting natural stat trick xG results")
 
-  gameIDs <- gameIDs[!(gameIDs %in% dropped_gid)]
-
-  scores_xg <- get_xg(gameIds = gameIDs)
   if (!is.null(scores)) {
     scores <- clean_names(scores)
-    if (nrow(scores[scores$OTStatus == "3rd", ]) > 0) {
-      scores[scores$OTStatus == "3rd", ]$OTStatus <- ""
+    if (nrow(scores[scores$OTStatus %in% "3rd", ]) > 0) {
+      scores[scores$OTStatus %in% "3rd", ]$OTStatus <- ""
     }
     scores <- scores |>
       dplyr::mutate(
+        # SO is checked first: it is a special case of "> 3" and would
+        # otherwise always be shadowed by the OT branch below.
         OTStatus = dplyr::case_when(
-          .data$OTStatus <= 3 ~ "",
-          .data$OTStatus > 3 ~ "OT",
           .data$OTStatus == 5 & .data$GameType == "R" ~ "SO",
+          .data$OTStatus > 3 ~ "OT",
+          .data$OTStatus <= 3 ~ "",
+          .default = NA_character_
         )
-      ) |>
+      )
+
+    if (anyNA(scores$OTStatus)) {
+      cli::cli_abort(
+        "{.fn getNHLScores} encountered unrecognized {.field OTStatus}/{.field GameType} combinations for {.val {scores[is.na(scores$OTStatus), 'GameID']}}."
+      )
+    }
+
+    # Modern NHL games are always decided (no regulation ties), so a tied
+    # score should only ever appear with an empty OTStatus if the boxscore
+    # is incomplete/erroneous, and never alongside an OT/SO decision.
+    invalid_tie <- scores$HomeGoals == scores$AwayGoals
+    if (any(invalid_tie)) {
+      cli::cli_abort(
+        "{.fn getNHLScores} found tied final scores (games are always decided in regulation, OT, or SO) for {.val {scores[invalid_tie, 'GameID']}}."
+      )
+    }
+
+    scores <- scores |>
       dplyr::mutate(
         Result = dplyr::case_when(
           (.data$HomeGoals > .data$AwayGoals) & .data$OTStatus == "" ~ 1,
           (.data$HomeGoals < .data$AwayGoals) & .data$OTStatus == "" ~ 0,
-          (.data$HomeGoals == .data$AwayGoals) ~ 0.5,
           (.data$HomeGoals > .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.75,
           (.data$HomeGoals > .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.6,
           (.data$HomeGoals < .data$AwayGoals) & .data$OTStatus == "SO" ~ 0.4,
           (.data$HomeGoals < .data$AwayGoals) & .data$OTStatus == "OT" ~ 0.25,
+          .default = NA_real_
         )
       ) |>
       dplyr::arrange(.data$Date, .data$GameStatus, .data$GameID)
+
+    if (anyNA(scores$Result)) {
+      cli::cli_abort(
+        "{.fn getNHLScores} produced {.val NA} {.field Result} values for {.val {scores[is.na(scores$Result), 'GameID']}}; check {.field HomeGoals}/{.field AwayGoals}/{.field OTStatus}."
+      )
+    }
   }
+
+  if (is.null(scores) || nrow(scores) == 0) {
+    message("No final scores were retrieved; skipping xG lookup.")
+    return(scores)
+  }
+
+  message("Now getting natural stat trick xG results")
+  scores_xg <- get_xg(gameIds = scores$GameID)
   scores <- dplyr::left_join(scores, scores_xg, by = "GameID")
   return(scores)
 }
@@ -351,7 +378,6 @@ load_or_get_nst <- function(
       )
     }
   }
-  closeAllConnections()
 
   return(nstdf)
 }
@@ -673,11 +699,15 @@ clean_names <- function(sc) {
 #' @description Gets the current season (or previous seasons') playoff series information using the NHL API
 #'
 #' @param season Optional, the season's playoff series to retrieve
+#' @param wins_required Number of wins needed to clinch a series. The NHL
+#'   playoff-bracket API does not report the series format, so this defaults
+#'   to `4` (best-of-seven, the NHL's current format) but can be overridden if
+#'   the format ever changes.
 #'
 #' @return a data frame with Round, Series, Home and Away Teams, number of wins each, playoff ranking/seed and
 #' whether the series is complete
 #' @export
-getAPISeries <- function(season = getCurrentSeason8()) {
+getAPISeries <- function(season = getCurrentSeason8(), wins_required = 4) {
   if (!seasonValidator(season)) {
     cli::cli_abort(
       "{.arg season} must be an 8-digit season ID string like {.val 20182019}."
@@ -711,9 +741,6 @@ getAPISeries <- function(season = getCurrentSeason8()) {
       "AwayWins" = "bottomSeedWins",
       "HomeSeed" = "topSeedRank",
       "AwaySeed" = "bottomSeedRank"
-    ) |>
-    dplyr::mutate(
-      "requiredWins" = 4
     )
 
   if (nrow(playoffSeries) == 0) {
@@ -723,19 +750,17 @@ getAPISeries <- function(season = getCurrentSeason8()) {
   playoffSeries <- clean_names(playoffSeries)
 
   playoffSeries$Status <- ifelse(
-    playoffSeries$HomeWins == playoffSeries$requiredWins |
-      playoffSeries$AwayWins == playoffSeries$requiredWins,
+    playoffSeries$HomeWins >= wins_required |
+      playoffSeries$AwayWins >= wins_required,
     "Complete",
     "Ongoing"
   )
-  playoffSeries$requiredWins <- NULL
   playoffSeries <- playoffSeries |>
     dplyr::mutate(
       "Round" = as.integer(.data$Round),
-      "Series" = purrr::map_int(
-        .data$Series,
-        function(x) which(LETTERS == x, useNames = FALSE)
-      ),
+      # Series identifiers are treated as opaque strings (not assumed to be
+      # A-Z letters), since the API's series-letter scheme could change.
+      "Series" = as.character(.data$Series),
       "HomeWins" = as.integer(.data$HomeWins),
       "AwayWins" = as.integer(.data$AwayWins),
       "HomeSeed" = as.integer(.data$HomeSeed),
