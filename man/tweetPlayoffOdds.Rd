@@ -20,6 +20,10 @@ tweetPlayoffOdds(
 
 \item{trimcup}{trim to just cup winners}
 }
+\value{
+(\code{data.frame}) A summary of each attempted post (see
+\code{.summarize_post_results()}), invisibly.
+}
 \description{
 Tweet a graphic of the playoff odds
 }

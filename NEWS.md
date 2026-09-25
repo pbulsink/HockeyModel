@@ -1,5 +1,6 @@
 # HockeyModel 2026.0.1.9000 (development version)
 
+* `tweet()`, `tweetPace()`, `tweetLikelihoods()`, `tweetGames()`, `tweetMetrics()`, `tweetSeries()`, and `tweetPlayoffOdds()` now capture and report failed social-media posts instead of silently discarding them via a bare `try()`; each function warns immediately on a failed post (via new internal `.safe_post()`) and returns an (invisible) `data.frame` summarizing every attempted post, which `.daily_summary_nhl()` aggregates into one final warning listing all failures for the run (#noissue).
 * `getNHLScores()` now derives `gameIDs` from `schedule` when `gameIDs = NULL`, instead of subsetting the `NULL` argument itself (which always produced an empty vector) (#noissue).
 * `getNHLScores()` now checks the shootout-specific `OTStatus == 5 & GameType == "R"` condition before the general `OTStatus > 3` condition, so shootout games are correctly labelled `"SO"` instead of always falling into `"OT"` (#noissue).
 * `getNHLScores()` now errors, instead of silently producing `NA`, when it encounters an `OTStatus`/`GameType` combination or a tied final score it doesn't recognize, so unexpected API data surfaces immediately rather than corrupting downstream `Result` values (#noissue).

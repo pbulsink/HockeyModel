@@ -21,7 +21,8 @@ tweetLikelihoods(
 \item{scores}{updated scores}
 }
 \value{
-\code{NULL} (invisibly).
+(\code{data.frame}) A summary of each attempted post (see
+\code{.summarize_post_results()}), invisibly.
 }
 \description{
 Tweet Likelihood plots (ggridges)

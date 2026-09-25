@@ -17,6 +17,10 @@ tweetSeries(
 
 \item{delay}{Delay in seconds between posts. Default is a random value between 1 and 3 minutes.}
 }
+\value{
+(\code{data.frame}) A summary of each attempted post (see
+\code{.summarize_post_results()}), invisibly.
+}
 \description{
 Tweet the series odds graphics
 }

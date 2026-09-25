@@ -125,7 +125,16 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   - Consider `tryCatch()` with condition handling
   - Provide user-facing error summary
 - **Test:** Verify failed posts are reported, not silently swallowed
-- **Status:** Deferred (not yet started)
+- **Status:** ✅ Fixed. Added `.safe_post()` (wraps a single `atrrr::post()` call
+  in `tryCatch()`, emits `cli::cli_warn()` immediately on failure, and returns
+  a structured `list(description, success, error)`) and
+  `.summarize_post_results()` (aggregates a batch into a `data.frame` and
+  warns with a failure count/description list) in `frontend-social.R`. Every
+  bare `try(atrrr::post(...))` call site in `frontend-social.R` and
+  `frontend-daily-summary.R` now goes through `.safe_post()`; the exported
+  `tweet*()` functions return their post summary (invisibly) instead of
+  `NULL`, and `.daily_summary_nhl()` combines every sub-call's summary into
+  one `data.frame` and emits a final warning if any posts failed.
 
 #### Issue 2.5: `tweetPlayoffOdds()` Dead Code
 - **File:** `frontend-social.R:518-521`

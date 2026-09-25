@@ -7,7 +7,8 @@
 tweetMetrics()
 }
 \value{
-\code{NULL} (invisibly).
+(\code{data.frame}) A summary of the attempted post (see
+\code{.summarize_post_results()}), invisibly.
 }
 \description{
 Tweet the metrics (Log Loss and Accuracy)

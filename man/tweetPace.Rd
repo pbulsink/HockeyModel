@@ -23,6 +23,10 @@ tweetPace(
 
 \item{scores}{HockeyModel::scores or a custom value}
 }
+\value{
+(\code{data.frame}) A summary of each attempted post (see
+\code{.summarize_post_results()}), invisibly.
+}
 \description{
 Tweet Pace Plots
 }

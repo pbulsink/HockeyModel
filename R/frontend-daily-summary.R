@@ -5,7 +5,9 @@
 #' @param graphic_dir Directory for graphic files
 #' @param subdir subdirectory to `graphic_dir` for pace plots
 #' @param delay delay between tweet posts
-#' @returns `NULL` (invisibly).
+#' @returns (`data.frame`) A combined summary of every attempted social post
+#'   across the run (see `.summarize_post_results()` in `frontend-social.R`),
+#'   invisibly.
 #' @keywords internal
 .daily_summary_nhl <- function(
   graphic_dir = .default_nhl_graphics_dir(),
@@ -20,6 +22,7 @@
       stop("Offseason")
     }
   }
+  post_results <- list()
   modelparams <- updateModel(league = "NHL")
   sc <- modelparams$schedule
   params <- parse_dc_params(params = modelparams)
@@ -64,27 +67,25 @@
       filename = file.path(graphic_dir, "today_odds_table.png")
     )
 
-    try(
-      atrrr::post(
-        text = "Predicted odds table for today's #NHL games.",
-        image = file.path(graphic_dir, "today_odds_table.png"),
-        image_alt = paste0(
-          "Odds table for Today's NHL games, for date ",
-          Sys.Date(),
-          "."
-        )
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      "today's odds table",
+      text = "Predicted odds table for today's #NHL games.",
+      image = file.path(graphic_dir, "today_odds_table.png"),
+      image_alt = paste0(
+        "Odds table for Today's NHL games, for date ",
+        Sys.Date(),
+        "."
       )
     )
 
-    try(
-      atrrr::post(
-        text = "Predicted odds for today's #NHL games.",
-        image = file.path(graphic_dir, "today_odds.png"),
-        image_alt = paste0(
-          "Odds graphic for Today's NHL games, for date ",
-          Sys.Date(),
-          "."
-        )
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      "today's odds",
+      text = "Predicted odds for today's #NHL games.",
+      image = file.path(graphic_dir, "today_odds.png"),
+      image_alt = paste0(
+        "Odds graphic for Today's NHL games, for date ",
+        Sys.Date(),
+        "."
       )
     )
 
@@ -103,12 +104,11 @@
       grDevices::dev.off()
     }
 
-    try(
-      atrrr::post(
-        text = paste0("Current team ratings (as of ", Sys.Date(), ")."),
-        image = file.path(graphic_dir, "current_rating.png"),
-        image_alt = paste0("Current team rating graphic for ", Sys.Date(), ".")
-      )
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      "current ratings",
+      text = paste0("Current team ratings (as of ", Sys.Date(), ")."),
+      image = file.path(graphic_dir, "current_rating.png"),
+      image_alt = paste0("Current team rating graphic for ", Sys.Date(), ".")
     )
   }
 
@@ -197,36 +197,51 @@
   }
 
   message("Posting Tweets...")
-  tweet(graphic_dir = graphic_dir, delay = delay)
+  post_results[[length(post_results) + 1]] <- tweet(
+    graphic_dir = graphic_dir,
+    delay = delay
+  )
 
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
   if (inRegularSeason()) {
-    tweetPlayoffOdds(graphic_dir = graphic_dir, params = params)
+    post_results[[length(post_results) + 1]] <- tweetPlayoffOdds(
+      graphic_dir = graphic_dir,
+      params = params
+    )
 
     message("Delaying ", delay / 2, " seconds to space tweets...")
     Sys.sleep(delay / 2)
   } else if (inPlayoffs()) {
     message("Calculating Playoff Odds")
-    tweetPlayoffOdds(graphic_dir = graphic_dir, trimcup = TRUE)
+    post_results[[length(post_results) + 1]] <- tweetPlayoffOdds(
+      graphic_dir = graphic_dir,
+      trimcup = TRUE
+    )
   }
 
   if (as.numeric(format(Sys.Date(), "%w")) == 1 && inRegularSeason()) {
     # On monday post pace plots
-    tweetPace(delay = delay, graphic_dir = graphic_dir)
+    post_results[[length(post_results) + 1]] <- tweetPace(
+      delay = delay,
+      graphic_dir = graphic_dir
+    )
   }
 
   if (as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason()) {
     message("Tweeting Metrics")
     # On Sunday post metrics
-    tweetMetrics()
+    post_results[[length(post_results) + 1]] <- tweetMetrics()
   }
 
   if (as.numeric(format(Sys.Date(), "%w")) == 2 && inRegularSeason()) {
     message("Tweeting Likelihoods")
     # On Tuesday post expected points (likelihood)
-    tweetLikelihoods(delay = delay, graphic_dir = graphic_dir)
+    post_results[[length(post_results) + 1]] <- tweetLikelihoods(
+      delay = delay,
+      graphic_dir = graphic_dir
+    )
   }
 
   series <- getAPISeries()
@@ -237,9 +252,22 @@
   ) {
     # TODO: Watch next spring to see if this goes ok
     message("Tweeting Series")
-    tweetSeries(graphic_dir = graphic_dir, params = params)
+    post_results[[length(post_results) + 1]] <- tweetSeries(
+      graphic_dir = graphic_dir,
+      params = params
+    )
     Sys.sleep(delay)
   }
+
+  post_summary <- dplyr::bind_rows(post_results)
+  n_failed <- if (nrow(post_summary) == 0) 0 else sum(!post_summary$success)
+  if (n_failed > 0) {
+    cli::cli_warn(
+      "{n_failed} of {nrow(post_summary)} social post{?s} failed during today's summary; see warnings above for details."
+    )
+  }
+
+  invisible(post_summary)
 }
 
 

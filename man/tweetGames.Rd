@@ -20,6 +20,10 @@ tweetGames(
 
 \item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
 }
+\value{
+(\code{data.frame}) A summary of each attempted post (see
+\code{.summarize_post_results()}), invisibly.
+}
 \description{
 Tweet Game Plots
 }

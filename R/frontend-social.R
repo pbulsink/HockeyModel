@@ -1,73 +1,145 @@
 # Front-end social: social media posting helpers
 
-#' Post daily model graphics to social media
+#' Post to social media, capturing failures instead of silently discarding them
 #'
-#' @param graphic_dir (`character(1)`) Directory containing generated images.
-#' @param delay (`double(1)`) Delay in seconds between posts.
-#' @returns `NULL` (invisibly).
+#' Wraps a single `atrrr::post()` call. A bare `try()` (the previous
+#' approach) suppresses any error so a failed post is indistinguishable from
+#' a successful one; this helper instead catches the error, reports it via
+#' `cli::cli_warn()` immediately, and returns a structured result so callers
+#' can aggregate and report on failures across a batch of posts.
+#'
+#' @param description (`character(1)`) Human-readable description of the post,
+#'   used in warnings and summaries if the post fails.
+#' @param ... Arguments forwarded to `atrrr::post()`.
+#' @returns (`list`) With `description` (`character(1)`), `success`
+#'   (`logical(1)`), and `error` (`character(1)` or `NA_character_`).
 #' @keywords internal
-tweet <- function(
-  graphic_dir = .default_nhl_graphics_dir(),
-  delay = stats::runif(1, min = 2, max = 6) * 60
-) {
-  if (inRegularSeason()) {
-    # Only runs if schedule has regular season games remaining
-    try(
-      atrrr::post(
-        text = paste0(
-          "Predicted points for #NHL teams (before games on ",
-          Sys.Date(),
-          ")."
-        ),
-        image = file.path(graphic_dir, "point_predict.png"), # token = token,
-        image_alt = paste0(
-          "Points predicted history for the last 14 days, as of ",
-          Sys.Date(),
-          ""
-        )
+.safe_post <- function(description, ...) {
+  tryCatch(
+    {
+      atrrr::post(...)
+      list(description = description, success = TRUE, error = NA_character_)
+    },
+    error = function(e) {
+      cli::cli_warn(
+        "Failed to post {.val {description}}: {conditionMessage(e)}"
       )
-    )
-
-    message("Delaying ", delay, " seconds to space tweets...")
-    Sys.sleep(delay)
-
-    try(
-      atrrr::post(
-        text = paste0(
-          "Playoff odds for #NHL teams (before games on ",
-          Sys.Date(),
-          "). #HockeyTwitter"
-        ),
-        image = file.path(graphic_dir, "playoff_odds.png"),
-        image_alt = paste0(
-          "Playoff Odds for each NHL team history and today's value as of ",
-          Sys.Date(),
-          ""
-        )
+      list(
+        description = description,
+        success = FALSE,
+        error = conditionMessage(e)
       )
-    )
+    }
+  )
+}
 
-    message("Delaying ", delay, " seconds to space tweets...")
-    Sys.sleep(delay)
+#' Summarize a batch of `.safe_post()` results
+#'
+#' @param results (`list`) List of `.safe_post()` results.
+#' @returns (`data.frame`) One row per post, with `description`, `success`,
+#'   and `error` columns.
+#' @keywords internal
+.summarize_post_results <- function(results) {
+  if (length(results) == 0) {
+    return(data.frame(
+      description = character(0),
+      success = logical(0),
+      error = character(0),
+      stringsAsFactors = FALSE
+    ))
+  }
 
-    try(
-      atrrr::post(
-        text = paste0(
-          "President's trophy odds for #NHL teams (before games on ",
-          Sys.Date(),
-          "). #HockeyTwitter"
-        ),
-        image = file.path(graphic_dir, "president_odds.png"),
-        image_alt = paste0(
-          "President's Trophy Odds for each NHL team history and today's value as of ",
-          Sys.Date(),
-          ""
+  summary <- data.frame(
+    description = vapply(results, function(r) r$description, character(1)),
+    success = vapply(results, function(r) r$success, logical(1)),
+    error = vapply(results, function(r) r$error, character(1)),
+    stringsAsFactors = FALSE
+  )
+
+  n_failed <- sum(!summary$success)
+  if (n_failed > 0) {
+    cli::cli_warn(
+      c(
+        "{n_failed} of {nrow(summary)} social post{?s} failed:",
+        stats::setNames(
+          paste0("{.val ", summary$description[!summary$success], "}"),
+          rep("x", n_failed)
         )
       )
     )
   }
 
-  return(invisible(NULL))
+  summary
+}
+
+#' Post daily model graphics to social media
+#'
+#' @param graphic_dir (`character(1)`) Directory containing generated images.
+#' @param delay (`double(1)`) Delay in seconds between posts.
+#' @returns (`data.frame`) A summary of each attempted post (see
+#'   `.summarize_post_results()`), invisibly.
+#' @keywords internal
+tweet <- function(
+  graphic_dir = .default_nhl_graphics_dir(),
+  delay = stats::runif(1, min = 2, max = 6) * 60
+) {
+  post_results <- list()
+
+  if (inRegularSeason()) {
+    # Only runs if schedule has regular season games remaining
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      "predicted points",
+      text = paste0(
+        "Predicted points for #NHL teams (before games on ",
+        Sys.Date(),
+        ")."
+      ),
+      image = file.path(graphic_dir, "point_predict.png"), # token = token,
+      image_alt = paste0(
+        "Points predicted history for the last 14 days, as of ",
+        Sys.Date(),
+        ""
+      )
+    )
+
+    message("Delaying ", delay, " seconds to space tweets...")
+    Sys.sleep(delay)
+
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      "playoff odds",
+      text = paste0(
+        "Playoff odds for #NHL teams (before games on ",
+        Sys.Date(),
+        "). #HockeyTwitter"
+      ),
+      image = file.path(graphic_dir, "playoff_odds.png"),
+      image_alt = paste0(
+        "Playoff Odds for each NHL team history and today's value as of ",
+        Sys.Date(),
+        ""
+      )
+    )
+
+    message("Delaying ", delay, " seconds to space tweets...")
+    Sys.sleep(delay)
+
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      "president's trophy odds",
+      text = paste0(
+        "President's trophy odds for #NHL teams (before games on ",
+        Sys.Date(),
+        "). #HockeyTwitter"
+      ),
+      image = file.path(graphic_dir, "president_odds.png"),
+      image_alt = paste0(
+        "President's Trophy Odds for each NHL team history and today's value as of ",
+        Sys.Date(),
+        ""
+      )
+    )
+  }
+
+  invisible(.summarize_post_results(post_results))
 }
 #' Tweet Pace Plots
 #'
@@ -77,6 +149,8 @@ tweet <- function(
 #' @param prediction_dir The predictions directory
 #' @param scores HockeyModel::scores or a custom value
 #'
+#' @returns (`data.frame`) A summary of each attempted post (see
+#'   `.summarize_post_results()`), invisibly.
 #' @export
 tweetPace <- function(
   delay = stats::runif(1, min = 1, max = 3) * 60,
@@ -85,6 +159,8 @@ tweetPace <- function(
   prediction_dir = getOption("HockeyModel.prediction.path"),
   scores = HockeyModel::scores
 ) {
+  post_results <- list()
+
   # make sure we're working with the most up-to-date info.
   scores <- updateScoresAPI(save_data = TRUE)
 
@@ -139,20 +215,19 @@ tweetPace <- function(
       teamColours[teamColours$Team == team, "Hashtag"]
     )
 
-    try(
-      atrrr::post(
-        text = status,
-        image = file.path(
-          graphic_dir,
-          subdir,
-          paste0(tolower(gsub(" ", "_", team)), ".png")
-        ),
-        image_alt = paste0(
-          team,
-          "'s Performance against predicted pace as of ",
-          Sys.Date(),
-          ""
-        )
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      paste0("team pace: ", team),
+      text = status,
+      image = file.path(
+        graphic_dir,
+        subdir,
+        paste0(tolower(gsub(" ", "_", team)), ".png")
+      ),
+      image_alt = paste0(
+        team,
+        "'s Performance against predicted pace as of ",
+        Sys.Date(),
+        ""
       )
     )
 
@@ -181,7 +256,10 @@ tweetPace <- function(
     " ",
     teamColours[teamColours$Team == minteam, "Hashtag"]
   )
-  atrrr::post(text = recapstatus)
+  post_results[[length(post_results) + 1]] <- .safe_post(
+    "pace recap",
+    text = recapstatus
+  )
 
   Sys.sleep(stats::runif(1, min = 2, max = 6) * 60)
 
@@ -200,22 +278,23 @@ tweetPace <- function(
       "division.\nPositive values are exceeding expectation, negative are performing below predicted."
     )
 
-    try(
-      atrrr::post(
-        text = status,
-        image = file.path(graphic_dir, subdir, paste0(division, "_pace.png")),
-        image_alt = paste0(
-          division,
-          " teams pace above/below expected as of ",
-          Sys.Date(),
-          "."
-        )
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      paste0("division pace: ", division),
+      text = status,
+      image = file.path(graphic_dir, subdir, paste0(division, "_pace.png")),
+      image_alt = paste0(
+        division,
+        " teams pace above/below expected as of ",
+        Sys.Date(),
+        "."
       )
     )
 
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
   }
+
+  invisible(.summarize_post_results(post_results))
 }
 
 #' Tweet Likelihood plots (ggridges)
@@ -225,7 +304,8 @@ tweetPace <- function(
 #' @param subdir subdirectory - usually 'preds'
 #' @param scores updated scores
 #'
-#' @returns `NULL` (invisibly).
+#' @returns (`data.frame`) A summary of each attempted post (see
+#'   `.summarize_post_results()`), invisibly.
 #' @export
 tweetLikelihoods <- function(
   delay = stats::runif(1, min = 3, max = 6) * 60,
@@ -233,6 +313,8 @@ tweetLikelihoods <- function(
   subdir = "pace",
   scores = HockeyModel::scores
 ) {
+  post_results <- list()
+
   # make likelihood plots
   plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
 
@@ -252,23 +334,22 @@ tweetLikelihoods <- function(
     ) {
       # Tweet them out
 
-      try(
-        atrrr::post(
-          text = paste0(
-            "#NHL ",
-            conf,
-            " Conference Team final point likelihoods:"
-          ),
-          image = file.path(
-            graphic_dir,
-            subdir,
-            paste0(tolower(conf), "likelihood.png")
-          ),
-          image_alt = paste0(
-            "Point likelihoods for teams in the ",
-            conf,
-            " conference."
-          )
+      post_results[[length(post_results) + 1]] <- .safe_post(
+        paste0("likelihoods: ", conf),
+        text = paste0(
+          "#NHL ",
+          conf,
+          " Conference Team final point likelihoods:"
+        ),
+        image = file.path(
+          graphic_dir,
+          subdir,
+          paste0(tolower(conf), "likelihood.png")
+        ),
+        image_alt = paste0(
+          "Point likelihoods for teams in the ",
+          conf,
+          " conference."
         )
       )
 
@@ -278,7 +359,7 @@ tweetLikelihoods <- function(
     }
   }
 
-  return(invisible(NULL))
+  invisible(.summarize_post_results(post_results))
 }
 
 #' Tweet Game Plots
@@ -288,6 +369,8 @@ tweetLikelihoods <- function(
 #' @param graphic_dir the graphics directory
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
+#' @returns (`data.frame`) A summary of each attempted post (see
+#'   `.summarize_post_results()`), invisibly.
 #' @export
 tweetGames <- function(
   games = games_today(),
@@ -296,15 +379,16 @@ tweetGames <- function(
   params = NULL
 ) {
   params <- parse_dc_params(params)
+  post_results <- list()
   # Tweet each game
   if (is.null(games)) {
     message("No games to tweet")
-    return()
+    return(invisible(.summarize_post_results(post_results)))
   }
 
   if (nrow(games) == 0) {
     message("No games to tweet")
-    return()
+    return(invisible(.summarize_post_results(post_results)))
   }
 
   if (!dir.exists(graphic_dir)) {
@@ -339,17 +423,16 @@ tweetGames <- function(
       " #HockeyTwitter"
     )
 
-    try(
-      atrrr::post(
-        text = status,
-        image = file.path(graphic_dir, "predicted_goals.png"),
-        image_alt = paste0(
-          "Odds of each goal for both ",
-          away,
-          " and ",
-          home,
-          " in their game."
-        )
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      paste0("game: ", away, " at ", home),
+      text = status,
+      image = file.path(graphic_dir, "predicted_goals.png"),
+      image_alt = paste0(
+        "Odds of each goal for both ",
+        away,
+        " and ",
+        home,
+        " in their game."
       )
     )
 
@@ -358,12 +441,15 @@ tweetGames <- function(
     message("Delaying ", delay, " seconds to space tweets...")
     Sys.sleep(delay)
   }
+
+  invisible(.summarize_post_results(post_results))
 }
 
 #' Tweet Metrics
 #' @description Tweet the metrics (Log Loss and Accuracy)
 #'
-#' @returns `NULL` (invisibly).
+#' @returns (`data.frame`) A summary of the attempted post (see
+#'   `.summarize_post_results()`), invisibly.
 #' @export
 tweetMetrics <- function() {
   metrics <- getSeasonMetricsDC()
@@ -379,7 +465,10 @@ tweetMetrics <- function() {
   )
   message(status)
 
-  try(atrrr::post(text = status))
+  invisible(.summarize_post_results(list(.safe_post(
+    "metrics",
+    text = status
+  ))))
 }
 
 #' Tweet Series
@@ -389,7 +478,8 @@ tweetMetrics <- function() {
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #' @param delay Delay in seconds between posts. Default is a random value between 1 and 3 minutes.
 #'
-#' @return NULL
+#' @return (`data.frame`) A summary of each attempted post (see
+#'   `.summarize_post_results()`), invisibly.
 #' @export
 tweetSeries <- function(
   params = NULL,
@@ -405,6 +495,7 @@ tweetSeries <- function(
     )
   }
 
+  post_results <- list()
   params <- parse_dc_params(params)
   while (grDevices::dev.cur() != 1) {
     grDevices::dev.off()
@@ -416,7 +507,7 @@ tweetSeries <- function(
   ]
   if (nrow(series) == 0) {
     message("No Series to Tweet")
-    return()
+    return(invisible(.summarize_post_results(post_results)))
   }
   plt <- plot_playoff_series_odds(series = series, params = params)
   grDevices::png(
@@ -435,12 +526,11 @@ tweetSeries <- function(
     "#NHL #StanleyCup Playoff Series Odds before games on ",
     Sys.Date()
   )
-  try(
-    atrrr::post(
-      text = status,
-      image = file.path(graphic_dir, "series_odds.png"),
-      image_alt = "A graphic showing odds for each series' winner"
-    )
+  post_results[[length(post_results) + 1]] <- .safe_post(
+    "series odds",
+    text = status,
+    image = file.path(graphic_dir, "series_odds.png"),
+    image_alt = "A graphic showing odds for each series' winner"
   )
 
   message("Delaying ", delay, " seconds to space tweets...")
@@ -452,16 +542,17 @@ tweetSeries <- function(
     filename = file.path(graphic_dir, "series_odds_table.png")
   )
 
-  try(
-    atrrr::post(
-      text = paste0(
-        "#NHL #StanleyCup Playoff Series Odds table before games on ",
-        Sys.Date()
-      ),
-      image = file.path(graphic_dir, "series_odds_table.png"),
-      image_alt = "A table showing odds for each series' winner"
-    )
+  post_results[[length(post_results) + 1]] <- .safe_post(
+    "series odds table",
+    text = paste0(
+      "#NHL #StanleyCup Playoff Series Odds table before games on ",
+      Sys.Date()
+    ),
+    image = file.path(graphic_dir, "series_odds_table.png"),
+    image_alt = "A table showing odds for each series' winner"
   )
+
+  invisible(.summarize_post_results(post_results))
 }
 
 
@@ -474,7 +565,8 @@ tweetSeries <- function(
 #' @param trimcup trim to just cup winners
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
 #'
-#' @return NULL
+#' @return (`data.frame`) A summary of each attempted post (see
+#'   `.summarize_post_results()`), invisibly.
 #' @export
 tweetPlayoffOdds <- function(
   summary_results = NULL,
@@ -488,6 +580,7 @@ tweetPlayoffOdds <- function(
     )
   }
 
+  post_results <- list()
   params <- parse_dc_params(params)
   playoffodds <- simulatePlayoffs(
     summary_results = summary_results,
@@ -495,7 +588,7 @@ tweetPlayoffOdds <- function(
   )
 
   if (is.null(playoffodds)) {
-    return(invisible(NULL))
+    return(invisible(.summarize_post_results(post_results)))
   }
 
   playoffodds$Conference <- getTeamConferences(playoffodds$Team)
@@ -517,16 +610,15 @@ tweetPlayoffOdds <- function(
       ". #HockeyTwitter"
     )
 
-    try(
-      atrrr::post(
-        text = paste0(
-          "#NHL Playoff and #StanleyCup Odds before games on ",
-          Sys.Date(),
-          "."
-        ),
-        image = file.path(graphic_dir, "playoff_odds.png"),
-        image_alt = "Playoff Odds"
-      )
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      "playoff and cup odds",
+      text = paste0(
+        "#NHL Playoff and #StanleyCup Odds before games on ",
+        Sys.Date(),
+        "."
+      ),
+      image = file.path(graphic_dir, "playoff_odds.png"),
+      image_alt = "Playoff Odds"
     )
   } else {
     for (conf in unique(playoffodds$Conference)) {
@@ -553,28 +645,28 @@ tweetPlayoffOdds <- function(
       ". #HockeyTwitter"
     )
 
-    try(
-      atrrr::post(
-        text = paste0(
-          "#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ",
-          Sys.Date(),
-          "."
-        ),
-        image = file.path(graphic_dir, "eastern_playoff_odds.png"),
-        image_alt = "Eastern Playoff Odds"
-      )
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      "eastern conference playoff odds",
+      text = paste0(
+        "#NHL Eastern Conference Playoff and #StanleyCup Odds before games on ",
+        Sys.Date(),
+        "."
+      ),
+      image = file.path(graphic_dir, "eastern_playoff_odds.png"),
+      image_alt = "Eastern Playoff Odds"
     )
 
-    try(
-      atrrr::post(
-        text = paste0(
-          "#NHL Western Conference Playoff and #StanleyCup Odds before games on ",
-          Sys.Date(),
-          "."
-        ),
-        image = file.path(graphic_dir, "western_playoff_odds.png"),
-        image_alt = "Western Playoff Odds"
-      )
+    post_results[[length(post_results) + 1]] <- .safe_post(
+      "western conference playoff odds",
+      text = paste0(
+        "#NHL Western Conference Playoff and #StanleyCup Odds before games on ",
+        Sys.Date(),
+        "."
+      ),
+      image = file.path(graphic_dir, "western_playoff_odds.png"),
+      image_alt = "Western Playoff Odds"
     )
   }
+
+  invisible(.summarize_post_results(post_results))
 }

@@ -18,7 +18,9 @@
 \item{delay}{delay between tweet posts}
 }
 \value{
-\code{NULL} (invisibly).
+(\code{data.frame}) A combined summary of every attempted social post
+across the run (see \code{.summarize_post_results()} in \code{frontend-social.R}),
+invisibly.
 }
 \description{
 Daily functions, rolled into one call

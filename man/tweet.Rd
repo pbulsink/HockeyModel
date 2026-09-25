@@ -15,7 +15,8 @@ tweet(
 \item{delay}{(\code{double(1)}) Delay in seconds between posts.}
 }
 \value{
-\code{NULL} (invisibly).
+(\code{data.frame}) A summary of each attempted post (see
+\code{.summarize_post_results()}), invisibly.
 }
 \description{
 Post daily model graphics to social media
