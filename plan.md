@@ -105,12 +105,18 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   fixing an arbitrary reference team (e.g. Anaheim Ducks) to 0 as `glm()` would
   otherwise do. This is documented in an inline comment at line 60 and should
   not be changed.
-- **Remaining follow-up:** Confirm the starting vector length
-  (`rep(0.01, length(unique(df.indep$Team)) * 2)`) still matches the model
-  matrix rank now that no team is dropped, and that `glm()`'s own aliasing
-  handling (via `NA` coefficients) behaves predictably if a team appears in only
-  home or only away rows.
-- **Test Needed:** `getM starting values match model rank`
+- **Investigation:** `Team` and `Opponent` are always built from the same
+  home/away union of teams (`df.indep`'s `Team` column is `c(HomeTeam,
+  AwayTeam)` and `Opponent` is `c(AwayTeam, HomeTeam)`), so their factor levels
+  are always identical. This guarantees the design matrix for
+  `Team + Opponent + Home + 0` is always full rank with exactly `2 * n_teams`
+  columns — matching `rep(0.01, length(unique(df.indep$Team)) * 2)` — even
+  when a team appears in only home or only away rows. Confirmed via
+  simulation (both edge cases) that `glm()` never produces `NA` (aliased)
+  coefficients.
+- **Status:** ✅ No bug found; the starting-vector length always matches model
+  rank by construction. Added a regression test locking in this invariant.
+- **Test Added:** `getM starting values match model rank`
 
 ---
 
@@ -387,7 +393,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - ✅ Fix rho optimization (DONE)
 - ✅ Fix away OT probability (DONE)
 - ✅ Add probability validation (Issue 1.2, DONE)
-- [ ] Verify GLM starting-value/rank robustness (Issue 1.3)
+- ✅ Verify GLM starting-value/rank robustness (Issue 1.3, DONE — no bug found; regression test added)
 
 ### Phase 2: Daily Workflow (Next)
 - ✅ Fix league parameter passing (Issue 2.1, DONE)

@@ -182,3 +182,65 @@ test_that("getM with nu = 0 and nu = 2 produce same team coefficient names", {
   # Coefficients differ because weights changed
   expect_false(all(m0$coefficients == m2$coefficients))
 })
+
+test_that("getM starting values match model rank", {
+  # Team and Opponent are constructed from the same home/away union, so their
+  # factor levels are always identical and the design matrix for
+  # `Team + Opponent + Home + 0` is always full rank with exactly
+  # `2 * n_teams` columns, matching the length of the `start` vector, even
+  # when a team appears only as a home team or only as an away team.
+  build_scores_with_lopsided_team <- function(
+    mode = c("home_only", "away_only")
+  ) {
+    mode <- match.arg(mode)
+    set.seed(909)
+    teams <- LETTERS[1:6]
+    n <- 40
+    home <- sample(teams, n, replace = TRUE)
+    away <- vapply(
+      home,
+      function(h) sample(setdiff(teams, h), 1),
+      character(1)
+    )
+    if (mode == "home_only") {
+      home[1] <- "F"
+      away[1] <- "A"
+    } else {
+      home[1] <- "A"
+      away[1] <- "F"
+    }
+    dates <- Sys.Date() - rev(seq_len(n))
+    data.frame(
+      Date = dates,
+      GameID = seq_len(n),
+      HomeTeam = home,
+      AwayTeam = away,
+      HomeGoals = rpois(n, 3),
+      AwayGoals = rpois(n, 3)
+    )
+  }
+
+  for (mode in c("home_only", "away_only")) {
+    scor <- build_scores_with_lopsided_team(mode)
+    m <- suppressWarnings(getM(
+      scores = scor,
+      currentDate = max(scor$Date) + 1,
+      nu = 0
+    ))
+
+    df.indep <- data.frame(
+      Team = as.factor(c(
+        as.character(scor$HomeTeam),
+        as.character(scor$AwayTeam)
+      )),
+      Opponent = as.factor(c(
+        as.character(scor$AwayTeam),
+        as.character(scor$HomeTeam)
+      ))
+    )
+    expected_length <- length(unique(df.indep$Team)) * 2
+
+    expect_length(m$coefficients, expected_length)
+    expect_false(anyNA(m$coefficients), info = paste("mode:", mode))
+  }
+})
