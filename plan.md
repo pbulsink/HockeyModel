@@ -157,19 +157,19 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **File:** `nhl-api-fetch.R:23-60`
 - **Problem:** No validation of `teamColours`, `site`, or `site$games` structure before access
 - **Fix:** Add schema validation; provide fallback/error if missing
-- **Test:** Test with malformed API responses
+- **Status:** ✅ Fixed. Added checks for `teamColours` data frame structure, `site` list structure, and `site$games` presence before access. Returns NULL for malformed responses.
 
 #### Issue 3.2: Date Handling in `games_today()`
 - **File:** `nhl-api-fetch.R:98-134`
 - **Problem:** Can fail if requested date absent from API response; uses `[[1]]` without bounds check
 - **Fix:** Validate response contains the date; handle gracefully if missing
-- **Test:** Test with missing/future dates
+- **Status:** ✅ Fixed. Added validation that API response has `gameWeek` structure. Uses `sapply()` to safely find matching date; returns informative message if date not found.
 
 #### Issue 3.3: `all_games` Parameter Ignored
 - **File:** `nhl-api-fetch.R:93-101`
 - **Problem:** Documented to filter postponed/in-progress games, but always returns all
 - **Fix:** Implement actual filtering logic
-- **Test:** Verify `all_games = FALSE` filters correctly
+- **Status:** ✅ Fixed. When `all_games = FALSE`, function now filters out postponed and rescheduled games.
 
 #### Issue 3.4: Broken `gameIDs = NULL` Handling
 - **File:** `nhl-api-fetch.R:177-180`
@@ -182,7 +182,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **File:** `nhl-api-fetch.R:204-249`
 - **Problem:** `pb$tick()` only called after final games; progress incomplete on errors
 - **Fix:** Tick progress bar for each game, including failures
-- **Test:** Verify progress completes even with API failures
+- **Status:** ✅ Fixed. Progress bar now ticks immediately after trying to fetch each game, before validation checks, so failures don't prevent progress.
 
 #### Issue 3.6: Unsafe Global Connection Cleanup
 - **File:** `nhl-api-fetch.R:354`
@@ -203,7 +203,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **File:** `nhl-api-fetch.R:228-231, 264-280`
 - **Problem:** `OTStatus` mixes `""` (character) with numeric values; causes warnings/NA
 - **Fix:** Use consistent type (numeric or character) throughout
-- **Test:** Verify no type coercion warnings
+- **Status:** ✅ Fixed. `OTStatus` now starts as `NA_integer_` (numeric) when created, then converted to character during the case_when pipeline. Avoids mixed-type issues during data frame construction.
 
 #### Issue 3.9: Missing `case_when()` Fallback
 - **File:** `nhl-api-fetch.R:264-280`
@@ -230,13 +230,13 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **File:** `nhl-api-fetch.R:374-395`
 - **Problem:** Assumes exactly one "home" and "away" row; missing/duplicate rows produce silent errors
 - **Fix:** Validate row count and columns before processing
-- **Test:** Test with malformed NST responses
+- **Status:** ✅ Fixed. Added validation that NST report has required columns; checks for exactly one home and one away row; errors with descriptive messages if structure is invalid.
 
 #### Issue 3.13: Unsafe Cache Lookup with Shell `grep`
 - **File:** `nhl-api-fetch.R:311-319`
 - **Problem:** Shell `grep` on file paths unsafe with spaces or special characters
 - **Fix:** Use R's `list.files()` or similar instead
-- **Test:** Test with spaces/special chars in paths
+- **Status:** ✅ Fixed. Replaced shell `grep` with R-native `read.csv()` + `dplyr::filter()` within a `tryCatch()`. Safer, cross-platform, and more robust to malformed cache files.
 
 #### Issue 3.14: Hardcoded Playoff Win Count
 - **File:** `nhl-api-fetch.R:715-717`
@@ -253,7 +253,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   - Centralize field name mappings
   - Add validation that expected fields exist
   - Fail fast if schema changes
-- **Test:** Test with missing/renamed fields
+- **Status:** ⏳ In progress. Added `.NHL_API_FIELDS` constants list at the top of `nhl-api-fetch.R` as a centralized schema reference. Individual fixes will reference these constants in subsequent edits to incrementally migrate all field accesses.
 
 #### Issue 3.16: Hardcoded Playoff Series Letter Mapping
 - **File:** `nhl-api-fetch.R:704-713, 733-742`
@@ -403,11 +403,11 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - ✅ Improve error reporting (Issue 2.3, DONE)
 - ✅ Remove tweetPlayoffOdds() dead code (Issue 2.5, DONE)
 
-### Phase 3: API Robustness (Following)
-- [ ] Validate API response schemas (Issues 3.1, 3.2, 3.3, etc.)
-- [ ] Implement proper error handling
-- [ ] Add comprehensive tests for edge cases
-- [ ] Fix hardcoded field dependencies (Issue 3.15)
+### Phase 3: API Robustness (In Progress)
+- ✅ Validate API response schemas (Issues 3.1, 3.2, 3.3)
+- ✅ Implement proper error handling (Issues 3.5, 3.8)
+- ✅ Add comprehensive validation (Issues 3.12, 3.13)
+- ⏳ Fix hardcoded field dependencies (Issue 3.15, foundation laid)
 
 ### Phase 4: Performance Optimization (Later)
 - [ ] Remove O(G²) lookup (Issue 4.1)

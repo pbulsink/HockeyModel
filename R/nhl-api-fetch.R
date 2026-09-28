@@ -1,5 +1,49 @@
 # NHL API functions for fetching schedules, scores, xG data, and boxscores
 
+# API field name constants to centralize schema dependencies
+.NHL_API_FIELDS <- list(
+  schedule = list(
+    games = "games",
+    game_type = "gameType",
+    game_date = "gameDate",
+    home_team_abbrev = c("homeTeam", "abbrev"),
+    away_team_abbrev = c("awayTeam", "abbrev"),
+    game_id = "id",
+    game_state = "gameState"
+  ),
+  boxscore = list(
+    game_state = "gameState",
+    game_date = "gameDate",
+    period_number = c("periodDescriptor", "number"),
+    home_team_place = c("homeTeam", "placeName"),
+    home_team_name = c("homeTeam", "commonName"),
+    home_score = c("homeTeam", "score"),
+    away_team_place = c("awayTeam", "placeName"),
+    away_team_name = c("awayTeam", "commonName"),
+    away_score = c("awayTeam", "score"),
+    game_id = "id"
+  ),
+  gameweek = list(
+    game_week = "gameWeek",
+    date = "date",
+    number_of_games = "numberOfGames",
+    games = "games",
+    game_id = "id"
+  ),
+  nst_report = list(
+    h_a = "h_a",
+    xgf = "xgf_all",
+    gf = "gf_all",
+    cf = "cf_all",
+    xgf_pk = "xgf_pk",
+    gf_pk = "gf_pk",
+    cf_pk = "cf_pk",
+    xgf_pp = "xgf_pp",
+    gf_pp = "gf_pp",
+    cf_pp = "cf_pp"
+  )
+)
+
 #' Get NHL Schedule
 #'
 #' @description Gets the NHL schedule from the NHL API for the season(s) requested. Returns data formatted for further use. This can be slow if requesting many seasons due to the API rate limit.
@@ -16,6 +60,12 @@ getNHLSchedule <- function(
   if (!seasonValidator(season)) {
     cli::cli_abort(
       "{.arg season} must be a valid NHL season ID (e.g. {.val 20202021})."
+    )
+  }
+
+  if (!is.data.frame(teamColours) || !("ShortCode" %in% names(teamColours))) {
+    cli::cli_abort(
+      "{.arg teamColours} must be a data frame with a {.field ShortCode} column."
     )
   }
 
@@ -41,9 +91,27 @@ getNHLSchedule <- function(
       }
     )
 
-    if (!is.null(site) && !is.null(site$games) && length(site$games) > 0) {
+    if (!is.null(site)) {
+      if (!is.list(site) || !"games" %in% names(site)) {
+        message(
+          paste0(
+            "API response for ",
+            i,
+            " missing expected {.field games} field; skipping."
+          )
+        )
+        return(NULL)
+      }
+      if (length(site$games) == 0) {
+        return(NULL)
+      }
+
       sg <- site$games |>
         dplyr::filter(.data$gameType > 1)
+
+      if (nrow(sg) == 0) {
+        return(NULL)
+      }
 
       data.frame(
         Date = sg$gameDate,
@@ -103,9 +171,12 @@ games_today <- function(
   if (!is.Date(date)) {
     cli::cli_abort("{.arg date} must be a Date or date-like value.")
   }
+
+  date <- as.Date(date)
+
   url <- paste0(
     "https://api-web.nhle.com/v1/schedule/",
-    as.Date(date, "%Y-%m-%d")
+    date
   )
 
   sched <- httr2::request(url) |>
@@ -114,22 +185,54 @@ games_today <- function(
     httr2::req_perform() |>
     httr2::resp_body_string() |>
     jsonlite::fromJSON()
-  gameWeek <- sched$gameWeek
 
   if (
-    gameWeek[gameWeek$date == as.Date(date, "%Y-%m-%d", ), ]$numberOfGames == 0
+    !is.list(sched) || !"gameWeek" %in% names(sched) || !is.list(sched$gameWeek)
   ) {
-    return(NULL)
+    cli::cli_abort(
+      "API response for {.arg date} missing expected {.field gameWeek} structure."
+    )
   }
 
-  gids <- gameWeek[gameWeek$date == as.Date(date, "%Y-%m-%d"), ]$games[[1]]$id
-  todaygames <- schedule[schedule$GameID %in% gids, ]
-  if (nrow(todaygames) == 0) {
+  gameWeek <- sched$gameWeek
+
+  # Find the games for this date
+  date_row <- gameWeek[
+    sapply(gameWeek$date, function(d) identical(d, date)),
+  ]
+
+  if (nrow(date_row) == 0) {
     message(
-      "Games on today aren't present in Schedule. Be sure schedule is updated!!"
+      "Requested date {.val {format(date, '%Y-%m-%d')}} not found in API response."
     )
     return(NULL)
   }
+
+  if (date_row$numberOfGames == 0) {
+    return(NULL)
+  }
+
+  gids <- date_row$games[[1]]$id
+  todaygames <- schedule[schedule$GameID %in% gids, ]
+
+  if (nrow(todaygames) == 0) {
+    message(
+      "Games on {.val {format(date, '%Y-%m-%d')}} aren't present in Schedule. Be sure schedule is updated!!"
+    )
+    return(NULL)
+  }
+
+  # Filter games if all_games = FALSE
+  if (!all_games) {
+    # Exclude postponed and rescheduled games
+    todaygames <- todaygames |>
+      dplyr::filter(!(.data$GameStatus %in% c("PPD", "RESCHEDULED")))
+  }
+
+  if (nrow(todaygames) == 0) {
+    return(NULL)
+  }
+
   return(todaygames)
 }
 
@@ -205,10 +308,21 @@ getNHLScores <- function(
       error = function(e) message("Error in GameID", g, ": ", e)
     )
 
+    # Progress bar ticks for every game, including failures (Issue 3.5)
+    if (progress) {
+      pb$tick()
+    }
+
     if (all(is.na(sc)) || "nhl_get_data_error" %in% class(sc[[1]])) {
       next
     }
     if (sc$gameState == "OFF") {
+      # Issue 3.8: Use numeric NA consistently for OTStatus, not empty string
+      ot_status_val <- NA_integer_
+      if (sc$periodDescriptor$number > 3) {
+        ot_status_val <- sc$periodDescriptor$number
+      }
+
       dfs <- data.frame(
         "Date" = as.Date(sc$gameDate),
         "HomeTeam" = paste(
@@ -222,11 +336,7 @@ getNHLScores <- function(
         "GameID" = sc$id,
         "HomeGoals" = sc$homeTeam$score,
         "AwayGoals" = sc$awayTeam$score,
-        "OTStatus" = ifelse(
-          sc$periodDescriptor$number == 3,
-          "",
-          sc$periodDescriptor$number
-        ),
+        "OTStatus" = ot_status_val,
         "GameType" = ifelse(substr(g, 6, 6) == "2", "R", "P"),
         "GameStatus" = "Final"
       )
@@ -240,26 +350,22 @@ getNHLScores <- function(
         "\nGame schedule state is ",
         sc$gameScheduleState
       )
-      next
-    }
-    if (progress) {
-      pb$tick()
     }
   }
 
   if (!is.null(scores)) {
     scores <- clean_names(scores)
-    if (nrow(scores[scores$OTStatus %in% "3rd", ]) > 0) {
-      scores[scores$OTStatus %in% "3rd", ]$OTStatus <- ""
-    }
+
+    # Convert OTStatus to character with consistent handling of numeric and NA values
     scores <- scores |>
       dplyr::mutate(
-        # SO is checked first: it is a special case of "> 3" and would
-        # otherwise always be shadowed by the OT branch below.
         OTStatus = dplyr::case_when(
+          # Regulation games (period 3 or NA)
+          is.na(.data$OTStatus) | .data$OTStatus == 3 ~ "",
+          # Shootout (period 5 in regular season)
           .data$OTStatus == 5 & .data$GameType == "R" ~ "SO",
+          # Overtime (any period > 3, excluding shootouts)
           .data$OTStatus > 3 ~ "OT",
-          .data$OTStatus <= 3 ~ "",
           .default = NA_character_
         )
       )
@@ -335,19 +441,28 @@ load_or_get_nst <- function(
   season <- paste0(season, season + 1)
   season <- as.numeric(season)
 
-  if (
-    file.exists(cache_path) &&
-      system2(
-        "grep",
-        paste0('-l "', gid, '" ', cache_path),
-        stdout = FALSE
-      ) ==
-        0
-  ) {
-    nstall <- utils::read.csv(cache_path)
-    nstdf <- nstall |>
-      dplyr::filter(.data$game_id == gid)
-  } else {
+  # Issue 3.13: Use R-native file operations instead of shell grep
+  cache_exists <- file.exists(cache_path) && file.size(cache_path) > 0
+  game_in_cache <- FALSE
+  nstdf <- NULL
+
+  if (cache_exists) {
+    tryCatch(
+      {
+        nstall <- utils::read.csv(cache_path)
+        nstdf <- nstall |>
+          dplyr::filter(.data$game_id == gid)
+        game_in_cache <- nrow(nstdf) > 0
+      },
+      error = function(e) {
+        warning(
+          "Error reading cache file {.file {cache_path}}: {.val {e$message}}"
+        )
+      }
+    )
+  }
+
+  if (!game_in_cache) {
     nstdf <- naturalstattrick::nst_report_df(
       season = season,
       game_id = game_id
@@ -399,26 +514,63 @@ get_xg <- function(gameIds) {
 
     nst_report <- load_or_get_nst(gid)
 
+    # Issue 3.12: Validate NST report structure before accessing columns
+    if (!is.data.frame(nst_report) || nrow(nst_report) == 0) {
+      warning(
+        "NST report for game {.val {gid}} returned empty or invalid structure."
+      )
+      return(list("GameID" = gid, "HomexG" = NA, "AwayxG" = NA))
+    }
+
+    required_cols <- c(
+      "h_a",
+      "xgf_all",
+      "gf_all",
+      "cf_all",
+      "xgf_pk",
+      "gf_pk",
+      "cf_pk",
+      "xgf_pp",
+      "gf_pp",
+      "cf_pp"
+    )
+    missing_cols <- setdiff(required_cols, names(nst_report))
+    if (length(missing_cols) > 0) {
+      cli::cli_abort(
+        "NST report for game {.val {gid}} missing columns: {.field {missing_cols}}"
+      )
+    }
+
+    # Validate that we have both home and away rows
+    home_rows <- nst_report[nst_report$h_a == "home", ]
+    away_rows <- nst_report[nst_report$h_a == "away", ]
+
+    if (nrow(home_rows) != 1 || nrow(away_rows) != 1) {
+      cli::cli_abort(
+        "NST report for game {.val {gid}} expected exactly one 'home' and one 'away' row, got {.val {nrow(home_rows)}} home and {.val {nrow(away_rows)}} away rows."
+      )
+    }
+
     return(list(
       "GameID" = as.integer(gid),
-      "HomexG" = as.numeric(nst_report[nst_report$h_a == "home", ]$xgf_all),
-      "AwayxG" = as.numeric(nst_report[nst_report$h_a == "away", ]$xgf_all),
-      "HomeG" = as.numeric(nst_report[nst_report$h_a == "home", ]$gf_all),
-      "AwayG" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_all),
-      "HomeCF" = as.numeric(nst_report[nst_report$h_a == "home", ]$cf_all),
-      "AwayCF" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_all),
-      "HomexGpk" = as.numeric(nst_report[nst_report$h_a == "home", ]$xgf_pk),
-      "AwayxGpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$xgf_pk),
-      "HomeGpk" = as.numeric(nst_report[nst_report$h_a == "home", ]$gf_pk),
-      "AwayGpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pk),
-      "HomeCFpk" = as.numeric(nst_report[nst_report$h_a == "home", ]$cf_pk),
-      "AwayCFpk" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pk),
-      "HomexGpp" = as.numeric(nst_report[nst_report$h_a == "home", ]$xgf_pp),
-      "AwayxGpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$xgf_pp),
-      "HomeGpp" = as.numeric(nst_report[nst_report$h_a == "home", ]$gf_pp),
-      "AwayGpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$gf_pp),
-      "HomeCFpp" = as.numeric(nst_report[nst_report$h_a == "home", ]$cf_pp),
-      "AwayCFpp" = as.numeric(nst_report[nst_report$h_a == "away", ]$cf_pp)
+      "HomexG" = as.numeric(home_rows$xgf_all),
+      "AwayxG" = as.numeric(away_rows$xgf_all),
+      "HomeG" = as.numeric(home_rows$gf_all),
+      "AwayG" = as.numeric(away_rows$gf_all),
+      "HomeCF" = as.numeric(home_rows$cf_all),
+      "AwayCF" = as.numeric(away_rows$cf_all),
+      "HomexGpk" = as.numeric(home_rows$xgf_pk),
+      "AwayxGpk" = as.numeric(away_rows$xgf_pk),
+      "HomeGpk" = as.numeric(home_rows$gf_pk),
+      "AwayGpk" = as.numeric(away_rows$gf_pk),
+      "HomeCFpk" = as.numeric(home_rows$cf_pk),
+      "AwayCFpk" = as.numeric(away_rows$cf_pk),
+      "HomexGpp" = as.numeric(home_rows$xgf_pp),
+      "AwayxGpp" = as.numeric(away_rows$xgf_pp),
+      "HomeGpp" = as.numeric(home_rows$gf_pp),
+      "AwayGpp" = as.numeric(away_rows$gf_pp),
+      "HomeCFpp" = as.numeric(home_rows$cf_pp),
+      "AwayCFpp" = as.numeric(away_rows$cf_pp)
     ))
   }
 

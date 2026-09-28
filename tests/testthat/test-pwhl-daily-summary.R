@@ -1,16 +1,20 @@
 test_that("dailyPWHLSummary() reports (not silently swallows) failed posts (#noissue)", {
-  withr::local_options(list(HockeyModel.prediction.path = withr::local_tempdir()))
+  withr::local_options(list(
+    HockeyModel.prediction.path = withr::local_tempdir()
+  ))
   local_mocked_bindings(
-    updatePWHLModel = function(...) list(
-      schedule = data.frame(
-        Date = Sys.Date() + 1,
-        GameType = "R",
-        HomeTeam = "Team A",
-        AwayTeam = "Team B"
-      ),
-      scores = data.frame(),
-      params = NULL
-    ),
+    updatePWHLModel = function(...) {
+      list(
+        schedule = data.frame(
+          Date = Sys.Date() + 1,
+          GameType = "R",
+          HomeTeam = "Team A",
+          AwayTeam = "Team B"
+        ),
+        scores = data.frame(),
+        params = NULL
+      )
+    },
     parse_pwhl_dc_params = function(params = NULL) list(m = NULL),
     pwhl_games_today = function(schedule, date = Sys.Date()) NULL,
     getPWHLPlayoffSeries = function() data.frame(),
@@ -28,21 +32,29 @@ test_that("dailyPWHLSummary() reports (not silently swallows) failed posts (#noi
 })
 
 test_that("dailyPWHLSummary() attributes failed posts to their description (#noissue)", {
-  withr::local_options(list(HockeyModel.prediction.path = withr::local_tempdir()))
+  withr::local_options(list(
+    HockeyModel.prediction.path = withr::local_tempdir()
+  ))
   local_mocked_bindings(
-    updatePWHLModel = function(...) list(
-      schedule = data.frame(
-        Date = Sys.Date() + 1,
-        GameType = "R",
-        HomeTeam = "Team A",
-        AwayTeam = "Team B"
-      ),
-      scores = data.frame(),
-      params = NULL
-    ),
+    updatePWHLModel = function(...) {
+      list(
+        schedule = data.frame(
+          Date = Sys.Date() + 1,
+          GameType = "R",
+          HomeTeam = "Team A",
+          AwayTeam = "Team B"
+        ),
+        scores = data.frame(),
+        params = NULL
+      )
+    },
     parse_pwhl_dc_params = function(params = NULL) list(m = NULL),
     pwhl_games_today = function(schedule, date = Sys.Date()) {
-      data.frame(Date = Sys.Date() + 1, HomeTeam = "Team A", AwayTeam = "Team B")
+      data.frame(
+        Date = Sys.Date() + 1,
+        HomeTeam = "Team A",
+        AwayTeam = "Team B"
+      )
     },
     plot_odds_today = function(params, schedule, league = "NHL") NULL,
     daily_odds_table = function(params, schedule, league = "NHL") "a-table",
