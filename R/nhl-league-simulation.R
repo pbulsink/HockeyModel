@@ -411,30 +411,32 @@ sim_engine <- function(all_season, nsims, params = NULL) {
   # multi_season<-dplyr::bind_rows(replicate(nsims, all_season[,c('HomeTeam', 'AwayTeam', 'Result', 'GameID')], simplify = FALSE))
   # multi_season$sim<-rep(1:nsims, each = season_length)
 
-  resultslist <- list()
+  # Pre-extract the per-game columns once so the loop below indexes by row
+  # (O(G)) rather than re-scanning `all_season` by GameID every iteration
+  # (O(G^2)). RNG draw order and per-game logic are unchanged.
+  is_unplayed <- is.na(all_season$Result)
+  hw <- all_season$HomeWin
+  hot <- all_season$HomeOT
+  hso <- all_season$HomeSO
+  aso <- all_season$AwaySO
+  aot <- all_season$AwayOT
+  aw <- all_season$AwayWin
+  played_result <- all_season$Result
 
-  # TODO: This can be vectorized or delooped by doing Result prediction on long_season?
-  for (g in all_season$GameID) {
-    if (is.na(all_season[all_season$GameID == g, ]$Result)) {
-      odds <- as.vector(all_season[
-        all_season$GameID == g,
-        c("HomeWin", "HomeOT", "HomeSO", "AwaySO", "AwayOT", "AwayWin")
-      ])
-      # multi_season[multi_season$GameID == g,]$Result <- sampleResult(odds[[1]], odds[[2]], odds[[3]], odds[[4]], odds[[5]], odds[[6]], size=nsims)
-      resultslist[[as.character(g)]] <- sampleResult(
-        odds[[1]],
-        odds[[2]],
-        odds[[3]],
-        odds[[4]],
-        odds[[5]],
-        odds[[6]],
+  resultslist <- vector("list", season_length)
+  for (i in seq_len(season_length)) {
+    if (is_unplayed[i]) {
+      resultslist[[i]] <- sampleResult(
+        hw[i],
+        hot[i],
+        hso[i],
+        aso[i],
+        aot[i],
+        aw[i],
         size = nsims
       )
     } else {
-      resultslist[[as.character(g)]] <- rep(
-        all_season[all_season$GameID == g, ]$Result,
-        nsims
-      )
+      resultslist[[i]] <- rep(played_result[i], nsims)
     }
   }
 
@@ -495,19 +497,19 @@ sim_engine <- function(all_season, nsims, params = NULL) {
     dplyr::ungroup() |>
     dplyr::arrange(.data$SimNo, .data$Team) |>
     dplyr::select(
-      .data$SimNo,
-      .data$Team,
-      .data$W,
-      .data$OTW,
-      .data$SOW,
-      .data$SOL,
-      .data$OTL,
-      .data$Points,
-      .data$Wildcard,
-      .data$Rank,
-      .data$ConfRank,
-      .data$DivRank,
-      .data$Playoffs
+      "SimNo",
+      "Team",
+      "W",
+      "OTW",
+      "SOW",
+      "SOL",
+      "OTL",
+      "Points",
+      "Wildcard",
+      "Rank",
+      "ConfRank",
+      "DivRank",
+      "Playoffs"
     ) |>
     tibble::as_tibble()
 

@@ -274,6 +274,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   - Iterate by row index instead: `for (i in seq_len(nrow(all_season))) { row <- all_season[i, ] }`
   - Or precompute vectors outside loop
 - **Test:** Benchmark large simulations; should see speedup
+- **Status:** ✅ Fixed. Pre-extracted the per-game columns (`HomeWin`, `HomeOT`, `HomeSO`, `AwaySO`, `AwayOT`, `AwayWin`, `Result`) once outside the loop and iterate by row index (`for (i in seq_len(season_length))`) instead of re-scanning `all_season` by `GameID` on every iteration. RNG draw order and per-game logic are unchanged; output is byte-identical to the old code (verified via golden comparison). Benchmark: G=16000 went from ~10.2s to ~0.77s (near-linear in G). Also fixed a latent `dplyr::select()` `.data$` deprecation (now string names) that surfaced once tests exercise `sim_engine()`. Added two tests: `sim_engine preserves played results and samples unplayed games` and `sim_engine handles a full-season-sized schedule`.
 
 #### Issue 4.2: Large Intermediate `long_season` Data Frame
 - **File:** `nhl-league-simulation.R:441-448`
@@ -410,7 +411,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - ⏳ Fix hardcoded field dependencies (Issue 3.15, foundation laid)
 
 ### Phase 4: Performance Optimization (Later)
-- [ ] Remove O(G²) lookup (Issue 4.1)
+- ✅ Remove O(G²) lookup (Issue 4.1, DONE)
 - [ ] Replace long_season with matrices (Issue 4.2)
 - [ ] Fix chunk division (Issue 4.4)
 - [ ] Vectorize odds generation (Issue 4.8)
