@@ -604,12 +604,6 @@ tweetPlayoffOdds <- function(
       filename = file.path(graphic_dir, "playoff_odds.png")
     )
 
-    status <- paste0(
-      "#NHL Eastern and Western Conference Playoff and #StanleyCup Odds before games on ",
-      Sys.Date(),
-      ". #HockeyTwitter"
-    )
-
     post_results[[length(post_results) + 1]] <- .safe_post(
       "playoff and cup odds",
       text = paste0(

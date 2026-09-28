@@ -13,7 +13,8 @@
 #' @param graphic_dir (`character(1)`) Directory to save generated PNG files.
 #' @param delay (`double(1)`) Seconds to wait between social-media posts.
 #'
-#' @returns `NULL` (invisibly).
+#' @returns (`data.frame`) A summary of every attempted social post (see
+#'   `.summarize_post_results()` in `frontend-social.R`), invisibly.
 #' @export
 dailyPWHLSummary <- function(
   graphic_dir = file.path(
@@ -22,6 +23,7 @@ dailyPWHLSummary <- function(
   ),
   delay = stats::runif(1, min = 2, max = 6) * 60
 ) {
+  post_results <- list()
   model_data <- updatePWHLModel()
   schedule <- model_data$schedule
   scores <- model_data$scores
@@ -29,7 +31,7 @@ dailyPWHLSummary <- function(
 
   if (nrow(schedule) == 0 || Sys.Date() > max(schedule$Date)) {
     cli::cli_alert_info("No PWHL games scheduled; nothing to do.")
-    return(invisible(NULL))
+    return(invisible(.summarize_post_results(post_results)))
   }
 
   if (!dir.exists(graphic_dir)) {
@@ -60,19 +62,18 @@ dailyPWHLSummary <- function(
         grDevices::dev.off()
       }
 
-      try(
-        atrrr::post(
-          text = paste0(
-            "Predicted odds for today's #PWHL games on ",
-            Sys.Date(),
-            "."
-          ),
-          image = file.path(graphic_dir, "pwhl_today_odds.png"),
-          image_alt = paste0(
-            "Odds graphic for today's PWHL games on ",
-            Sys.Date(),
-            "."
-          )
+      post_results[[length(post_results) + 1]] <- .safe_post(
+        "today's odds",
+        text = paste0(
+          "Predicted odds for today's #PWHL games on ",
+          Sys.Date(),
+          "."
+        ),
+        image = file.path(graphic_dir, "pwhl_today_odds.png"),
+        image_alt = paste0(
+          "Odds graphic for today's PWHL games on ",
+          Sys.Date(),
+          "."
         )
       )
     }
@@ -90,19 +91,18 @@ dailyPWHLSummary <- function(
 
       Sys.sleep(delay)
 
-      try(
-        atrrr::post(
-          text = paste0(
-            "Predicted odds table for today's #PWHL games on ",
-            Sys.Date(),
-            "."
-          ),
-          image = file.path(graphic_dir, "pwhl_today_odds_table.png"),
-          image_alt = paste0(
-            "Odds table for today's PWHL games on ",
-            Sys.Date(),
-            "."
-          )
+      post_results[[length(post_results) + 1]] <- .safe_post(
+        "today's odds table",
+        text = paste0(
+          "Predicted odds table for today's #PWHL games on ",
+          Sys.Date(),
+          "."
+        ),
+        image = file.path(graphic_dir, "pwhl_today_odds_table.png"),
+        image_alt = paste0(
+          "Odds table for today's PWHL games on ",
+          Sys.Date(),
+          "."
         )
       )
     }
@@ -129,19 +129,18 @@ dailyPWHLSummary <- function(
 
         Sys.sleep(delay)
 
-        try(
-          atrrr::post(
-            text = paste0(
-              "Current #PWHL team ratings (as of ",
-              Sys.Date(),
-              ")."
-            ),
-            image = file.path(graphic_dir, "pwhl_current_rating.png"),
-            image_alt = paste0(
-              "PWHL team offence/defence rating scatter plot as of ",
-              Sys.Date(),
-              "."
-            )
+        post_results[[length(post_results) + 1]] <- .safe_post(
+          "current ratings",
+          text = paste0(
+            "Current #PWHL team ratings (as of ",
+            Sys.Date(),
+            ")."
+          ),
+          image = file.path(graphic_dir, "pwhl_current_rating.png"),
+          image_alt = paste0(
+            "PWHL team offence/defence rating scatter plot as of ",
+            Sys.Date(),
+            "."
           )
         )
       }
@@ -179,19 +178,18 @@ dailyPWHLSummary <- function(
 
       Sys.sleep(delay)
 
-      try(
-        atrrr::post(
-          text = paste0(
-            "#PWHL playoff series odds as of ",
-            Sys.Date(),
-            "."
-          ),
-          image = file.path(graphic_dir, "pwhl_series_odds.png"),
-          image_alt = paste0(
-            "PWHL playoff series odds as of ",
-            Sys.Date(),
-            "."
-          )
+      post_results[[length(post_results) + 1]] <- .safe_post(
+        "series odds",
+        text = paste0(
+          "#PWHL playoff series odds as of ",
+          Sys.Date(),
+          "."
+        ),
+        image = file.path(graphic_dir, "pwhl_series_odds.png"),
+        image_alt = paste0(
+          "PWHL playoff series odds as of ",
+          Sys.Date(),
+          "."
         )
       )
     }
@@ -208,19 +206,18 @@ dailyPWHLSummary <- function(
 
       Sys.sleep(delay)
 
-      try(
-        atrrr::post(
-          text = paste0(
-            "#PWHL playoff series odds table as of ",
-            Sys.Date(),
-            "."
-          ),
-          image = file.path(graphic_dir, "pwhl_series_odds_table.png"),
-          image_alt = paste0(
-            "PWHL playoff series odds table as of ",
-            Sys.Date(),
-            "."
-          )
+      post_results[[length(post_results) + 1]] <- .safe_post(
+        "series odds table",
+        text = paste0(
+          "#PWHL playoff series odds table as of ",
+          Sys.Date(),
+          "."
+        ),
+        image = file.path(graphic_dir, "pwhl_series_odds_table.png"),
+        image_alt = paste0(
+          "PWHL playoff series odds table as of ",
+          Sys.Date(),
+          "."
         )
       )
     }
@@ -264,19 +261,18 @@ dailyPWHLSummary <- function(
 
           Sys.sleep(delay)
 
-          try(
-            atrrr::post(
-              text = paste0(
-                "#PWHL playoff qualification odds before games on ",
-                Sys.Date(),
-                "."
-              ),
-              image = file.path(graphic_dir, "pwhl_playoff_odds.png"),
-              image_alt = paste0(
-                "PWHL team playoff odds table as of ",
-                Sys.Date(),
-                "."
-              )
+          post_results[[length(post_results) + 1]] <- .safe_post(
+            "playoff qualification odds",
+            text = paste0(
+              "#PWHL playoff qualification odds before games on ",
+              Sys.Date(),
+              "."
+            ),
+            image = file.path(graphic_dir, "pwhl_playoff_odds.png"),
+            image_alt = paste0(
+              "PWHL team playoff odds table as of ",
+              Sys.Date(),
+              "."
             )
           )
         }
@@ -284,5 +280,5 @@ dailyPWHLSummary <- function(
     }
   }
 
-  return(invisible(NULL))
+  invisible(.summarize_post_results(post_results))
 }

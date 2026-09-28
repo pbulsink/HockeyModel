@@ -143,10 +143,11 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   one `data.frame` and emits a final warning if any posts failed.
 
 #### Issue 2.5: `tweetPlayoffOdds()` Dead Code
-- **File:** `frontend-social.R:518-521`
+- **File:** `frontend-social.R` (tweetPlayoffOdds)
 - **Problem:** `status` variable assigned but never used
-- **Fix:** Remove dead code or document why it exists
+- **Fix:** Removed the unused `status` definition; the inline `text` argument in the `.safe_post()` call is the canonical version.
 - **Test:** None needed (cleanup only)
+- **Status:** ✅ Fixed
 
 ---
 
@@ -399,8 +400,8 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - ✅ Fix league parameter passing (Issue 2.1, DONE)
 - ✅ Fix tweet() call (Issue 2.2, DONE)
 - ✅ Fix tweetPace() delay parameter (Issue 2.4, DONE)
-- [ ] Improve error reporting (Issue 2.3)
-- [ ] Remove tweetPlayoffOdds() dead code (Issue 2.5)
+- ✅ Improve error reporting (Issue 2.3, DONE)
+- ✅ Remove tweetPlayoffOdds() dead code (Issue 2.5, DONE)
 
 ### Phase 3: API Robustness (Following)
 - [ ] Validate API response schemas (Issues 3.1, 3.2, 3.3, etc.)
