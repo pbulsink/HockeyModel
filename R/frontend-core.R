@@ -206,7 +206,7 @@ updateModel <- function(save_data = TRUE, league = NULL) {
   schedule = HockeyModel::schedule,
   params = NULL
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
 
   if (!dir.exists(data_dir)) {
     dir.create(data_dir, recursive = TRUE)

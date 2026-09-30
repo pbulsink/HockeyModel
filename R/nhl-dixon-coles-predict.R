@@ -25,7 +25,7 @@ DCPredict <- function(
   season_percent = NULL,
   draws = TRUE
 ) {
-  params <- parse_dc_params(params = params)
+  params <- .parse_dc_params(params = params)
   probability_matrix <- dcProbMatrix(
     home = home,
     away = away,
@@ -66,7 +66,7 @@ DCPredict <- function(
 #'
 #' @return a list of $home and $away Poisson Lambda values -
 dcLambda <- function(home, away, params = NULL) {
-  params <- parse_dc_params(params = params)
+  params <- .parse_dc_params(params = params)
   xg <- list("home" = NA, "away" = NA)
 
   # Expected goals home
@@ -149,7 +149,7 @@ dcProbMatrix <- function(
   expected_mean = NULL,
   season_percent = NULL
 ) {
-  params <- parse_dc_params(params = params)
+  params <- .parse_dc_params(params = params)
 
   xg <- dcLambda(home = home, away = away, params = params)
   # Expected goals home
@@ -189,7 +189,7 @@ dcProbMatrix <- function(
 #' @return a square matrix of maxgoal:maxgoal, with all entries in `[0, 1]` and
 #'   summing to 1 (see [validateProbMatrix])
 prob_matrix <- function(lambda, mu, params, maxgoal) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*%
     t(stats::dpois(0:maxgoal, mu))
 
@@ -289,7 +289,7 @@ dcSample <- function(
   season_percent = NULL,
   as_result = TRUE
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   pm <- dcProbMatrix(
     home = home,
     away = away,
@@ -355,7 +355,7 @@ dcSample <- function(
 #'
 #' @return a result from 0 to 1 corresponding to \link{scores} results
 dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
 
   dcr <- function(lambda, mu, params, maxgoal, nsim) {
     if (is.na(lambda)) {
@@ -442,7 +442,7 @@ sampleResult <- function(hw, hot, hso, aso, aot, aw, size = 1) {
 #'   away OT, and away win.
 #' @keywords internal
 dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
 
   dceo <- function(lambda, mu, params, maxgoal, nsim) {
     if (is.na(lambda)) {

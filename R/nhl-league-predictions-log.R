@@ -21,7 +21,7 @@ recordTodaysPredictions <- function(
   include_xG = FALSE,
   draws = TRUE
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   if (!is.Date(today)) {
     cli::cli_abort("{.arg today} must be a Date or date-like value.")
   }

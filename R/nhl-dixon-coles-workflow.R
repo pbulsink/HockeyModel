@@ -86,7 +86,7 @@ todayDC <- function(
   if (!is.Date(today)) {
     cli::cli_abort("{.arg today} must be a Date or date-like value.")
   }
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   #games <- games_today(date = today)
   games <- schedule[schedule$Date == today, ]
   if (nrow(games) == 0) {
@@ -152,7 +152,7 @@ todayDC <- function(
 #' @return home ice advantage team odds to win series
 #' @export
 playoffDC <- function(home, away, params = NULL, home_wins = 0, away_wins = 0) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   # Odds of home ice advantage team win at home
   homeodds <- DCPredict(home = home, away = away, params = params)
   homeodds <- normalizeOdds(c(homeodds[1], homeodds[3]))[1]
@@ -200,7 +200,7 @@ remainderSeasonDC <- function(
 
   cores <- parseCores(cores)
 
-  params <- parse_dc_params(params = params)
+  params <- .parse_dc_params(params = params)
 
   last_game_date <- as.Date(max(scores$Date))
   schedule <- add_postponed_to_schedule_end(schedule)

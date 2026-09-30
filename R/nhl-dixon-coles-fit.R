@@ -351,7 +351,7 @@ derive_season_starts <- function(dates, season_month_cutoff = 8L) {
 #'   `eta`, and `k`. When `NULL`, NHL package-level defaults are used.
 #' @returns (`list`) Named list containing `m`, `rho`, `beta`, `eta`, and `k`.
 #' @keywords internal
-parse_dc_params <- function(params = NULL, defaults = NULL) {
+.parse_dc_params <- function(params = NULL, defaults = NULL) {
   while ("params" %in% names(params)) {
     params <- params$params
   }

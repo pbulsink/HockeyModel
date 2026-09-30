@@ -18,7 +18,7 @@ playoffWin <- function(
   away_wins = 0,
   params = NULL
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   home_odds <- DCPredict(
     home = home_team,
     away = away_team,
@@ -63,7 +63,7 @@ randomSeriesWinner <- function(
   params = NULL
 ) {
   if (is.null(homeAwayOdds)) {
-    params <- parse_dc_params(params)
+    params <- .parse_dc_params(params)
     return(ifelse(
       stats::runif(1) <
         playoffWin(
@@ -84,7 +84,7 @@ randomSeriesWinner <- function(
       return(ifelse(stats::runif(1) < hao$HomeOdds, home_team, away_team))
     } else {
       # Calculated odds aren't in there, get it manually
-      params <- parse_dc_params(params)
+      params <- .parse_dc_params(params)
       return(ifelse(
         stats::runif(1) <
           playoffWin(
@@ -265,7 +265,7 @@ simulatePlayoffs <- function(
   cores = NULL,
   params = NULL
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   cores <- parseCores(cores)
   # TODO use compile_predictions for this?
   if (is.null(summary_results)) {
@@ -528,7 +528,7 @@ single_series_solver <- function(
   homeAwayOdds = NULL,
   params = NULL
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   if (is.na(currentSeries) || nrow(currentSeries) == 0) {
     return(randomSeriesWinner(
       homeTeam,
@@ -644,7 +644,7 @@ playoffSolverEngine <- function(
   homeAwayOdds,
   params = NULL
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   simresults <- data.frame(
     "SimNo" = integer(),
     "l1" = character(),
@@ -1242,7 +1242,7 @@ getSeriesOdds <- function(params = NULL) {
     return(NULL)
   }
 
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
 
   series$HomeSeed <- NULL
   series$AwaySeed <- NULL

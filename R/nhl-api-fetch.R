@@ -196,6 +196,12 @@ games_today <- function(
 
   gameWeek <- sched$gameWeek
 
+  gameWeek <- gameWeek |>
+    dplyr::mutate(
+      date = as.Date(.data$date),
+      numberOfGames = as.integer(.data$numberOfGames)
+    )
+
   # Find the games for this date
   date_row <- gameWeek[
     sapply(gameWeek$date, function(d) identical(d, date)),

@@ -24,7 +24,7 @@ plot_odds_today <- function(
       "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
     )
   }
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   todayodds <- todayDC(today = today, params, schedule = schedule)
   if (is.null(todayodds)) {
     return(NULL)
@@ -226,7 +226,7 @@ plot_playoff_series_odds <- function(
       "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
     )
   }
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   series <- series[, c("HomeTeam", "AwayTeam", "HomeWins", "AwayWins")]
   series$HomeOdds <- purrr::pmap_dbl(
     series,

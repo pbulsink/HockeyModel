@@ -251,7 +251,7 @@ loopless_sim <- function(
   likelihood_graphic = TRUE,
   odds_table = NULL
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
 
   cores <- parseCores(cores)
 
@@ -404,7 +404,7 @@ loopless_sim <- function(
 #' @return results of `nsims` season simulations, as one long data frame score table.
 #' @export
 sim_engine <- function(all_season, nsims, params = NULL) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
 
   season_length <- nrow(all_season)
 
@@ -563,7 +563,7 @@ todayOdds <- function(
 #' @returns (`data.frame`) Pairwise table with `HomeOdds`.
 #' @keywords internal
 getAllHomeAwayOdds <- function(teamlist, params = NULL) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   homeAwayOdds <- expand.grid(
     "HomeTeam" = teamlist,
     "AwayTeam" = teamlist,

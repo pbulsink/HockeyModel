@@ -120,7 +120,7 @@ updatePWHLDC <- function(
 
 #' Parse PWHL Dixon-Coles parameter list
 #'
-#' @description Like [parse_dc_params()] but falls back to the PWHL-specific
+#' @description Like [.parse_dc_params()] but falls back to the PWHL-specific
 #'   package data objects (`pwhl_m`, `pwhl_rho`, `pwhl_beta`, `pwhl_eta`,
 #'   `pwhl_k`) instead of the NHL ones.
 #'
@@ -130,7 +130,7 @@ updatePWHLDC <- function(
 #' @returns A named list with elements `m`, `rho`, `beta`, `eta`, and `k`.
 #' @keywords internal
 parse_pwhl_dc_params <- function(params = NULL) {
-  parse_dc_params(
+  .parse_dc_params(
     params,
     defaults = list(
       m = HockeyModel::pwhl_m,

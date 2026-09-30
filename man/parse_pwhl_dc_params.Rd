@@ -14,7 +14,7 @@ under a \code{params} key.}
 A named list with elements \code{m}, \code{rho}, \code{beta}, \code{eta}, and \code{k}.
 }
 \description{
-Like \code{\link[=parse_dc_params]{parse_dc_params()}} but falls back to the PWHL-specific
+Like \code{\link[=.parse_dc_params]{.parse_dc_params()}} but falls back to the PWHL-specific
 package data objects (\code{pwhl_m}, \code{pwhl_rho}, \code{pwhl_beta}, \code{pwhl_eta},
 \code{pwhl_k}) instead of the NHL ones.
 }

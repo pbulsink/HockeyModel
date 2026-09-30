@@ -14,7 +14,7 @@
   schedule = HockeyModel::schedule,
   scores = HockeyModel::scores
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
 
   if (scores$Date[nrow(scores)] < (date - 7)) {
     cli::cli_alert_info(

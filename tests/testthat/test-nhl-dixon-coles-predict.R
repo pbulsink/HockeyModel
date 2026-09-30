@@ -66,7 +66,7 @@ test_that("dcProbMatrix creates symmetric-like structure", {
 
 # ============ DC Convenience tests ============
 test_that("DC Convenience functions are ok", {
-  params <- parse_dc_params(NULL)
+  params <- .parse_dc_params(NULL)
   expect_true(
     dcResult(lambda = 3, mu = 3, params = params) %in%
       c(0, 0.25, 0.4, 0.5, 0.6, 0.75, 1)

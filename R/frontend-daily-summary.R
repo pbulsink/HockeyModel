@@ -25,7 +25,7 @@
   post_results <- list()
   modelparams <- updateModel(league = "NHL")
   sc <- modelparams$schedule
-  params <- parse_dc_params(params = modelparams)
+  params <- .parse_dc_params(params = modelparams)
 
   if (Sys.Date() > max(sc$Date)) {
     stop("No future games planned")
@@ -42,7 +42,7 @@
     today <- todayOddsPlot(
       params = params,
       schedule = modelparams$schedule,
-      scores = modelparams$scores
+      scores = modelparams$scores, league = "NHL"
     )
     # save to files.
     grDevices::png(
@@ -52,7 +52,7 @@
       units = "in",
       res = 300
     )
-    print(today)
+    print(today$nhl)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()
@@ -89,7 +89,7 @@
       )
     )
 
-    rating <- ratings(params$m)
+    rating <- ratings(params$m, league = "NHL")
     # save to files.
     grDevices::png(
       filename = file.path(graphic_dir, "current_rating.png"),
@@ -98,7 +98,7 @@
       units = "in",
       res = 300
     )
-    print(rating)
+    print(rating$nhl)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()
@@ -119,10 +119,10 @@
       params = params,
       league = "NHL"
     )
-    playoff <- playoffOdds()
-    president <- presidentOdds()
-    point <- pointPredict()
-    rating <- ratings(m = params$m)
+    playoff <- playoffOdds(league = "NHL")
+    president <- presidentOdds(league = "NHL")
+    point <- pointPredict(league = "NHL")
+    rating <- ratings(m = params$m, league = "NHL")
 
     Sys.sleep(15)
 

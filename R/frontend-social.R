@@ -378,7 +378,7 @@ tweetGames <- function(
   graphic_dir = getOption("HockeyModel.graphics.path"),
   params = NULL
 ) {
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   post_results <- list()
   # Tweet each game
   if (is.null(games)) {
@@ -496,7 +496,7 @@ tweetSeries <- function(
   }
 
   post_results <- list()
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   while (grDevices::dev.cur() != 1) {
     grDevices::dev.off()
   }
@@ -581,7 +581,7 @@ tweetPlayoffOdds <- function(
   }
 
   post_results <- list()
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   playoffodds <- simulatePlayoffs(
     summary_results = summary_results,
     params = params

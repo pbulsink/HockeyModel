@@ -15,7 +15,7 @@ plot_game <- function(home, away, params = NULL, maxgoal = 10) {
       "Package {.pkg ggplot2} is required. Install it with {.code install.packages('ggplot2')}."
     )
   }
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   # Expected goals home
   lambda <- try(
     stats::predict(

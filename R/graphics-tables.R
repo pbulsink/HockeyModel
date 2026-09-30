@@ -206,7 +206,7 @@ daily_odds_table <- function(
       "Package {.pkg scales} is required. Install it with {.code install.packages('scales')}."
     )
   }
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
   todayodds <- todayDC(
     today = as.Date(today),
     params = params,
@@ -472,7 +472,7 @@ series_odds_table <- function(
     series <- series[series$Status == "Ongoing", , drop = FALSE]
   }
 
-  params <- parse_dc_params(params)
+  params <- .parse_dc_params(params)
 
   series <- series[, required_cols]
   series$HomeOdds <- mapply(

@@ -16,7 +16,8 @@ dailyPWHLSummary(
 \item{delay}{(\code{double(1)}) Seconds to wait between social-media posts.}
 }
 \value{
-\code{NULL} (invisibly).
+(\code{data.frame}) A summary of every attempted social post (see
+\code{.summarize_post_results()} in \code{frontend-social.R}), invisibly.
 }
 \description{
 The PWHL equivalent of \code{\link[=dailySummary]{dailySummary()}}. Fetches the latest
