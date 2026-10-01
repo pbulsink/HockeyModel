@@ -53,8 +53,8 @@ buildStats <- function(scores) {
         W = sum(.data$Result == 1),
         OTW = sum(.data$Result == 0.75),
         SOW = sum(.data$Result == 0.60),
-        OTL = sum(.data$Result == 0.40),
-        SOL = sum(.data$Result == 0.25),
+        SOL = sum(.data$Result == 0.40),
+        OTL = sum(.data$Result == 0.25),
         L = sum(.data$Result == 0),
         P = as.numeric(
           .data$W * 2 + .data$OTW * 2 + .data$SOW * 2 + .data$OTL + .data$SOL
@@ -68,8 +68,8 @@ buildStats <- function(scores) {
         W = sum(.data$Result == 0),
         OTW = sum(.data$Result == 0.25),
         SOW = sum(.data$Result == 0.40),
-        OTL = sum(.data$Result == 0.60),
-        SOL = sum(.data$Result == 0.75),
+        SOL = sum(.data$Result == 0.60),
+        OTL = sum(.data$Result == 0.75),
         L = sum(.data$Result == 1),
         P = as.numeric(
           .data$W * 2 + .data$OTW * 2 + .data$SOW * 2 + .data$OTL + .data$SOL

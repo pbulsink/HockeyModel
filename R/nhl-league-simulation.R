@@ -423,10 +423,23 @@ sim_engine <- function(all_season, nsims, params = NULL) {
   aw <- all_season$AwayWin
   played_result <- all_season$Result
 
-  resultslist <- vector("list", season_length)
+  # Per-game result vectors (length nsims each) are collected in `home_res`
+  # and `away_res` lists, then aggregated into per-team totals. This avoids
+  # the 2*G*S row `long_season` intermediate the previous implementation
+  # built before `group_by(SimNo, Team)` summarisation.
+  teamlist <- sort(unique(c(
+    all_season$HomeTeam,
+    all_season$AwayTeam
+  )))
+  home_idx <- match(all_season$HomeTeam, teamlist)
+  away_idx <- match(all_season$AwayTeam, teamlist)
+
+  home_res <- vector("list", season_length)
+  away_res <- vector("list", season_length)
+
   for (i in seq_len(season_length)) {
     if (is_unplayed[i]) {
-      resultslist[[i]] <- sampleResult(
+      r <- sampleResult(
         hw[i],
         hot[i],
         hso[i],
@@ -436,35 +449,71 @@ sim_engine <- function(all_season, nsims, params = NULL) {
         size = nsims
       )
     } else {
-      resultslist[[i]] <- rep(played_result[i], nsims)
+      r <- rep(played_result[i], nsims)
     }
+    home_res[[i]] <- r
+    away_res[[i]] <- 1 - r
   }
 
-  long_season <- data.frame(
-    Team = c(
-      rep(all_season$HomeTeam, each = nsims),
-      rep(all_season$AwayTeam, each = nsims)
-    ),
-    SimNo = c(rep(1:nsims, season_length), rep(1:nsims, season_length)),
-    Result = c(unlist(resultslist), 1 - unlist(resultslist))
+  # Map each team to the indices of games where it is home / away
+  home_games <- setNames(
+    lapply(seq_along(teamlist), function(t) which(home_idx == t)),
+    teamlist
+  )
+  away_games <- setNames(
+    lapply(seq_along(teamlist), function(t) which(away_idx == t)),
+    teamlist
   )
 
-  rm(resultslist)
+  # Sum a boolean mask over the games a team plays (home or away)
+  sum_mask <- function(games_idx, res_list, value) {
+    if (length(games_idx) == 0L) {
+      return(rep(0, nsims))
+    }
+    out <- rep(0, nsims)
+    for (g in games_idx) {
+      out <- out + (res_list[[g]] == value)
+    }
+    out
+  }
 
-  all_results <- long_season |>
-    dtplyr::lazy_dt() |>
-    dplyr::group_by(.data$SimNo, .data$Team) |>
-    dplyr::summarise(
-      W = sum(.data$Result == 1),
-      OTW = sum(.data$Result == 0.75),
-      SOW = sum(.data$Result == 0.6),
-      SOL = sum(.data$Result == 0.4),
-      OTL = sum(.data$Result == 0.25),
-      L = sum(.data$Result == 0)
-    ) |>
-    as.data.frame()
-
-  rm(long_season)
+  all_results <- data.frame(
+    SimNo = rep(1:nsims, length(teamlist)),
+    Team = rep(teamlist, each = nsims)
+  )
+  # Each team's W/OTW/SOW counts both home and away wins; L/OTL/SOL counts
+  # both home and away losses. The away result is `1 - home_result`, so e.g.
+  # an away win (away_res == 1) corresponds to home_res == 0.
+  all_results$W <- unlist(mapply(
+    function(t) sum_mask(home_games[[t]], home_res, 1) + sum_mask(away_games[[t]], away_res, 1),
+    seq_along(teamlist),
+    SIMPLIFY = FALSE
+  ))
+  all_results$OTW <- unlist(mapply(
+    function(t) sum_mask(home_games[[t]], home_res, 0.75) + sum_mask(away_games[[t]], away_res, 0.75),
+    seq_along(teamlist),
+    SIMPLIFY = FALSE
+  ))
+  all_results$SOW <- unlist(mapply(
+    function(t) sum_mask(home_games[[t]], home_res, 0.6) + sum_mask(away_games[[t]], away_res, 0.6),
+    seq_along(teamlist),
+    SIMPLIFY = FALSE
+  ))
+  all_results$L <- unlist(mapply(
+    function(t) sum_mask(home_games[[t]], home_res, 0) + sum_mask(away_games[[t]], away_res, 0),
+    seq_along(teamlist),
+    SIMPLIFY = FALSE
+  ))
+  all_results$OTL <- unlist(mapply(
+    function(t) sum_mask(home_games[[t]], home_res, 0.25) + sum_mask(away_games[[t]], away_res, 0.25),
+    seq_along(teamlist),
+    SIMPLIFY = FALSE
+  ))
+  all_results$SOL <- unlist(mapply(
+    function(t) sum_mask(home_games[[t]], home_res, 0.4) + sum_mask(away_games[[t]], away_res, 0.4),
+    seq_along(teamlist),
+    SIMPLIFY = FALSE
+  ))
 
   all_results$Points <- all_results$W *
     2 +

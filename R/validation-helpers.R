@@ -147,6 +147,11 @@ gameIDValidator <- function(gameIDs) {
 #' @examples is.Date("2020-12-13")
 #' is.Date("bob")
 is.Date <- function(date) {
+  # A bare numeric (e.g. 12345) is not a valid date-like value, even though
+  # as.Date() would silently interpret it as a days-since-epoch offset.
+  if (is.numeric(date) && !inherits(date, c("Date", "POSIXt"))) {
+    return(FALSE)
+  }
   tryCatch(!is.na(as.Date(date)), error = function(err) {
     FALSE
   })

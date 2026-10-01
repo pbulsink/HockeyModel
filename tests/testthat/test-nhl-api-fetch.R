@@ -116,7 +116,7 @@ test_that("games_today returns NULL or data frame", {
     today_missing <- NULL
     expect_message(
       today_missing <- games_today(date = as.Date("2019-11-01")),
-      "Games on today aren't present in Schedule"
+      "aren't present in Schedule"
     )
     expect_null(today_missing)
   })

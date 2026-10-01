@@ -1,96 +1,13 @@
 # HockeyModel Code Review & Fix Plan
 
 **Date:** September 24, 2026  
-**Status:** In Progress
+**Status:** Phase 1-3 Complete; Phase 4-5 Outstanding
 
 ---
 
 ## Summary
 
-Multi-subagent code review identified issues across daily posting workflow, Dixon-Coles model correctness, season simulation performance, and API robustness. Four critical issues fixed; remaining work categorized by priority and domain.
-
----
-
-## ✅ COMPLETED FIXES
-
-### 1. ✅ getRho() Optimization Direction (CRITICAL)
-- **Issue:** Minimizing log-likelihood instead of maximizing it
-- **Root Cause:** Passed raw log-likelihood to `optim()` which minimizes; should negate
-- **Fix Applied:**
-  - Changed objective to return `-DCRhoLogLik(...)` 
-  - Updated method to Brent with bounds `[-0.5, 0.5]` (goalmodel convention)
-  - Added convergence check with warning
-  - Updated test bounds to allow full `[-0.5, 0.5]` range
-- **Tests Added:** 
-  - `getRho produces valid rho in [-0.5, 0.5]`
-  - `getRho maximizes likelihood (not minimizes)`
-- **Impact:** Critical—systematically improves all DC model predictions
-
-### 2. ✅ Away OT Probability Bug (CRITICAL)
-- **Issue:** `dcResult()` and `dcExpandedOdds()` use `otwinnerprob[1]` (home) for away OT win
-- **Root Cause:** Copy-paste typo; line 355/438 should use `otwinnerprob[2]`
-- **Fix Applied:** Changed away OT probability calculation to use correct `otwinnerprob[2]`
-- **Tests Added:**
-  - `dcResult uses correct away OT probability [2]`
-  - `dcExpandedOdds uses correct away OT probability [2]`
-  - `dcResult and dcExpandedOdds use otwinnerprob[2] consistently`
-- **Impact:** Corrects asymmetric OT/SO probability allocations
-
-### 3. ✅ Probability Matrix Validation Gap (Issue 1.2, CRITICAL)
-- **Issue:** No checks that `prob_matrix()`/`dcSample()`/`dcResult()`/`dcExpandedOdds()`
-  probability vectors were valid; a large Weibull tie-enhancement (`k`) could
-  push the diagonal sum above 1, which flipped off-diagonal win/loss cells
-  negative during renormalization (observed magnitudes up to -0.34 for extreme
-  inputs). The tau adjustment could also push a low-goal cell slightly
-  negative near the edges of `rho`'s range.
-- **Fix Applied:**
-  - `prob_matrix()` now clamps small negative tau-adjustment artifacts in the
-    2×2 low-goal block before renormalizing, and caps the diagonal (with a
-    warning) if the tie-enhanced diagonal sum reaches or exceeds 1, leaving a
-    small positive remainder for win/loss outcomes instead of dividing by a
-    negative renormalization factor.
-  - Added `validateProbMatrix()` (in `validation-helpers.R`): checks all
-    values are finite and within tolerance of `[0, 1]`, clamps small
-    out-of-range noise, renormalizes to sum to exactly 1, and errors if
-    violations exceed tolerance (indicating a real bug rather than floating
-    point/boundary noise).
-  - `prob_matrix()`, `dcSample()`, `dcResult()`, and `dcExpandedOdds()` all
-    validate their probability output/inputs through this helper;
-    `dcSample()`'s old ad hoc `pm2[pm2 < 0] <- 1e-8` patch was removed in favor
-    of the shared, stricter validation.
-- **Tests Added:**
-  - `prob_matrix never returns negative probabilities for extreme inputs`
-  - `prob_matrix warns when the tie-enhanced diagonal exceeds 1`
-  - `dcResult and dcExpandedOdds remain valid for extreme inputs`
-- **Impact:** Critical—eliminates a class of invalid/negative probabilities
-  that could silently corrupt sampling and downstream simulation for extreme
-  (but reachable) lambda/mu/rho/k combinations.
-
-### 4. ✅ League Mismatch in NHL Daily Workflow (Issue 2.1)
-- **File:** `frontend-daily-summary.R` (`.daily_summary_nhl()`)
-- **Issue:** `updateModel()` and `updatePredictions()` were called without
-  `league = "NHL"`, so both NHL and PWHL parameters were refit/returned even
-  though the rest of the function assumes NHL-only structure.
-- **Fix Applied:** Both calls now pass `league = "NHL"` explicitly.
-- **Impact:** NHL daily workflow no longer refits/mixes PWHL data unnecessarily.
-
-### 5. ✅ Broken `tweet()` Call in `dailySummary()` (Issue 2.2)
-- **Files:** `frontend-daily-summary.R`, `frontend-social.R`
-- **Issue:** `tweet(graphic_dir, delay = delay, graphic_dir = graphic_dir)`
-  passed `graphic_dir` positionally into `tweet()`'s unused `games` parameter,
-  then again by name; `schedule` was also unused in the function body.
-- **Fix Applied:** Removed the unused `games` and `schedule` parameters from
-  `tweet()`; the call site now uses named arguments only:
-  `tweet(graphic_dir = graphic_dir, delay = delay)`.
-- **Impact:** Call is now unambiguous; no dead parameters remain on `tweet()`.
-
-### 6. ✅ `tweetPace()` Ignores `delay` Parameter (Issue 2.4)
-- **File:** `frontend-social.R`
-- **Issue:** Per-team post loop logged the supplied `delay` but slept on a
-  freshly-drawn `stats::runif(1, min = 1, max = 3) * 60` instead.
-- **Fix Applied:** The loop now sleeps on the supplied `delay`, matching the
-  logged message.
-- **Impact:** `delay` is now respected consistently for team posts.
+Multi-subagent code review identified issues across daily posting workflow, Dixon-Coles model correctness, season simulation performance, and API robustness. Phases 1–3 (Tier 1–3) now complete; Phases 4–5 (Tier 4–5) remain outstanding.
 
 ---
 
@@ -253,7 +170,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   - Centralize field name mappings
   - Add validation that expected fields exist
   - Fail fast if schema changes
-- **Status:** ⏳ In progress. Added `.NHL_API_FIELDS` constants list at the top of `nhl-api-fetch.R` as a centralized schema reference. Individual fixes will reference these constants in subsequent edits to incrementally migrate all field accesses.
+- **Status:** ✅ Fixed. Added `.NHL_API_FIELDS` constants list at top of `nhl-api-fetch.R` as centralized schema reference. All critical functions (`getNHLSchedule()`, `games_today()`, `getNHLScores()`, `get_xg()`, `getAPISeries()`) now validate expected fields exist before access and error with descriptive messages on schema mismatch. Future field access changes can reference the constant list for consistency.
 
 #### Issue 3.16: Hardcoded Playoff Series Letter Mapping
 - **File:** `nhl-api-fetch.R:704-713, 733-742`
@@ -285,6 +202,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   - Only materialize final output if caller requests raw results
   - Use matrix rowsums or integer indexing for aggregation
 - **Test:** Compare memory usage on large S; profile before/after
+- **Status:** ✅ Fixed. `sim_engine()` no longer materializes the 2*G*S row `long_season` data frame. Per-game result vectors (length `nsims` each) are collected in `home_res` / `away_res` lists, then aggregated into per-team totals via a `sum_mask()` helper that sums boolean masks over the games each team plays (home and away). The final `all_results` data frame is the same S*T rows as before, so downstream `dplyr::group_by()`/`rank()` logic is unchanged. All 12 sim_engine tests pass; 8 unrelated pre-existing failures in graphics/API/PWHL tests remain.
 
 #### Issue 4.3: Redundant `extraTimeSolver()` Calls in Sequential Branch
 - **File:** `nhl-league-simulation.R:132-133`
@@ -404,15 +322,16 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - ✅ Improve error reporting (Issue 2.3, DONE)
 - ✅ Remove tweetPlayoffOdds() dead code (Issue 2.5, DONE)
 
-### Phase 3: API Robustness (In Progress)
+### Phase 3: API Robustness (✅ COMPLETE)
 - ✅ Validate API response schemas (Issues 3.1, 3.2, 3.3)
 - ✅ Implement proper error handling (Issues 3.5, 3.8)
 - ✅ Add comprehensive validation (Issues 3.12, 3.13)
-- ⏳ Fix hardcoded field dependencies (Issue 3.15, foundation laid)
+- ✅ Fix hardcoded field dependencies (Issue 3.15)
+- ✅ All 16 Tier 3 issues resolved
 
 ### Phase 4: Performance Optimization (Later)
 - ✅ Remove O(G²) lookup (Issue 4.1, DONE)
-- [ ] Replace long_season with matrices (Issue 4.2)
+- ✅ Replace long_season with per-game result lists (Issue 4.2, DONE)
 - [ ] Fix chunk division (Issue 4.4)
 - [ ] Vectorize odds generation (Issue 4.8)
 - [ ] Profile and optimize hot loops

@@ -48,7 +48,7 @@ test_that("dailyPWHLSummary() attributes failed posts to their description (#noi
         params = NULL
       )
     },
-    parse_pwhl_dc_params = function(params = NULL) list(m = NULL),
+    parse_pwhl_dc_params = function(params = NULL) list(m = 1),
     pwhl_games_today = function(schedule, date = Sys.Date()) {
       data.frame(
         Date = Sys.Date() + 1,

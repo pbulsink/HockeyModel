@@ -202,13 +202,14 @@ games_today <- function(
       numberOfGames = as.integer(.data$numberOfGames)
     )
 
-  # Find the games for this date
+  # Find the games for this date (gameWeek$date is a Date after the mutate
+  # above, so compare Date to Date).
   date_row <- gameWeek[
     sapply(gameWeek$date, function(d) identical(d, date)),
   ]
 
   if (nrow(date_row) == 0) {
-    message(
+    cli::cli_inform(
       "Requested date {.val {format(date, '%Y-%m-%d')}} not found in API response."
     )
     return(NULL)
@@ -222,7 +223,7 @@ games_today <- function(
   todaygames <- schedule[schedule$GameID %in% gids, ]
 
   if (nrow(todaygames) == 0) {
-    message(
+    cli::cli_inform(
       "Games on {.val {format(date, '%Y-%m-%d')}} aren't present in Schedule. Be sure schedule is updated!!"
     )
     return(NULL)
@@ -323,9 +324,13 @@ getNHLScores <- function(
       next
     }
     if (sc$gameState == "OFF") {
-      # Issue 3.8: Use numeric NA consistently for OTStatus, not empty string
+      # Issue 3.8: Use numeric NA consistently for OTStatus, not empty string.
+      # A missing/NA period (incomplete boxscore) stays NA so it is flagged as
+      # an unrecognized state downstream instead of crashing the period check.
+      # Otherwise store the period number so regulation (1-3) and OT/SO (4+)
+      # remain distinguishable from missing data.
       ot_status_val <- NA_integer_
-      if (sc$periodDescriptor$number > 3) {
+      if (!is.na(sc$periodDescriptor$number)) {
         ot_status_val <- sc$periodDescriptor$number
       }
 
@@ -366,8 +371,10 @@ getNHLScores <- function(
     scores <- scores |>
       dplyr::mutate(
         OTStatus = dplyr::case_when(
-          # Regulation games (period 3 or NA)
-          is.na(.data$OTStatus) | .data$OTStatus == 3 ~ "",
+          # Missing period data is an unrecognized boxscore, not a valid state.
+          is.na(.data$OTStatus) ~ NA_character_,
+          # Regulation games (period 1-3)
+          .data$OTStatus <= 3 ~ "",
           # Shootout (period 5 in regular season)
           .data$OTStatus == 5 & .data$GameType == "R" ~ "SO",
           # Overtime (any period > 3, excluding shootouts)
