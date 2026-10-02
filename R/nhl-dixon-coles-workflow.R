@@ -188,15 +188,7 @@ remainderSeasonDC <- function(
   regress = TRUE,
   mu_lambda = FALSE
 ) {
-  odds_table <- data.frame(
-    HomeTeam = character(),
-    AwayTeam = character(),
-    HomeWin = numeric(),
-    AwayWin = numeric(),
-    Draw = numeric(),
-    GameID = numeric(),
-    stringsAsFactors = FALSE
-  )
+  pred_list <- list()
 
   cores <- parseCores(cores)
 
@@ -251,10 +243,24 @@ remainderSeasonDC <- function(
       params = params
     )
     preds$Date <- d
-    odds_table <- rbind(odds_table, preds)
+    pred_list <- c(pred_list, list(preds))
   }
 
   #odds_table$Date <- schedule$Date
+  if (length(pred_list) == 0) {
+    odds_table <- data.frame(
+      HomeTeam = character(),
+      AwayTeam = character(),
+      HomeWin = numeric(),
+      AwayWin = numeric(),
+      Draw = numeric(),
+      GameID = numeric(),
+      Date = as.Date(character()),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    odds_table <- dplyr::bind_rows(pred_list)
+  }
   odds_table$GameID <- as.numeric(odds_table$GameID)
 
   if (odds) {
