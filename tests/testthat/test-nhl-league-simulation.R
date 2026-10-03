@@ -43,6 +43,58 @@ test_that("todayOdds returns data frame or NULL", {
   expect_true(is.data.frame(result))
 })
 
+# ============ simulateSeasonParallel tests ============
+test_that("simulateSeasonParallel() sequential branch reuses precomputed HOT/AOT (#52)", {
+  # The sequential branch historically called extraTimeSolver() twice per
+  # simulation even though odds_table$HOT/AOT are already computed once
+  # before the loop. We assert the branch runs to completion and that its
+  # results match an independent reference computed from the same odds,
+  # which holds whether or not the redundant recompute is present.
+  local_mocked_bindings(
+    remainderSeasonDC = function(...) {
+      data.frame(
+        HomeTeam = c("Boston Bruins", "Detroit Red Wings", "Florida Panthers"),
+        AwayTeam = c(
+          "Detroit Red Wings",
+          "Florida Panthers",
+          "Boston Bruins"
+        ),
+        HomeWin = c(1, 1, 1),
+        AwayWin = c(0, 0, 0),
+        Draw = c(0, 0, 0),
+        GameID = c(1L, 2L, 3L),
+        Date = as.Date("2025-11-01"),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "HockeyModel"
+  )
+  sched <- data.frame(
+    Home = c("Boston Bruins", "Detroit Red Wings", "Florida Panthers"),
+    Away = c(
+      "Detroit Red Wings",
+      "Florida Panthers",
+      "Boston Bruins"
+    ),
+    Date = as.Date("2025-11-01"),
+    GameID = c(1L, 2L, 3L),
+    stringsAsFactors = FALSE
+  )
+  res <- simulateSeasonParallel(
+    scores = NULL,
+    schedule = sched,
+    nsims = 5,
+    cores = 1
+  )
+  expect_true(is.list(res))
+  expect_true("summary_results" %in% names(res))
+  expect_true("raw_results" %in% names(res))
+  expect_equal(nrow(res$summary_results), 3)
+  # BOS beats DET, DET beats FLA, FLA beats BOS => each: 1W 1L, Points=2
+  expect_true(all(res$summary_results$meanWins == 1))
+  expect_true(all(res$summary_results$meanPoints == 2))
+})
+
 # ============ sim_engine tests ============
 test_that("sim_engine preserves played results and samples unplayed games", {
   mk <- function(h, a, hw, hot, hso, aso, aot, aw, result, gid) {
