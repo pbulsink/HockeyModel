@@ -87,7 +87,7 @@ todayDC <- function(
     cli::cli_abort("{.arg today} must be a Date or date-like value.")
   }
   params <- .parse_dc_params(params)
-  # games <- games_today(date = today)
+  #games <- games_today(date = today)
   games <- schedule[schedule$Date == today, ]
   if (nrow(games) == 0) {
     return(NULL)
@@ -190,15 +190,7 @@ remainderSeasonDC <- function(
   regress = TRUE,
   mu_lambda = FALSE
 ) {
-  odds_table <- data.frame(
-    HomeTeam = character(),
-    AwayTeam = character(),
-    HomeWin = numeric(),
-    AwayWin = numeric(),
-    Draw = numeric(),
-    GameID = numeric(),
-    stringsAsFactors = FALSE
-  )
+  pred_list <- list()
 
   cores <- parseCores(cores)
 
@@ -236,7 +228,6 @@ remainderSeasonDC <- function(
     season_percent <- NULL
   }
 
-  daily_frames <- list()
   for (day in unique(schedule$Date)) {
     d <- as.Date(day, origin = "1970-01-01")
     if (regress) {
@@ -253,15 +244,12 @@ remainderSeasonDC <- function(
       expected_mean = expected_mean,
       params = params
     )
-    if (is.null(preds) || nrow(preds) == 0) {
-      next
-    }
     preds$Date <- d
-    daily_frames[[length(daily_frames) + 1L]] <- preds
+    pred_list <- c(pred_list, list(preds))
   }
 
-  odds_table <- dplyr::bind_rows(daily_frames)
-  if (is.null(odds_table)) {
+  #odds_table$Date <- schedule$Date
+  if (length(pred_list) == 0) {
     odds_table <- data.frame(
       HomeTeam = character(),
       AwayTeam = character(),
@@ -269,10 +257,12 @@ remainderSeasonDC <- function(
       AwayWin = numeric(),
       Draw = numeric(),
       GameID = numeric(),
+      Date = as.Date(character()),
       stringsAsFactors = FALSE
     )
+  } else {
+    odds_table <- dplyr::bind_rows(pred_list)
   }
-
   odds_table$GameID <- as.numeric(odds_table$GameID)
 
   if (odds) {

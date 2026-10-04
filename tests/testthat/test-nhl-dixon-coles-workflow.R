@@ -29,7 +29,8 @@ test_that("updateDC with historical date works", {
 test_that("remainderSeasonDC returns odds table directly", {
   sched <- HockeyModel::scores[
     HockeyModel::scores$Date >= as.Date("2025-10-07") &
-      HockeyModel::scores$Date <= as.Date("2025-10-10"), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+      HockeyModel::scores$Date <= as.Date("2025-10-10"),
+    c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
   ]
   sched$GameStatus <- "FUT"
   scor <- HockeyModel::scores[
@@ -75,10 +76,98 @@ test_that("remainderSeasonDC returns odds table directly", {
   expect_true(nrow(result) > 0)
 })
 
+test_that("remainderSeasonDC accumulates every day's games in order", {
+  # Build a 3-day schedule with 2 games each day so the per-day
+  # accumulation is exercised across multiple list elements.
+  days <- seq.Date(as.Date("2025-11-01"), by = "1 day", length.out = 3)
+  teams <- c(
+    "Team A",
+    "Team B",
+    "Team C",
+    "Team D",
+    "Team E",
+    "Team F"
+  )
+  sched <- data.frame(
+    Date = rep(days, each = 2),
+    HomeTeam = c(
+      teams[1],
+      teams[2],
+      teams[3],
+      teams[4],
+      teams[5],
+      teams[6]
+    ),
+    AwayTeam = c(
+      teams[2],
+      teams[1],
+      teams[4],
+      teams[3],
+      teams[6],
+      teams[5]
+    ),
+    GameID = 1:6,
+    GameType = rep("R", 6),
+    GameStatus = rep("FUT", 6),
+    stringsAsFactors = FALSE
+  )
+  scor <- data.frame(
+    Date = as.Date("2025-10-20"),
+    HomeTeam = "Team A",
+    AwayTeam = "Team B",
+    GameID = 0,
+    GameType = "R",
+    GameStatus = "FUT",
+    stringsAsFactors = FALSE
+  )
+
+  local_mocked_bindings(
+    todayDC = function(today, schedule, ...) {
+      day_games <- schedule[schedule$Date == as.Date(today), ]
+      data.frame(
+        HomeTeam = day_games$HomeTeam,
+        AwayTeam = day_games$AwayTeam,
+        HomeWin = 0.5,
+        AwayWin = 0.3,
+        Draw = 0.2,
+        GameID = day_games$GameID
+      )
+    },
+    .package = "HockeyModel"
+  )
+
+  result <- remainderSeasonDC(
+    nsims = 3,
+    cores = 1,
+    scores = scor,
+    schedule = sched,
+    odds = TRUE,
+    regress = FALSE
+  )
+
+  expect_s3_class(result, "data.frame")
+  # all 6 games across all 3 days are present
+  expect_equal(nrow(result), 6)
+  expect_setequal(result$GameID, 1:6)
+  # games remain in schedule (Date, GameID) order after accumulation
+  expect_equal(result$GameID, 1:6)
+  # per-day Date is carried through to every row
+  expect_true(all(is.Date(result$Date)))
+  expect_equal(unique(result$Date), days)
+  # odds columns are numeric and present on every row
+  expect_true(all(
+    c("HomeWin", "AwayWin", "Draw") %in% names(result)
+  ))
+  expect_false(any(is.na(result$HomeWin)))
+  # GameID is numeric (as coerced after accumulation)
+  expect_type(result$GameID, "double")
+})
+
 test_that("loopless_sim returns summary and raw results", {
   sched <- HockeyModel::scores[
     HockeyModel::scores$Date >= as.Date("2025-10-07") &
-      HockeyModel::scores$Date <= as.Date("2025-10-10"), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+      HockeyModel::scores$Date <= as.Date("2025-10-10"),
+    c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
   ]
   sched$GameStatus <- "FUT"
   scor <- HockeyModel::scores[
