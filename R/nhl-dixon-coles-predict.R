@@ -30,7 +30,9 @@ DCPredict <- function(
     home = home,
     away = away,
     params = params,
-    maxgoal = maxgoal
+    maxgoal = maxgoal,
+    expected_mean = expected_mean,
+    season_percent = season_percent
   )
 
   HomeWinProbability <- sum(probability_matrix[lower.tri(probability_matrix)])
@@ -45,15 +47,171 @@ DCPredict <- function(
   ))
 
   if (!draws) {
-    HomeWinProbability <- HomeWinProbability +
-      normalizeOdds(c(HomeWinProbability, AwayWinProbability))[1] *
-        DrawProbability
-    AwayWinProbability <- AwayWinProbability +
-      normalizeOdds(c(HomeWinProbability, AwayWinProbability))[2] *
-        DrawProbability
+    # Distribute the draw probability proportionally to home/away, using the
+    # original (pre-redistribution) values for both so neither outcome is
+    # biased by the other's update.
+    orig_hw <- HomeWinProbability
+    orig_aw <- AwayWinProbability
+    pair <- orig_hw + orig_aw
+    HomeWinProbability <- orig_hw + orig_hw / pair * DrawProbability
+    AwayWinProbability <- orig_aw + orig_aw / pair * DrawProbability
     odds <- normalizeOdds(c(HomeWinProbability, AwayWinProbability))
   }
   return(odds)
+}
+
+#' Vectorized Dixon-Coles probability array
+#'
+#' @description Builds the Dixon-Coles probability matrix for each of many
+#'   (lambda, mu) pairs at once, returning a 3D array of dimension
+#'   `(maxgoal+1) x (maxgoal+1) x n`. Each slice `pm[,,j]` is exactly what
+#'   [prob_matrix] returns for the j-th game, so the per-game output is
+#'   statistically identical to the scalar path.
+#'
+#' @param lambda (`double(n)`) Home expected goals, one value per game.
+#' @param mu (`double(n)`) Away expected goals, one value per game.
+#' @param params (`list`) Dixon-Coles parameter list (m, rho, beta, eta, k).
+#' @param maxgoal (`integer(1)`) Maximum goals per team.
+#' @returns (`array`) Probability array of dim `(maxgoal+1) x (maxgoal+1) x n`.
+#' @keywords internal
+dcProbArray <- function(lambda, mu, params, maxgoal) {
+  params <- .parse_dc_params(params)
+  n <- length(lambda)
+  G <- maxgoal + 1
+  idx0 <- 0:maxgoal
+
+  # Weibull tie-enhancement on the diagonal (shared across games).
+  weib <- stats::dweibull(seq_len(G), shape = params$beta, scale = params$eta) * params$k
+  up <- upper.tri(matrix(1, G, G))
+  lo <- lower.tri(matrix(1, G, G))
+
+  build_one <- function(lam, mu) {
+    pm <- stats::dpois(idx0, lam) %*% t(stats::dpois(idx0, mu))
+    # Dixon-Coles tau scaling on the four low-score cells, then clamp negatives.
+    # Must match prob_matrix exactly: it uses matrix(c(c00,c01,c10,c11), nrow=2)
+    # (column-major), so [2,1] gets c01 (mu) and [1,2] gets c10 (lambda).
+    pm[1, 1] <- pm[1, 1] * (1 - (lam * mu * params$rho))
+    pm[2, 1] <- pm[2, 1] * (1 + (mu * params$rho))
+    pm[1, 2] <- pm[1, 2] * (1 + (lam * params$rho))
+    pm[2, 2] <- pm[2, 2] * (1 - params$rho)
+    pm[1:2, 1:2][pm[1:2, 1:2] < 0] <- 0
+    # Weibull tie-enhancement on the diagonal.
+    diag(pm) <- diag(pm) * weib
+    # Cap diagonal if it reaches/exceeds 1.
+    ds <- sum(diag(pm))
+    if (ds >= 1) {
+      diag(pm) <- diag(pm) * (1 - 1e-6) / ds
+      ds <- sum(diag(pm))
+    }
+    # Renormalize the off-diagonal to fill the remaining mass.
+    offsum <- sum(pm[up]) + sum(pm[lo])
+    nf <- offsum / (1 - ds)
+    pm[up] <- pm[up] / nf
+    pm[lo] <- pm[lo] / nf
+    return(pm)
+  }
+
+  out <- array(0, dim = c(G, G, n))
+  for (j in seq_len(n)) {
+    out[, , j] <- build_one(lambda[j], mu[j])
+  }
+  return(out)
+}
+
+#' Vectorized Dixon-Coles odds
+#'
+#' @description Computes home/draw/away win probabilities for many games at
+#'   once. The output is statistically identical to calling [DCPredict]
+#'   per game, but avoids the per-game function-call overhead that makes
+#'   `todayDC()` / `remainderSeasonDC()` O(F) in function calls.
+#'
+#' @param home (`character(n)`) Home team name per game.
+#' @param away (`character(n)`) Away team name per game.
+#' @param params (`list`) Dixon-Coles parameter list (m, rho, beta, eta, k).
+#' @param maxgoal (`integer(1)`) Maximum goals per team.
+#' @param expected_mean (`double` or `NULL`) Mean lambda/mu for regression.
+#' @param season_percent (`double` or `NULL`) Season completion fraction for
+#'   regression.
+#' @param draws (`logical(1)`) Whether to return a 3-column (home, draw, away)
+#'   matrix; if `FALSE`, returns a 2-column (home, away) matrix with the draw
+#'   probability distributed proportionally.
+#' @returns (`matrix(n x 3)` or `matrix(n x 2)`) Probability columns.
+#' @keywords internal
+dcPredictVectorized <- function(
+  home,
+  away,
+  params = NULL,
+  maxgoal = 10,
+  expected_mean = NULL,
+  season_percent = NULL,
+  draws = TRUE
+) {
+  params <- .parse_dc_params(params)
+  n <- length(home)
+
+  # Expected goals home / away per game, with the same error recovery path as
+  # [dcLambda] so new or unseen teams still produce a numeric estimate.
+  lam <- vapply(seq_len(n), function(i) {
+    x <- try(
+      as.numeric(stats::predict(
+        params$m,
+        data.frame(Home = 1, Team = home[i], Opponent = away[i]),
+        type = "response"
+      )),
+      silent = TRUE
+    )
+    if (is.numeric(x)) {
+      x
+    } else {
+      DCPredictErrorRecover(team = home[i], opponent = away[i], homeiceadv = TRUE)
+    }
+  }, numeric(1))
+  mu <- vapply(seq_len(n), function(i) {
+    x <- try(
+      as.numeric(stats::predict(
+        params$m,
+        data.frame(Home = 0, Team = away[i], Opponent = home[i]),
+        type = "response"
+      )),
+      silent = TRUE
+    )
+    if (is.numeric(x)) {
+      x
+    } else {
+      DCPredictErrorRecover(team = away[i], opponent = home[i], homeiceadv = FALSE)
+    }
+  }, numeric(1))
+
+  if (!is.null(expected_mean) && !is.null(season_percent)) {
+    lam <- lam * (1 - 1 / 3 * season_percent) + expected_mean * (1 / 3 * season_percent)
+    mu <- mu * (1 - 1 / 3 * season_percent) + expected_mean * (1 / 3 * season_percent)
+  }
+
+  pm <- dcProbArray(lambda = lam, mu = mu, params = params, maxgoal = maxgoal)
+
+  # Per-game raw (home, draw, away) regulation probabilities from the matrix.
+  hw <- apply(pm, 3, function(x) sum(x[lower.tri(x)]))
+  dw <- apply(pm, 3, function(x) sum(diag(x)))
+  aw <- apply(pm, 3, function(x) sum(x[upper.tri(x)]))
+
+  if (!draws) {
+    # Distribute the draw probability proportionally to home/away (both from
+    # the original values), then normalize each game's pair to sum to 1.
+    pair <- hw + aw
+    h2 <- hw + hw / pair * dw
+    a2 <- aw + aw / pair * dw
+    p2 <- h2 + a2
+    hw <- h2 / p2
+    aw <- a2 / p2
+    return(matrix(c(hw, aw), nrow = n, ncol = 2, byrow = FALSE, dimnames = list(NULL, c("HomeWin", "AwayWin"))))
+  }
+
+  # Normalize each game's triple to sum to 1 (mirrors DCPredict's normalizeOdds).
+  tot <- hw + dw + aw
+  hw <- hw / tot
+  dw <- dw / tot
+  aw <- aw / tot
+  return(matrix(c(hw, dw, aw), nrow = n, ncol = 3, byrow = FALSE, dimnames = list(NULL, c("HomeWin", "Draw", "AwayWin"))))
 }
 
 #' DC Expected Goals

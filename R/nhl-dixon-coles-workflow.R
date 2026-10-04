@@ -87,7 +87,7 @@ todayDC <- function(
     cli::cli_abort("{.arg today} must be a Date or date-like value.")
   }
   params <- .parse_dc_params(params)
-  #games <- games_today(date = today)
+  # games <- games_today(date = today)
   games <- schedule[schedule$Date == today, ]
   if (nrow(games) == 0) {
     return(NULL)
@@ -105,25 +105,27 @@ todayDC <- function(
   if (include_xG) {
     preds$Away_xG <- preds$Home_xG <- 0
   }
-  for (i in seq_len(nrow(preds))) {
-    p <- DCPredict(
-      preds$HomeTeam[[i]],
-      preds$AwayTeam[[i]],
-      params = params,
-      expected_mean = expected_mean,
-      season_percent = season_percent,
-      draws = draws
-    )
-    if (draws) {
-      preds$HomeWin[[i]] <- p[[1]]
-      preds$AwayWin[[i]] <- p[[3]]
-      preds$Draw[[i]] <- p[[2]]
-    } else {
-      preds$HomeWin[[i]] <- p[[1]]
-      preds$AwayWin[[i]] <- p[[2]]
-    }
 
-    if (include_xG) {
+  # Compute all games' odds at once via the vectorized path.
+  odds <- dcPredictVectorized(
+    home = preds$HomeTeam,
+    away = preds$AwayTeam,
+    params = params,
+    expected_mean = expected_mean,
+    season_percent = season_percent,
+    draws = draws
+  )
+  if (draws) {
+    preds$HomeWin <- odds[, "HomeWin"]
+    preds$AwayWin <- odds[, "AwayWin"]
+    preds$Draw <- odds[, "Draw"]
+  } else {
+    preds$HomeWin <- odds[, "HomeWin"]
+    preds$AwayWin <- odds[, "AwayWin"]
+  }
+
+  if (include_xG) {
+    for (i in seq_len(nrow(preds))) {
       xg <- dcxG(
         home = preds$HomeTeam[[i]],
         away = preds$AwayTeam[[i]],
@@ -234,6 +236,7 @@ remainderSeasonDC <- function(
     season_percent <- NULL
   }
 
+  daily_frames <- list()
   for (day in unique(schedule$Date)) {
     d <- as.Date(day, origin = "1970-01-01")
     if (regress) {
@@ -250,11 +253,26 @@ remainderSeasonDC <- function(
       expected_mean = expected_mean,
       params = params
     )
+    if (is.null(preds) || nrow(preds) == 0) {
+      next
+    }
     preds$Date <- d
-    odds_table <- rbind(odds_table, preds)
+    daily_frames[[length(daily_frames) + 1L]] <- preds
   }
 
-  #odds_table$Date <- schedule$Date
+  odds_table <- dplyr::bind_rows(daily_frames)
+  if (is.null(odds_table)) {
+    odds_table <- data.frame(
+      HomeTeam = character(),
+      AwayTeam = character(),
+      HomeWin = numeric(),
+      AwayWin = numeric(),
+      Draw = numeric(),
+      GameID = numeric(),
+      stringsAsFactors = FALSE
+    )
+  }
+
   odds_table$GameID <- as.numeric(odds_table$GameID)
 
   if (odds) {
