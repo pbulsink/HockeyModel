@@ -358,3 +358,89 @@ test_that("dcResult and dcExpandedOdds remain valid for extreme inputs", {
   ))
   expect_true(all(results %in% c(0, 0.25, 0.4, 0.6, 0.75, 1)))
 })
+
+# ============ Regression tests for vectorized odds (Issue 4.8) ============
+test_that("dcPredictVectorized matches DCPredict per-game (draws = TRUE)", {
+  params <- .parse_dc_params(NULL)
+  home <- c(
+    "Toronto Maple Leafs",
+    "Ottawa Senators",
+    "New Jersey Devils",
+    "Philadelphia Flyers"
+  )
+  away <- c(
+    "Ottawa Senators",
+    "Toronto Maple Leafs",
+    "Philadelphia Flyers",
+    "New Jersey Devils"
+  )
+  vec <- dcPredictVectorized(home = home, away = away, params = params, draws = TRUE)
+  ref <- t(vapply(seq_along(home), function(i) {
+    p <- DCPredict(home = home[i], away = away[i], params = params, draws = TRUE)
+    c(p[1], p[2], p[3])
+  }, numeric(3)))
+  expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
+  expect_true(all(rowSums(vec) == 1))
+})
+
+test_that("dcPredictVectorized matches DCPredict per-game (draws = FALSE)", {
+  # Locks in the fix for the sequential-assignment bias in DCPredict's
+  # !draws branch: both home and away must use the original (pre-update)
+  # draw probability when redistributing.
+  params <- .parse_dc_params(NULL)
+  home <- c("Toronto Maple Leafs", "New Jersey Devils", "Colorado Avalanche")
+  away <- c("Ottawa Senators", "Philadelphia Flyers", "Dallas Stars")
+  vec <- dcPredictVectorized(home = home, away = away, params = params, draws = FALSE)
+  ref <- t(vapply(seq_along(home), function(i) {
+    p <- DCPredict(home = home[i], away = away[i], params = params, draws = FALSE)
+    c(p[1], p[2])
+  }, numeric(2)))
+  expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
+  expect_true(all(rowSums(vec) == 1))
+})
+
+test_that("dcPredictVectorized matches DCPredict with regression (expected_mean, season_percent)", {
+  # DCPredict previously dropped expected_mean/season_percent before calling
+  # dcProbMatrix, so regression was silently ignored. Both paths must now apply
+  # the blend identically.
+  params <- .parse_dc_params(NULL)
+  home <- c("Toronto Maple Leafs", "New Jersey Devils", "Washington Capitals")
+  away <- c("Ottawa Senators", "Philadelphia Flyers", "Buffalo Sabres")
+  vec <- dcPredictVectorized(
+    home = home,
+    away = away,
+    params = params,
+    draws = TRUE,
+    expected_mean = 2.835184,
+    season_percent = 0.5
+  )
+  ref <- t(vapply(seq_along(home), function(i) {
+    p <- DCPredict(
+      home = home[i],
+      away = away[i],
+      params = params,
+      draws = TRUE,
+      expected_mean = 2.835184,
+      season_percent = 0.5
+    )
+    c(p[1], p[2], p[3])
+  }, numeric(3)))
+  expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
+})
+
+test_that("dcProbArray matches prob_matrix per-game", {
+  params <- .parse_dc_params(NULL)
+  lambdas <- c(1.2, 2.8, 3.4, 0.5)
+  mus <- c(2.1, 1.9, 2.7, 3.3)
+  arr <- dcProbArray(lambda = lambdas, mu = mus, params = params, maxgoal = 10)
+  for (j in seq_along(lambdas)) {
+    ref <- prob_matrix(
+      lambda = lambdas[j],
+      mu = mus[j],
+      params = params,
+      maxgoal = 10
+    )
+    expect_equal(arr[, , j], ref, tolerance = 1e-12)
+    expect_equal(sum(arr[, , j]), 1, tolerance = 1e-10)
+  }
+})

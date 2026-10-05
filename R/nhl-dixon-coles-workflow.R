@@ -105,25 +105,27 @@ todayDC <- function(
   if (include_xG) {
     preds$Away_xG <- preds$Home_xG <- 0
   }
-  for (i in seq_len(nrow(preds))) {
-    p <- DCPredict(
-      preds$HomeTeam[[i]],
-      preds$AwayTeam[[i]],
-      params = params,
-      expected_mean = expected_mean,
-      season_percent = season_percent,
-      draws = draws
-    )
-    if (draws) {
-      preds$HomeWin[[i]] <- p[[1]]
-      preds$AwayWin[[i]] <- p[[3]]
-      preds$Draw[[i]] <- p[[2]]
-    } else {
-      preds$HomeWin[[i]] <- p[[1]]
-      preds$AwayWin[[i]] <- p[[2]]
-    }
 
-    if (include_xG) {
+  # Compute all games' odds at once via the vectorized path.
+  odds <- dcPredictVectorized(
+    home = preds$HomeTeam,
+    away = preds$AwayTeam,
+    params = params,
+    expected_mean = expected_mean,
+    season_percent = season_percent,
+    draws = draws
+  )
+  if (draws) {
+    preds$HomeWin <- odds[, "HomeWin"]
+    preds$AwayWin <- odds[, "AwayWin"]
+    preds$Draw <- odds[, "Draw"]
+  } else {
+    preds$HomeWin <- odds[, "HomeWin"]
+    preds$AwayWin <- odds[, "AwayWin"]
+  }
+
+  if (include_xG) {
+    for (i in seq_len(nrow(preds))) {
       xg <- dcxG(
         home = preds$HomeTeam[[i]],
         away = preds$AwayTeam[[i]],
