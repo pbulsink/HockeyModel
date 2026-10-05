@@ -307,7 +307,10 @@ DCweights <- function(
 #' @keywords internal
 DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
   # rho=0, independence y1 home goals y2 away goals mu:expected Home, lambda: expected Away
-  t <- tau(y1, y2, lambda, mu, rho)
+  # tau can cross zero at extreme rho (e.g. tau(0,0) = 1 - lambda*mu*rho), so
+  # clamp to a positive floor before log() to keep the likelihood well-defined
+  # and warning-free across the whole optimizer search space.
+  t <- pmax(tau(y1, y2, lambda, mu, rho), .Machine$double.xmin)
   loglik <- log(t) + log(stats::dpois(y1, lambda)) + log(stats::dpois(y2, mu))
   if (is.null(weights)) {
     return(sum(loglik, na.rm = TRUE))

@@ -23,3 +23,6 @@ email.md
 20252026.csv
 ^\.vscode$
 ^cobertura.xml$
+20262027.csv
+^plan\.md$
+^\.kilo$
