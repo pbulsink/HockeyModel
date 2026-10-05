@@ -454,11 +454,11 @@ sim_engine <- function(all_season, nsims, params = NULL) {
   }
 
   # Map each team to the indices of games where it is home / away
-  home_games <- setNames(
+  home_games <- stats::setNames(
     lapply(seq_along(teamlist), function(t) which(home_idx == t)),
     teamlist
   )
-  away_games <- setNames(
+  away_games <- stats::setNames(
     lapply(seq_along(teamlist), function(t) which(away_idx == t)),
     teamlist
   )
