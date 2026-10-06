@@ -209,6 +209,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **Problem:** Called twice per simulation in sequential path; parallel path calls once before loop
 - **Fix:** Compute once for all simulations in both branches
 - **Test:** Verify same OT/SO probabilities used consistently
+- **Status**: Fixed in PR #55
 
 #### Issue 4.4: Inefficient Chunk Division in `loopless_sim()`
 - **File:** `nhl-league-simulation.R:258-259, 335-350`
@@ -224,12 +225,14 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
 - **Problem:** Copy `odds_table` for every iteration; most columns invariant
 - **Fix:** Store invariant columns once; generate only result vectors per sim
 - **Test:** Profile memory allocation per simulation
+- **Status:** Fixed in PR #57
 
 #### Issue 4.6: Repeated `rbind()` Accumulation
 - **File:** `nhl-dixon-coles-workflow.r:253-254`
 - **Problem:** Loop calls `rbind()` repeatedly on growing table (O(N²) copies)
 - **Fix:** Accumulate frames in list; call `bind_rows()` once
 - **Test:** Benchmark with many games; should see speedup
+- **Status:** Fixed in PR #54
 
 #### Issue 4.7: Repeated Parameter Parsing
 - **File:** `nhl-dixon-coles-predict.R:28, 152, 191, 332, 415` (and elsewhere)
@@ -246,6 +249,7 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   - Batch `prob_matrix()` calls
   - Collect daily frames in list before `bind_rows()`
 - **Test:** Benchmark odds generation with many future games
+- **Status:** Fixed in PR #56
 
 #### Issue 4.9: Large Parallel Serialization Overhead
 - **File:** `nhl-league-simulation.r:67-71` (simulateSeasonParallel)
@@ -255,12 +259,14 @@ Multi-subagent code review identified issues across daily posting workflow, Dixo
   - Return only summary statistics unless raw results requested
   - Use explicit RNG strategy for reproducibility
 - **Test:** Benchmark with 1000+ simulations; compare task overhead
+- **Status:** Fixed in PR #57
 
 #### Issue 4.10: Stats Accumulation Always Materializes Output
 - **File:** `nhl-league-simulation.r:179-204, 357-395`
 - **Problem:** Always returns full results table even if caller only needs summaries
 - **Fix:** Make raw results optional; accumulate mean/min/max/quantiles online
 - **Test:** Compare output sizes; add `return_raw = FALSE` option
+- **Status** Won't Fix, intended behavior.
 
 ---
 
