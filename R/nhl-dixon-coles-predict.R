@@ -6,7 +6,7 @@
 #'
 #' @param home home team
 #' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
@@ -81,7 +81,8 @@ dcProbArray <- function(lambda, mu, params, maxgoal) {
   idx0 <- 0:maxgoal
 
   # Weibull tie-enhancement on the diagonal (shared across games).
-  weib <- stats::dweibull(seq_len(G), shape = params$beta, scale = params$eta) * params$k
+  weib <- stats::dweibull(seq_len(G), shape = params$beta, scale = params$eta) *
+    params$k
   up <- upper.tri(matrix(1, G, G))
   lo <- lower.tri(matrix(1, G, G))
 
@@ -113,7 +114,7 @@ dcProbArray <- function(lambda, mu, params, maxgoal) {
 
   out <- array(0, dim = c(G, G, n))
   for (j in seq_len(n)) {
-    out[, , j] <- build_one(lambda[j], mu[j])
+    out[,, j] <- build_one(lambda[j], mu[j])
   }
   return(out)
 }
@@ -151,40 +152,60 @@ dcPredictVectorized <- function(
 
   # Expected goals home / away per game, with the same error recovery path as
   # [dcLambda] so new or unseen teams still produce a numeric estimate.
-  lam <- vapply(seq_len(n), function(i) {
-    x <- try(
-      as.numeric(stats::predict(
-        params$m,
-        data.frame(Home = 1, Team = home[i], Opponent = away[i]),
-        type = "response"
-      )),
-      silent = TRUE
-    )
-    if (is.numeric(x)) {
-      x
-    } else {
-      DCPredictErrorRecover(team = home[i], opponent = away[i], homeiceadv = TRUE)
-    }
-  }, numeric(1))
-  mu <- vapply(seq_len(n), function(i) {
-    x <- try(
-      as.numeric(stats::predict(
-        params$m,
-        data.frame(Home = 0, Team = away[i], Opponent = home[i]),
-        type = "response"
-      )),
-      silent = TRUE
-    )
-    if (is.numeric(x)) {
-      x
-    } else {
-      DCPredictErrorRecover(team = away[i], opponent = home[i], homeiceadv = FALSE)
-    }
-  }, numeric(1))
+  lam <- vapply(
+    seq_len(n),
+    function(i) {
+      x <- try(
+        as.numeric(stats::predict(
+          params$m,
+          data.frame(Home = 1, Team = home[i], Opponent = away[i]),
+          type = "response"
+        )),
+        silent = TRUE
+      )
+      if (is.numeric(x)) {
+        x
+      } else {
+        DCPredictErrorRecover(
+          team = home[i],
+          opponent = away[i],
+          homeiceadv = TRUE
+        )
+      }
+    },
+    numeric(1)
+  )
+  mu <- vapply(
+    seq_len(n),
+    function(i) {
+      x <- try(
+        as.numeric(stats::predict(
+          params$m,
+          data.frame(Home = 0, Team = away[i], Opponent = home[i]),
+          type = "response"
+        )),
+        silent = TRUE
+      )
+      if (is.numeric(x)) {
+        x
+      } else {
+        DCPredictErrorRecover(
+          team = away[i],
+          opponent = home[i],
+          homeiceadv = FALSE
+        )
+      }
+    },
+    numeric(1)
+  )
 
   if (!is.null(expected_mean) && !is.null(season_percent)) {
-    lam <- lam * (1 - 1 / 3 * season_percent) + expected_mean * (1 / 3 * season_percent)
-    mu <- mu * (1 - 1 / 3 * season_percent) + expected_mean * (1 / 3 * season_percent)
+    lam <- lam *
+      (1 - 1 / 3 * season_percent) +
+      expected_mean * (1 / 3 * season_percent)
+    mu <- mu *
+      (1 - 1 / 3 * season_percent) +
+      expected_mean * (1 / 3 * season_percent)
   }
 
   pm <- dcProbArray(lambda = lam, mu = mu, params = params, maxgoal = maxgoal)
@@ -203,7 +224,13 @@ dcPredictVectorized <- function(
     p2 <- h2 + a2
     hw <- h2 / p2
     aw <- a2 / p2
-    return(matrix(c(hw, aw), nrow = n, ncol = 2, byrow = FALSE, dimnames = list(NULL, c("HomeWin", "AwayWin"))))
+    return(matrix(
+      c(hw, aw),
+      nrow = n,
+      ncol = 2,
+      byrow = FALSE,
+      dimnames = list(NULL, c("HomeWin", "AwayWin"))
+    ))
   }
 
   # Normalize each game's triple to sum to 1 (mirrors DCPredict's normalizeOdds).
@@ -211,7 +238,13 @@ dcPredictVectorized <- function(
   hw <- hw / tot
   dw <- dw / tot
   aw <- aw / tot
-  return(matrix(c(hw, dw, aw), nrow = n, ncol = 3, byrow = FALSE, dimnames = list(NULL, c("HomeWin", "Draw", "AwayWin"))))
+  return(matrix(
+    c(hw, dw, aw),
+    nrow = n,
+    ncol = 3,
+    byrow = FALSE,
+    dimnames = list(NULL, c("HomeWin", "Draw", "AwayWin"))
+  ))
 }
 
 #' DC Expected Goals
@@ -220,7 +253,7 @@ dcPredictVectorized <- function(
 #'
 #' @param home The home team name
 #' @param away The away team name
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return a list of $home and $away Poisson Lambda values -
 dcLambda <- function(home, away, params = NULL) {
@@ -291,7 +324,7 @@ dcxG <- function(home, away, params = NULL, maxgoal = 10) {
 #'
 #' @param home home team
 #' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
@@ -341,7 +374,7 @@ dcProbMatrix <- function(
 #'
 #' @param lambda home lambda
 #' @param mu away mu
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max goals per game
 #'
 #' @return a square matrix of maxgoal:maxgoal, with all entries in `[0, 1]` and
@@ -426,7 +459,7 @@ prob_matrix <- function(lambda, mu, params, maxgoal) {
 #'
 #' @param home home team
 #' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
@@ -507,7 +540,7 @@ dcSample <- function(
 #'
 #' @param lambda home team lambda
 #' @param mu away team mu
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max goals predicable per game, default 10
 #' @param nsim the number of simulations in each result
 #'

@@ -79,7 +79,7 @@ make_pwhl_schedule <- function(scores) {
 }
 
 # Build DC params without running Weibull optimisation (for speed in tests
-# that don't specifically test updatePWHLDC)
+# that don't specifically test .update_dc_pwhl)
 make_pwhl_params <- function(scores) {
   sc <- pwhl_add_result(scores)
   m <- getM(scores = sc, currentDate = max(sc$Date) + 1)

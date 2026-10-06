@@ -11,7 +11,7 @@ playoffDC(home, away, params = NULL, home_wins = 0, away_wins = 0)
 
 \item{away}{Away (Opponent) Team Name}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 
 \item{home_wins}{Number of wins for home ice advantage team thus far in series}
 

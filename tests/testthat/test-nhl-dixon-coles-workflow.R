@@ -1,7 +1,7 @@
 context("test-nhl-dixon-coles-workflow")
 
 test_that("Model params generate OK", {
-  params <- suppressWarnings(updateDC(save_data = FALSE))
+  params <- suppressWarnings(.update_dc_nhl(save_data = FALSE))
   expect_true(is.list(params))
   expect_true(all(c("m", "rho", "beta", "eta", "k") %in% names(params)))
 
@@ -17,8 +17,8 @@ test_that("Model params generate OK", {
   expect_true(all(is.finite(params$k)) && params$k > 0)
 })
 
-test_that("updateDC with historical date works", {
-  params <- suppressWarnings(updateDC(
+test_that(".update_dc_nhl with historical date works", {
+  params <- suppressWarnings(.update_dc_nhl(
     currentDate = as.Date("2019-01-01"),
     save_data = FALSE
   ))

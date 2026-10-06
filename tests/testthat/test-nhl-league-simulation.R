@@ -194,7 +194,9 @@ test_that("loopless_sim runs exactly the requested number of simulations (#51)",
     c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
   ]
   sched$GameStatus <- "FUT"
-  scor <- HockeyModel::scores[HockeyModel::scores$Date < as.Date("2025-10-07"), ]
+  scor <- HockeyModel::scores[
+    HockeyModel::scores$Date < as.Date("2025-10-07"),
+  ]
   odds_table <- sched[, c("Date", "HomeTeam", "AwayTeam", "GameID")]
   odds_table$HomeWin <- 0.5
   odds_table$AwayWin <- 0.3

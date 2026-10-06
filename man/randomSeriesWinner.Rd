@@ -24,7 +24,7 @@ randomSeriesWinner(
 
 \item{homeAwayOdds}{pre-calculated home & away team parings odds of a home win. Overrides playoffwin calculation}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 }
 \value{
 TRUE if the home team wins, else FALSE

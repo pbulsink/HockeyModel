@@ -7,7 +7,7 @@
 #' @param today Day's predictions to record. Defaults to today, but can set any other day
 #' @param filepath csv file location to store predictions. Will append to file.
 #' @param schedule HockeyModel::schedule or supplied. \code{today} date must be in schedule
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param include_xG Whether to record daily XG values
 #' @param draws whether to record draw odds (True) or not (False). Default is True
 #'

@@ -14,7 +14,7 @@ tweetPlayoffOdds(
 \arguments{
 \item{summary_results}{the summary results file, otherwise the most recent will be loaded}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 
 \item{graphic_dir}{graphic dir}
 

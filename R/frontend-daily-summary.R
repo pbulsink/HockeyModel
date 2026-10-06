@@ -42,7 +42,8 @@
     today <- todayOddsPlot(
       params = params,
       schedule = modelparams$schedule,
-      scores = modelparams$scores, league = "NHL"
+      scores = modelparams$scores,
+      league = "NHL"
     )
     # save to files.
     grDevices::png(
@@ -320,7 +321,7 @@ dailySummary <- function(
         .default_pwhl_graphics_dir()
       )
     }
-    result$pwhl <- dailyPWHLSummary(
+    result$pwhl <- .daily_summary_pwhl(
       graphic_dir = pwhl_graphic_dir,
       delay = delay
     )

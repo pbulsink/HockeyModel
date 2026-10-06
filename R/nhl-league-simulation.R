@@ -27,7 +27,8 @@ sim_odds_results <- function(odds_table) {
   away_sos <- as.numeric(res2 > 0.6858606)
   away_ot <- as.numeric(res2 < 0.6858606)
   Result <-
-    1 * (res1 < home_win) +
+    1 *
+    (res1 < home_win) +
     0.75 * in_ot * away_ot +
     0.6 * in_ot * away_sos +
     0.4 * in_so * away_sos +
@@ -95,7 +96,7 @@ sim_batch <- function(sim_ids, odds_table, season_sofar = NULL) {
 #' @param nsims number of simulations to run
 #' @param cores number of cores to use in parallel.
 #' @param progress whether to show a progress bar.
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return a data frame of results
 #' @export
@@ -160,7 +161,8 @@ simulateSeasonParallel <- function(
         away_sos <- as.numeric(res2 > 0.6858606)
         away_ot <- as.numeric(res2 < 0.6858606)
         Result <-
-          1 * (res1 < home_win) +
+          1 *
+          (res1 < home_win) +
           0.75 * in_ot * away_ot +
           0.6 * in_ot * away_sos +
           0.4 * in_so * away_sos +
@@ -275,7 +277,7 @@ compile_predictions <- function(
 #' @param cores number of cores in parallel to process
 #' @param schedule games to play
 #' @param scores Season to this point
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param season_sofar The results of the season to date
 #' @param likelihood_graphic whether to create a likelihood graphic
 #' @param odds_table a table of odds for all games in schedule. Null, unless provided. Should be similar to the output of `remainderSeasonDC(odds=TRUE)`,
@@ -444,7 +446,7 @@ loopless_sim <- function(
 #'
 #' @param all_season One seasons' scores & odds schedule
 #' @param nsims Number of simulations to run
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return results of `nsims` season simulations, as one long data frame score table.
 #' @export
@@ -638,7 +640,7 @@ sim_engine <- function(all_season, nsims, params = NULL) {
 #' Today's Odds
 #'
 #' @description Determine today's games' odds (if today has games), or a specified date's odds
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param today The date for which you want game odds
 #' @param schedule The schedule, default to internal schedule
 #' @param expected_mean the mean lambda & mu, used only for regression

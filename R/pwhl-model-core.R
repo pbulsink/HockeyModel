@@ -48,8 +48,8 @@ pwhl_add_result <- function(scores) {
 #'   the parameters as package data objects.
 #'
 #' @returns A named list with elements `m`, `rho`, `beta`, `eta`, and `k`.
-#' @export
-updatePWHLDC <- function(
+#' @keywords internal
+.update_dc_pwhl <- function(
   scores = HockeyModel::pwhlScores,
   currentDate = Sys.Date(),
   xi = DC_XI_PWHL,
@@ -153,8 +153,8 @@ parse_pwhl_dc_params <- function(params = NULL) {
 #'   model parameters as package data.
 #'
 #' @returns A named list with elements `scores`, `schedule`, and `params`.
-#' @export
-updatePWHLModel <- function(save_data = TRUE) {
+#' @keywords internal
+.update_model_pwhl <- function(save_data = TRUE) {
   cli::cli_inform("Updating PWHL Schedule")
   schedule <- updatePWHLScheduleAPI(save_data = save_data)
 
@@ -165,7 +165,7 @@ updatePWHLModel <- function(save_data = TRUE) {
   )
 
   cli::cli_inform("Refitting PWHL Model Parameters")
-  params <- updatePWHLDC(scores = scores, save_data = save_data)
+  params <- .update_dc_pwhl(scores = scores, save_data = save_data)
 
   list(
     scores = scores,

@@ -7,7 +7,7 @@
 #' @param away_team Opponent Team
 #' @param home_wins Home Ice Advantage Team Wins in Series
 #' @param away_wins Opponent Team Wins in Series
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return Odds from 0-1 of home team winning. Away odds are 1 - return value
 #' @export
@@ -50,7 +50,7 @@ playoffWin <- function(
 #' @param home_wins Number of home wins (default 0)
 #' @param away_wins Number of away team wins (default 0)
 #' @param homeAwayOdds pre-calculated home & away team parings odds of a home win. Overrides playoffwin calculation
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return TRUE if the home team wins, else FALSE
 #' @export
@@ -255,7 +255,7 @@ playoffSeriesOdds <- function(
 #' @param summary_results summary results
 #' @param nsims Number of playoff sims to run. Too many takes a long time.
 #' @param cores Number of processor cores to use
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)
 #' @export
@@ -517,7 +517,7 @@ reseedTwoTeams <- function(team1, team2, summary_results, p1 = NULL) {
 #' @param homeTeam Home Team extracted from summary_results
 #' @param awayTeam away Team extracted from summary_results
 #' @param homeAwayOdds if calculated, the odds of a home or away team win
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return a series winner (team name)
 single_series_solver <- function(
@@ -631,7 +631,7 @@ getCompletedSeries <- function(currentSeries) {
 #' @param currentSeries currentSeries
 #' @param summary_results summary_results
 #' @param homeAwayOdds precalculated home & away pairs of odds - if available.
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @export
 playoffSolverEngine <- function(
@@ -1222,7 +1222,7 @@ playoffSolverEngine <- function(
 
 #' Get Series Odds
 #'
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return NULL if no series are currently set but not complete, else a data frame.
 #' @export

@@ -11,7 +11,7 @@ prob_matrix(lambda, mu, params, maxgoal)
 
 \item{mu}{away mu}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 
 \item{maxgoal}{max goals per game}
 }

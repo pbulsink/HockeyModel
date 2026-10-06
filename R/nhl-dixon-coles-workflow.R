@@ -1,16 +1,14 @@
 # Dixon-Coles workflow: parameter updating, daily/playoff predictions, and season simulation orchestration
 
-#' Update Dixon Coles parameters
+#' Update NHL Dixon-Coles parameters
 #'
-#' @description This function updates the model parameters to best fit the provided data. The parameters for this model are as follows:
-#' * [m] is the result of the main model fit and contains team attack and defense strengths, plus home ice advantage terms
-#' * [rho] is the Dixon-Coles low scores adjustment term.
-#' * [beta] is the Weibull distribution's 'shape' parameter. This is used with [eta] to produce a curve multiplied by the diagonal score possibility matrix to enhance the odds of tie games
-#' * [eta] is the Weibull distribution's 'scale' parameter. See above for its importance
-#' * [k] is the multiplication factor used with the Weibull distribution to enhance ties
+#' @description Fits the Dixon-Coles model to NHL scores data and returns (and
+#'   optionally saves) the five model parameters.
 #'
-#' @param scores scores, if not then HockeyModel::scores is used
-#' @param currentDate Current Date, usually today but useful to set a different date if back calculating results
+#' @param scores (`data.frame`) NHL game scores. Defaults to
+#'   [HockeyModel::scores].
+#' @param currentDate (`Date`) Reference date for time-weighting. Defaults to
+#'   today.
 #' @param xi (`double(1)`) Logistic slope for within-season time-decay
 #'   weighting.  Defaults to [DC_XI_NHL].
 #' @param upsilon (`double(1)`) Logistic midpoint (days) for within-season
@@ -18,15 +16,12 @@
 #' @param nu (`double(1)`) Cross-season discounting exponent.  `0` (default
 #'   [DC_NU_NHL]) disables cross-season discounting.  See [DCweights()] for
 #'   details.
-#' @param save_data Whether to save parameters to the package.
+#' @param save_data (`logical(1)`) If `TRUE` and `usethis` is installed, writes
+#'   the parameters as package data objects.
 #'
-#' @return a named list containing m, rho, beta, eta and k values for the model.
-#'
-#' @seealso [m], [rho], [beta], [eta], [k], [DC_XI_NHL], [DC_UPSILON_NHL],
-#'   [DC_NU_NHL]
-#'
-#' @export
-updateDC <- function(
+#' @returns A named list with elements `m`, `rho`, `beta`, `eta`, and `k`.
+#' @keywords internal
+.update_dc_nhl <- function(
   scores = HockeyModel::scores,
   currentDate = Sys.Date(),
   xi = DC_XI_NHL,
@@ -66,7 +61,7 @@ updateDC <- function(
 #' DC Predictions Today
 #'
 #' @param today Generate predictions for this date. Defaults to today
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param schedule schedule to use, if not the built-in
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
@@ -147,7 +142,7 @@ todayDC <- function(
 #'
 #' @param home Series Home Ice Advantage Team Name
 #' @param away Away (Opponent) Team Name
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param home_wins Number of wins for home ice advantage team thus far in series
 #' @param away_wins Number of wins for away team thus far in series
 #'
@@ -176,7 +171,7 @@ playoffDC <- function(home, away, params = NULL, home_wins = 0, away_wins = 0) {
 #' @param odds whether to return odds table or simulate season
 #' @param regress whether to apply a regression to the mean for team strength on future predictions
 #' @param mu_lambda whether to return team xG values. Can't be set true if odds is true
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
@@ -396,7 +391,7 @@ dcPredictMultipleDays <- function(
     score <- scores[scores$Date < day, ]
     score <- score[score$Date > as.Date("2008-08-01"), ]
     sched <- schedule[schedule$Date >= day, ]
-    params <- updateDC(scores = score, currentDate = d)
+    params <- .update_dc_nhl(scores = score, currentDate = d)
     preds <- NULL
 
     # preds <- loopless_sim(nsims = nsims, cores = cores, scores = score, schedule = sched, params = params, likelihood_graphic=likelihood_graphic)

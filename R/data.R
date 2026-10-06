@@ -159,7 +159,7 @@
 #' PWHL Dixon-Coles model `m`
 #'
 #' Fitted GLM capturing each PWHL team's attack and defence strength plus home
-#' ice advantage. Populated by [updatePWHLDC()].
+#' ice advantage. Populated by [.update_dc_pwhl()].
 #'
 #' @format a glm model fit, or `NULL` when not yet fitted
 "pwhl_m"
@@ -168,7 +168,7 @@
 #' PWHL Dixon-Coles `rho`
 #'
 #' Low-score correction parameter for the PWHL model. Populated by
-#' [updatePWHLDC()].
+#' [.update_dc_pwhl()].
 #'
 #' @format a single numeric value, or `NULL` when not yet fitted
 "pwhl_rho"
@@ -177,7 +177,7 @@
 #' PWHL `beta`
 #'
 #' Weibull shape parameter for PWHL tie-game enhancement. Populated by
-#' [updatePWHLDC()].
+#' [.update_dc_pwhl()].
 #'
 #' @format a single numeric value, or `NULL` when not yet fitted
 "pwhl_beta"
@@ -186,7 +186,7 @@
 #' PWHL `eta`
 #'
 #' Weibull scale parameter for PWHL tie-game enhancement. Populated by
-#' [updatePWHLDC()].
+#' [.update_dc_pwhl()].
 #'
 #' @format a single numeric value, or `NULL` when not yet fitted
 "pwhl_eta"
@@ -195,7 +195,7 @@
 #' PWHL `k`
 #'
 #' Weibull multiplier for PWHL tie-game enhancement. Populated by
-#' [updatePWHLDC()].
+#' [.update_dc_pwhl()].
 #'
 #' @format a single numeric value, or `NULL` when not yet fitted
 "pwhl_k"

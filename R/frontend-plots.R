@@ -72,7 +72,7 @@
 #' Today's game odds graphic
 #'
 #' @param date date to predict odds. Default today
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param scores HockeyModel::scores or a custom value
 #' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs

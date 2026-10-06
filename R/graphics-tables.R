@@ -182,7 +182,7 @@ format_playoff_odds <- function(
 #' @description Returns a gt table of odds for today's games (or games for a supplied date)
 #'
 #' @param today A date for games to create a table. Defaults to today.
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param schedule Schedule, or HockeyModel Schedule
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
 #'   `"PWHL"`, PWHL team colours and logos are used and the title is set to
@@ -406,7 +406,7 @@ daily_odds_table <- function(
 #'   AwayWins describing the current playoff series. Defaults to
 #'   [getAPISeries()].
 #' @param params The named list containing m, rho, beta, eta, and k. See
-#'   [updateDC] for information on the params list.
+#'   [updateModel()] for information on the params list.
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
 #'   `"PWHL"`, PWHL team colours and logos are used and the title is set to
 #'   `"PWHL Playoff Series Odds"`.

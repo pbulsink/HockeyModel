@@ -24,7 +24,7 @@ single_series_solver(
 
 \item{homeAwayOdds}{if calculated, the odds of a home or away team win}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 }
 \value{
 a series winner (team name)

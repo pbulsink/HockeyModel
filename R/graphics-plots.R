@@ -4,7 +4,7 @@
 #'
 #' @param home The Home Team
 #' @param away The Away Team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal the max number of goals to predict. Plot a few less.
 #'
 #' @return a ggplot object

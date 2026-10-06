@@ -24,7 +24,7 @@ simulateSeasonParallel(
 
 \item{progress}{whether to show a progress bar.}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 }
 \value{
 a data frame of results

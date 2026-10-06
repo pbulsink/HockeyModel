@@ -367,7 +367,7 @@ tweetLikelihoods <- function(
 #' @param games Games to tweet graphics from
 #' @param delay Delay between tweets
 #' @param graphic_dir the graphics directory
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @returns (`data.frame`) A summary of each attempted post (see
 #'   `.summarize_post_results()`), invisibly.
@@ -475,7 +475,7 @@ tweetMetrics <- function() {
 #' @description Tweet the series odds graphics
 #'
 #' @param graphic_dir directory to save the image
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param delay Delay in seconds between posts. Default is a random value between 1 and 3 minutes.
 #'
 #' @return (`data.frame`) A summary of each attempted post (see
@@ -563,7 +563,7 @@ tweetSeries <- function(
 #' @param summary_results the summary results file, otherwise the most recent will be loaded
 #' @param graphic_dir graphic dir
 #' @param trimcup trim to just cup winners
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return (`data.frame`) A summary of each attempted post (see
 #'   `.summarize_post_results()`), invisibly.

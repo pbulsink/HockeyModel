@@ -203,7 +203,7 @@ test_that("dcResult and dcExpandedOdds use otwinnerprob[2] consistently", {
 # ============ Regression tests for rho optimization fix ============
 test_that("getRho produces valid rho in [-0.5, 0.5]", {
   # Rho must be within goalmodel bounds
-  params <- suppressWarnings(updateDC(save_data = FALSE))
+  params <- suppressWarnings(.update_dc_nhl(save_data = FALSE))
   expect_gte(params$rho, -0.5)
   expect_lte(params$rho, 0.5)
 })
@@ -374,11 +374,25 @@ test_that("dcPredictVectorized matches DCPredict per-game (draws = TRUE)", {
     "Philadelphia Flyers",
     "New Jersey Devils"
   )
-  vec <- dcPredictVectorized(home = home, away = away, params = params, draws = TRUE)
-  ref <- t(vapply(seq_along(home), function(i) {
-    p <- DCPredict(home = home[i], away = away[i], params = params, draws = TRUE)
-    c(p[1], p[2], p[3])
-  }, numeric(3)))
+  vec <- dcPredictVectorized(
+    home = home,
+    away = away,
+    params = params,
+    draws = TRUE
+  )
+  ref <- t(vapply(
+    seq_along(home),
+    function(i) {
+      p <- DCPredict(
+        home = home[i],
+        away = away[i],
+        params = params,
+        draws = TRUE
+      )
+      c(p[1], p[2], p[3])
+    },
+    numeric(3)
+  ))
   expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
   expect_true(all(rowSums(vec) == 1))
 })
@@ -390,11 +404,25 @@ test_that("dcPredictVectorized matches DCPredict per-game (draws = FALSE)", {
   params <- .parse_dc_params(NULL)
   home <- c("Toronto Maple Leafs", "New Jersey Devils", "Colorado Avalanche")
   away <- c("Ottawa Senators", "Philadelphia Flyers", "Dallas Stars")
-  vec <- dcPredictVectorized(home = home, away = away, params = params, draws = FALSE)
-  ref <- t(vapply(seq_along(home), function(i) {
-    p <- DCPredict(home = home[i], away = away[i], params = params, draws = FALSE)
-    c(p[1], p[2])
-  }, numeric(2)))
+  vec <- dcPredictVectorized(
+    home = home,
+    away = away,
+    params = params,
+    draws = FALSE
+  )
+  ref <- t(vapply(
+    seq_along(home),
+    function(i) {
+      p <- DCPredict(
+        home = home[i],
+        away = away[i],
+        params = params,
+        draws = FALSE
+      )
+      c(p[1], p[2])
+    },
+    numeric(2)
+  ))
   expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
   expect_true(all(rowSums(vec) == 1))
 })
@@ -414,17 +442,21 @@ test_that("dcPredictVectorized matches DCPredict with regression (expected_mean,
     expected_mean = 2.835184,
     season_percent = 0.5
   )
-  ref <- t(vapply(seq_along(home), function(i) {
-    p <- DCPredict(
-      home = home[i],
-      away = away[i],
-      params = params,
-      draws = TRUE,
-      expected_mean = 2.835184,
-      season_percent = 0.5
-    )
-    c(p[1], p[2], p[3])
-  }, numeric(3)))
+  ref <- t(vapply(
+    seq_along(home),
+    function(i) {
+      p <- DCPredict(
+        home = home[i],
+        away = away[i],
+        params = params,
+        draws = TRUE,
+        expected_mean = 2.835184,
+        season_percent = 0.5
+      )
+      c(p[1], p[2], p[3])
+    },
+    numeric(3)
+  ))
   expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
 })
 
@@ -440,7 +472,7 @@ test_that("dcProbArray matches prob_matrix per-game", {
       params = params,
       maxgoal = 10
     )
-    expect_equal(arr[, , j], ref, tolerance = 1e-12)
-    expect_equal(sum(arr[, , j]), 1, tolerance = 1e-10)
+    expect_equal(arr[,, j], ref, tolerance = 1e-12)
+    expect_equal(sum(arr[,, j]), 1, tolerance = 1e-10)
   }
 })

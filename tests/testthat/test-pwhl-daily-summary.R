@@ -1,9 +1,9 @@
-test_that("dailyPWHLSummary() reports (not silently swallows) failed posts (#noissue)", {
+test_that(".daily_summary_pwhl() reports (not silently swallows) failed posts (#noissue)", {
   withr::local_options(list(
     HockeyModel.prediction.path = withr::local_tempdir()
   ))
   local_mocked_bindings(
-    updatePWHLModel = function(...) {
+    .update_model_pwhl = function(...) {
       list(
         schedule = data.frame(
           Date = Sys.Date() + 1,
@@ -26,17 +26,17 @@ test_that("dailyPWHLSummary() reports (not silently swallows) failed posts (#noi
     .package = "atrrr"
   )
 
-  result <- suppressWarnings(dailyPWHLSummary(delay = 0))
+  result <- suppressWarnings(.daily_summary_pwhl(delay = 0))
   expect_true(is.data.frame(result))
   expect_named(result, c("description", "success", "error"))
 })
 
-test_that("dailyPWHLSummary() attributes failed posts to their description (#noissue)", {
+test_that(".daily_summary_pwhl() attributes failed posts to their description (#noissue)", {
   withr::local_options(list(
     HockeyModel.prediction.path = withr::local_tempdir()
   ))
   local_mocked_bindings(
-    updatePWHLModel = function(...) {
+    .update_model_pwhl = function(...) {
       list(
         schedule = data.frame(
           Date = Sys.Date() + 1,
@@ -71,7 +71,7 @@ test_that("dailyPWHLSummary() attributes failed posts to their description (#noi
 
   result <- suppressWarnings(
     suppressMessages(
-      dailyPWHLSummary(graphic_dir = withr::local_tempdir(), delay = 0)
+      .daily_summary_pwhl(graphic_dir = withr::local_tempdir(), delay = 0)
     )
   )
   expect_equal(nrow(result), 2)
