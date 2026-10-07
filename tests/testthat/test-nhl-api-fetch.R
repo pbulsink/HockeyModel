@@ -66,7 +66,7 @@ test_that("Scores are OK", {
 
 test_that("get_xg() uses component parser results", {
   local_mocked_bindings(
-    load_or_get_nst = function(gid) {
+    .load_or_get_nst = function(gid) {
       data.frame(
         h_a = c("home", "away"),
         xgf_all = c(2.5, 1.8),
@@ -90,11 +90,11 @@ test_that("get_xg() uses component parser results", {
   expect_equal(xg$AwayxG[[1]], 1.8)
 })
 
-test_that("load_or_get_nst() fetches and caches a Natural Stat Trick report", {
+test_that(".load_or_get_nst() fetches and caches a Natural Stat Trick report", {
   cache_file <- withr::local_tempfile(fileext = ".csv")
 
   vcr::use_cassette("nst-report", {
-    nst <- load_or_get_nst(2020020001, cache_path = cache_file)
+    nst <- .load_or_get_nst(2020020001, cache_path = cache_file)
   })
 
   expect_s3_class(nst, "data.frame")
@@ -103,7 +103,7 @@ test_that("load_or_get_nst() fetches and caches a Natural Stat Trick report", {
   # Result should now be served from the cache file, not the network.
   expect_true(file.exists(cache_file))
 
-  nst_cached <- load_or_get_nst(2020020001, cache_path = cache_file)
+  nst_cached <- .load_or_get_nst(2020020001, cache_path = cache_file)
   expect_equal(nst_cached$xgf_all, nst$xgf_all)
 })
 
@@ -169,7 +169,7 @@ test_that("getNHLScores derives gameIDs from schedule when gameIDs = NULL (#3.4)
 
   local_mocked_bindings(
     gameIDValidator = function(x) rep(TRUE, length(x)),
-    nhl_boxscore = function(gid) {
+    .nhl_boxscore = function(gid) {
       list(
         gameState = "OFF",
         gameDate = "2020-01-01",
@@ -201,7 +201,7 @@ test_that("getNHLScores derives gameIDs from schedule when gameIDs = NULL (#3.4)
 test_that("getNHLScores detects shootout games (#3.7)", {
   local_mocked_bindings(
     gameIDValidator = function(x) rep(TRUE, length(x)),
-    nhl_boxscore = function(gid) {
+    .nhl_boxscore = function(gid) {
       list(
         gameState = "OFF",
         gameDate = "2020-01-01",
@@ -233,7 +233,7 @@ test_that("getNHLScores detects shootout games (#3.7)", {
 test_that("getNHLScores errors on unrecognized OTStatus values (#3.9)", {
   local_mocked_bindings(
     gameIDValidator = function(x) rep(TRUE, length(x)),
-    nhl_boxscore = function(gid) {
+    .nhl_boxscore = function(gid) {
       list(
         gameState = "OFF",
         gameDate = "2020-01-01",
@@ -268,7 +268,7 @@ test_that("getNHLScores errors on unrecognized OTStatus values (#3.9)", {
 test_that("getNHLScores rejects tied final scores (#3.10)", {
   local_mocked_bindings(
     gameIDValidator = function(x) rep(TRUE, length(x)),
-    nhl_boxscore = function(gid) {
+    .nhl_boxscore = function(gid) {
       list(
         gameState = "OFF",
         gameDate = "2020-01-01",
@@ -302,7 +302,7 @@ test_that("getNHLScores skips xG lookup when no final scores are retrieved (#3.1
   called <- FALSE
   local_mocked_bindings(
     gameIDValidator = function(x) rep(TRUE, length(x)),
-    nhl_boxscore = function(gid) {
+    .nhl_boxscore = function(gid) {
       list(gameState = "FUT", gameScheduleState = "OK")
     },
     get_xg = function(gameIds) {

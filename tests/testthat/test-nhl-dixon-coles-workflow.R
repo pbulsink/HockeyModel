@@ -1,7 +1,7 @@
 context("test-nhl-dixon-coles-workflow")
 
 test_that("Model params generate OK", {
-  params <- suppressWarnings(updateDC(save_data = FALSE))
+  params <- suppressWarnings(.update_dc_nhl(save_data = FALSE))
   expect_true(is.list(params))
   expect_true(all(c("m", "rho", "beta", "eta", "k") %in% names(params)))
 
@@ -17,8 +17,8 @@ test_that("Model params generate OK", {
   expect_true(all(is.finite(params$k)) && params$k > 0)
 })
 
-test_that("updateDC with historical date works", {
-  params <- suppressWarnings(updateDC(
+test_that(".update_dc_nhl with historical date works", {
+  params <- suppressWarnings(.update_dc_nhl(
     currentDate = as.Date("2019-01-01"),
     save_data = FALSE
   ))
@@ -38,7 +38,7 @@ test_that("remainderSeasonDC returns odds table directly", {
   ]
 
   local_mocked_bindings(
-    todayDC = function(today, schedule, ...) {
+    .todayDC = function(today, schedule, ...) {
       day_games <- schedule[schedule$Date == as.Date(today), ]
       data.frame(
         HomeTeam = day_games$HomeTeam,
@@ -122,7 +122,7 @@ test_that("remainderSeasonDC accumulates every day's games in order", {
   )
 
   local_mocked_bindings(
-    todayDC = function(today, schedule, ...) {
+    .todayDC = function(today, schedule, ...) {
       day_games <- schedule[schedule$Date == as.Date(today), ]
       data.frame(
         HomeTeam = day_games$HomeTeam,
@@ -244,12 +244,12 @@ test_that("playoffDC same team near 0.5", {
   expect_true(abs(result - 0.5) < 0.1)
 })
 
-# ============ todayDC tests ============
+# ============ .todayDC tests ============
 test_that("DC Today returns data or NULL", {
   tmpdir <- withr::local_tempdir()
   withr::local_options("HockeyModel.prediction.path" = tmpdir)
 
-  today_odds <- todayDC(today = as.Date("2019-11-01"))
+  today_odds <- .todayDC(today = as.Date("2019-11-01"))
   expect_true(is.null(today_odds) || is.data.frame(today_odds))
 
   if (!is.null(today_odds)) {
@@ -258,16 +258,16 @@ test_that("DC Today returns data or NULL", {
   }
 })
 
-test_that("todayDC returns NULL for no games", {
-  result <- todayDC(today = as.Date("2020-07-15"))
+test_that(".todayDC returns NULL for no games", {
+  result <- .todayDC(today = as.Date("2020-07-15"))
   expect_null(result)
 })
 
-test_that("todayDC odds sum to 1 when available", {
+test_that(".todayDC odds sum to 1 when available", {
   sched <- HockeyModel::scores
   sched <- sched[sched$Date > as.Date("2019-10-01"), ]
   sched <- sched[sched$Date < as.Date("2019-12-31"), ]
-  today_odds <- todayDC(today = as.Date("2019-11-01"), schedule = sched)
+  today_odds <- .todayDC(today = as.Date("2019-11-01"), schedule = sched)
   if (!is.null(today_odds) && nrow(today_odds) > 0) {
     for (i in seq_len(nrow(today_odds))) {
       expect_equal(
@@ -279,13 +279,13 @@ test_that("todayDC odds sum to 1 when available", {
   }
 })
 
-# ── todayDC (PWHL) ────────────────────────────────────────────────────────────
+# ── .todayDC (PWHL) ────────────────────────────────────────────────────────────
 
-test_that("todayDC returns NULL when no PWHL games today", {
+test_that(".todayDC returns NULL when no PWHL games today", {
   scores <- make_pwhl_scores(30)
   params <- make_pwhl_params(scores)
   sched <- make_pwhl_schedule(scores)
-  result <- todayDC(
+  result <- .todayDC(
     params = params,
     today = as.Date("1900-01-01"),
     schedule = sched,
@@ -294,12 +294,12 @@ test_that("todayDC returns NULL when no PWHL games today", {
   expect_null(result)
 })
 
-test_that("todayDC returns correct columns when PWHL games exist", {
+test_that(".todayDC returns correct columns when PWHL games exist", {
   scores <- make_pwhl_scores(30)
   params <- make_pwhl_params(scores)
   sched <- make_pwhl_schedule(scores)
   today <- sched$Date[1]
-  result <- todayDC(
+  result <- .todayDC(
     params = params,
     today = today,
     schedule = sched,
@@ -314,6 +314,6 @@ test_that("todayDC returns correct columns when PWHL games exist", {
   expect_true(all(result$AwayWin >= 0 & result$AwayWin <= 1))
 })
 
-test_that("todayDC rejects non-Date today", {
-  expect_error(todayDC(today = "not-a-date"), class = "rlang_error")
+test_that(".todayDC rejects non-Date today", {
+  expect_error(.todayDC(today = "not-a-date"), class = "rlang_error")
 })

@@ -1,65 +1,65 @@
 # Tests for PWHL model functions (helpers live in helper-pwhl.R)
 
-# ── pwhl_add_result ───────────────────────────────────────────────────────────
+# ── .pwhl_add_result ───────────────────────────────────────────────────────────
 
-test_that("pwhl_add_result adds Result column with correct encodings", {
+test_that(".pwhl_add_result adds Result column with correct encodings", {
   scores <- data.frame(
     HomeGoals = c(3, 3, 3, 1, 1, 2), # regulation, home OT win, home SO win
     AwayGoals = c(1, 2, 2, 2, 2, 3), # regulation, away OT win, away SO win
     OTStatus = c("", "OT", "SO", "", "OT", "SO"),
     stringsAsFactors = FALSE
   )
-  out <- pwhl_add_result(scores)
+  out <- .pwhl_add_result(scores)
   expect_true("Result" %in% names(out))
   expect_equal(out$Result, c(1, 0.75, 0.6, 0, 0.25, 0.4))
 })
 
-test_that("pwhl_add_result preserves all input columns", {
+test_that(".pwhl_add_result preserves all input columns", {
   scores <- make_pwhl_scores(5)
-  out <- pwhl_add_result(scores)
+  out <- .pwhl_add_result(scores)
   expect_true(all(names(scores) %in% names(out)))
   expect_equal(nrow(out), nrow(scores))
 })
 
-# ── parse_pwhl_dc_params ──────────────────────────────────────────────────────
+# ── .parse_pwhl_dc_params ──────────────────────────────────────────────────────
 
-test_that("parse_pwhl_dc_params falls back to package PWHL params", {
-  params <- parse_pwhl_dc_params(NULL)
+test_that(".parse_pwhl_dc_params falls back to package PWHL params", {
+  params <- .parse_pwhl_dc_params(NULL)
   expect_type(params, "list")
   expect_named(params, c("m", "rho", "beta", "eta", "k"))
 })
 
-test_that("parse_pwhl_dc_params uses supplied params", {
+test_that(".parse_pwhl_dc_params uses supplied params", {
   fake <- list(m = "a", rho = -0.1, beta = 2, eta = 1, k = 5)
-  params <- parse_pwhl_dc_params(fake)
+  params <- .parse_pwhl_dc_params(fake)
   expect_equal(params$m, "a")
   expect_equal(params$rho, -0.1)
   expect_equal(params$beta, 2)
 })
 
-test_that("parse_pwhl_dc_params unwraps nested params", {
+test_that(".parse_pwhl_dc_params unwraps nested params", {
   inner <- list(m = "nested", rho = 0, beta = 1, eta = 1, k = 1)
   nested <- list(params = inner)
-  params <- parse_pwhl_dc_params(nested)
+  params <- .parse_pwhl_dc_params(nested)
   expect_equal(params$m, "nested")
 })
 
-# ── updatePWHLDC ─────────────────────────────────────────────────────────────
+# ── .update_dc_pwhl ──────────────────────────────────────────────────────────
 
-test_that("updatePWHLDC rejects non-Date currentDate", {
+test_that(".update_dc_pwhl rejects non-Date currentDate", {
   scores <- make_pwhl_scores()
   expect_error(
-    updatePWHLDC(scores, currentDate = "not-a-date"),
+    .update_dc_pwhl(scores, currentDate = "not-a-date"),
     class = "rlang_error"
   )
 })
 
-test_that("updatePWHLDC errors on empty scores", {
+test_that(".update_dc_pwhl errors on empty scores", {
   empty <- make_pwhl_scores(0)
-  expect_error(updatePWHLDC(empty), class = "rlang_error")
+  expect_error(.update_dc_pwhl(empty), class = "rlang_error")
 })
 
-test_that("updatePWHLDC returns a named list with the correct components", {
+test_that(".update_dc_pwhl returns a named list with the correct components", {
   # Test the contract (m is a glm, rho/beta/eta/k are numeric) using
   # make_pwhl_params (bypasses the Weibull optimisation which needs real data)
   scores <- make_pwhl_scores(30)
@@ -175,9 +175,9 @@ test_that("pwhl_loopless_sim top-4 playoff odds sum to roughly 4", {
   expect_true(abs(total_playoff_odds - 4) < 0.5)
 })
 
-# ── updatePWHLModel ───────────────────────────────────────────────────────────
+# ── .update_model_pwhl ────────────────────────────────────────────────────────
 
-test_that("updatePWHLModel returns list with scores, schedule, params", {
+test_that(".update_model_pwhl returns list with scores, schedule, params", {
   scores_fixture <- make_pwhl_scores(30)
   schedule_fixture <- data.frame(
     Date = as.Date("2025-01-01"),
@@ -193,10 +193,10 @@ test_that("updatePWHLModel returns list with scores, schedule, params", {
   local_mocked_bindings(
     updatePWHLScheduleAPI = function(...) schedule_fixture,
     updatePWHLScoresAPI = function(...) scores_fixture,
-    updatePWHLDC = function(...) params_fixture,
+    .update_dc_pwhl = function(...) params_fixture,
     .package = "HockeyModel"
   )
-  result <- updatePWHLModel(save_data = FALSE)
+  result <- .update_model_pwhl(save_data = FALSE)
   expect_type(result, "list")
   expect_true(all(c("scores", "schedule", "params") %in% names(result)))
   expect_equal(nrow(result$schedule), 1)

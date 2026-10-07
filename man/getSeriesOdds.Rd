@@ -7,7 +7,7 @@
 getSeriesOdds(params = NULL)
 }
 \arguments{
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 }
 \value{
 NULL if no series are currently set but not complete, else a data frame.

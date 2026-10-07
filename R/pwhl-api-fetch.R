@@ -10,7 +10,7 @@ PWHL_API_CLIENT <- "pwhl"
 #' @param params Named list of query parameters to append.
 #' @returns A prepared [`httr2::request`] object.
 #' @keywords internal
-pwhl_api_request <- function(params) {
+.pwhl_api_request <- function(params) {
   all_params <- c(
     params,
     list(key = PWHL_API_KEY, client_code = PWHL_API_CLIENT)
@@ -33,7 +33,7 @@ pwhl_api_request <- function(params) {
 #' @export
 getPWHLSeasons <- function() {
   resp <- tryCatch(
-    pwhl_api_request(list(feed = "modulekit", view = "seasons")) |>
+    .pwhl_api_request(list(feed = "modulekit", view = "seasons")) |>
       httr2::req_perform() |>
       httr2::resp_body_string() |>
       jsonlite::fromJSON(),
@@ -116,7 +116,7 @@ getPWHLSchedule <- function(
   season <- as.integer(season)
 
   resp <- tryCatch(
-    pwhl_api_request(
+    .pwhl_api_request(
       list(feed = "modulekit", view = "schedule", season_id = season)
     ) |>
       httr2::req_perform() |>
@@ -156,8 +156,8 @@ getPWHLSchedule <- function(
 
   sched <- data.frame(
     Date = as.Date(games$date_played),
-    HomeTeam = getLongTeam(games$home_team_code, pwhlTeamColours),
-    AwayTeam = getLongTeam(games$visiting_team_code, pwhlTeamColours),
+    HomeTeam = .getLongTeam(games$home_team_code, pwhlTeamColours),
+    AwayTeam = .getLongTeam(games$visiting_team_code, pwhlTeamColours),
     GameID = as.integer(games$id),
     GameType = game_type,
     GameStatus = ifelse(
@@ -216,7 +216,7 @@ getPWHLScores <- function(
   scores <- NULL
   for (gid in gameIDs) {
     sc <- tryCatch(
-      pwhl_game_summary(gid),
+      .pwhl_game_summary(gid),
       error = function(e) {
         message("Error retrieving PWHL game ", gid, ": ", conditionMessage(e))
         NULL
@@ -244,11 +244,11 @@ getPWHLScores <- function(
 #' @param pwhlTeamColours Built-in PWHL Team Colours data
 #' @returns (`character(1)`) Canonical team name.
 #' @keywords internal
-pwhl_resolve_team_name <- function(
+.pwhl_resolve_team_name <- function(
   pwhlID,
   pwhlTeamColours = HockeyModel::pwhlTeamColours
 ) {
-  getteamname <- function(t) {
+  .getteamname <- function(t) {
     if (t %in% pwhlTeamColours$PWHLID) {
       return(pwhlTeamColours[pwhlTeamColours$PWHLID == t, ]$Team)
     } else {
@@ -256,9 +256,9 @@ pwhl_resolve_team_name <- function(
     }
   }
 
-  v_getteamname <- Vectorize(getteamname, "t")
+  v_getteamname <- Vectorize(.getteamname, "t")
   if (length(pwhlID) == 1) {
-    return(getteamname(t = pwhlID))
+    return(.getteamname(t = pwhlID))
   } else {
     return(unname(v_getteamname(t = pwhlID)))
   }
@@ -270,9 +270,9 @@ pwhl_resolve_team_name <- function(
 #' @param gid (`integer(1)`) PWHL game ID.
 #' @returns A one-row data frame or `NULL` if the game is not final.
 #' @keywords internal
-pwhl_game_summary <- function(gid) {
+.pwhl_game_summary <- function(gid) {
   resp <- tryCatch(
-    pwhl_api_request(
+    .pwhl_api_request(
       list(feed = "gc", tab = "gamesummary", game_id = gid, lang = "en")
     ) |>
       httr2::req_perform() |>
@@ -288,33 +288,33 @@ pwhl_game_summary <- function(gid) {
     return(NULL)
   }
 
-  gs <- resp$GC$Gamesummary
-  if (is.null(gs)) {
+  .gs <- resp$GC$Gamesummary
+  if (is.null(.gs)) {
     return(NULL)
   }
 
-  meta <- gs$meta
+  meta <- .gs$meta
   # Only process finished games
   if (is.null(meta) || is.null(meta$status) || meta$status != "4") {
     return(NULL)
   }
 
-  home_goals <- gs$goalCount$home
-  away_goals <- gs$goalCount$visitor
+  home_goals <- .gs$goalCount$home
+  away_goals <- .gs$goalCount$visitor
 
   n_periods <- meta$period
   ot_status <- if (n_periods == 3L) {
     ""
   } else if (n_periods == 4L) {
     # Check for shootout
-    shootout <- gs$shootoutDetail
+    shootout <- .gs$shootoutDetail
     if (!is.null(shootout) && length(shootout) > 0) "SO" else "OT"
   } else {
     "OT"
   }
 
-  home_team <- getLongTeam(gs$home$team_code, HockeyModel::pwhlTeamColours)
-  away_team <- getLongTeam(gs$visitor$team_code, HockeyModel::pwhlTeamColours)
+  home_team <- .getLongTeam(.gs$home$team_code, HockeyModel::pwhlTeamColours)
+  away_team <- .getLongTeam(.gs$visitor$team_code, HockeyModel::pwhlTeamColours)
 
   sched <- HockeyModel::pwhlSchedule
   gt <- sched[sched$GameID == gid, ]$GameType
@@ -475,7 +475,7 @@ getPWHLPlayoffSeries <- function(season_id = NULL) {
 
   # Build API request for brackets
   resp <- tryCatch(
-    pwhl_api_request(list(
+    .pwhl_api_request(list(
       feed = "modulekit",
       view = "brackets",
       season_id = season_id
@@ -483,7 +483,9 @@ getPWHLPlayoffSeries <- function(season_id = NULL) {
       httr2::req_perform() |>
       httr2::resp_body_string() |>
       jsonlite::fromJSON(),
-    error = function(e) return(NULL)
+    error = function(e) {
+      return(NULL)
+    }
   )
   if (is.null(resp) || is.null(resp$SiteKit$Brackets)) {
     return(NULL)
@@ -499,8 +501,8 @@ getPWHLPlayoffSeries <- function(season_id = NULL) {
 
   # Flatten all rounds/series
   series_list <- data.frame(
-    HomeTeam = pwhl_resolve_team_name(matchups[[1]]$team1),
-    AwayTeam = pwhl_resolve_team_name(matchups[[1]]$team2),
+    HomeTeam = .pwhl_resolve_team_name(matchups[[1]]$team1),
+    AwayTeam = .pwhl_resolve_team_name(matchups[[1]]$team2),
     HomeWins = as.integer(matchups[[1]]$team1_wins),
     AwayWins = as.integer(matchups[[1]]$team2_wins)
   )
@@ -521,7 +523,7 @@ getPWHLPlayoffSeries <- function(season_id = NULL) {
 #' @returns `NULL` (invisibly). Writes updated data when `usethis` is
 #'   available.
 #' @keywords internal
-buildPWHLTeamColours <- function() {
+.buildPWHLTeamColours <- function() {
   pwhlTeamColours <- utils::read.csv(
     "./data-raw/logos/pwhl_team_colours.csv",
     stringsAsFactors = FALSE

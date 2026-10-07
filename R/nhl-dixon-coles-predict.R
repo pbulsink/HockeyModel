@@ -6,7 +6,7 @@
 #'
 #' @param home home team
 #' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
@@ -26,7 +26,7 @@ DCPredict <- function(
   draws = TRUE
 ) {
   params <- .parse_dc_params(params = params)
-  probability_matrix <- dcProbMatrix(
+  probability_matrix <- .dcProbMatrix(
     home = home,
     away = away,
     params = params,
@@ -65,7 +65,7 @@ DCPredict <- function(
 #' @description Builds the Dixon-Coles probability matrix for each of many
 #'   (lambda, mu) pairs at once, returning a 3D array of dimension
 #'   `(maxgoal+1) x (maxgoal+1) x n`. Each slice `pm[,,j]` is exactly what
-#'   [prob_matrix] returns for the j-th game, so the per-game output is
+#'   [.prob_matrix] returns for the j-th game, so the per-game output is
 #'   statistically identical to the scalar path.
 #'
 #' @param lambda (`double(n)`) Home expected goals, one value per game.
@@ -74,21 +74,22 @@ DCPredict <- function(
 #' @param maxgoal (`integer(1)`) Maximum goals per team.
 #' @returns (`array`) Probability array of dim `(maxgoal+1) x (maxgoal+1) x n`.
 #' @keywords internal
-dcProbArray <- function(lambda, mu, params, maxgoal) {
+.dcProbArray <- function(lambda, mu, params, maxgoal) {
   params <- .parse_dc_params(params)
   n <- length(lambda)
   G <- maxgoal + 1
   idx0 <- 0:maxgoal
 
   # Weibull tie-enhancement on the diagonal (shared across games).
-  weib <- stats::dweibull(seq_len(G), shape = params$beta, scale = params$eta) * params$k
+  weib <- stats::dweibull(seq_len(G), shape = params$beta, scale = params$eta) *
+    params$k
   up <- upper.tri(matrix(1, G, G))
   lo <- lower.tri(matrix(1, G, G))
 
-  build_one <- function(lam, mu) {
+  .build_one <- function(lam, mu) {
     pm <- stats::dpois(idx0, lam) %*% t(stats::dpois(idx0, mu))
     # Dixon-Coles tau scaling on the four low-score cells, then clamp negatives.
-    # Must match prob_matrix exactly: it uses matrix(c(c00,c01,c10,c11), nrow=2)
+    # Must match .prob_matrix exactly: it uses matrix(c(c00,c01,c10,c11), nrow=2)
     # (column-major), so [2,1] gets c01 (mu) and [1,2] gets c10 (lambda).
     pm[1, 1] <- pm[1, 1] * (1 - (lam * mu * params$rho))
     pm[2, 1] <- pm[2, 1] * (1 + (mu * params$rho))
@@ -113,7 +114,7 @@ dcProbArray <- function(lambda, mu, params, maxgoal) {
 
   out <- array(0, dim = c(G, G, n))
   for (j in seq_len(n)) {
-    out[, , j] <- build_one(lambda[j], mu[j])
+    out[, , j] <- .build_one(lambda[j], mu[j])
   }
   return(out)
 }
@@ -123,7 +124,7 @@ dcProbArray <- function(lambda, mu, params, maxgoal) {
 #' @description Computes home/draw/away win probabilities for many games at
 #'   once. The output is statistically identical to calling [DCPredict]
 #'   per game, but avoids the per-game function-call overhead that makes
-#'   `todayDC()` / `remainderSeasonDC()` O(F) in function calls.
+#'   `.todayDC()` / `remainderSeasonDC()` O(F) in function calls.
 #'
 #' @param home (`character(n)`) Home team name per game.
 #' @param away (`character(n)`) Away team name per game.
@@ -137,7 +138,7 @@ dcProbArray <- function(lambda, mu, params, maxgoal) {
 #'   probability distributed proportionally.
 #' @returns (`matrix(n x 3)` or `matrix(n x 2)`) Probability columns.
 #' @keywords internal
-dcPredictVectorized <- function(
+.dcPredictVectorized <- function(
   home,
   away,
   params = NULL,
@@ -150,44 +151,64 @@ dcPredictVectorized <- function(
   n <- length(home)
 
   # Expected goals home / away per game, with the same error recovery path as
-  # [dcLambda] so new or unseen teams still produce a numeric estimate.
-  lam <- vapply(seq_len(n), function(i) {
-    x <- try(
-      as.numeric(stats::predict(
-        params$m,
-        data.frame(Home = 1, Team = home[i], Opponent = away[i]),
-        type = "response"
-      )),
-      silent = TRUE
-    )
-    if (is.numeric(x)) {
-      x
-    } else {
-      DCPredictErrorRecover(team = home[i], opponent = away[i], homeiceadv = TRUE)
-    }
-  }, numeric(1))
-  mu <- vapply(seq_len(n), function(i) {
-    x <- try(
-      as.numeric(stats::predict(
-        params$m,
-        data.frame(Home = 0, Team = away[i], Opponent = home[i]),
-        type = "response"
-      )),
-      silent = TRUE
-    )
-    if (is.numeric(x)) {
-      x
-    } else {
-      DCPredictErrorRecover(team = away[i], opponent = home[i], homeiceadv = FALSE)
-    }
-  }, numeric(1))
+  # [.dcLambda] so new or unseen teams still produce a numeric estimate.
+  lam <- vapply(
+    seq_len(n),
+    function(i) {
+      x <- try(
+        as.numeric(stats::predict(
+          params$m,
+          data.frame(Home = 1, Team = home[i], Opponent = away[i]),
+          type = "response"
+        )),
+        silent = TRUE
+      )
+      if (is.numeric(x)) {
+        x
+      } else {
+        .DCPredictErrorRecover(
+          team = home[i],
+          opponent = away[i],
+          homeiceadv = TRUE
+        )
+      }
+    },
+    numeric(1)
+  )
+  mu <- vapply(
+    seq_len(n),
+    function(i) {
+      x <- try(
+        as.numeric(stats::predict(
+          params$m,
+          data.frame(Home = 0, Team = away[i], Opponent = home[i]),
+          type = "response"
+        )),
+        silent = TRUE
+      )
+      if (is.numeric(x)) {
+        x
+      } else {
+        .DCPredictErrorRecover(
+          team = away[i],
+          opponent = home[i],
+          homeiceadv = FALSE
+        )
+      }
+    },
+    numeric(1)
+  )
 
   if (!is.null(expected_mean) && !is.null(season_percent)) {
-    lam <- lam * (1 - 1 / 3 * season_percent) + expected_mean * (1 / 3 * season_percent)
-    mu <- mu * (1 - 1 / 3 * season_percent) + expected_mean * (1 / 3 * season_percent)
+    lam <- lam *
+      (1 - 1 / 3 * season_percent) +
+      expected_mean * (1 / 3 * season_percent)
+    mu <- mu *
+      (1 - 1 / 3 * season_percent) +
+      expected_mean * (1 / 3 * season_percent)
   }
 
-  pm <- dcProbArray(lambda = lam, mu = mu, params = params, maxgoal = maxgoal)
+  pm <- .dcProbArray(lambda = lam, mu = mu, params = params, maxgoal = maxgoal)
 
   # Per-game raw (home, draw, away) regulation probabilities from the matrix.
   hw <- apply(pm, 3, function(x) sum(x[lower.tri(x)]))
@@ -203,7 +224,13 @@ dcPredictVectorized <- function(
     p2 <- h2 + a2
     hw <- h2 / p2
     aw <- a2 / p2
-    return(matrix(c(hw, aw), nrow = n, ncol = 2, byrow = FALSE, dimnames = list(NULL, c("HomeWin", "AwayWin"))))
+    return(matrix(
+      c(hw, aw),
+      nrow = n,
+      ncol = 2,
+      byrow = FALSE,
+      dimnames = list(NULL, c("HomeWin", "AwayWin"))
+    ))
   }
 
   # Normalize each game's triple to sum to 1 (mirrors DCPredict's normalizeOdds).
@@ -211,7 +238,13 @@ dcPredictVectorized <- function(
   hw <- hw / tot
   dw <- dw / tot
   aw <- aw / tot
-  return(matrix(c(hw, dw, aw), nrow = n, ncol = 3, byrow = FALSE, dimnames = list(NULL, c("HomeWin", "Draw", "AwayWin"))))
+  return(matrix(
+    c(hw, dw, aw),
+    nrow = n,
+    ncol = 3,
+    byrow = FALSE,
+    dimnames = list(NULL, c("HomeWin", "Draw", "AwayWin"))
+  ))
 }
 
 #' DC Expected Goals
@@ -220,10 +253,10 @@ dcPredictVectorized <- function(
 #'
 #' @param home The home team name
 #' @param away The away team name
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return a list of $home and $away Poisson Lambda values -
-dcLambda <- function(home, away, params = NULL) {
+.dcLambda <- function(home, away, params = NULL) {
   params <- .parse_dc_params(params = params)
   xg <- list("home" = NA, "away" = NA)
 
@@ -248,14 +281,14 @@ dcLambda <- function(home, away, params = NULL) {
   )
 
   if (!is.numeric(xg$home)) {
-    xg$home <- DCPredictErrorRecover(
+    xg$home <- .DCPredictErrorRecover(
       team = home,
       opponent = away,
       homeiceadv = TRUE
     )
   }
   if (!is.numeric(xg$away)) {
-    xg$away <- DCPredictErrorRecover(
+    xg$away <- .DCPredictErrorRecover(
       team = away,
       opponent = home,
       homeiceadv = FALSE
@@ -273,8 +306,8 @@ dcLambda <- function(home, away, params = NULL) {
 #' @param maxgoal (`integer(1)`) Maximum goals included per team.
 #' @returns (`list`) Home and away expected goals.
 #' @keywords internal
-dcxG <- function(home, away, params = NULL, maxgoal = 10) {
-  pm <- dcProbMatrix(
+.dcxG <- function(home, away, params = NULL, maxgoal = 10) {
+  pm <- .dcProbMatrix(
     home = home,
     away = away,
     params = params,
@@ -291,14 +324,14 @@ dcxG <- function(home, away, params = NULL, maxgoal = 10) {
 #'
 #' @param home home team
 #' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
 #'
 #' @return a square matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
-dcProbMatrix <- function(
+.dcProbMatrix <- function(
   home,
   away,
   params = NULL,
@@ -309,7 +342,7 @@ dcProbMatrix <- function(
 ) {
   params <- .parse_dc_params(params = params)
 
-  xg <- dcLambda(home = home, away = away, params = params)
+  xg <- .dcLambda(home = home, away = away, params = params)
   # Expected goals home
   lambda <- as.numeric(xg$home)
 
@@ -325,7 +358,7 @@ dcProbMatrix <- function(
       expected_mean * (1 / 3 * season_percent)
   }
 
-  probability_matrix <- prob_matrix(
+  probability_matrix <- .prob_matrix(
     lambda = lambda,
     mu = mu,
     params = params,
@@ -337,16 +370,16 @@ dcProbMatrix <- function(
 
 #' Probability Matrix
 #'
-#' @description Given a mu, lambda, rho, and theta, generate a probability matrix. Differs from dcProbMatrix in that no regresson or solving for supplied teams happens
+#' @description Given a mu, lambda, rho, and theta, generate a probability matrix. Differs from .dcProbMatrix in that no regresson or solving for supplied teams happens
 #'
 #' @param lambda home lambda
 #' @param mu away mu
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max goals per game
 #'
 #' @return a square matrix of maxgoal:maxgoal, with all entries in `[0, 1]` and
-#'   summing to 1 (see [validateProbMatrix])
-prob_matrix <- function(lambda, mu, params, maxgoal) {
+#'   summing to 1 (see [.validateProbMatrix])
+.prob_matrix <- function(lambda, mu, params, maxgoal) {
   params <- .parse_dc_params(params)
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*%
     t(stats::dpois(0:maxgoal, mu))
@@ -393,7 +426,7 @@ prob_matrix <- function(lambda, mu, params, maxgoal) {
     # negative. Cap the diagonal so it leaves a small positive remainder for
     # the off-diagonal (win/loss) outcomes instead.
     warning(
-      "prob_matrix: tie-enhanced diagonal probability (",
+      ".prob_matrix: tie-enhanced diagonal probability (",
       signif(diag_sum, 4),
       ") reached or exceeded 1; capping to leave room for win/loss outcomes."
     )
@@ -417,7 +450,7 @@ prob_matrix <- function(lambda, mu, params, maxgoal) {
     probability_matrix
   )] <- probability_matrix[lower.tri(probability_matrix)] / normfact
 
-  validateProbMatrix(probability_matrix, context = "prob_matrix")
+  .validateProbMatrix(probability_matrix, context = ".prob_matrix")
 }
 
 #' DC Sample
@@ -426,7 +459,7 @@ prob_matrix <- function(lambda, mu, params, maxgoal) {
 #'
 #' @param home home team
 #' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
@@ -448,16 +481,16 @@ dcSample <- function(
   as_result = TRUE
 ) {
   params <- .parse_dc_params(params)
-  pm <- dcProbMatrix(
+  pm <- .dcProbMatrix(
     home = home,
     away = away,
     params = params,
     maxgoal = maxgoal
   )
 
-  # prob_matrix() already guarantees valid probabilities (see validateProbMatrix);
+  # .prob_matrix() already guarantees valid probabilities (see .validateProbMatrix);
   # re-validate here in case pm was constructed/modified by a caller.
-  pm <- validateProbMatrix(pm, context = "dcSample probability matrix")
+  pm <- .validateProbMatrix(pm, context = "dcSample probability matrix")
 
   goals <- as.vector(arrayInd(
     sample(seq_along(pm), size = 1, prob = pm),
@@ -471,7 +504,7 @@ dcSample <- function(
     otwinner <- sample(
       c("Home", "Away"),
       size = 1,
-      prob = extraTimeSolver(
+      prob = .extraTimeSolver(
         sum(pm[lower.tri(pm)]),
         sum(pm[upper.tri(pm)]),
         sum(diag(pm))
@@ -507,19 +540,19 @@ dcSample <- function(
 #'
 #' @param lambda home team lambda
 #' @param mu away team mu
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param maxgoal max goals predicable per game, default 10
 #' @param nsim the number of simulations in each result
 #'
 #' @return a result from 0 to 1 corresponding to \link{scores} results
-dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
+.dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
   params <- .parse_dc_params(params)
 
-  dcr <- function(lambda, mu, params, maxgoal, nsim) {
+  .dcr <- function(lambda, mu, params, maxgoal, nsim) {
     if (is.na(lambda)) {
       return(NA)
     }
-    pm <- prob_matrix(
+    pm <- .prob_matrix(
       lambda = lambda,
       mu = mu,
       params = params,
@@ -528,7 +561,7 @@ dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
 
     homewinprob <- sum(pm[lower.tri(pm)])
     awaywinprob <- sum(pm[upper.tri(pm)])
-    otwinnerprob <- extraTimeSolver(homewinprob, awaywinprob, sum(diag(pm)))[
+    otwinnerprob <- .extraTimeSolver(homewinprob, awaywinprob, sum(diag(pm)))[
       2:3
     ]
     resultprob <- c(
@@ -539,9 +572,9 @@ dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
       otwinnerprob[2] * 0.6858606,
       awaywinprob
     )
-    resultprob <- validateProbMatrix(
+    resultprob <- .validateProbMatrix(
       resultprob,
-      context = "dcResult resultprob"
+      context = ".dcResult resultprob"
     )
     results <- sample(
       c(1, 0.75, 0.6, 0.4, 0.25, 0),
@@ -552,10 +585,10 @@ dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
     return(results)
   }
 
-  v_dcr <- Vectorize(dcr, c("lambda", "mu"))
+  v_dcr <- Vectorize(.dcr, c("lambda", "mu"))
 
   if (length(lambda) == 1) {
-    return(dcr(lambda, mu, params, maxgoal, nsim))
+    return(.dcr(lambda, mu, params, maxgoal, nsim))
   } else {
     return(as.vector(v_dcr(lambda, mu, params, maxgoal, nsim)))
   }
@@ -572,8 +605,8 @@ dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
 #' @param size (`integer(1)`) Number of samples to draw.
 #' @returns (`numeric`) Result values encoded like `scores$Result`.
 #' @keywords internal
-sampleResult <- function(hw, hot, hso, aso, aot, aw, size = 1) {
-  sr <- function(hw, hot, hso, aso, aot, aw, size) {
+.sampleResult <- function(hw, hot, hso, aso, aot, aw, size = 1) {
+  .sr <- function(hw, hot, hso, aso, aot, aw, size) {
     return(sample(
       c(1, 0.75, 0.6, 0.4, 0.25, 0),
       size = size,
@@ -581,10 +614,10 @@ sampleResult <- function(hw, hot, hso, aso, aot, aw, size = 1) {
       prob = c(hw, hot, hso, aso, aot, aw)
     ))
   }
-  v_sr <- Vectorize(sr, c("hw", "hot", "hso", "aso", "aot", "aw"))
+  v_sr <- Vectorize(.sr, c("hw", "hot", "hso", "aso", "aot", "aw"))
 
   if (size == 1) {
-    return(sr(hw, hot, hso, aso, aot, aw, size))
+    return(.sr(hw, hot, hso, aso, aot, aw, size))
   } else {
     return(as.vector(v_sr(hw, hot, hso, aso, aot, aw, size)))
   }
@@ -599,14 +632,14 @@ sampleResult <- function(hw, hot, hso, aso, aot, aw, size = 1) {
 #' @returns (`numeric`) Probabilities for home win, home OT, home SO, away SO,
 #'   away OT, and away win.
 #' @keywords internal
-dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
+.dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
   params <- .parse_dc_params(params)
 
-  dceo <- function(lambda, mu, params, maxgoal, nsim) {
+  .dceo <- function(lambda, mu, params, maxgoal, nsim) {
     if (is.na(lambda)) {
       return(NA)
     }
-    pm <- prob_matrix(
+    pm <- .prob_matrix(
       lambda = lambda,
       mu = mu,
       params = params,
@@ -615,7 +648,7 @@ dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
 
     homewinprob <- sum(pm[lower.tri(pm)])
     awaywinprob <- sum(pm[upper.tri(pm)])
-    otwinnerprob <- extraTimeSolver(homewinprob, awaywinprob, sum(diag(pm)))[
+    otwinnerprob <- .extraTimeSolver(homewinprob, awaywinprob, sum(diag(pm)))[
       2:3
     ]
     resultprob <- c(
@@ -626,16 +659,16 @@ dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
       otwinnerprob[2] * 0.6858606,
       awaywinprob
     )
-    return(validateProbMatrix(
+    return(.validateProbMatrix(
       resultprob,
-      context = "dcExpandedOdds resultprob"
+      context = ".dcExpandedOdds resultprob"
     ))
   }
 
-  v_dceo <- Vectorize(dceo, c("lambda", "mu"))
+  v_dceo <- Vectorize(.dceo, c("lambda", "mu"))
 
   if (length(lambda) == 1) {
-    return(dceo(lambda, mu, params, maxgoal))
+    return(.dceo(lambda, mu, params, maxgoal))
   } else {
     return(v_dceo(lambda, mu, params, maxgoal))
   }
@@ -649,7 +682,7 @@ dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
 #' @param m (`glm`) Fitted Dixon-Coles model.
 #' @returns (`double(1)`) Fallback expected goals estimate.
 #' @keywords internal
-DCPredictErrorRecover <- function(
+.DCPredictErrorRecover <- function(
   team,
   opponent,
   homeiceadv = FALSE,

@@ -193,7 +193,7 @@ getSeason <- function(gamedate = Sys.Date()) {
     httr2::resp_body_string() |>
     jsonlite::fromJSON()
   seasons <- seasons$data
-  gs <- function(gd, seasons) {
+  .gs <- function(gd, seasons) {
     gd <- as.Date(gd)
     season_list <- seasons[seasons$startDate <= gd & seasons$endDate >= gd, ]
     if (nrow(season_list) == 1) {
@@ -202,10 +202,10 @@ getSeason <- function(gamedate = Sys.Date()) {
       return(NULL)
     }
   }
-  vgs <- Vectorize(FUN = gs, vectorize.args = c("gd"))
+  vgs <- Vectorize(FUN = .gs, vectorize.args = c("gd"))
 
   if (length(gamedate) == 1) {
-    return(gs(gd = gamedate, seasons = seasons))
+    return(.gs(gd = gamedate, seasons = seasons))
   } else if (length(gamedate) > 1) {
     return(unname(vgs(gd = gamedate, seasons = seasons)))
   }
@@ -218,7 +218,7 @@ getSeason <- function(gamedate = Sys.Date()) {
 #'   column.
 #' @returns (`character`) Unique conference names.
 #' @keywords internal
-getConferences <- function(teamColours = HockeyModel::teamColours) {
+.getConferences <- function(teamColours = HockeyModel::teamColours) {
   return(unique(teamColours$Conference))
 }
 
@@ -228,7 +228,7 @@ getConferences <- function(teamColours = HockeyModel::teamColours) {
 #'   column.
 #' @returns (`character`) Unique division names.
 #' @keywords internal
-getDivisions <- function(teamColours = HockeyModel::teamColours) {
+.getDivisions <- function(teamColours = HockeyModel::teamColours) {
   return(unique(teamColours$Division))
 }
 
@@ -238,15 +238,15 @@ getDivisions <- function(teamColours = HockeyModel::teamColours) {
 #' @param teamColours (`data.frame`) Team metadata table.
 #' @returns (`character`) Conference name for each input team.
 #' @keywords internal
-getTeamConferences <- function(teams, teamColours = HockeyModel::teamColours) {
-  getteamconf <- function(t, teamColours = HockeyModel::teamColours) {
+.getTeamConferences <- function(teams, teamColours = HockeyModel::teamColours) {
+  .getteamconf <- function(t, teamColours = HockeyModel::teamColours) {
     return(teamColours[teamColours$Team == t, ]$Conference)
   }
 
-  v_getteamconf <- Vectorize(getteamconf, "t")
-  teams <- clean_names(teams)
+  v_getteamconf <- Vectorize(.getteamconf, "t")
+  teams <- .clean_names(teams)
   if (length(teams) == 1) {
-    return(getteamconf(t = teams, teamColours = teamColours))
+    return(.getteamconf(t = teams, teamColours = teamColours))
   } else {
     return(unname(v_getteamconf(t = teams, teamColours = teamColours)))
   }
@@ -258,15 +258,15 @@ getTeamConferences <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @param teamColours (`data.frame`) Team metadata table.
 #' @returns (`character`) Division name for each input team.
 #' @keywords internal
-getTeamDivisions <- function(teams, teamColours = HockeyModel::teamColours) {
-  getteamdiv <- function(t, teamColours = HockeyModel::teamColours) {
+.getTeamDivisions <- function(teams, teamColours = HockeyModel::teamColours) {
+  .getteamdiv <- function(t, teamColours = HockeyModel::teamColours) {
     return(teamColours[teamColours$Team == t, ]$Division)
   }
 
-  v_getteamdiv <- Vectorize(getteamdiv, "t")
-  teams <- clean_names(teams)
+  v_getteamdiv <- Vectorize(.getteamdiv, "t")
+  teams <- .clean_names(teams)
   if (length(teams) == 1) {
-    return(getteamdiv(t = teams, teamColours = teamColours))
+    return(.getteamdiv(t = teams, teamColours = teamColours))
   } else {
     return(unname(v_getteamdiv(t = teams, teamColours = teamColours)))
   }
@@ -278,8 +278,8 @@ getTeamDivisions <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @param teamColours (`data.frame`) Team metadata table.
 #' @returns (`character`) Team short code for each input team.
 #' @keywords internal
-getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
-  getteamshort <- function(t) {
+.getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
+  .getteamshort <- function(t) {
     if (t %in% teamColours$Team) {
       return(teamColours[teamColours$Team == t, ]$ShortCode)
     } else {
@@ -287,10 +287,10 @@ getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
     }
   }
 
-  v_getteamshort <- Vectorize(getteamshort, "t")
-  teams <- clean_names(teams)
+  v_getteamshort <- Vectorize(.getteamshort, "t")
+  teams <- .clean_names(teams)
   if (length(teams) == 1) {
-    return(getteamshort(t = teams))
+    return(.getteamshort(t = teams))
   } else {
     return(unname(v_getteamshort(t = teams)))
   }
@@ -302,8 +302,8 @@ getShortTeam <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @param teamColours (`data.frame`) Team metadata table.
 #' @returns (`character`) Long-form team name for each input code.
 #' @keywords internal
-getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
-  getteamlong <- function(t) {
+.getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
+  .getteamlong <- function(t) {
     if (t %in% teamColours$ShortCode) {
       return(teamColours[teamColours$ShortCode == t, ]$Team)
     } else {
@@ -311,10 +311,10 @@ getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
     }
   }
 
-  v_getteamlong <- Vectorize(getteamlong, "t")
-  teams <- clean_names(teams)
+  v_getteamlong <- Vectorize(.getteamlong, "t")
+  teams <- .clean_names(teams)
   if (length(teams) == 1) {
-    return(getteamlong(t = teams))
+    return(.getteamlong(t = teams))
   } else {
     return(unname(v_getteamlong(t = teams)))
   }
@@ -325,9 +325,9 @@ getLongTeam <- function(teams, teamColours = HockeyModel::teamColours) {
 #' @param season (`character(1)`) Season ID in eight-digit format.
 #' @returns (`numeric(1)`) Number of regular-season games per team.
 #' @keywords internal
-getNumGames <- function(season = getCurrentSeason8()) {
+.getNumGames <- function(season = getCurrentSeason8()) {
   if (!is.null(season)) {
-    if (!seasonValidator(season)) {
+    if (!.seasonValidator(season)) {
       cli::cli_abort(
         "{.arg season} must be a valid NHL season ID (e.g. {.val 20202021})."
       )

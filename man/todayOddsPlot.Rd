@@ -15,7 +15,7 @@ todayOddsPlot(
 \arguments{
 \item{date}{date to predict odds. Default today}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 
 \item{schedule}{HockeyModel::schedule or a custom value}
 

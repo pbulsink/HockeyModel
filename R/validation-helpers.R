@@ -7,7 +7,7 @@
 #' @param cm model to clean
 #'
 #' @return a smaller model, ready for saving
-cleanModel <- function(cm) {
+.cleanModel <- function(cm) {
   # from http://www.win-vector.com/blog/2014/05/trimming-the-fat-from-glm-models-in-r/
   cm$y <- c()
   cm$model <- c()
@@ -58,7 +58,7 @@ normalizeOdds <- function(odds) {
 #' @returns `x`, with any within-tolerance out-of-range values clamped into
 #'   `[0, 1]`.
 #' @keywords internal
-validateProbMatrix <- function(
+.validateProbMatrix <- function(
   x,
   tol = 1e-6,
   clamp_tol = 1e-3,
@@ -104,7 +104,7 @@ validateProbMatrix <- function(
 #' @param sc scores frame
 #'
 #' @returns A tibble with season point totals by team.
-historicalPoints <- function(sc) {
+.historicalPoints <- function(sc) {
   sc <- sc |>
     dplyr::rowwise() |>
     dplyr::mutate(Season = getSeason(.data$Date))
@@ -162,7 +162,7 @@ is.Date <- function(date) {
 #' @param season (`character(1)`) Candidate season ID.
 #' @returns (`logical(1)`) `TRUE` when `season` matches `YYYYYYYY` format.
 #' @keywords internal
-seasonValidator <- function(season) {
+.seasonValidator <- function(season) {
   # TODO: Currently 19272099 would pass - make sure the two years are sequential
   if (!is.character(season)) {
     return(FALSE)
@@ -179,8 +179,8 @@ seasonValidator <- function(season) {
 #' @returns (`matrix` or `numeric`) Home regulation, home OT/SO, away OT/SO,
 #'   and away regulation probabilities.
 #' @keywords internal
-extraTimeSolver <- function(home_win, away_win, draw) {
-  ets <- function(home_win, away_win, draw) {
+.extraTimeSolver <- function(home_win, away_win, draw) {
+  .ets <- function(home_win, away_win, draw) {
     homenorm <- normalizeOdds(c(home_win, away_win))[1]
     home_ot <- 0.345 * homenorm + 0.315
 
@@ -190,9 +190,9 @@ extraTimeSolver <- function(home_win, away_win, draw) {
     return(c(home_win, home_draw, away_draw, away_win))
   }
 
-  v_ets <- Vectorize(ets, )
+  v_ets <- Vectorize(.ets, )
   if (length(home_win) == 1) {
-    return(ets(home_win = home_win, away_win = away_win, draw = draw))
+    return(.ets(home_win = home_win, away_win = away_win, draw = draw))
   } else {
     return(t(v_ets(home_win, away_win, draw)))
   }
@@ -207,7 +207,7 @@ extraTimeSolver <- function(home_win, away_win, draw) {
 #' @param schedule the schedule to reconfigure
 #'
 #' @return a schedule with postponed games moved to the end of the schedule - helps to not drop games that are otherwise in the past but weren't played.
-add_postponed_to_schedule_end <- function(schedule = HockeyModel::schedule) {
+.add_postponed_to_schedule_end <- function(schedule = HockeyModel::schedule) {
   if (!any(schedule$GameStatus == "Postponed")) {
     # no postponed games
     return(schedule)

@@ -3,7 +3,7 @@
 #' Plot Today's Odds
 #'
 #' @param today The day's odds to plot. Default today.
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param teamColours HockeyModel::teamColours or a custom value
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
@@ -25,7 +25,7 @@ plot_odds_today <- function(
     )
   }
   params <- .parse_dc_params(params)
-  todayodds <- todayDC(today = today, params, schedule = schedule)
+  todayodds <- .todayDC(today = today, params, schedule = schedule)
   if (is.null(todayodds)) {
     return(NULL)
   }
@@ -33,12 +33,12 @@ plot_odds_today <- function(
 
   # add odds for each team in OT/SO
   for (g in seq_len(nrow(todayodds))) {
-    todayodds$HomeWinOT[g] <- extraTimeSolver(
+    todayodds$HomeWinOT[g] <- .extraTimeSolver(
       home_win = todayodds$HomeWin[g],
       away_win = todayodds$AwayWin[g],
       draw = todayodds$Draw[g]
     )[2]
-    todayodds$AwayWinOT[g] <- extraTimeSolver(
+    todayodds$AwayWinOT[g] <- .extraTimeSolver(
       home_win = todayodds$HomeWin[g],
       away_win = todayodds$AwayWin[g],
       draw = todayodds$Draw[g]
@@ -207,7 +207,7 @@ plot_odds_today <- function(
 #' Plot Today's Playoff Series Odds
 #'
 #' @param series A data frame of home team, away team, home wins, away wins
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param teamColours HockeyModel::teamColours or a custom value
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
 #'   `"PWHL"`, PWHL-specific labels are used.

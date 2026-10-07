@@ -110,8 +110,8 @@ buildStats <- function(scores) {
         -.data$ROSW,
         .data$Rand
       )), # include Random for random ties sorting, else Anaheim will always beat Vegas if they're tied.
-      Conf = getTeamConferences(.data$Team), # convenience data, dropped later
-      Div = getTeamDivisions(.data$Team)
+      Conf = .getTeamConferences(.data$Team), # convenience data, dropped later
+      Div = .getTeamDivisions(.data$Team)
     ) |>
     dplyr::group_by(.data$Conf) |>
     dplyr::mutate(ConfRank = rank(.data$Rank, ties.method = "random")) |>

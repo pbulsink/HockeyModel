@@ -13,7 +13,7 @@
 #' @return `list(res1 = <double>, res2 = <double>, Result = <double>)` each of
 #'   length `nrow(odds_table)`.
 #' @keywords internal
-sim_odds_results <- function(odds_table) {
+.sim_odds_results <- function(odds_table) {
   res1 <- stats::runif(n = nrow(odds_table))
   res2 <- stats::runif(n = nrow(odds_table))
   home_win <- odds_table$HomeWin
@@ -27,7 +27,8 @@ sim_odds_results <- function(odds_table) {
   away_sos <- as.numeric(res2 > 0.6858606)
   away_ot <- as.numeric(res2 < 0.6858606)
   Result <-
-    1 * (res1 < home_win) +
+    1 *
+    (res1 < home_win) +
     0.75 * in_ot * away_ot +
     0.6 * in_ot * away_sos +
     0.4 * in_so * away_sos +
@@ -46,7 +47,7 @@ sim_odds_results <- function(odds_table) {
 #' @return (`integer`) Vector of length `n` of chunk sizes whose sum equals
 #'   `nsims`.
 #' @keywords internal
-simulation_chunks <- function(nsims, n) {
+.simulation_chunks <- function(nsims, n) {
   base <- nsims %/% n
   rem <- nsims %% n
   sizes <- rep(base, n)
@@ -72,9 +73,9 @@ simulation_chunks <- function(nsims, n) {
 #' @return (`tibble`) Per-team stats with a `SimNo` column, one block per
 #'   simulation in `sim_ids`.
 #' @keywords internal
-sim_batch <- function(sim_ids, odds_table, season_sofar = NULL) {
+.sim_batch <- function(sim_ids, odds_table, season_sofar = NULL) {
   out <- lapply(sim_ids, function(i) {
-    res <- sim_odds_results(odds_table)
+    res <- .sim_odds_results(odds_table)
     table <- buildStats(
       dplyr::bind_cols(
         season_sofar,
@@ -95,7 +96,7 @@ sim_batch <- function(sim_ids, odds_table, season_sofar = NULL) {
 #' @param nsims number of simulations to run
 #' @param cores number of cores to use in parallel.
 #' @param progress whether to show a progress bar.
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return a data frame of results
 #' @export
@@ -120,7 +121,7 @@ simulateSeasonParallel <- function(
     sort(unique(c(as.character(schedule$Home), as.character(schedule$Away))))
   )
 
-  cores <- parseCores(cores)
+  cores <- .parseCores(cores)
 
   odds_table <- remainderSeasonDC(
     scores = scores,
@@ -129,12 +130,12 @@ simulateSeasonParallel <- function(
     odds = TRUE
   )
 
-  odds_table$HOT <- extraTimeSolver(
+  odds_table$HOT <- .extraTimeSolver(
     odds_table$HomeWin,
     odds_table$AwayWin,
     odds_table$Draw
   )[, 2]
-  odds_table$AOT <- extraTimeSolver(
+  odds_table$AOT <- .extraTimeSolver(
     odds_table$HomeWin,
     odds_table$AwayWin,
     odds_table$Draw
@@ -144,10 +145,10 @@ simulateSeasonParallel <- function(
     # Worker body. doSNOW workers only see the *attached* package namespace,
     # so we call the exported buildStats() directly (its own closure resolves
     # its internal helpers correctly). The result-sampling body is inlined
-    # here rather than calling the internal sim_odds_results(), because
+    # here rather than calling the internal .sim_odds_results(), because
     # non-exported functions are not reliably callable from a worker. It uses
     # only base R + stats::runif, so it runs identically in a worker.
-    run_sim_batch <- function(sim_ids, odds_table, season_sofar) {
+    .run_sim_batch <- function(sim_ids, odds_table, season_sofar) {
       home_win <- odds_table$HomeWin
       hot <- odds_table$HOT
       aot <- odds_table$AOT
@@ -160,7 +161,8 @@ simulateSeasonParallel <- function(
         away_sos <- as.numeric(res2 > 0.6858606)
         away_ot <- as.numeric(res2 < 0.6858606)
         Result <-
-          1 * (res1 < home_win) +
+          1 *
+          (res1 < home_win) +
           0.75 * in_ot * away_ot +
           0.6 * in_ot * away_sos +
           0.4 * in_so * away_sos +
@@ -190,7 +192,7 @@ simulateSeasonParallel <- function(
     # Run `nsims` simulations across `cores` batched tasks rather than one task
     # per simulation, so the invariant odds_table is serialised to each worker
     # only `cores` times instead of `nsims` times (#49).
-    chunk_sizes <- simulation_chunks(nsims, cores)
+    chunk_sizes <- .simulation_chunks(nsims, cores)
     # Assign each simulation number (1..nsims) to a worker: worker i runs the
     # simulations whose index falls in its chunk.
     sim_to_worker <- rep(1:cores, times = chunk_sizes)
@@ -199,11 +201,10 @@ simulateSeasonParallel <- function(
       .combine = "rbind",
       .options.snow = opts,
       .packages = c("HockeyModel")
-    ) %dopar%
-      {
-        ids <- which(sim_to_worker == i)
-        run_sim_batch(ids, odds_table, season_sofar)
-      }
+    ) %dopar% {
+      ids <- which(sim_to_worker == i)
+      .run_sim_batch(ids, odds_table, season_sofar)
+    }
     if (progress) {
       close(pb)
     }
@@ -215,7 +216,7 @@ simulateSeasonParallel <- function(
         "Parallel processing is only available if the parallels package is installed."
       )
     }
-    all_results <- sim_batch(1:nsims, odds_table, season_sofar)
+    all_results <- .sim_batch(1:nsims, odds_table, season_sofar)
   }
 
   summary_results <- all_results |>
@@ -256,7 +257,7 @@ simulateSeasonParallel <- function(
 compile_predictions <- function(
   dir = getOption("HockeyModel.prediction.path")
 ) {
-  pdates <- get_prediction_dates(dir)
+  pdates <- .get_prediction_dates(dir)
   if (length(pdates) == 0L) {
     cli::cli_abort("No prediction files found in {.path {dir}}.")
   }
@@ -275,7 +276,7 @@ compile_predictions <- function(
 #' @param cores number of cores in parallel to process
 #' @param schedule games to play
 #' @param scores Season to this point
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param season_sofar The results of the season to date
 #' @param likelihood_graphic whether to create a likelihood graphic
 #' @param odds_table a table of odds for all games in schedule. Null, unless provided. Should be similar to the output of `remainderSeasonDC(odds=TRUE)`,
@@ -295,11 +296,11 @@ loopless_sim <- function(
 ) {
   params <- .parse_dc_params(params)
 
-  cores <- parseCores(cores)
+  cores <- .parseCores(cores)
 
   schedule <- schedule[!(schedule$GameID %in% scores$GameID), ]
 
-  schedule <- add_postponed_to_schedule_end(schedule)
+  schedule <- .add_postponed_to_schedule_end(schedule)
 
   if (
     is.null(odds_table) ||
@@ -345,7 +346,7 @@ loopless_sim <- function(
     all_season$Result <- NA
   }
 
-  oddsseason <- extraTimeSolver(
+  oddsseason <- .extraTimeSolver(
     all_season$HomeWin,
     all_season$AwayWin,
     1 - (all_season$HomeWin + all_season$AwayWin)
@@ -381,19 +382,18 @@ loopless_sim <- function(
     # tasks each ran `ceiling(nsims / 100)` simulations, so the total rarely
     # matched `nsims`). Each task also runs many simulations before returning,
     # reducing serialisation round-trips (#51, #49).
-    chunk_sizes <- simulation_chunks(nsims, cores)
+    chunk_sizes <- .simulation_chunks(nsims, cores)
     all_results <- foreach::foreach(
       i = seq_len(cores),
       .combine = "rbind",
       .packages = "HockeyModel"
-    ) %dopar%
-      {
-        sim_engine(
-          all_season = all_season,
-          nsims = chunk_sizes[i],
-          params = params
-        )
-      }
+    ) %dopar% {
+      sim_engine(
+        all_season = all_season,
+        nsims = chunk_sizes[i],
+        params = params
+      )
+    }
 
     parallel::stopCluster(cl)
     gc(verbose = FALSE)
@@ -444,7 +444,7 @@ loopless_sim <- function(
 #'
 #' @param all_season One seasons' scores & odds schedule
 #' @param nsims Number of simulations to run
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return results of `nsims` season simulations, as one long data frame score table.
 #' @export
@@ -484,7 +484,7 @@ sim_engine <- function(all_season, nsims, params = NULL) {
 
   for (i in seq_len(season_length)) {
     if (is_unplayed[i]) {
-      r <- sampleResult(
+      r <- .sampleResult(
         hw[i],
         hot[i],
         hso[i],
@@ -511,7 +511,7 @@ sim_engine <- function(all_season, nsims, params = NULL) {
   )
 
   # Sum a boolean mask over the games a team plays (home or away)
-  sum_mask <- function(games_idx, res_list, value) {
+  .sum_mask <- function(games_idx, res_list, value) {
     if (length(games_idx) == 0L) {
       return(rep(0, nsims))
     }
@@ -531,48 +531,48 @@ sim_engine <- function(all_season, nsims, params = NULL) {
   # an away win (away_res == 1) corresponds to home_res == 0.
   all_results$W <- unlist(mapply(
     function(t) {
-      sum_mask(home_games[[t]], home_res, 1) +
-        sum_mask(away_games[[t]], away_res, 1)
+      .sum_mask(home_games[[t]], home_res, 1) +
+        .sum_mask(away_games[[t]], away_res, 1)
     },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$OTW <- unlist(mapply(
     function(t) {
-      sum_mask(home_games[[t]], home_res, 0.75) +
-        sum_mask(away_games[[t]], away_res, 0.75)
+      .sum_mask(home_games[[t]], home_res, 0.75) +
+        .sum_mask(away_games[[t]], away_res, 0.75)
     },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$SOW <- unlist(mapply(
     function(t) {
-      sum_mask(home_games[[t]], home_res, 0.6) +
-        sum_mask(away_games[[t]], away_res, 0.6)
+      .sum_mask(home_games[[t]], home_res, 0.6) +
+        .sum_mask(away_games[[t]], away_res, 0.6)
     },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$L <- unlist(mapply(
     function(t) {
-      sum_mask(home_games[[t]], home_res, 0) +
-        sum_mask(away_games[[t]], away_res, 0)
+      .sum_mask(home_games[[t]], home_res, 0) +
+        .sum_mask(away_games[[t]], away_res, 0)
     },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$OTL <- unlist(mapply(
     function(t) {
-      sum_mask(home_games[[t]], home_res, 0.25) +
-        sum_mask(away_games[[t]], away_res, 0.25)
+      .sum_mask(home_games[[t]], home_res, 0.25) +
+        .sum_mask(away_games[[t]], away_res, 0.25)
     },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$SOL <- unlist(mapply(
     function(t) {
-      sum_mask(home_games[[t]], home_res, 0.4) +
-        sum_mask(away_games[[t]], away_res, 0.4)
+      .sum_mask(home_games[[t]], home_res, 0.4) +
+        .sum_mask(away_games[[t]], away_res, 0.4)
     },
     seq_along(teamlist),
     SIMPLIFY = FALSE
@@ -585,8 +585,8 @@ sim_engine <- function(all_season, nsims, params = NULL) {
     all_results$OTL +
     all_results$SOL
 
-  all_results$Conference <- unlist(getTeamConferences(all_results$Team))
-  all_results$Division <- getTeamDivisions(all_results$Team)
+  all_results$Conference <- unlist(.getTeamConferences(all_results$Team))
+  all_results$Division <- .getTeamDivisions(all_results$Team)
   all_results$Wildcard <- 100
 
   all_results <- all_results |>
@@ -638,7 +638,7 @@ sim_engine <- function(all_season, nsims, params = NULL) {
 #' Today's Odds
 #'
 #' @description Determine today's games' odds (if today has games), or a specified date's odds
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param today The date for which you want game odds
 #' @param schedule The schedule, default to internal schedule
 #' @param expected_mean the mean lambda & mu, used only for regression
@@ -657,7 +657,7 @@ todayOdds <- function(
   season_percent = NULL,
   include_xG = FALSE
 ) {
-  return(todayDC(
+  return(.todayDC(
     params = params,
     today = today,
     schedule = schedule,
@@ -674,7 +674,7 @@ todayOdds <- function(
 #' @param params (`list` or `NULL`) Dixon-Coles parameter list.
 #' @returns (`data.frame`) Pairwise table with `HomeOdds`.
 #' @keywords internal
-getAllHomeAwayOdds <- function(teamlist, params = NULL) {
+.getAllHomeAwayOdds <- function(teamlist, params = NULL) {
   params <- .parse_dc_params(params)
   homeAwayOdds <- expand.grid(
     "HomeTeam" = teamlist,

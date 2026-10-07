@@ -12,6 +12,6 @@ pwhl_rho
 }
 \description{
 Low-score correction parameter for the PWHL model. Populated by
-\code{\link[=updatePWHLDC]{updatePWHLDC()}}.
+\code{\link[=.update_dc_pwhl]{.update_dc_pwhl()}}.
 }
 \keyword{datasets}

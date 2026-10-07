@@ -7,7 +7,7 @@
 #' @param today Day's predictions to record. Defaults to today, but can set any other day
 #' @param filepath csv file location to store predictions. Will append to file.
 #' @param schedule HockeyModel::schedule or supplied. \code{today} date must be in schedule
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param include_xG Whether to record daily XG values
 #' @param draws whether to record draw odds (True) or not (False). Default is True
 #'
@@ -30,7 +30,7 @@ recordTodaysPredictions <- function(
   if (nrow(today_sched) == 0) {
     stop("No games on date:", today)
   }
-  today_preds <- todayDC(
+  today_preds <- .todayDC(
     today = today,
     params = params,
     schedule = schedule,
@@ -155,7 +155,7 @@ cleanupPredictionsFile <- function(
 #' @param draws (`logical(1)`) Whether to store draw probabilities.
 #' @returns (`logical(1)`) `TRUE` when processing completes.
 #' @keywords internal
-build_past_predictions <- function(
+.build_past_predictions <- function(
   startDate,
   endDate,
   scores = HockeyModel::scores,

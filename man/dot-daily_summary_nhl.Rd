@@ -15,7 +15,7 @@
 
 \item{subdir}{subdirectory to \code{graphic_dir} for pace plots}
 
-\item{delay}{delay between tweet posts}
+\item{delay}{delay between .tweet posts}
 }
 \value{
 (\code{data.frame}) A combined summary of every attempted social post

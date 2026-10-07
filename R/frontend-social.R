@@ -79,7 +79,7 @@
 #' @returns (`data.frame`) A summary of each attempted post (see
 #'   `.summarize_post_results()`), invisibly.
 #' @keywords internal
-tweet <- function(
+.tweet <- function(
   graphic_dir = .default_nhl_graphics_dir(),
   delay = stats::runif(1, min = 2, max = 6) * 60
 ) {
@@ -172,7 +172,7 @@ tweetPace <- function(
     scores = scores
   )
 
-  pdates <- get_prediction_dates(prediction_dir)
+  pdates <- .get_prediction_dates(prediction_dir)
   if (length(pdates) == 0L) {
     cli::cli_abort("No prediction files found in {.path {prediction_dir}}.")
   }
@@ -271,7 +271,7 @@ tweetPace <- function(
     scores = scores
   )
 
-  for (division in getDivisions()) {
+  for (division in .getDivisions()) {
     status <- paste(
       "Current Points compared to predicted (at season start) for #NHL teams in the",
       division,
@@ -318,7 +318,7 @@ tweetLikelihoods <- function(
   # make likelihood plots
   plot_point_likelihood(graphic_dir = graphic_dir, subdir = subdir)
 
-  for (conf in getConferences()) {
+  for (conf in .getConferences()) {
     if (
       file.exists(file.path(
         graphic_dir,
@@ -364,10 +364,10 @@ tweetLikelihoods <- function(
 
 #' Tweet Game Plots
 #'
-#' @param games Games to tweet graphics from
+#' @param games Games to .tweet graphics from
 #' @param delay Delay between tweets
 #' @param graphic_dir the graphics directory
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @returns (`data.frame`) A summary of each attempted post (see
 #'   `.summarize_post_results()`), invisibly.
@@ -382,12 +382,12 @@ tweetGames <- function(
   post_results <- list()
   # Tweet each game
   if (is.null(games)) {
-    message("No games to tweet")
+    message("No games to .tweet")
     return(invisible(.summarize_post_results(post_results)))
   }
 
   if (nrow(games) == 0) {
-    message("No games to tweet")
+    message("No games to .tweet")
     return(invisible(.summarize_post_results(post_results)))
   }
 
@@ -417,9 +417,9 @@ tweetGames <- function(
       " at ",
       teamColours[teamColours$Team == home, "Hashtag"],
       " predicted goals. #",
-      getShortTeam(away),
+      .getShortTeam(away),
       "vs",
-      getShortTeam(home),
+      .getShortTeam(home),
       " #HockeyTwitter"
     )
 
@@ -475,7 +475,7 @@ tweetMetrics <- function() {
 #' @description Tweet the series odds graphics
 #'
 #' @param graphic_dir directory to save the image
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param delay Delay in seconds between posts. Default is a random value between 1 and 3 minutes.
 #'
 #' @return (`data.frame`) A summary of each attempted post (see
@@ -563,7 +563,7 @@ tweetSeries <- function(
 #' @param summary_results the summary results file, otherwise the most recent will be loaded
 #' @param graphic_dir graphic dir
 #' @param trimcup trim to just cup winners
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return (`data.frame`) A summary of each attempted post (see
 #'   `.summarize_post_results()`), invisibly.
@@ -591,7 +591,7 @@ tweetPlayoffOdds <- function(
     return(invisible(.summarize_post_results(post_results)))
   }
 
-  playoffodds$Conference <- getTeamConferences(playoffodds$Team)
+  playoffodds$Conference <- .getTeamConferences(playoffodds$Team)
   if (trimcup) {
     plt <- format_playoff_odds(
       playoff_odds = playoffodds,

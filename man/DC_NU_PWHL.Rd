@@ -9,6 +9,6 @@ DC_NU_PWHL
 \description{
 \code{nu = 2} provides moderate cross-season discounting for PWHL, reflecting
 the high year-to-year roster volatility from expansion drafts.  Tune with
-\code{tune_dc_weight(league = "PWHL")}.
+\code{.tune_dc_weight(league = "PWHL")}.
 }
 \keyword{internal}

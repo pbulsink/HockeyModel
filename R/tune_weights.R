@@ -11,7 +11,7 @@
 #'   # NHL
 #'   optim(
 #'     par = c(DC_XI_NHL, DC_UPSILON_NHL, DC_NU_NHL),
-#'     fn  = function(p) tune_dc_weight(xi = p[1], upsilon = p[2], nu = p[3]),
+#'     fn  = function(p) .tune_dc_weight(xi = p[1], upsilon = p[2], nu = p[3]),
 #'     method = "L-BFGS-B",
 #'     lower  = c(1e-4, 30,  0),
 #'     upper  = c(0.05, 730, 5)
@@ -20,7 +20,7 @@
 #'   # PWHL
 #'   optim(
 #'     par = c(DC_XI_PWHL, DC_UPSILON_PWHL, DC_NU_PWHL),
-#'     fn  = function(p) tune_dc_weight(p[1], p[2], p[3], league = "PWHL"),
+#'     fn  = function(p) .tune_dc_weight(p[1], p[2], p[3], league = "PWHL"),
 #'     method = "L-BFGS-B",
 #'     lower  = c(1e-4, 30,  0),
 #'     upper  = c(0.05, 730, 5),
@@ -41,7 +41,7 @@
 #' @returns (`double(1)`) Log-loss on the held-out test period (lower is
 #'   better).
 #' @keywords internal
-tune_dc_weight <- function(
+.tune_dc_weight <- function(
   xi = NULL,
   upsilon = NULL,
   nu = NULL,
@@ -61,9 +61,9 @@ tune_dc_weight <- function(
         "No PWHL scores available. Run {.fn updatePWHLScoresAPI} first."
       )
     }
-    all_scores <- pwhl_add_result(all_scores)
+    all_scores <- .pwhl_add_result(all_scores)
     # Use the most recent PWHL season as the test period
-    season_starts <- derive_season_starts(all_scores$Date)
+    season_starts <- .derive_season_starts(all_scores$Date)
     if (length(season_starts) < 2) {
       cli::cli_abort(
         "At least two PWHL seasons of data are required to tune weights."
@@ -109,7 +109,7 @@ tune_dc_weight <- function(
   test_dates <- sort(unique(truth$Date))
 
   # Inner function: produce HomeWin probability for all games on date d
-  get_game_odds <- function(d, all_scores, xi, upsilon, nu) {
+  .get_game_odds <- function(d, all_scores, xi, upsilon, nu) {
     current_m <- getM(
       scores = all_scores[all_scores$Date < d, ],
       currentDate = d,
@@ -140,7 +140,7 @@ tune_dc_weight <- function(
     return(sch[, c("GameID", "HomeWin", "AwayWin")])
   }
 
-  cl <- parallel::makeCluster(parseCores(4))
+  cl <- parallel::makeCluster(.parseCores(4))
   on.exit(parallel::stopCluster(cl), add = TRUE)
   doSNOW::registerDoSNOW(cl)
   `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK
@@ -150,7 +150,7 @@ tune_dc_weight <- function(
     i = seq_along(test_dates),
     .combine = "rbind"
   ) %dopar%
-    (get_game_odds(test_dates[i], all_scores, xi, upsilon, nu))
+    (.get_game_odds(test_dates[i], all_scores, xi, upsilon, nu))
 
   schedule <- dplyr::left_join(
     truth[, c("GameID", "Date", "HomeTeam", "AwayTeam", "Result")],
