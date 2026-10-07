@@ -18,7 +18,9 @@ playoffWin <- function(
   away_wins = 0,
   params = NULL
 ) {
-  params <- .parse_dc_params(params)
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   home_odds <- DCPredict(
     home = home_team,
     away = away_team,
@@ -402,18 +404,19 @@ simulatePlayoffs <- function(
     simresults <- foreach::foreach(
       i = 1:(cores * 100),
       .combine = "rbind"
-    ) %dopar% {
-      simresults <- playoffSolverEngine(
-        nsims = ceiling(nsims / (cores * 100)),
-        completedSeries = completedSeries,
-        east_results = east_results,
-        west_results = west_results,
-        currentSeries = currentSeries,
-        summary_results = summary_results,
-        homeAwayOdds = homeAwayOdds
-      )
-      return(simresults)
-    }
+    ) %dopar%
+      {
+        simresults <- playoffSolverEngine(
+          nsims = ceiling(nsims / (cores * 100)),
+          completedSeries = completedSeries,
+          east_results = east_results,
+          west_results = west_results,
+          currentSeries = currentSeries,
+          summary_results = summary_results,
+          homeAwayOdds = homeAwayOdds
+        )
+        return(simresults)
+      }
 
     parallel::stopCluster(cl)
     gc(verbose = FALSE)

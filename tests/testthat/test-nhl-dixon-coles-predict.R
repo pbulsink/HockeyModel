@@ -472,7 +472,7 @@ test_that(".dcProbArray matches .prob_matrix per-game", {
       params = params,
       maxgoal = 10
     )
-    expect_equal(arr[, , j], ref, tolerance = 1e-12)
-    expect_equal(sum(arr[, , j]), 1, tolerance = 1e-10)
+    expect_equal(arr[,, j], ref, tolerance = 1e-12)
+    expect_equal(sum(arr[,, j]), 1, tolerance = 1e-10)
   }
 })
