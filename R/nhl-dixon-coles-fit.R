@@ -30,7 +30,11 @@ getM <- function(
   scores <- scores[scores$Date >= (currentDate - 4000), ] # auto-trim to ~11 years of data, past then the model doesn't get better, just bigger
 
   # Derive per-season start dates when cross-season discounting is active
-  season_start_dates <- if (nu != 0) .derive_season_starts(scores$Date) else NULL
+  season_start_dates <- if (nu != 0) {
+    .derive_season_starts(scores$Date)
+  } else {
+    NULL
+  }
 
   weights <- .DCweights(
     dates = scores$Date,

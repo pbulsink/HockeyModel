@@ -25,7 +25,9 @@ DCPredict <- function(
   season_percent = NULL,
   draws = TRUE
 ) {
-  params <- .parse_dc_params(params = params)
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   probability_matrix <- .dcProbMatrix(
     home = home,
     away = away,
@@ -70,12 +72,17 @@ DCPredict <- function(
 #'
 #' @param lambda (`double(n)`) Home expected goals, one value per game.
 #' @param mu (`double(n)`) Away expected goals, one value per game.
-#' @param params (`list`) Dixon-Coles parameter list (m, rho, beta, eta, k).
+#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+#'   Must be the output of [.parse_dc_params()]; callers in the public entry
+#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
+#'   parse (for direct test calls).
 #' @param maxgoal (`integer(1)`) Maximum goals per team.
 #' @returns (`array`) Probability array of dim `(maxgoal+1) x (maxgoal+1) x n`.
 #' @keywords internal
-.dcProbArray <- function(lambda, mu, params, maxgoal) {
-  params <- .parse_dc_params(params)
+.dcProbArray <- function(lambda, mu, params = NULL, maxgoal) {
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   n <- length(lambda)
   G <- maxgoal + 1
   idx0 <- 0:maxgoal
@@ -114,7 +121,7 @@ DCPredict <- function(
 
   out <- array(0, dim = c(G, G, n))
   for (j in seq_len(n)) {
-    out[, , j] <- .build_one(lambda[j], mu[j])
+    out[,, j] <- .build_one(lambda[j], mu[j])
   }
   return(out)
 }
@@ -128,7 +135,10 @@ DCPredict <- function(
 #'
 #' @param home (`character(n)`) Home team name per game.
 #' @param away (`character(n)`) Away team name per game.
-#' @param params (`list`) Dixon-Coles parameter list (m, rho, beta, eta, k).
+#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+#'   Must be the output of [.parse_dc_params()]; callers in the public entry
+#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
+#'   parse (for direct test calls).
 #' @param maxgoal (`integer(1)`) Maximum goals per team.
 #' @param expected_mean (`double` or `NULL`) Mean lambda/mu for regression.
 #' @param season_percent (`double` or `NULL`) Season completion fraction for
@@ -147,7 +157,9 @@ DCPredict <- function(
   season_percent = NULL,
   draws = TRUE
 ) {
-  params <- .parse_dc_params(params)
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   n <- length(home)
 
   # Expected goals home / away per game, with the same error recovery path as
@@ -253,11 +265,16 @@ DCPredict <- function(
 #'
 #' @param home The home team name
 #' @param away The away team name
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
+#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+#'   Must be the output of [.parse_dc_params()]; callers in the public entry
+#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
+#'   parse (for direct test calls).
 #'
 #' @return a list of $home and $away Poisson Lambda values -
 .dcLambda <- function(home, away, params = NULL) {
-  params <- .parse_dc_params(params = params)
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   xg <- list("home" = NA, "away" = NA)
 
   # Expected goals home
@@ -302,7 +319,10 @@ DCPredict <- function(
 #'
 #' @param home (`character(1)`) Home team name.
 #' @param away (`character(1)`) Away team name.
-#' @param params (`list` or `NULL`) Dixon-Coles parameter list.
+#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+#'   Must be the output of [.parse_dc_params()]; callers in the public entry
+#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
+#'   parse (for direct test calls).
 #' @param maxgoal (`integer(1)`) Maximum goals included per team.
 #' @returns (`list`) Home and away expected goals.
 #' @keywords internal
@@ -324,7 +344,10 @@ DCPredict <- function(
 #'
 #' @param home home team
 #' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
+#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+#'   Must be the output of [.parse_dc_params()]; callers in the public entry
+#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
+#'   parse (for direct test calls).
 #' @param maxgoal max number of goals per team
 #' @param scores optional, if not supplying m & rho, scores used to calculate them.
 #' @param expected_mean the mean lambda & mu, used only for regression
@@ -340,8 +363,9 @@ DCPredict <- function(
   expected_mean = NULL,
   season_percent = NULL
 ) {
-  params <- .parse_dc_params(params = params)
-
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   xg <- .dcLambda(home = home, away = away, params = params)
   # Expected goals home
   lambda <- as.numeric(xg$home)
@@ -374,13 +398,18 @@ DCPredict <- function(
 #'
 #' @param lambda home lambda
 #' @param mu away mu
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
+#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+#'   Must be the output of [.parse_dc_params()]; callers in the public entry
+#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
+#'   parse (for direct test calls).
 #' @param maxgoal max goals per game
 #'
 #' @return a square matrix of maxgoal:maxgoal, with all entries in `[0, 1]` and
 #'   summing to 1 (see [.validateProbMatrix])
-.prob_matrix <- function(lambda, mu, params, maxgoal) {
-  params <- .parse_dc_params(params)
+.prob_matrix <- function(lambda, mu, params = NULL, maxgoal) {
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   probability_matrix <- stats::dpois(0:maxgoal, lambda) %*%
     t(stats::dpois(0:maxgoal, mu))
 
@@ -480,7 +509,9 @@ dcSample <- function(
   season_percent = NULL,
   as_result = TRUE
 ) {
-  params <- .parse_dc_params(params)
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   pm <- .dcProbMatrix(
     home = home,
     away = away,
@@ -540,14 +571,18 @@ dcSample <- function(
 #'
 #' @param lambda home team lambda
 #' @param mu away team mu
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
+#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+#'   Must be the output of [.parse_dc_params()]; callers in the public entry
+#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
+#'   parse (for direct test calls).
 #' @param maxgoal max goals predicable per game, default 10
 #' @param nsim the number of simulations in each result
 #'
 #' @return a result from 0 to 1 corresponding to \link{scores} results
 .dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
-  params <- .parse_dc_params(params)
-
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   .dcr <- function(lambda, mu, params, maxgoal, nsim) {
     if (is.na(lambda)) {
       return(NA)
@@ -627,14 +662,18 @@ dcSample <- function(
 #'
 #' @param lambda (`double`) Home expected goals.
 #' @param mu (`double`) Away expected goals.
-#' @param params (`list` or `NULL`) Dixon-Coles parameter list.
+#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+#'   Must be the output of [.parse_dc_params()]; callers in the public entry
+#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
+#'   parse (for direct test calls).
 #' @param maxgoal (`integer(1)`) Maximum goals included per team.
 #' @returns (`numeric`) Probabilities for home win, home OT, home SO, away SO,
 #'   away OT, and away win.
 #' @keywords internal
 .dcExpandedOdds <- function(lambda, mu, params = NULL, maxgoal = 8) {
-  params <- .parse_dc_params(params)
-
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   .dceo <- function(lambda, mu, params, maxgoal, nsim) {
     if (is.na(lambda)) {
       return(NA)

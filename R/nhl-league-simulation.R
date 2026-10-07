@@ -201,10 +201,11 @@ simulateSeasonParallel <- function(
       .combine = "rbind",
       .options.snow = opts,
       .packages = c("HockeyModel")
-    ) %dopar% {
-      ids <- which(sim_to_worker == i)
-      .run_sim_batch(ids, odds_table, season_sofar)
-    }
+    ) %dopar%
+      {
+        ids <- which(sim_to_worker == i)
+        .run_sim_batch(ids, odds_table, season_sofar)
+      }
     if (progress) {
       close(pb)
     }
@@ -387,13 +388,14 @@ loopless_sim <- function(
       i = seq_len(cores),
       .combine = "rbind",
       .packages = "HockeyModel"
-    ) %dopar% {
-      sim_engine(
-        all_season = all_season,
-        nsims = chunk_sizes[i],
-        params = params
-      )
-    }
+    ) %dopar%
+      {
+        sim_engine(
+          all_season = all_season,
+          nsims = chunk_sizes[i],
+          params = params
+        )
+      }
 
     parallel::stopCluster(cl)
     gc(verbose = FALSE)
