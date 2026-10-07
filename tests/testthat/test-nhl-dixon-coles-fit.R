@@ -17,8 +17,8 @@ test_that("Package weighting constants are numeric and in expected ranges", {
   expect_gte(DC_NU_PWHL, 0)
 })
 
-# ============ derive_season_starts tests ============
-test_that("derive_season_starts returns one date per season", {
+# ============ .derive_season_starts tests ============
+test_that(".derive_season_starts returns one date per season", {
   # Three seasons: 2022-23, 2023-24, 2024-25
   dates <- as.Date(c(
     "2022-10-11",
@@ -30,7 +30,7 @@ test_that("derive_season_starts returns one date per season", {
     "2024-10-08",
     "2025-01-20" # 2024-25
   ))
-  starts <- derive_season_starts(dates)
+  starts <- .derive_season_starts(dates)
   expect_length(starts, 3)
   expect_s3_class(starts, "Date")
   expect_true(all(starts == sort(starts))) # sorted
@@ -39,29 +39,29 @@ test_that("derive_season_starts returns one date per season", {
   expect_equal(starts[3], as.Date("2024-10-08"))
 })
 
-test_that("derive_season_starts handles a single season", {
+test_that(".derive_season_starts handles a single season", {
   dates <- as.Date(c("2024-10-08", "2024-11-01", "2025-02-15"))
-  starts <- derive_season_starts(dates)
+  starts <- .derive_season_starts(dates)
   expect_length(starts, 1)
   expect_equal(starts, as.Date("2024-10-08"))
 })
 
-# ============ DCweights tests ============
-test_that("DCweights with nu = 0 equals legacy sigmoid weights", {
+# ============ .DCweights tests ============
+test_that(".DCweights with nu = 0 equals legacy sigmoid weights", {
   dates <- as.Date(c("2025-01-01", "2024-06-01", "2023-10-01"))
   current <- as.Date("2025-03-01")
   xi <- 0.005
   upsilon <- 300L
 
   # Compute expected weights using the sigmoid formula directly, without calling
-  # DCweights().  This guards against regressions in the implementation.
+  # .DCweights().  This guards against regressions in the implementation.
   # Formula: w = 1 - 1 / (1 + exp(-xi * (datediffs - upsilon)))
   # where datediffs = (currentDate - date) in days (positive = past game).
   datediffs <- as.numeric(as.Date(current) - dates)
   w_expected <- 1 - 1 / (1 + exp(-xi * (datediffs - upsilon)))
   w_expected[datediffs <= 0] <- 0 # Future dates get weight 0
 
-  w_new <- DCweights(
+  w_new <- .DCweights(
     dates,
     currentDate = current,
     xi = xi,
@@ -71,21 +71,21 @@ test_that("DCweights with nu = 0 equals legacy sigmoid weights", {
   expect_equal(w_new, w_expected)
 })
 
-test_that("DCweights with nu > 0 reduces weight for older seasons", {
+test_that(".DCweights with nu > 0 reduces weight for older seasons", {
   # Two dates: one in current season, one a full season back
   season_starts <- as.Date(c("2023-10-01", "2024-10-01"))
   current <- as.Date("2025-02-01")
   dates_cur <- as.Date("2024-11-01") # current season
   dates_prev <- as.Date("2023-11-01") # previous season
 
-  w_no_nu <- DCweights(
+  w_no_nu <- .DCweights(
     c(dates_cur, dates_prev),
     currentDate = current,
     xi = 0.001,
     upsilon = 365,
     nu = 0
   )
-  w_with_nu <- DCweights(
+  w_with_nu <- .DCweights(
     c(dates_cur, dates_prev),
     currentDate = current,
     xi = 0.001,
@@ -100,23 +100,23 @@ test_that("DCweights with nu > 0 reduces weight for older seasons", {
   expect_equal(w_with_nu[2], w_no_nu[2] * 0.5, tolerance = 1e-10)
 })
 
-test_that("DCweights with nu > 0 requires season_start_dates", {
+test_that(".DCweights with nu > 0 requires season_start_dates", {
   dates <- as.Date(c("2024-10-01", "2023-10-01"))
   expect_error(
-    DCweights(dates, currentDate = as.Date("2025-01-01"), nu = 2),
+    .DCweights(dates, currentDate = as.Date("2025-01-01"), nu = 2),
     "season_start_dates"
   )
 })
 
-test_that("DCweights assigns zero weight to future dates", {
+test_that(".DCweights assigns zero weight to future dates", {
   dates <- as.Date(c("2025-05-01", "2025-01-01"))
   current <- as.Date("2025-03-01")
-  w <- DCweights(dates, currentDate = current, nu = 0)
+  w <- .DCweights(dates, currentDate = current, nu = 0)
   expect_equal(w[1], 0)
   expect_gt(w[2], 0)
 })
 
-test_that("DCweights cross-season discount is monotonically decreasing", {
+test_that(".DCweights cross-season discount is monotonically decreasing", {
   season_starts <- as.Date(c(
     "2021-10-01",
     "2022-10-01",
@@ -131,7 +131,7 @@ test_that("DCweights cross-season discount is monotonically decreasing", {
     "2022-11-01",
     "2021-11-01"
   ))
-  w <- DCweights(
+  w <- .DCweights(
     game_dates,
     currentDate = current,
     xi = 0.001,

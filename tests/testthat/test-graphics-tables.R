@@ -13,7 +13,7 @@ test_that("Series Odds Table is ok", {
     HomeWins = c(0, 3, 3),
     AwayWins = c(4, 3, 2)
   )
-  if (!requireNamespace('gt')) {
+  if (!requireNamespace("gt")) {
     expect_error(series_odds_table(series = series), "Package gt is required")
     skip("No `gt` package.")
   }
@@ -283,7 +283,7 @@ test_that("Playoff Table is ok", {
     class = "data.frame"
   )
 
-  if (!requireNamespace('gt')) {
+  if (!requireNamespace("gt")) {
     expect_error(format_playoff_odds(po), "Package gt is required")
     skip("No `gt` package.")
   }

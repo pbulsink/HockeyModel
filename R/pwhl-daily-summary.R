@@ -19,7 +19,7 @@
   model_data <- .update_model_pwhl()
   schedule <- model_data$schedule
   scores <- model_data$scores
-  params <- parse_pwhl_dc_params(model_data$params)
+  params <- .parse_pwhl_dc_params(model_data$params)
 
   if (nrow(schedule) == 0 || Sys.Date() > max(schedule$Date)) {
     cli::cli_alert_info("No PWHL games scheduled; nothing to do.")

@@ -38,21 +38,21 @@ plot_game <- function(home, away, params = NULL, maxgoal = 10) {
 
   # fix errors
   if (!is.numeric(lambda)) {
-    lambda <- DCPredictErrorRecover(
+    lambda <- .DCPredictErrorRecover(
       team = home,
       opponent = away,
       homeiceadv = TRUE
     )
   }
   if (!is.numeric(mu)) {
-    mu <- DCPredictErrorRecover(
+    mu <- .DCPredictErrorRecover(
       team = away,
       opponent = home,
       homeiceadv = FALSE
     )
   }
 
-  probability_matrix <- dcProbMatrix(
+  probability_matrix <- .dcProbMatrix(
     home = home,
     away = away,
     params = params,
@@ -189,7 +189,7 @@ plot_point_likelihood <- function(
     preds <- loopless_sim(nsims = 1e4)$raw_results
   }
 
-  preds$Conf <- getTeamConferences(preds$Team)
+  preds$Conf <- .getTeamConferences(preds$Team)
 
   conferences <- unique(preds$Conf)
 

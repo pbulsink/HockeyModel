@@ -215,7 +215,7 @@ updateModel <- function(save_data = TRUE, league = NULL) {
   if (scores$Date[nrow(scores)] < (Sys.Date())) {
     updateScoresAPI(save_data = TRUE)
   }
-  pdates <- get_prediction_dates(data_dir)
+  pdates <- .get_prediction_dates(data_dir)
   lastp <- if (length(pdates) == 0L) {
     as.Date(getSeasonStartDate()) - 1L
   } else {
@@ -251,7 +251,7 @@ updateModel <- function(save_data = TRUE, league = NULL) {
   schedule = HockeyModel::pwhlSchedule,
   params = NULL
 ) {
-  params <- parse_pwhl_dc_params(params)
+  params <- .parse_pwhl_dc_params(params)
 
   if (!dir.exists(data_dir)) {
     dir.create(data_dir, recursive = TRUE)

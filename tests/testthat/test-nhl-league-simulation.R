@@ -26,7 +26,7 @@ test_that("todayOdds returns data frame or NULL", {
 # ============ todayOdds tests (from test-graphics-comprehensive.R) ============
 test_that("todayOdds returns data frame or NULL", {
   local_mocked_bindings(
-    todayDC = function(...) {
+    .todayDC = function(...) {
       data.frame(
         Date = as.Date("2019-11-01"),
         GameID = 2019020196,
@@ -45,7 +45,7 @@ test_that("todayOdds returns data frame or NULL", {
 
 # ============ simulateSeasonParallel tests ============
 test_that("simulateSeasonParallel() sequential branch reuses precomputed HOT/AOT (#52)", {
-  # The sequential branch historically called extraTimeSolver() twice per
+  # The sequential branch historically called .extraTimeSolver() twice per
   # simulation even though odds_table$HOT/AOT are already computed once
   # before the loop. We assert the branch runs to completion and that its
   # results match an independent reference computed from the same odds,
@@ -147,15 +147,15 @@ test_that("simulateSeasonParallel() parallel branch matches sequential (#49)", {
   expect_setequal(unique(res$raw_results$SimNo), 1:3)
 })
 
-# ============ sim_odds_results tests ============
-test_that("sim_odds_results returns one outcome per game (#45)", {
+# ============ .sim_odds_results tests ============
+test_that(".sim_odds_results returns one outcome per game (#45)", {
   odds_table <- data.frame(
     HomeWin = c(0.5, 1, 0),
     HOT = c(0.1, 0, 0),
     AOT = c(0.05, 0, 0),
     stringsAsFactors = FALSE
   )
-  res <- sim_odds_results(odds_table)
+  res <- .sim_odds_results(odds_table)
   expect_named(res, c("res1", "res2", "Result"))
   expect_length(res$res1, 3)
   expect_length(res$res2, 3)
@@ -168,20 +168,20 @@ test_that("sim_odds_results returns one outcome per game (#45)", {
   expect_true(all(res$Result %in% c(1, 0.75, 0.6, 0.4, 0.25, 0)))
 })
 
-# ============ simulation_chunks tests ============
-test_that("simulation_chunks distributes exactly nsims (#51)", {
+# ============ .simulation_chunks tests ============
+test_that(".simulation_chunks distributes exactly nsims (#51)", {
   for (nsims in c(1L, 5L, 100L, 1000L)) {
     for (n in c(1L, 2L, 4L, 7L)) {
-      sizes <- simulation_chunks(nsims, n)
+      sizes <- .simulation_chunks(nsims, n)
       expect_length(sizes, n)
       expect_equal(sum(sizes), nsims)
       expect_true(all(sizes >= 0))
     }
   }
   # Remainder is spread over the first (nsims %% n) chunks.
-  expect_equal(simulation_chunks(10, 3), c(4, 3, 3))
-  expect_equal(simulation_chunks(7, 7), c(1, 1, 1, 1, 1, 1, 1))
-  expect_equal(simulation_chunks(4, 4), c(1, 1, 1, 1))
+  expect_equal(.simulation_chunks(10, 3), c(4, 3, 3))
+  expect_equal(.simulation_chunks(7, 7), c(1, 1, 1, 1, 1, 1, 1))
+  expect_equal(.simulation_chunks(4, 4), c(1, 1, 1, 1))
 })
 
 # ============ loopless_sim chunk count (#51) ============

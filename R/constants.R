@@ -1,6 +1,6 @@
 # Package-level weighting constants for the Dixon-Coles model.
 #
-# These values control how `DCweights()` (and therefore `getM()`) decays the
+# These values control how `.DCweights()` (and therefore `getM()`) decays the
 # influence of historical games.  Two separate components are used:
 #
 #   1. **Sigmoid within-season decay** (parameters xi and upsilon)
@@ -16,7 +16,7 @@
 #
 # NHL values were originally tuned on full NHL history; PWHL values use
 # nu = 2 as a starting point to reflect the high year-to-year roster churn
-# from expansion drafts. Run `tune_dc_weight(league = "PWHL")` to find the
+# from expansion drafts. Run `.tune_dc_weight(league = "PWHL")` to find the
 # optimal values.
 
 #' Default NHL Dixon-Coles sigmoid time-decay slope
@@ -35,7 +35,7 @@ DC_UPSILON_NHL <- 365
 #'
 #' `nu = 0` disables cross-season discounting for NHL (seasons are relatively
 #' stable year-to-year).  Increase to down-weight older seasons more
-#' aggressively.  Tune with [tune_dc_weight()].
+#' aggressively.  Tune with [.tune_dc_weight()].
 #' @keywords internal
 DC_NU_NHL <- 0
 
@@ -53,6 +53,6 @@ DC_UPSILON_PWHL <- 461.0156
 #'
 #' `nu = 2` provides moderate cross-season discounting for PWHL, reflecting
 #' the high year-to-year roster volatility from expansion drafts.  Tune with
-#' `tune_dc_weight(league = "PWHL")`.
+#' `.tune_dc_weight(league = "PWHL")`.
 #' @keywords internal
 DC_NU_PWHL <- 5

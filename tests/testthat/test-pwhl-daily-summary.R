@@ -15,7 +15,7 @@ test_that(".daily_summary_pwhl() reports (not silently swallows) failed posts (#
         params = NULL
       )
     },
-    parse_pwhl_dc_params = function(params = NULL) list(m = NULL),
+    .parse_pwhl_dc_params = function(params = NULL) list(m = NULL),
     pwhl_games_today = function(schedule, date = Sys.Date()) NULL,
     getPWHLPlayoffSeries = function() data.frame(),
     pwhl_in_season = function(schedule) FALSE,
@@ -48,7 +48,7 @@ test_that(".daily_summary_pwhl() attributes failed posts to their description (#
         params = NULL
       )
     },
-    parse_pwhl_dc_params = function(params = NULL) list(m = 1),
+    .parse_pwhl_dc_params = function(params = NULL) list(m = 1),
     pwhl_games_today = function(schedule, date = Sys.Date()) {
       data.frame(
         Date = Sys.Date() + 1,

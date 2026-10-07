@@ -12,7 +12,7 @@
 #'
 #' @returns The same data frame with an added `Result` column.
 #' @keywords internal
-pwhl_add_result <- function(scores) {
+.pwhl_add_result <- function(scores) {
   scores$Result <- dplyr::case_when(
     scores$HomeGoals > scores$AwayGoals & scores$OTStatus == "" ~ 1,
     scores$HomeGoals > scores$AwayGoals & scores$OTStatus == "OT" ~ 0.75,
@@ -42,7 +42,7 @@ pwhl_add_result <- function(scores) {
 #'   time-decay weighting.  Defaults to [DC_UPSILON_PWHL].
 #' @param nu (`double(1)`) Cross-season discounting exponent.  Defaults to
 #'   [DC_NU_PWHL] (2), which provides moderate discounting of older seasons to
-#'   account for PWHL expansion-draft roster churn.  See [DCweights()] for
+#'   account for PWHL expansion-draft roster churn.  See [.DCweights()] for
 #'   details.
 #' @param save_data (`logical(1)`) If `TRUE` and `usethis` is installed, writes
 #'   the parameters as package data objects.
@@ -71,7 +71,7 @@ pwhl_add_result <- function(scores) {
     cli::cli_abort("No finalised PWHL games found in {.arg scores}.")
   }
 
-  scores <- pwhl_add_result(scores)
+  scores <- .pwhl_add_result(scores)
 
   if (currentDate != Sys.Date()) {
     currentDate <- as.Date(currentDate)
@@ -129,7 +129,7 @@ pwhl_add_result <- function(scores) {
 #'
 #' @returns A named list with elements `m`, `rho`, `beta`, `eta`, and `k`.
 #' @keywords internal
-parse_pwhl_dc_params <- function(params = NULL) {
+.parse_pwhl_dc_params <- function(params = NULL) {
   .parse_dc_params(
     params,
     defaults = list(
@@ -210,7 +210,7 @@ pwhl_in_season <- function(
 #'
 #' @returns (`Date`) First game date in the schedule, or `NA` if empty.
 #' @keywords internal
-pwhl_season_start_date <- function(schedule = HockeyModel::pwhlSchedule) {
+.pwhl_season_start_date <- function(schedule = HockeyModel::pwhlSchedule) {
   if (nrow(schedule) == 0) {
     return(as.Date(NA_character_))
   }
@@ -250,10 +250,10 @@ pwhl_loopless_sim <- function(
   params = NULL,
   odds_table = NULL
 ) {
-  params <- parse_pwhl_dc_params(params)
+  params <- .parse_pwhl_dc_params(params)
 
   scores_rs <- scores[scores$GameType == "R", ]
-  season_start <- pwhl_season_start_date(schedule)
+  season_start <- .pwhl_season_start_date(schedule)
 
   if (is.na(season_start)) {
     cli::cli_abort(
@@ -281,7 +281,7 @@ pwhl_loopless_sim <- function(
   }
 
   season_sofar <- scores_rs[scores_rs$Date >= season_start, ]
-  season_sofar <- pwhl_add_result(season_sofar)
+  season_sofar <- .pwhl_add_result(season_sofar)
   # Drop any rows with missing Result (should not occur in clean data)
   season_sofar <- season_sofar[!is.na(season_sofar$Result), ]
 
@@ -308,7 +308,7 @@ pwhl_loopless_sim <- function(
   all_season$AwayOT <- NA_real_
 
   if (any(future_mask)) {
-    ot_probs <- extraTimeSolver(
+    ot_probs <- .extraTimeSolver(
       all_season$HomeWin[future_mask],
       all_season$AwayWin[future_mask],
       1 - (all_season$HomeWin[future_mask] + all_season$AwayWin[future_mask])
@@ -356,7 +356,7 @@ pwhl_loopless_sim <- function(
           c("HomeWin", "HomeOT", "HomeSO", "AwaySO", "AwayOT", "AwayWin")
         ],
         function(HomeWin, HomeOT, HomeSO, AwaySO, AwayOT, AwayWin, ...) {
-          sampleResult(
+          .sampleResult(
             HomeWin,
             HomeOT,
             HomeSO,

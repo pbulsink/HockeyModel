@@ -28,7 +28,7 @@ time-decay weighting.  Defaults to \link{DC_UPSILON_PWHL}.}
 
 \item{nu}{(\code{double(1)}) Cross-season discounting exponent.  Defaults to
 \link{DC_NU_PWHL} (2), which provides moderate discounting of older seasons to
-account for PWHL expansion-draft roster churn.  See \code{\link[=DCweights]{DCweights()}} for
+account for PWHL expansion-draft roster churn.  See \code{\link[=.DCweights]{.DCweights()}} for
 details.}
 
 \item{save_data}{(\code{logical(1)}) If \code{TRUE} and \code{usethis} is installed, writes

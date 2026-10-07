@@ -12,7 +12,7 @@ tweetGames(
 )
 }
 \arguments{
-\item{games}{Games to tweet graphics from}
+\item{games}{Games to .tweet graphics from}
 
 \item{delay}{Delay between tweets}
 

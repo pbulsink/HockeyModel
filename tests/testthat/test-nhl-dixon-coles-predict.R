@@ -1,10 +1,10 @@
 context("test-nhl-dixon-coles-predict")
 
-# ============ dcProbMatrix tests ============
+# ============ .dcProbMatrix tests ============
 test_that("DC Functions function", {
-  pmat <- dcProbMatrix(home = "Toronto Maple Leafs", away = "Ottawa Senators")
+  pmat <- .dcProbMatrix(home = "Toronto Maple Leafs", away = "Ottawa Senators")
   expect_equal(sum(pmat), 1)
-  pmat2 <- prob_matrix(
+  pmat2 <- .prob_matrix(
     lambda = 2,
     mu = 2,
     params = list("rho" = -0.25, "beta" = 2, "eta" = 2, "k" = 5),
@@ -46,8 +46,8 @@ test_that("DC Functions function", {
   )
 })
 
-test_that("prob_matrix sums to 1", {
-  pmat <- prob_matrix(
+test_that(".prob_matrix sums to 1", {
+  pmat <- .prob_matrix(
     lambda = 1.5,
     mu = 1.5,
     params = list("rho" = -0.1, "beta" = 2, "eta" = 2, "k" = 3),
@@ -56,8 +56,8 @@ test_that("prob_matrix sums to 1", {
   expect_equal(sum(pmat), 1, tolerance = 1e-10)
 })
 
-test_that("dcProbMatrix creates symmetric-like structure", {
-  pmat <- dcProbMatrix(
+test_that(".dcProbMatrix creates symmetric-like structure", {
+  pmat <- .dcProbMatrix(
     home = "Toronto Maple Leafs",
     away = "Toronto Maple Leafs"
   )
@@ -68,7 +68,7 @@ test_that("dcProbMatrix creates symmetric-like structure", {
 test_that("DC Convenience functions are ok", {
   params <- .parse_dc_params(NULL)
   expect_true(
-    dcResult(lambda = 3, mu = 3, params = params) %in%
+    .dcResult(lambda = 3, mu = 3, params = params) %in%
       c(0, 0.25, 0.4, 0.5, 0.6, 0.75, 1)
   )
 
@@ -96,20 +96,20 @@ test_that("dcSample with as_result=FALSE returns data frame", {
   expect_true(is.character(sim$OTStatus))
 })
 
-test_that("dcResult handles various score combinations", {
+test_that(".dcResult handles various score combinations", {
   set.seed(10)
-  expect_equal(dcResult(5, 2), 1)
-  expect_equal(dcResult(2, 5), 0)
+  expect_equal(.dcResult(5, 2), 1)
+  expect_equal(.dcResult(2, 5), 0)
 })
 
 # ============ Regression tests for OT probability fix ============
-test_that("dcResult uses correct away OT probability [2]", {
-  # dcResult should use otwinnerprob[2] for away OT win (0.75 result)
+test_that(".dcResult uses correct away OT probability [2]", {
+  # .dcResult should use otwinnerprob[2] for away OT win (0.75 result)
   # Ensure away team can win in OT without using home OT probability
   set.seed(7441)
   results <- replicate(
     1000,
-    dcResult(
+    .dcResult(
       lambda = 1.5,
       mu = 1.5,
       params = list("rho" = -0.1, "beta" = 2, "eta" = 2, "k" = 5),
@@ -130,9 +130,9 @@ test_that("dcResult uses correct away OT probability [2]", {
   )
 })
 
-test_that("dcExpandedOdds uses correct away OT probability [2]", {
-  # dcExpandedOdds should return 6 probabilities with correct away OT/SO allocations
-  odds <- dcExpandedOdds(
+test_that(".dcExpandedOdds uses correct away OT probability [2]", {
+  # .dcExpandedOdds should return 6 probabilities with correct away OT/SO allocations
+  odds <- .dcExpandedOdds(
     lambda = 1.5,
     mu = 1.5,
     params = list("rho" = -0.1, "beta" = 2, "eta" = 2, "k" = 5)
@@ -157,10 +157,10 @@ test_that("dcExpandedOdds uses correct away OT probability [2]", {
   )
 })
 
-test_that("dcResult and dcExpandedOdds use otwinnerprob[2] consistently", {
+test_that(".dcResult and .dcExpandedOdds use otwinnerprob[2] consistently", {
   # Both functions should produce consistent OT/SO probabilities
   set.seed(9999)
-  expanded_odds <- dcExpandedOdds(
+  expanded_odds <- .dcExpandedOdds(
     lambda = 2.0,
     mu = 1.0,
     params = list("rho" = -0.15, "beta" = 2.5, "eta" = 1.5, "k" = 6)
@@ -169,7 +169,7 @@ test_that("dcResult and dcExpandedOdds use otwinnerprob[2] consistently", {
   set.seed(9999)
   results <- replicate(
     5000,
-    dcResult(
+    .dcResult(
       lambda = 2.0,
       mu = 1.0,
       params = list("rho" = -0.15, "beta" = 2.5, "eta" = 1.5, "k" = 6),
@@ -224,7 +224,7 @@ test_that("getRho maximizes likelihood (not minimizes)", {
   away.expected <- as.vector(expected[(nrow(scores) + 1):(nrow(scores) * 2)])
   weights <- m$data$Weight[seq_len(nrow(scores))]
 
-  ll_at_est <- DCRhoLogLik(
+  ll_at_est <- .DCRhoLogLik(
     y1 = scores$HomeGoals,
     y2 = scores$AwayGoals,
     mu = home.expected,
@@ -233,7 +233,7 @@ test_that("getRho maximizes likelihood (not minimizes)", {
     weights = weights
   )
 
-  ll_at_minus_0.5 <- suppressWarnings(DCRhoLogLik(
+  ll_at_minus_0.5 <- suppressWarnings(.DCRhoLogLik(
     y1 = scores$HomeGoals,
     y2 = scores$AwayGoals,
     mu = home.expected,
@@ -282,7 +282,7 @@ test_that("DCPredict(draws = FALSE) produces valid and consistent results", {
 })
 
 # ============ Regression tests for probability validation (Issue 1.2) ============
-test_that("prob_matrix never returns negative probabilities for extreme inputs", {
+test_that(".prob_matrix never returns negative probabilities for extreme inputs", {
   # These parameter combinations previously produced small-to-large negative
   # probabilities: a large Weibull tie-enhancement (k) can push the diagonal
   # sum above 1, which used to flip the off-diagonal (win/loss) cells
@@ -312,7 +312,7 @@ test_that("prob_matrix never returns negative probabilities for extreme inputs",
   )
 
   for (tc in extreme_cases) {
-    pm <- suppressWarnings(prob_matrix(
+    pm <- suppressWarnings(.prob_matrix(
       lambda = tc$lambda,
       mu = tc$mu,
       params = tc$params,
@@ -324,9 +324,9 @@ test_that("prob_matrix never returns negative probabilities for extreme inputs",
   }
 })
 
-test_that("prob_matrix warns when the tie-enhanced diagonal exceeds 1", {
+test_that(".prob_matrix warns when the tie-enhanced diagonal exceeds 1", {
   expect_warning(
-    prob_matrix(
+    .prob_matrix(
       lambda = 1.5,
       mu = 1.5,
       params = list(rho = -0.1, beta = 2, eta = 2, k = 50),
@@ -336,10 +336,10 @@ test_that("prob_matrix warns when the tie-enhanced diagonal exceeds 1", {
   )
 })
 
-test_that("dcResult and dcExpandedOdds remain valid for extreme inputs", {
+test_that(".dcResult and .dcExpandedOdds remain valid for extreme inputs", {
   extreme_params <- list(rho = -0.4, beta = 2, eta = 2, k = 10)
 
-  odds <- suppressWarnings(dcExpandedOdds(
+  odds <- suppressWarnings(.dcExpandedOdds(
     lambda = 8,
     mu = 8,
     params = extreme_params,
@@ -349,7 +349,7 @@ test_that("dcResult and dcExpandedOdds remain valid for extreme inputs", {
   expect_equal(sum(odds), 1, tolerance = 1e-8)
 
   set.seed(2024)
-  results <- suppressWarnings(dcResult(
+  results <- suppressWarnings(.dcResult(
     lambda = 8,
     mu = 8,
     params = extreme_params,
@@ -360,7 +360,7 @@ test_that("dcResult and dcExpandedOdds remain valid for extreme inputs", {
 })
 
 # ============ Regression tests for vectorized odds (Issue 4.8) ============
-test_that("dcPredictVectorized matches DCPredict per-game (draws = TRUE)", {
+test_that(".dcPredictVectorized matches DCPredict per-game (draws = TRUE)", {
   params <- .parse_dc_params(NULL)
   home <- c(
     "Toronto Maple Leafs",
@@ -374,7 +374,7 @@ test_that("dcPredictVectorized matches DCPredict per-game (draws = TRUE)", {
     "Philadelphia Flyers",
     "New Jersey Devils"
   )
-  vec <- dcPredictVectorized(
+  vec <- .dcPredictVectorized(
     home = home,
     away = away,
     params = params,
@@ -397,14 +397,14 @@ test_that("dcPredictVectorized matches DCPredict per-game (draws = TRUE)", {
   expect_true(all(rowSums(vec) == 1))
 })
 
-test_that("dcPredictVectorized matches DCPredict per-game (draws = FALSE)", {
+test_that(".dcPredictVectorized matches DCPredict per-game (draws = FALSE)", {
   # Locks in the fix for the sequential-assignment bias in DCPredict's
   # !draws branch: both home and away must use the original (pre-update)
   # draw probability when redistributing.
   params <- .parse_dc_params(NULL)
   home <- c("Toronto Maple Leafs", "New Jersey Devils", "Colorado Avalanche")
   away <- c("Ottawa Senators", "Philadelphia Flyers", "Dallas Stars")
-  vec <- dcPredictVectorized(
+  vec <- .dcPredictVectorized(
     home = home,
     away = away,
     params = params,
@@ -427,14 +427,14 @@ test_that("dcPredictVectorized matches DCPredict per-game (draws = FALSE)", {
   expect_true(all(rowSums(vec) == 1))
 })
 
-test_that("dcPredictVectorized matches DCPredict with regression (expected_mean, season_percent)", {
+test_that(".dcPredictVectorized matches DCPredict with regression (expected_mean, season_percent)", {
   # DCPredict previously dropped expected_mean/season_percent before calling
-  # dcProbMatrix, so regression was silently ignored. Both paths must now apply
+  # .dcProbMatrix, so regression was silently ignored. Both paths must now apply
   # the blend identically.
   params <- .parse_dc_params(NULL)
   home <- c("Toronto Maple Leafs", "New Jersey Devils", "Washington Capitals")
   away <- c("Ottawa Senators", "Philadelphia Flyers", "Buffalo Sabres")
-  vec <- dcPredictVectorized(
+  vec <- .dcPredictVectorized(
     home = home,
     away = away,
     params = params,
@@ -460,19 +460,19 @@ test_that("dcPredictVectorized matches DCPredict with regression (expected_mean,
   expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
 })
 
-test_that("dcProbArray matches prob_matrix per-game", {
+test_that(".dcProbArray matches .prob_matrix per-game", {
   params <- .parse_dc_params(NULL)
   lambdas <- c(1.2, 2.8, 3.4, 0.5)
   mus <- c(2.1, 1.9, 2.7, 3.3)
-  arr <- dcProbArray(lambda = lambdas, mu = mus, params = params, maxgoal = 10)
+  arr <- .dcProbArray(lambda = lambdas, mu = mus, params = params, maxgoal = 10)
   for (j in seq_along(lambdas)) {
-    ref <- prob_matrix(
+    ref <- .prob_matrix(
       lambda = lambdas[j],
       mu = mus[j],
       params = params,
       maxgoal = 10
     )
-    expect_equal(arr[,, j], ref, tolerance = 1e-12)
-    expect_equal(sum(arr[,, j]), 1, tolerance = 1e-10)
+    expect_equal(arr[, , j], ref, tolerance = 1e-12)
+    expect_equal(sum(arr[, , j]), 1, tolerance = 1e-10)
   }
 })

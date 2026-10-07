@@ -18,7 +18,7 @@ test_that("Single Game xG plot OK", {
 test_that("Predicted Points plot OK", {
   preds <- HockeyModel::example_raw_predictions
 
-  if (!requireNamespace('ggridges')) {
+  if (!requireNamespace("ggridges")) {
     expect_error(
       suppressWarnings(plot_point_likelihood(preds = preds, savefiles = FALSE)),
       "Package ggridges is required"

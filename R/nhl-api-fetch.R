@@ -57,7 +57,7 @@ getNHLSchedule <- function(
   season = getCurrentSeason8(),
   teamColours = HockeyModel::teamColours
 ) {
-  if (!seasonValidator(season)) {
+  if (!.seasonValidator(season)) {
     cli::cli_abort(
       "{.arg season} must be a valid NHL season ID (e.g. {.val 20202021})."
     )
@@ -115,8 +115,8 @@ getNHLSchedule <- function(
 
       data.frame(
         Date = sg$gameDate,
-        HomeTeam = getLongTeam(sg$homeTeam$abbrev),
-        AwayTeam = getLongTeam(sg$awayTeam$abbrev),
+        HomeTeam = .getLongTeam(sg$homeTeam$abbrev),
+        AwayTeam = .getLongTeam(sg$awayTeam$abbrev),
         GameID = sg$id,
         GameType = ifelse(
           sg$gameType == 2,
@@ -311,7 +311,7 @@ getNHLScores <- function(
   for (g in gameIDs) {
     sc <- NA
     tryCatch(
-      sc <- nhl_boxscore(g),
+      sc <- .nhl_boxscore(g),
       error = function(e) message("Error in GameID", g, ": ", e)
     )
 
@@ -365,7 +365,7 @@ getNHLScores <- function(
   }
 
   if (!is.null(scores)) {
-    scores <- clean_names(scores)
+    scores <- .clean_names(scores)
 
     # Convert OTStatus to character with consistent handling of numeric and NA values
     scores <- scores |>
@@ -441,7 +441,7 @@ getNHLScores <- function(
 #'   parameter so tests can point it at a temporary file.
 #' @returns (`data.frame`) Natural Stat Trick report rows for `gid`.
 #' @keywords internal
-load_or_get_nst <- function(
+.load_or_get_nst <- function(
   gid,
   cache_path = getOption(
     "HockeyModel.nst.cache.path",
@@ -518,14 +518,14 @@ load_or_get_nst <- function(
 #' if one game ID supplied, or a data frame with those columns
 #' @export
 get_xg <- function(gameIds) {
-  gxg <- function(gid) {
+  .gxg <- function(gid) {
     season <- as.numeric(substr(gid, 1, 4))
 
     if (season < 2007) {
       return(list("GameID" = gid, "HomexG" = NA, "AwayxG" = NA))
     }
 
-    nst_report <- load_or_get_nst(gid)
+    nst_report <- .load_or_get_nst(gid)
 
     # Issue 3.12: Validate NST report structure before accessing columns
     if (!is.data.frame(nst_report) || nrow(nst_report) == 0) {
@@ -590,11 +590,11 @@ get_xg <- function(gameIds) {
   if (length(gameIds) == 0) {
     return(NA)
   } else if (length(gameIds) == 1) {
-    return(as.data.frame(gxg(gameIds)))
+    return(as.data.frame(.gxg(gameIds)))
   } else {
     gxgs <- data.frame()
     for (i in seq_along(gameIds)) {
-      gxgs <- dplyr::bind_rows(gxgs, gxg(gameIds[i]))
+      gxgs <- dplyr::bind_rows(gxgs, .gxg(gameIds[i]))
     }
 
     return(gxgs)
@@ -654,7 +654,7 @@ updateScoresAPI <- function(
 #' @returns (`vector` or `data.frame`) `sc` with normalized historical and
 #'   accented team names.
 #' @keywords internal
-clean_names <- function(sc) {
+.clean_names <- function(sc) {
   if (is.vector(sc)) {
     sc <- stringi::stri_trans_general(str = sc, "latin-ascii")
     sc <- replace(sc, sc == "Utah Utah Hockey Club", "Utah Hockey Club")
@@ -873,7 +873,7 @@ clean_names <- function(sc) {
 #' whether the series is complete
 #' @export
 getAPISeries <- function(season = getCurrentSeason8(), wins_required = 4) {
-  if (!seasonValidator(season)) {
+  if (!.seasonValidator(season)) {
     cli::cli_abort(
       "{.arg season} must be an 8-digit season ID string like {.val 20182019}."
     )
@@ -912,7 +912,7 @@ getAPISeries <- function(season = getCurrentSeason8(), wins_required = 4) {
     return(data.frame())
   }
 
-  playoffSeries <- clean_names(playoffSeries)
+  playoffSeries <- .clean_names(playoffSeries)
 
   playoffSeries$Status <- ifelse(
     playoffSeries$HomeWins >= wins_required |
@@ -945,7 +945,7 @@ getAPISeries <- function(season = getCurrentSeason8(), wins_required = 4) {
 #' @param gid (`character(1)` or `numeric(1)`) NHL game ID.
 #' @returns (`list`) Parsed boxscore response from the NHL API.
 #' @keywords internal
-nhl_boxscore <- function(gid) {
+.nhl_boxscore <- function(gid) {
   url <- paste0("https://api-web.nhle.com/v1/gamecenter/", gid, "/boxscore")
   req <- httr2::request(url) |>
     httr2::req_cache(tempdir()) |>

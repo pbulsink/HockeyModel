@@ -27,7 +27,7 @@ weighting.  Defaults to \link{DC_XI_NHL}.}
 time-decay weighting.  Defaults to \link{DC_UPSILON_NHL}.}
 
 \item{nu}{(\code{double(1)}) Cross-season discounting exponent.  \code{0} (default
-\link{DC_NU_NHL}) disables cross-season discounting.  See \code{\link[=DCweights]{DCweights()}} for
+\link{DC_NU_NHL}) disables cross-season discounting.  See \code{\link[=.DCweights]{.DCweights()}} for
 details.}
 
 \item{save_data}{(\code{logical(1)}) If \code{TRUE} and \code{usethis} is installed, writes

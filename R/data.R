@@ -224,7 +224,7 @@
 #' @returns `NULL` (invisibly). Writes updated data when `usethis` is
 #'   available.
 #' @keywords internal
-buildTeamColours <- function() {
+.buildTeamColours <- function() {
   teamColours <- utils::read.csv(
     "./data-raw/logos/team_colours.csv",
     stringsAsFactors = FALSE

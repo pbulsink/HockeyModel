@@ -1,5 +1,5 @@
 # Shared PWHL test helpers used across test-pwhl-model-core.R and
-# test-nhl-dixon-coles-workflow.R (PWHL todayDC tests)
+# test-nhl-dixon-coles-workflow.R (PWHL .todayDC tests)
 
 # Minimal sample PWHL scores for offline testing
 make_pwhl_scores <- function(n_games = 20) {
@@ -81,7 +81,7 @@ make_pwhl_schedule <- function(scores) {
 # Build DC params without running Weibull optimisation (for speed in tests
 # that don't specifically test .update_dc_pwhl)
 make_pwhl_params <- function(scores) {
-  sc <- pwhl_add_result(scores)
+  sc <- .pwhl_add_result(scores)
   m <- getM(scores = sc, currentDate = max(sc$Date) + 1)
   rho <- getRho(m = m, scores = sc)
   list(m = m, rho = rho, beta = 2.5, eta = 1.5, k = 5.0)

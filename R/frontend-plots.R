@@ -49,7 +49,7 @@
   schedule = HockeyModel::pwhlSchedule,
   scores = HockeyModel::pwhlScores
 ) {
-  params <- parse_pwhl_dc_params(params)
+  params <- .parse_pwhl_dc_params(params)
 
   if (nrow(scores) > 0 && scores$Date[nrow(scores)] < (date - 7)) {
     cli::cli_alert_info(

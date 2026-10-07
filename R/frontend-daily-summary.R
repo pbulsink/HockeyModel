@@ -4,7 +4,7 @@
 #'
 #' @param graphic_dir Directory for graphic files
 #' @param subdir subdirectory to `graphic_dir` for pace plots
-#' @param delay delay between tweet posts
+#' @param delay delay between .tweet posts
 #' @returns (`data.frame`) A combined summary of every attempted social post
 #'   across the run (see `.summarize_post_results()` in `frontend-social.R`),
 #'   invisibly.
@@ -198,7 +198,7 @@
   }
 
   message("Posting Tweets...")
-  post_results[[length(post_results) + 1]] <- tweet(
+  post_results[[length(post_results) + 1]] <- .tweet(
     graphic_dir = graphic_dir,
     delay = delay
   )

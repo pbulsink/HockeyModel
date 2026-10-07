@@ -14,7 +14,7 @@
 #' @param upsilon (`double(1)`) Logistic midpoint (days) for within-season
 #'   time-decay weighting.  Defaults to [DC_UPSILON_NHL].
 #' @param nu (`double(1)`) Cross-season discounting exponent.  `0` (default
-#'   [DC_NU_NHL]) disables cross-season discounting.  See [DCweights()] for
+#'   [DC_NU_NHL]) disables cross-season discounting.  See [.DCweights()] for
 #'   details.
 #' @param save_data (`logical(1)`) If `TRUE` and `usethis` is installed, writes
 #'   the parameters as package data objects.
@@ -69,7 +69,7 @@
 #' @param draws whether to report draws in odds (AwayWin/HomeWin/Draw) or not (AwayWin/HomeWin). Default True
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
-todayDC <- function(
+.todayDC <- function(
   params = NULL,
   today = Sys.Date(),
   schedule = HockeyModel::schedule,
@@ -82,7 +82,7 @@ todayDC <- function(
     cli::cli_abort("{.arg today} must be a Date or date-like value.")
   }
   params <- .parse_dc_params(params)
-  #games <- games_today(date = today)
+  # games <- games_today(date = today)
   games <- schedule[schedule$Date == today, ]
   if (nrow(games) == 0) {
     return(NULL)
@@ -102,7 +102,7 @@ todayDC <- function(
   }
 
   # Compute all games' odds at once via the vectorized path.
-  odds <- dcPredictVectorized(
+  odds <- .dcPredictVectorized(
     home = preds$HomeTeam,
     away = preds$AwayTeam,
     params = params,
@@ -121,7 +121,7 @@ todayDC <- function(
 
   if (include_xG) {
     for (i in seq_len(nrow(preds))) {
-      xg <- dcxG(
+      xg <- .dcxG(
         home = preds$HomeTeam[[i]],
         away = preds$AwayTeam[[i]],
         params = params
@@ -187,12 +187,12 @@ remainderSeasonDC <- function(
 ) {
   pred_list <- list()
 
-  cores <- parseCores(cores)
+  cores <- .parseCores(cores)
 
   params <- .parse_dc_params(params = params)
 
   last_game_date <- as.Date(max(scores$Date))
-  schedule <- add_postponed_to_schedule_end(schedule)
+  schedule <- .add_postponed_to_schedule_end(schedule)
   schedule <- schedule[schedule$Date > last_game_date, ]
   schedule <- schedule |>
     dplyr::arrange(.data$Date, .data$GameID)
@@ -232,7 +232,7 @@ remainderSeasonDC <- function(
         season_length
     }
 
-    preds <- todayDC(
+    preds <- .todayDC(
       today = d,
       schedule = schedule,
       season_percent = season_percent,
@@ -243,7 +243,7 @@ remainderSeasonDC <- function(
     pred_list <- c(pred_list, list(preds))
   }
 
-  #odds_table$Date <- schedule$Date
+  # odds_table$Date <- schedule$Date
   if (length(pred_list) == 0) {
     odds_table <- data.frame(
       HomeTeam = character(),
@@ -299,14 +299,14 @@ remainderSeasonDC <- function(
       )
 
       if (!is.numeric(lambda)) {
-        lambda <- DCPredictErrorRecover(
+        lambda <- .DCPredictErrorRecover(
           team = odds_table$HomeTeam[g],
           opponent = odds_table$AwayTeam[g],
           homeiceadv = TRUE
         )
       }
       if (!is.numeric(mu)) {
-        mu <- DCPredictErrorRecover(
+        mu <- .DCPredictErrorRecover(
           team = odds_table$AwayTeam[g],
           opponent = odds_table$HomeTeam[g],
           homeiceadv = FALSE
@@ -371,7 +371,7 @@ dcPredictMultipleDays <- function(
   if (!dir.exists(filedir)) {
     dir.create(filedir, recursive = TRUE)
   }
-  cores <- parseCores(cores)
+  cores <- .parseCores(cores)
 
   if (!is.Date(start)) {
     cli::cli_abort("{.arg start} must be a Date or date-like value.")
@@ -382,7 +382,7 @@ dcPredictMultipleDays <- function(
   predict_dates <- seq(from = as.Date(end), to = as.Date(start), by = -1) # do it backwards to get the most recent date done first
 
   schedule$Date <- as.Date(schedule$Date)
-  schedule <- add_postponed_to_schedule_end(schedule)
+  schedule <- .add_postponed_to_schedule_end(schedule)
 
   message("Running predictions for ", length(predict_dates), " day(s).")
   for (day in predict_dates) {
@@ -543,7 +543,7 @@ predictMultipleDaysResultsDC <- function(
     params$eta <- w.day$eta
     params$k <- w.day$k
 
-    p <- todayDC(today = d, params = params)
+    p <- .todayDC(today = d, params = params)
 
     sched[sched$Date == d, "HomeWin"] <- p$HomeWin
     sched[sched$Date == d, "AwayWin"] <- p$AwayWin

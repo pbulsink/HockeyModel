@@ -42,29 +42,23 @@ test_that("plot wrappers route PWHL prediction data through shared graphics (#39
       expect_match(dir, "pwhl$")
       all_predictions
     },
-    plot_prediction_playoffs_by_team = function(
-      all_predictions,
-      teamColours,
-      ...
-    ) {
+    plot_prediction_playoffs_by_team = function(all_predictions,
+                                                teamColours,
+                                                ...) {
       list(kind = "playoffs", teams = teamColours$Team, data = all_predictions)
     },
-    plot_prediction_presidents_by_team = function(
-      all_predictions,
-      teamColours,
-      ...
-    ) {
+    plot_prediction_presidents_by_team = function(all_predictions,
+                                                  teamColours,
+                                                  ...) {
       list(
         kind = "presidents",
         teams = teamColours$Team,
         data = all_predictions
       )
     },
-    plot_prediction_points_by_team = function(
-      all_predictions,
-      teamColours,
-      ...
-    ) {
+    plot_prediction_points_by_team = function(all_predictions,
+                                              teamColours,
+                                              ...) {
       list(kind = "points", teams = teamColours$Team, data = all_predictions)
     },
     .package = "HockeyModel"

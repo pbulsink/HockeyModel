@@ -1,6 +1,6 @@
 test_that("Today Odds plot OK", {
   local_mocked_bindings(
-    todayDC = function(...) {
+    .todayDC = function(...) {
       data.frame(
         Date = as.Date("2019-11-01"),
         GameID = 2019020196,
@@ -24,7 +24,7 @@ test_that("Today Odds plot OK", {
   expect_identical(p$labels$y, "Result Odds")
   expect_identical(p$labels$x, "")
 
-  if (!requireNamespace('gt')) {
+  if (!requireNamespace("gt")) {
     expect_error(
       suppressWarnings(daily_odds_table(today = as.Date("2019-11-01"))),
       "Package gt is required"
@@ -85,7 +85,7 @@ test_that("todayOddsPlot executes without error", {
     games_today = function(schedule, date, all_games = FALSE) {
       schedule[schedule$GameID %in% 2019020196, ]
     },
-    todayDC = function(...) {
+    .todayDC = function(...) {
       data.frame(
         Date = as.Date("2019-11-01"),
         GameID = 2019020196,

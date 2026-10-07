@@ -30,7 +30,7 @@ recordTodaysPredictions <- function(
   if (nrow(today_sched) == 0) {
     stop("No games on date:", today)
   }
-  today_preds <- todayDC(
+  today_preds <- .todayDC(
     today = today,
     params = params,
     schedule = schedule,
@@ -155,7 +155,7 @@ cleanupPredictionsFile <- function(
 #' @param draws (`logical(1)`) Whether to store draw probabilities.
 #' @returns (`logical(1)`) `TRUE` when processing completes.
 #' @keywords internal
-build_past_predictions <- function(
+.build_past_predictions <- function(
   startDate,
   endDate,
   scores = HockeyModel::scores,

@@ -35,7 +35,7 @@ test_that("Past points function works", {
     scores$Date > as.Date("2017-11-01") & scores$Date < as.Date("2017-12-01"),
   ]
 
-  p <- HockeyModel:::historicalPoints(sc = sc)
+  p <- HockeyModel:::.historicalPoints(sc = sc)
   expect_true(is.data.frame(p))
   expect_equal(nrow(p), 31)
   expect_equal(colnames(p), c("Team", "Points", "Season"))
@@ -84,14 +84,14 @@ test_that("gameIDValidator handles edge cases", {
 })
 
 test_that("Season Validates", {
-  expect_true(seasonValidator("20202021"))
-  expect_false(seasonValidator("Bob"))
-  expect_false(seasonValidator(TRUE))
+  expect_true(.seasonValidator("20202021"))
+  expect_false(.seasonValidator("Bob"))
+  expect_false(.seasonValidator(TRUE))
 })
 
 test_that("Draws Normalize", {
   expect_equal(
-    extraTimeSolver(0.45, 0.35, 0.2),
+    .extraTimeSolver(0.45, 0.35, 0.2),
     c(0.45, 0.1018125, 0.0981875, 0.35)
   )
 })
