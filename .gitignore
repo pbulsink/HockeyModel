@@ -50,3 +50,4 @@ tests/testthat/_problems/
 cobertura.xml
 tests/testthat/*.csv
 reference/*.pdf
+*.csv

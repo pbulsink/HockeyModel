@@ -29,7 +29,8 @@ test_that("updateDC with historical date works", {
 test_that("remainderSeasonDC returns odds table directly", {
   sched <- HockeyModel::scores[
     HockeyModel::scores$Date >= as.Date("2025-10-07") &
-      HockeyModel::scores$Date <= as.Date("2025-10-10"), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+      HockeyModel::scores$Date <= as.Date("2025-10-10"),
+    c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
   ]
   sched$GameStatus <- "FUT"
   scor <- HockeyModel::scores[
@@ -78,7 +79,8 @@ test_that("remainderSeasonDC returns odds table directly", {
 test_that("loopless_sim returns summary and raw results", {
   sched <- HockeyModel::scores[
     HockeyModel::scores$Date >= as.Date("2025-10-07") &
-      HockeyModel::scores$Date <= as.Date("2025-10-10"), c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+      HockeyModel::scores$Date <= as.Date("2025-10-10"),
+    c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
   ]
   sched$GameStatus <- "FUT"
   scor <- HockeyModel::scores[

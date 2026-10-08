@@ -485,32 +485,50 @@ sim_engine <- function(all_season, nsims, params = NULL) {
   # both home and away losses. The away result is `1 - home_result`, so e.g.
   # an away win (away_res == 1) corresponds to home_res == 0.
   all_results$W <- unlist(mapply(
-    function(t) sum_mask(home_games[[t]], home_res, 1) + sum_mask(away_games[[t]], away_res, 1),
+    function(t) {
+      sum_mask(home_games[[t]], home_res, 1) +
+        sum_mask(away_games[[t]], away_res, 1)
+    },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$OTW <- unlist(mapply(
-    function(t) sum_mask(home_games[[t]], home_res, 0.75) + sum_mask(away_games[[t]], away_res, 0.75),
+    function(t) {
+      sum_mask(home_games[[t]], home_res, 0.75) +
+        sum_mask(away_games[[t]], away_res, 0.75)
+    },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$SOW <- unlist(mapply(
-    function(t) sum_mask(home_games[[t]], home_res, 0.6) + sum_mask(away_games[[t]], away_res, 0.6),
+    function(t) {
+      sum_mask(home_games[[t]], home_res, 0.6) +
+        sum_mask(away_games[[t]], away_res, 0.6)
+    },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$L <- unlist(mapply(
-    function(t) sum_mask(home_games[[t]], home_res, 0) + sum_mask(away_games[[t]], away_res, 0),
+    function(t) {
+      sum_mask(home_games[[t]], home_res, 0) +
+        sum_mask(away_games[[t]], away_res, 0)
+    },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$OTL <- unlist(mapply(
-    function(t) sum_mask(home_games[[t]], home_res, 0.25) + sum_mask(away_games[[t]], away_res, 0.25),
+    function(t) {
+      sum_mask(home_games[[t]], home_res, 0.25) +
+        sum_mask(away_games[[t]], away_res, 0.25)
+    },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
   all_results$SOL <- unlist(mapply(
-    function(t) sum_mask(home_games[[t]], home_res, 0.4) + sum_mask(away_games[[t]], away_res, 0.4),
+    function(t) {
+      sum_mask(home_games[[t]], home_res, 0.4) +
+        sum_mask(away_games[[t]], away_res, 0.4)
+    },
     seq_along(teamlist),
     SIMPLIFY = FALSE
   ))
