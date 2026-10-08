@@ -53,7 +53,7 @@
       units = "in",
       res = 300
     )
-    print(today$nhl)
+    print(today)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()
@@ -99,7 +99,7 @@
       units = "in",
       res = 300
     )
-    print(rating$nhl)
+    print(rating)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()

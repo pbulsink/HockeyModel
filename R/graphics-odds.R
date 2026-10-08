@@ -48,9 +48,11 @@ plot_odds_today <- function(
   if (nrow(todayodds) > 0) {
     todayodds$GameID <- as.numeric(todayodds$GameID)
     if (league != "PWHL") {
-      utils::write.csv(
+      utils::write.table(
         todayodds,
         file = paste0("./", getCurrentSeason8(), ".csv"),
+        sep = ",",
+        dec = ".",
         row.names = FALSE,
         append = TRUE
       )
