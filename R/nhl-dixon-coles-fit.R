@@ -30,9 +30,13 @@ getM <- function(
   scores <- scores[scores$Date >= (currentDate - 4000), ] # auto-trim to ~11 years of data, past then the model doesn't get better, just bigger
 
   # Derive per-season start dates when cross-season discounting is active
-  season_start_dates <- if (nu != 0) derive_season_starts(scores$Date) else NULL
+  season_start_dates <- if (nu != 0) {
+    .derive_season_starts(scores$Date)
+  } else {
+    NULL
+  }
 
-  weights <- DCweights(
+  weights <- .DCweights(
     dates = scores$Date,
     currentDate = currentDate,
     xi = xi,
@@ -66,7 +70,7 @@ getM <- function(
     start = rep(0.01, length(unique(df.indep$Team)) * 2),
     model = FALSE
   )
-  m <- cleanModel(m) # reduce M size
+  m <- .cleanModel(m) # reduce M size
   return(m)
 }
 
@@ -87,8 +91,8 @@ getRho <- function(m = HockeyModel::m, scores = HockeyModel::scores) {
   away.expected <- as.vector(expected[(nrow(scores) + 1):(nrow(scores) * 2)])
   weights <- m$data$Weight[seq_len(nrow(scores))]
 
-  DCoptimRhoFn.fast <- function(par) {
-    -DCRhoLogLik(
+  .DCoptimRhoFn.fast <- function(par) {
+    -.DCRhoLogLik(
       y1 = scores$HomeGoals,
       y2 = scores$AwayGoals,
       mu = home.expected,
@@ -100,7 +104,7 @@ getRho <- function(m = HockeyModel::m, scores = HockeyModel::scores) {
 
   res <- stats::optim(
     par = 0,
-    fn = DCoptimRhoFn.fast,
+    fn = .DCoptimRhoFn.fast,
     method = "Brent",
     lower = -0.5,
     upper = 0.5
@@ -157,7 +161,7 @@ getWeibullParams <- function(
         TRUE ~ NA_real_
       )
     )
-  DCoptimTheta.fast <- function(par) {
+  .DCoptimTheta.fast <- function(par) {
     beta <- par[1]
     eta <- par[2]
     k <- par[3]
@@ -186,7 +190,7 @@ getWeibullParams <- function(
 
   res <- stats::optim(
     par = c(3, 1, 6),
-    fn = DCoptimTheta.fast,
+    fn = .DCoptimTheta.fast,
     lower = c(1e-6, 1e-6, -2),
     upper = c(10, 10, 100),
     # control = list(fnscale=-1),
@@ -205,7 +209,7 @@ getWeibullParams <- function(
 #' @param rho (`double(1)`) Low-score dependence parameter.
 #' @returns (`double(1)`) Tau scaling factor for one score pair.
 #' @keywords internal
-tau_singular <- function(xx, yy, lambda, mu, rho) {
+.tau_singular <- function(xx, yy, lambda, mu, rho) {
   if (xx == 0 && yy == 0) {
     return(1 - (lambda * mu * rho))
   } else if (xx == 0 && yy == 1) {
@@ -229,7 +233,7 @@ tau_singular <- function(xx, yy, lambda, mu, rho) {
 #' @param rho the factor for adjustment calculations
 #'
 #' @export
-tau <- Vectorize(tau_singular, c("xx", "yy", "lambda", "mu"))
+tau <- Vectorize(.tau_singular, c("xx", "yy", "lambda", "mu"))
 
 #' Compute sigmoid time-decay weights for historical matches
 #'
@@ -257,11 +261,11 @@ tau <- Vectorize(tau_singular, c("xx", "yy", "lambda", "mu"))
 #' @param season_start_dates (`Date` or `NULL`) A sorted vector of season start
 #'   dates used to determine which season each game belongs to.  Required when
 #'   `nu != 0`; if `NULL` and `nu != 0` an error is raised.  Obtain from
-#'   [derive_season_starts()].
+#'   [.derive_season_starts()].
 #'
 #' @returns (`double`) Weight per input date in `[0, 1]`.
 #' @keywords internal
-DCweights <- function(
+.DCweights <- function(
   dates,
   currentDate = Sys.Date(),
   xi = DC_XI_NHL,
@@ -305,9 +309,12 @@ DCweights <- function(
 #' @param weights (`double` or `NULL`) Optional per-match weights.
 #' @returns (`double(1)`) Summed (optionally weighted) log-likelihood.
 #' @keywords internal
-DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
+.DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
   # rho=0, independence y1 home goals y2 away goals mu:expected Home, lambda: expected Away
-  t <- tau(y1, y2, lambda, mu, rho)
+  # tau can cross zero at extreme rho (e.g. tau(0,0) = 1 - lambda*mu*rho), so
+  # clamp to a positive floor before log() to keep the likelihood well-defined
+  # and warning-free across the whole optimizer search space.
+  t <- pmax(tau(y1, y2, lambda, mu, rho), .Machine$double.xmin)
   loglik <- log(t) + log(stats::dpois(y1, lambda)) + log(stats::dpois(y2, mu))
   if (is.null(weights)) {
     return(sum(loglik, na.rm = TRUE))
@@ -332,7 +339,7 @@ DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
 #' @returns A sorted `Date` vector with one entry per season, each being the
 #'   first game date of that season.
 #' @keywords internal
-derive_season_starts <- function(dates, season_month_cutoff = 8L) {
+.derive_season_starts <- function(dates, season_month_cutoff = 8L) {
   dates <- as.Date(dates)
   year <- as.integer(format(dates, "%Y"))
   month <- as.integer(format(dates, "%m"))

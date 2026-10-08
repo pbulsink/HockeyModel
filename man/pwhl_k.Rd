@@ -12,6 +12,6 @@ pwhl_k
 }
 \description{
 Weibull multiplier for PWHL tie-game enhancement. Populated by
-\code{\link[=updatePWHLDC]{updatePWHLDC()}}.
+\code{\link[=.update_dc_pwhl]{.update_dc_pwhl()}}.
 }
 \keyword{datasets}

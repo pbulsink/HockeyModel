@@ -15,7 +15,7 @@ playoffWin(home_team, away_team, home_wins = 0, away_wins = 0, params = NULL)
 
 \item{away_wins}{Opponent Team Wins in Series}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 }
 \value{
 Odds from 0-1 of home team winning. Away odds are 1 - return value

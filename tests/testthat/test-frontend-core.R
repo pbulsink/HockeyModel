@@ -12,7 +12,7 @@ test_that("updateModel dispatches both leagues by default (#39)", {
     .update_model_nhl = function(save_data = TRUE) {
       list(source = "nhl", save_data = save_data)
     },
-    updatePWHLModel = function(save_data = TRUE) {
+    .update_model_pwhl = function(save_data = TRUE) {
       list(source = "pwhl", save_data = save_data)
     },
     .package = "HockeyModel"
@@ -32,7 +32,7 @@ test_that("updateModel returns a single-league payload when requested (#39)", {
     .update_model_nhl = function(save_data = TRUE) {
       list(source = "nhl", save_data = save_data)
     },
-    updatePWHLModel = function(save_data = TRUE) {
+    .update_model_pwhl = function(save_data = TRUE) {
       list(source = "pwhl", save_data = save_data)
     },
     .package = "HockeyModel"

@@ -8,7 +8,7 @@
 #' @param handle (`character(1)`) Contest handle to include in output.
 #' @returns (`character(1)`) Serialized contest payload string.
 #' @keywords internal
-formatPredsForHockeyVisContest <- function(
+.formatPredsForHockeyVisContest <- function(
   predictions,
   candyType = "Fuzzy Peaches",
   handle = "@bot.bulsink.ca"

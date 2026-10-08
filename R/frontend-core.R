@@ -157,7 +157,7 @@
   cli::cli_inform("Updating Scores")
   scores <- updateScoresAPI(schedule = schedule, save_data = save_data)
   cli::cli_inform("Refitting Model Parameters")
-  params <- updateDC(scores = scores, save_data = save_data)
+  params <- .update_dc_nhl(scores = scores, save_data = save_data)
   list(
     scores = scores,
     schedule = schedule,
@@ -185,7 +185,7 @@ updateModel <- function(save_data = TRUE, league = NULL) {
     result$nhl <- .update_model_nhl(save_data = save_data)
   }
   if ("PWHL" %in% leagues) {
-    result$pwhl <- updatePWHLModel(save_data = save_data)
+    result$pwhl <- .update_model_pwhl(save_data = save_data)
   }
 
   .simplify_frontend_result(result, leagues)
@@ -215,7 +215,7 @@ updateModel <- function(save_data = TRUE, league = NULL) {
   if (scores$Date[nrow(scores)] < (Sys.Date())) {
     updateScoresAPI(save_data = TRUE)
   }
-  pdates <- get_prediction_dates(data_dir)
+  pdates <- .get_prediction_dates(data_dir)
   lastp <- if (length(pdates) == 0L) {
     as.Date(getSeasonStartDate()) - 1L
   } else {
@@ -251,7 +251,7 @@ updateModel <- function(save_data = TRUE, league = NULL) {
   schedule = HockeyModel::pwhlSchedule,
   params = NULL
 ) {
-  params <- parse_pwhl_dc_params(params)
+  params <- .parse_pwhl_dc_params(params)
 
   if (!dir.exists(data_dir)) {
     dir.create(data_dir, recursive = TRUE)
@@ -281,7 +281,7 @@ updateModel <- function(save_data = TRUE, league = NULL) {
 #' @param data_dir directory of predictions
 #' @param scores HockeyModel::scores or a custom value
 #' @param schedule HockeyModel::schedule or a custom value
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
 #'   both leagues; `"nhl"` and `"pwhl"` run one league only
 #'

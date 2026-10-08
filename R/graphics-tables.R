@@ -182,7 +182,7 @@ format_playoff_odds <- function(
 #' @description Returns a gt table of odds for today's games (or games for a supplied date)
 #'
 #' @param today A date for games to create a table. Defaults to today.
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param schedule Schedule, or HockeyModel Schedule
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
 #'   `"PWHL"`, PWHL team colours and logos are used and the title is set to
@@ -207,7 +207,7 @@ daily_odds_table <- function(
     )
   }
   params <- .parse_dc_params(params)
-  todayodds <- todayDC(
+  todayodds <- .todayDC(
     today = as.Date(today),
     params = params,
     schedule = schedule
@@ -219,7 +219,7 @@ daily_odds_table <- function(
   todayodds$AwayxG <- NA
 
   for (g in seq_len(nrow(todayodds))) {
-    xg <- dcxG(
+    xg <- .dcxG(
       home = todayodds$HomeTeam[g],
       away = todayodds$AwayTeam[g],
       params = params
@@ -406,7 +406,7 @@ daily_odds_table <- function(
 #'   AwayWins describing the current playoff series. Defaults to
 #'   [getAPISeries()].
 #' @param params The named list containing m, rho, beta, eta, and k. See
-#'   [updateDC] for information on the params list.
+#'   [updateModel()] for information on the params list.
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When
 #'   `"PWHL"`, PWHL team colours and logos are used and the title is set to
 #'   `"PWHL Playoff Series Odds"`.
@@ -499,7 +499,7 @@ series_odds_table <- function(
   }
 
   # Resolve a team name to its local logo path (falls back to nhl or pwhl logo)
-  team_logo_path <- function(team_name, league) {
+  .team_logo_path <- function(team_name, league) {
     candidate <- file.path(
       getOption("HockeyModel.data.path"),
       "logos",
@@ -607,7 +607,7 @@ series_odds_table <- function(
           locations = gt::cells_body(columns = "homeimage", rows = i),
           fn = function(x) {
             gt::local_image(
-              filename = team_logo_path(x, league),
+              filename = .team_logo_path(x, league),
               height = "30px"
             )
           }
@@ -616,7 +616,7 @@ series_odds_table <- function(
           locations = gt::cells_body(columns = "awayimage", rows = i),
           fn = function(x) {
             gt::local_image(
-              filename = team_logo_path(x, league),
+              filename = .team_logo_path(x, league),
               height = "30px"
             )
           }

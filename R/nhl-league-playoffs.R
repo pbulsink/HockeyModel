@@ -7,7 +7,7 @@
 #' @param away_team Opponent Team
 #' @param home_wins Home Ice Advantage Team Wins in Series
 #' @param away_wins Opponent Team Wins in Series
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return Odds from 0-1 of home team winning. Away odds are 1 - return value
 #' @export
@@ -18,7 +18,9 @@ playoffWin <- function(
   away_wins = 0,
   params = NULL
 ) {
-  params <- .parse_dc_params(params)
+  if (is.null(params)) {
+    params <- .parse_dc_params(params)
+  }
   home_odds <- DCPredict(
     home = home_team,
     away = away_team,
@@ -50,7 +52,7 @@ playoffWin <- function(
 #' @param home_wins Number of home wins (default 0)
 #' @param away_wins Number of away team wins (default 0)
 #' @param homeAwayOdds pre-calculated home & away team parings odds of a home win. Overrides playoffwin calculation
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return TRUE if the home team wins, else FALSE
 #' @export
@@ -255,7 +257,7 @@ playoffSeriesOdds <- function(
 #' @param summary_results summary results
 #' @param nsims Number of playoff sims to run. Too many takes a long time.
 #' @param cores Number of processor cores to use
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return a data frame of each teams' odds of winning each round (First Round, Second Round, Conference Finals and Stanley Cup)
 #' @export
@@ -266,10 +268,10 @@ simulatePlayoffs <- function(
   params = NULL
 ) {
   params <- .parse_dc_params(params)
-  cores <- parseCores(cores)
+  cores <- .parseCores(cores)
   # TODO use compile_predictions for this?
   if (is.null(summary_results)) {
-    pdates <- get_prediction_dates(getOption("HockeyModel.prediction.path"))
+    pdates <- .get_prediction_dates(getOption("HockeyModel.prediction.path"))
     if (length(pdates) == 0L) {
       cli::cli_alert_info(
         "No prediction files found; skipping playoff simulation."
@@ -291,8 +293,8 @@ simulatePlayoffs <- function(
 
   summary_results <- summary_results |>
     dplyr::mutate(
-      "Conf" = getTeamConferences(.data$Team),
-      "Div" = getTeamDivisions(.data$Team)
+      "Conf" = .getTeamConferences(.data$Team),
+      "Div" = .getTeamDivisions(.data$Team)
     )
   if ("p_rank3" %in% names(summary_results)) {
     # Shortcut for having prank3, 4, 5, 6 instead of prank34, and prank56. add them
@@ -305,7 +307,7 @@ simulatePlayoffs <- function(
   east_results <- summary_results |> dplyr::filter(.data$Conf == "Eastern")
   west_results <- summary_results |> dplyr::filter(.data$Conf == "Western")
 
-  homeAwayOdds <- getAllHomeAwayOdds(summary_results$Team, params = params)
+  homeAwayOdds <- .getAllHomeAwayOdds(summary_results$Team, params = params)
 
   simresults <- data.frame(
     "SimNo" = integer(),
@@ -369,7 +371,7 @@ simulatePlayoffs <- function(
       "SeriesID" = integer()
     )
   } else {
-    completedSeries <- getCompletedSeries(currentSeries)
+    completedSeries <- .getCompletedSeries(currentSeries)
     for (s in currentSeries[currentSeries$Status == "Ongoing", ]$SeriesID) {
       homeAwayOdds[
         homeAwayOdds$HomeTeam ==
@@ -387,7 +389,7 @@ simulatePlayoffs <- function(
     }
   }
 
-  if (cores > 1 & !requireNamespace('doSNOW', quietly = TRUE)) {
+  if (cores > 1 & !requireNamespace("doSNOW", quietly = TRUE)) {
     cli::cli_warn(
       "Warning: package {.pkg doSNOW} not installed. Reverting to single-core processing."
     )
@@ -486,7 +488,7 @@ simulatePlayoffs <- function(
 #' @param p1 (`character(1)` or `NULL`) Optional forced first seed.
 #' @returns (`character`) Length-two vector in seeding order.
 #' @keywords internal
-reseedTwoTeams <- function(team1, team2, summary_results, p1 = NULL) {
+.reseedTwoTeams <- function(team1, team2, summary_results, p1 = NULL) {
   t1p <- summary_results[summary_results$Team == team1, ]$meanPoints
   t2p <- summary_results[summary_results$Team == team2, ]$meanPoints
 
@@ -517,10 +519,10 @@ reseedTwoTeams <- function(team1, team2, summary_results, p1 = NULL) {
 #' @param homeTeam Home Team extracted from summary_results
 #' @param awayTeam away Team extracted from summary_results
 #' @param homeAwayOdds if calculated, the odds of a home or away team win
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return a series winner (team name)
-single_series_solver <- function(
+.single_series_solver <- function(
   series_number,
   currentSeries,
   homeTeam,
@@ -603,7 +605,7 @@ single_series_solver <- function(
 #' @param currentSeries (`data.frame`) Series table from [getAPISeries()].
 #' @returns (`data.frame`) Series identifier with winner and loser teams.
 #' @keywords internal
-getCompletedSeries <- function(currentSeries) {
+.getCompletedSeries <- function(currentSeries) {
   completedSeries <- currentSeries |>
     dplyr::filter(.data$Status == "Complete") |>
     dplyr::mutate(
@@ -631,7 +633,7 @@ getCompletedSeries <- function(currentSeries) {
 #' @param currentSeries currentSeries
 #' @param summary_results summary_results
 #' @param homeAwayOdds precalculated home & away pairs of odds - if available.
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @export
 playoffSolverEngine <- function(
@@ -745,9 +747,9 @@ playoffSolverEngine <- function(
           sample(seq_len(nrow(er)), size = 1, prob = er$p_rank1),
         ]$Team
         er <- er[er$Team != eastseries["p1"], ]
-        p1div <- getTeamDivisions(eastseries["p1"])
+        p1div <- .getTeamDivisions(eastseries["p1"])
       } else {
-        p1div <- getTeamDivisions(eastseries["p1"])
+        p1div <- .getTeamDivisions(eastseries["p1"])
       }
       if (!("p2" %in% names(eastseries))) {
         eastseries["p2"] <- er[er$Div == p1div, ]$Team[sample(
@@ -801,7 +803,7 @@ playoffSolverEngine <- function(
       }
 
       if (!("series1" %in% serieslist)) {
-        series1 <- single_series_solver(
+        series1 <- .single_series_solver(
           series_number = 1,
           currentSeries = currentSeries,
           homeTeam = eastseries[["p1"]],
@@ -818,7 +820,7 @@ playoffSolverEngine <- function(
         l1 <- serieslist[["l1"]]
       }
       if (!("series2" %in% serieslist)) {
-        series2 <- single_series_solver(
+        series2 <- .single_series_solver(
           series_number = 2,
           currentSeries = currentSeries,
           homeTeam = eastseries[["p2"]],
@@ -835,7 +837,7 @@ playoffSolverEngine <- function(
         l2 <- serieslist[["l2"]]
       }
       if (!("series3" %in% serieslist)) {
-        series3 <- single_series_solver(
+        series3 <- .single_series_solver(
           series_number = 3,
           currentSeries = currentSeries,
           homeTeam = eastseries[["p3"]],
@@ -852,7 +854,7 @@ playoffSolverEngine <- function(
         l3 <- serieslist[["l3"]]
       }
       if (!("series4" %in% serieslist)) {
-        series4 <- single_series_solver(
+        series4 <- .single_series_solver(
           series_number = 4,
           currentSeries = currentSeries,
           homeTeam = eastseries[["p4"]],
@@ -922,9 +924,9 @@ playoffSolverEngine <- function(
           sample(seq_len(nrow(wr)), size = 1, prob = wr$p_rank1),
         ]$Team
         wr <- wr[wr$Team != westseries["p1"], ]
-        p1div <- getTeamDivisions(westseries["p1"])
+        p1div <- .getTeamDivisions(westseries["p1"])
       } else {
-        p1div <- getTeamDivisions(westseries["p1"])
+        p1div <- .getTeamDivisions(westseries["p1"])
       }
       if (!("p2" %in% names(westseries))) {
         westseries["p2"] <- wr[wr$Div == p1div, ]$Team[sample(
@@ -978,7 +980,7 @@ playoffSolverEngine <- function(
       }
 
       if (!("series1" %in% serieslist)) {
-        series5 <- single_series_solver(
+        series5 <- .single_series_solver(
           series_number = 5,
           currentSeries = currentSeries,
           homeTeam = westseries[["p1"]],
@@ -995,7 +997,7 @@ playoffSolverEngine <- function(
         l5 <- serieslist[["l1"]]
       }
       if (!("series2" %in% serieslist)) {
-        series6 <- single_series_solver(
+        series6 <- .single_series_solver(
           series_number = 6,
           currentSeries = currentSeries,
           homeTeam = westseries[["p2"]],
@@ -1012,7 +1014,7 @@ playoffSolverEngine <- function(
         l6 <- serieslist[["l2"]]
       }
       if (!("series3" %in% serieslist)) {
-        series7 <- single_series_solver(
+        series7 <- .single_series_solver(
           series_number = 7,
           currentSeries = currentSeries,
           homeTeam = westseries[["p3"]],
@@ -1029,7 +1031,7 @@ playoffSolverEngine <- function(
         l7 <- serieslist[["l3"]]
       }
       if (!("series4" %in% serieslist)) {
-        series8 <- single_series_solver(
+        series8 <- .single_series_solver(
           series_number = 8,
           currentSeries = currentSeries,
           homeTeam = westseries[["p4"]],
@@ -1052,13 +1054,13 @@ playoffSolverEngine <- function(
     if ("series9" %in% completedSeries$Series) {
       series9 <- completedSeries[completedSeries$Series == "series9", ]$Winner
     } else {
-      rs <- reseedTwoTeams(
+      rs <- .reseedTwoTeams(
         series1,
         series2,
         summary_results,
         currentSeries[currentSeries$SeriesID == 1, ]$HomeTeam
       )
-      series9 <- single_series_solver(
+      series9 <- .single_series_solver(
         series_number = 9,
         currentSeries = currentSeries,
         homeTeam = rs[1],
@@ -1070,13 +1072,13 @@ playoffSolverEngine <- function(
     if ("series10" %in% completedSeries$Series) {
       series10 <- completedSeries[completedSeries$Series == "series10", ]$Winner
     } else {
-      rs <- reseedTwoTeams(
+      rs <- .reseedTwoTeams(
         series3,
         series4,
         summary_results,
         currentSeries[currentSeries$SeriesID == 3, ]$HomeTeam
       )
-      series10 <- single_series_solver(
+      series10 <- .single_series_solver(
         series_number = 10,
         currentSeries = currentSeries,
         homeTeam = rs[1],
@@ -1088,13 +1090,13 @@ playoffSolverEngine <- function(
     if ("series11" %in% completedSeries$Series) {
       series11 <- completedSeries[completedSeries$Series == "series11", ]$Winner
     } else {
-      rs <- reseedTwoTeams(
+      rs <- .reseedTwoTeams(
         series5,
         series6,
         summary_results,
         currentSeries[currentSeries$SeriesID == 5, ]$HomeTeam
       )
-      series11 <- single_series_solver(
+      series11 <- .single_series_solver(
         series_number = 11,
         currentSeries = currentSeries,
         homeTeam = rs[1],
@@ -1106,13 +1108,13 @@ playoffSolverEngine <- function(
     if ("series12" %in% completedSeries$Series) {
       series12 <- completedSeries[completedSeries$Series == "series12", ]$Winner
     } else {
-      rs <- reseedTwoTeams(
+      rs <- .reseedTwoTeams(
         series7,
         series8,
         summary_results,
         currentSeries[currentSeries$SeriesID == 7, ]$HomeTeam
       )
-      series12 <- single_series_solver(
+      series12 <- .single_series_solver(
         series_number = 12,
         currentSeries = currentSeries,
         homeTeam = rs[1],
@@ -1125,8 +1127,8 @@ playoffSolverEngine <- function(
     if ("series13" %in% completedSeries$Series) {
       series13 <- completedSeries[completedSeries$Series == "series13", ]$Winner
     } else {
-      rs <- reseedTwoTeams(series9, series10, summary_results)
-      series13 <- single_series_solver(
+      rs <- .reseedTwoTeams(series9, series10, summary_results)
+      series13 <- .single_series_solver(
         series_number = 13,
         currentSeries = currentSeries,
         homeTeam = rs[1],
@@ -1138,8 +1140,8 @@ playoffSolverEngine <- function(
     if ("series14" %in% completedSeries$Series) {
       series14 <- completedSeries[completedSeries$Series == "series14", ]$Winner
     } else {
-      rs <- reseedTwoTeams(series11, series12, summary_results)
-      series14 <- single_series_solver(
+      rs <- .reseedTwoTeams(series11, series12, summary_results)
+      series14 <- .single_series_solver(
         series_number = 14,
         currentSeries = currentSeries,
         homeTeam = rs[1],
@@ -1152,8 +1154,8 @@ playoffSolverEngine <- function(
     if ("series15" %in% completedSeries$Series) {
       series15 <- completedSeries[completedSeries$Series == "series15", ]$Winner
     } else {
-      rs <- reseedTwoTeams(series13, series14, summary_results)
-      series15 <- single_series_solver(
+      rs <- .reseedTwoTeams(series13, series14, summary_results)
+      series15 <- .single_series_solver(
         series_number = 15,
         currentSeries = currentSeries,
         homeTeam = rs[1],
@@ -1222,7 +1224,7 @@ playoffSolverEngine <- function(
 
 #' Get Series Odds
 #'
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return NULL if no series are currently set but not complete, else a data frame.
 #' @export

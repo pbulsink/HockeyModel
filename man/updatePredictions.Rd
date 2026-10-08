@@ -19,7 +19,7 @@ updatePredictions(
 
 \item{schedule}{HockeyModel::schedule or a custom value}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 
 \item{league}{which league front-end to run: \code{NULL}, \code{NA}, or \code{"both"} runs
 both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}

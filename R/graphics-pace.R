@@ -33,7 +33,7 @@ plot_pace_by_division <- function(
     dir.create(file.path(graphic_dir, subdir), recursive = TRUE)
   }
 
-  ngames <- getNumGames()
+  ngames <- .getNumGames()
 
   teamlist <- unique(c(as.character(sc$HomeTeam), as.character(sc$AwayTeam)))
 
@@ -102,7 +102,7 @@ plot_pace_by_division <- function(
       "PointDiff"
     ]
     lab <- paste0(
-      getShortTeam(team),
+      .getShortTeam(team),
       " - ",
       teampoints[team],
       " pts. (",
@@ -121,7 +121,7 @@ plot_pace_by_division <- function(
     ] <- lab
   }
 
-  teamPerformance$Div <- getTeamDivisions(teamPerformance$Team)
+  teamPerformance$Div <- .getTeamDivisions(teamPerformance$Team)
 
   for (division in unique(teamPerformance$Div)) {
     # tl<-teamlist[teamlist %in% unlist(HockeyModel::nhl_divisions[division])]
@@ -219,7 +219,7 @@ plot_pace_by_team <- function(
     paste0(getSeasonStartDate(), "-predictions.RDS")
   ))
 
-  pdates <- get_prediction_dates(prediction_dir)
+  pdates <- .get_prediction_dates(prediction_dir)
   if (length(pdates) == 0L) {
     cli::cli_abort("No prediction files found in {.path {prediction_dir}}.")
   }
@@ -229,7 +229,7 @@ plot_pace_by_team <- function(
   if (!dir.exists(file.path(graphic_dir, subdir))) {
     dir.create(file.path(graphic_dir, subdir), recursive = TRUE)
   }
-  numgames <- getNumGames()
+  numgames <- .getNumGames()
 
   teamColours <- HockeyModel::teamColours
 

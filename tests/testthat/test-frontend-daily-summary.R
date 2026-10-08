@@ -13,7 +13,7 @@ test_that("dailySummary uses option-based graphic defaults for both leagues (#39
       observed$nhl <- graphic_dir
       "nhl-summary"
     },
-    dailyPWHLSummary = function(graphic_dir, ...) {
+    .daily_summary_pwhl = function(graphic_dir, ...) {
       observed$pwhl <- graphic_dir
       "pwhl-summary"
     },

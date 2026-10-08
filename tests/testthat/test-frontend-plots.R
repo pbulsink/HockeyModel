@@ -3,7 +3,7 @@ test_that("todayOddsPlot and dailySummary fan out by league (#39)", {
     .today_odds_plot_nhl = function(...) "nhl-today",
     .today_odds_plot_pwhl = function(...) "pwhl-today",
     .daily_summary_nhl = function(...) "nhl-summary",
-    dailyPWHLSummary = function(...) "pwhl-summary",
+    .daily_summary_pwhl = function(...) "pwhl-summary",
     .package = "HockeyModel"
   )
 

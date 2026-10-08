@@ -12,13 +12,13 @@ tweetGames(
 )
 }
 \arguments{
-\item{games}{Games to tweet graphics from}
+\item{games}{Games to .tweet graphics from}
 
 \item{delay}{Delay between tweets}
 
 \item{graphic_dir}{the graphics directory}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 }
 \value{
 (\code{data.frame}) A summary of each attempted post (see

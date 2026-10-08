@@ -12,6 +12,6 @@ pwhl_m
 }
 \description{
 Fitted GLM capturing each PWHL team's attack and defence strength plus home
-ice advantage. Populated by \code{\link[=updatePWHLDC]{updatePWHLDC()}}.
+ice advantage. Populated by \code{\link[=.update_dc_pwhl]{.update_dc_pwhl()}}.
 }
 \keyword{datasets}

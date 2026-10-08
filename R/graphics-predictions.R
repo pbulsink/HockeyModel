@@ -50,7 +50,7 @@ plot_prediction_points_by_team <- function(
   teams <- unique(all_predictions$Team)
   dates <- as.Date(unique(all_predictions$predictionDate))
   # Get division
-  all_predictions$Division <- getTeamDivisions(
+  all_predictions$Division <- .getTeamDivisions(
     all_predictions$Team,
     teamColours = teamColours
   )
@@ -63,7 +63,7 @@ plot_prediction_points_by_team <- function(
   all_predictions$label <- ifelse(
     all_predictions$predictionDate == max(all_predictions$predictionDate),
     as.character(paste0(
-      getShortTeam(all_predictions$Team, teamColours = teamColours),
+      .getShortTeam(all_predictions$Team, teamColours = teamColours),
       "\n",
       round(all_predictions$meanPoints, digits = 0)
     )),
@@ -149,7 +149,7 @@ plot_prediction_playoffs_by_team <- function(
   # extract constants
   teams <- unique(all_predictions$Team)
   # Get division
-  all_predictions$Division <- getTeamDivisions(
+  all_predictions$Division <- .getTeamDivisions(
     all_predictions$Team,
     teamColours = teamColours
   )
@@ -175,7 +175,7 @@ plot_prediction_playoffs_by_team <- function(
   label[playoff_odds == 0] <- "0"
 
   label <- paste0(
-    getShortTeam(
+    .getShortTeam(
       all_predictions[all_predictions$predictionDate == lastdate, ]$Team,
       teamColours = teamColours
     ),
@@ -279,7 +279,7 @@ plot_prediction_presidents_by_team <- function(
   teams <- unique(all_predictions$Team)
   dates <- as.Date(unique(all_predictions$predictionDate))
   # Get division
-  all_predictions$Division <- getTeamDivisions(
+  all_predictions$Division <- .getTeamDivisions(
     all_predictions$Team,
     teamColours = teamColours
   )
@@ -292,7 +292,7 @@ plot_prediction_presidents_by_team <- function(
   all_predictions$label <- ifelse(
     all_predictions$predictionDate == max(all_predictions$predictionDate),
     as.character(paste0(
-      getShortTeam(all_predictions$Team, teamColours = teamColours),
+      .getShortTeam(all_predictions$Team, teamColours = teamColours),
       "\n",
       signif(all_predictions$Presidents * 100, digits = 2),
       "%"

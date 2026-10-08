@@ -5,7 +5,7 @@
 #' @param cores (`integer(1)` or `NULL`) Requested core count.
 #' @returns (`integer(1)`) Core count constrained to available resources.
 #' @keywords internal
-parseCores <- function(cores) {
+.parseCores <- function(cores) {
   cores <- cores
   if (is.null(cores)) {
     if (!requireNamespace("parallel", quietly = TRUE)) {
@@ -103,7 +103,7 @@ parseCores <- function(cores) {
 #'
 #' @return A (possibly empty) sorted `Date` vector.
 #' @keywords internal
-get_prediction_dates <- function(
+.get_prediction_dates <- function(
   dir = getOption("HockeyModel.prediction.path")
 ) {
   if (is.null(dir) || !dir.exists(dir)) {

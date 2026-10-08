@@ -1,10 +1,10 @@
 context("test-nhl-dixon-coles-predict")
 
-# ============ dcProbMatrix tests ============
+# ============ .dcProbMatrix tests ============
 test_that("DC Functions function", {
-  pmat <- dcProbMatrix(home = "Toronto Maple Leafs", away = "Ottawa Senators")
+  pmat <- .dcProbMatrix(home = "Toronto Maple Leafs", away = "Ottawa Senators")
   expect_equal(sum(pmat), 1)
-  pmat2 <- prob_matrix(
+  pmat2 <- .prob_matrix(
     lambda = 2,
     mu = 2,
     params = list("rho" = -0.25, "beta" = 2, "eta" = 2, "k" = 5),
@@ -46,8 +46,8 @@ test_that("DC Functions function", {
   )
 })
 
-test_that("prob_matrix sums to 1", {
-  pmat <- prob_matrix(
+test_that(".prob_matrix sums to 1", {
+  pmat <- .prob_matrix(
     lambda = 1.5,
     mu = 1.5,
     params = list("rho" = -0.1, "beta" = 2, "eta" = 2, "k" = 3),
@@ -56,8 +56,8 @@ test_that("prob_matrix sums to 1", {
   expect_equal(sum(pmat), 1, tolerance = 1e-10)
 })
 
-test_that("dcProbMatrix creates symmetric-like structure", {
-  pmat <- dcProbMatrix(
+test_that(".dcProbMatrix creates symmetric-like structure", {
+  pmat <- .dcProbMatrix(
     home = "Toronto Maple Leafs",
     away = "Toronto Maple Leafs"
   )
@@ -68,7 +68,7 @@ test_that("dcProbMatrix creates symmetric-like structure", {
 test_that("DC Convenience functions are ok", {
   params <- .parse_dc_params(NULL)
   expect_true(
-    dcResult(lambda = 3, mu = 3, params = params) %in%
+    .dcResult(lambda = 3, mu = 3, params = params) %in%
       c(0, 0.25, 0.4, 0.5, 0.6, 0.75, 1)
   )
 
@@ -96,20 +96,20 @@ test_that("dcSample with as_result=FALSE returns data frame", {
   expect_true(is.character(sim$OTStatus))
 })
 
-test_that("dcResult handles various score combinations", {
+test_that(".dcResult handles various score combinations", {
   set.seed(10)
-  expect_equal(dcResult(5, 2), 1)
-  expect_equal(dcResult(2, 5), 0)
+  expect_equal(.dcResult(5, 2), 1)
+  expect_equal(.dcResult(2, 5), 0)
 })
 
 # ============ Regression tests for OT probability fix ============
-test_that("dcResult uses correct away OT probability [2]", {
-  # dcResult should use otwinnerprob[2] for away OT win (0.75 result)
+test_that(".dcResult uses correct away OT probability [2]", {
+  # .dcResult should use otwinnerprob[2] for away OT win (0.75 result)
   # Ensure away team can win in OT without using home OT probability
   set.seed(7441)
   results <- replicate(
     1000,
-    dcResult(
+    .dcResult(
       lambda = 1.5,
       mu = 1.5,
       params = list("rho" = -0.1, "beta" = 2, "eta" = 2, "k" = 5),
@@ -130,9 +130,9 @@ test_that("dcResult uses correct away OT probability [2]", {
   )
 })
 
-test_that("dcExpandedOdds uses correct away OT probability [2]", {
-  # dcExpandedOdds should return 6 probabilities with correct away OT/SO allocations
-  odds <- dcExpandedOdds(
+test_that(".dcExpandedOdds uses correct away OT probability [2]", {
+  # .dcExpandedOdds should return 6 probabilities with correct away OT/SO allocations
+  odds <- .dcExpandedOdds(
     lambda = 1.5,
     mu = 1.5,
     params = list("rho" = -0.1, "beta" = 2, "eta" = 2, "k" = 5)
@@ -157,10 +157,10 @@ test_that("dcExpandedOdds uses correct away OT probability [2]", {
   )
 })
 
-test_that("dcResult and dcExpandedOdds use otwinnerprob[2] consistently", {
+test_that(".dcResult and .dcExpandedOdds use otwinnerprob[2] consistently", {
   # Both functions should produce consistent OT/SO probabilities
   set.seed(9999)
-  expanded_odds <- dcExpandedOdds(
+  expanded_odds <- .dcExpandedOdds(
     lambda = 2.0,
     mu = 1.0,
     params = list("rho" = -0.15, "beta" = 2.5, "eta" = 1.5, "k" = 6)
@@ -169,7 +169,7 @@ test_that("dcResult and dcExpandedOdds use otwinnerprob[2] consistently", {
   set.seed(9999)
   results <- replicate(
     5000,
-    dcResult(
+    .dcResult(
       lambda = 2.0,
       mu = 1.0,
       params = list("rho" = -0.15, "beta" = 2.5, "eta" = 1.5, "k" = 6),
@@ -203,7 +203,7 @@ test_that("dcResult and dcExpandedOdds use otwinnerprob[2] consistently", {
 # ============ Regression tests for rho optimization fix ============
 test_that("getRho produces valid rho in [-0.5, 0.5]", {
   # Rho must be within goalmodel bounds
-  params <- suppressWarnings(updateDC(save_data = FALSE))
+  params <- suppressWarnings(.update_dc_nhl(save_data = FALSE))
   expect_gte(params$rho, -0.5)
   expect_lte(params$rho, 0.5)
 })
@@ -224,7 +224,7 @@ test_that("getRho maximizes likelihood (not minimizes)", {
   away.expected <- as.vector(expected[(nrow(scores) + 1):(nrow(scores) * 2)])
   weights <- m$data$Weight[seq_len(nrow(scores))]
 
-  ll_at_est <- DCRhoLogLik(
+  ll_at_est <- .DCRhoLogLik(
     y1 = scores$HomeGoals,
     y2 = scores$AwayGoals,
     mu = home.expected,
@@ -233,7 +233,7 @@ test_that("getRho maximizes likelihood (not minimizes)", {
     weights = weights
   )
 
-  ll_at_minus_0.5 <- suppressWarnings(DCRhoLogLik(
+  ll_at_minus_0.5 <- suppressWarnings(.DCRhoLogLik(
     y1 = scores$HomeGoals,
     y2 = scores$AwayGoals,
     mu = home.expected,
@@ -282,7 +282,7 @@ test_that("DCPredict(draws = FALSE) produces valid and consistent results", {
 })
 
 # ============ Regression tests for probability validation (Issue 1.2) ============
-test_that("prob_matrix never returns negative probabilities for extreme inputs", {
+test_that(".prob_matrix never returns negative probabilities for extreme inputs", {
   # These parameter combinations previously produced small-to-large negative
   # probabilities: a large Weibull tie-enhancement (k) can push the diagonal
   # sum above 1, which used to flip the off-diagonal (win/loss) cells
@@ -312,7 +312,7 @@ test_that("prob_matrix never returns negative probabilities for extreme inputs",
   )
 
   for (tc in extreme_cases) {
-    pm <- suppressWarnings(prob_matrix(
+    pm <- suppressWarnings(.prob_matrix(
       lambda = tc$lambda,
       mu = tc$mu,
       params = tc$params,
@@ -324,9 +324,9 @@ test_that("prob_matrix never returns negative probabilities for extreme inputs",
   }
 })
 
-test_that("prob_matrix warns when the tie-enhanced diagonal exceeds 1", {
+test_that(".prob_matrix warns when the tie-enhanced diagonal exceeds 1", {
   expect_warning(
-    prob_matrix(
+    .prob_matrix(
       lambda = 1.5,
       mu = 1.5,
       params = list(rho = -0.1, beta = 2, eta = 2, k = 50),
@@ -336,10 +336,10 @@ test_that("prob_matrix warns when the tie-enhanced diagonal exceeds 1", {
   )
 })
 
-test_that("dcResult and dcExpandedOdds remain valid for extreme inputs", {
+test_that(".dcResult and .dcExpandedOdds remain valid for extreme inputs", {
   extreme_params <- list(rho = -0.4, beta = 2, eta = 2, k = 10)
 
-  odds <- suppressWarnings(dcExpandedOdds(
+  odds <- suppressWarnings(.dcExpandedOdds(
     lambda = 8,
     mu = 8,
     params = extreme_params,
@@ -349,7 +349,7 @@ test_that("dcResult and dcExpandedOdds remain valid for extreme inputs", {
   expect_equal(sum(odds), 1, tolerance = 1e-8)
 
   set.seed(2024)
-  results <- suppressWarnings(dcResult(
+  results <- suppressWarnings(.dcResult(
     lambda = 8,
     mu = 8,
     params = extreme_params,
@@ -357,4 +357,226 @@ test_that("dcResult and dcExpandedOdds remain valid for extreme inputs", {
     nsim = 20
   ))
   expect_true(all(results %in% c(0, 0.25, 0.4, 0.6, 0.75, 1)))
+})
+
+# ============ Regression tests for vectorized odds (Issue 4.8) ============
+test_that(".dcPredictVectorized matches DCPredict per-game (draws = TRUE)", {
+  params <- .parse_dc_params(NULL)
+  home <- c(
+    "Toronto Maple Leafs",
+    "Ottawa Senators",
+    "New Jersey Devils",
+    "Philadelphia Flyers"
+  )
+  away <- c(
+    "Ottawa Senators",
+    "Toronto Maple Leafs",
+    "Philadelphia Flyers",
+    "New Jersey Devils"
+  )
+  vec <- .dcPredictVectorized(
+    home = home,
+    away = away,
+    params = params,
+    draws = TRUE
+  )
+  ref <- t(vapply(
+    seq_along(home),
+    function(i) {
+      p <- DCPredict(
+        home = home[i],
+        away = away[i],
+        params = params,
+        draws = TRUE
+      )
+      c(p[1], p[2], p[3])
+    },
+    numeric(3)
+  ))
+  expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
+  expect_true(all(rowSums(vec) == 1))
+})
+
+test_that(".dcPredictVectorized matches DCPredict per-game (draws = FALSE)", {
+  # Locks in the fix for the sequential-assignment bias in DCPredict's
+  # !draws branch: both home and away must use the original (pre-update)
+  # draw probability when redistributing.
+  params <- .parse_dc_params(NULL)
+  home <- c("Toronto Maple Leafs", "New Jersey Devils", "Colorado Avalanche")
+  away <- c("Ottawa Senators", "Philadelphia Flyers", "Dallas Stars")
+  vec <- .dcPredictVectorized(
+    home = home,
+    away = away,
+    params = params,
+    draws = FALSE
+  )
+  ref <- t(vapply(
+    seq_along(home),
+    function(i) {
+      p <- DCPredict(
+        home = home[i],
+        away = away[i],
+        params = params,
+        draws = FALSE
+      )
+      c(p[1], p[2])
+    },
+    numeric(2)
+  ))
+  expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
+  expect_true(all(rowSums(vec) == 1))
+})
+
+test_that(".dcPredictVectorized matches DCPredict with regression (expected_mean, season_percent)", {
+  # DCPredict previously dropped expected_mean/season_percent before calling
+  # .dcProbMatrix, so regression was silently ignored. Both paths must now apply
+  # the blend identically.
+  params <- .parse_dc_params(NULL)
+  home <- c("Toronto Maple Leafs", "New Jersey Devils", "Washington Capitals")
+  away <- c("Ottawa Senators", "Philadelphia Flyers", "Buffalo Sabres")
+  vec <- .dcPredictVectorized(
+    home = home,
+    away = away,
+    params = params,
+    draws = TRUE,
+    expected_mean = 2.835184,
+    season_percent = 0.5
+  )
+  ref <- t(vapply(
+    seq_along(home),
+    function(i) {
+      p <- DCPredict(
+        home = home[i],
+        away = away[i],
+        params = params,
+        draws = TRUE,
+        expected_mean = 2.835184,
+        season_percent = 0.5
+      )
+      c(p[1], p[2], p[3])
+    },
+    numeric(3)
+  ))
+  expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
+})
+
+test_that(".dcProbArray matches .prob_matrix per-game", {
+  params <- .parse_dc_params(NULL)
+  lambdas <- c(1.2, 2.8, 3.4, 0.5)
+  mus <- c(2.1, 1.9, 2.7, 3.3)
+  arr <- .dcProbArray(lambda = lambdas, mu = mus, params = params, maxgoal = 10)
+  for (j in seq_along(lambdas)) {
+    ref <- .prob_matrix(
+      lambda = lambdas[j],
+      mu = mus[j],
+      params = params,
+      maxgoal = 10
+    )
+    expect_equal(arr[,, j], ref, tolerance = 1e-12)
+    expect_equal(sum(arr[,, j]), 1, tolerance = 1e-10)
+  }
+})
+
+
+# Regression test for Issue #47: .parse_dc_params() should be called only once
+# per public call boundary, not again inside the internal prediction chain.
+#
+# DCPredict() and dcSample() are called once per game, per day, per simulation,
+# and previously every internal step (.dcProbMatrix, .dcLambda, .prob_matrix,
+# .dcProbArray, .dcPredictVectorized) re-parsed the same params list.
+#
+# The test below counts .parse_dc_params() invocations by swapping in a
+# counting shim in the package namespace, running the public function, and
+# asserting the count. This locks in the invariant without changing any
+# public behavior.
+
+context("Issue 47: parse_dc_params called once at the boundary")
+
+.track_parse_count <- function(code) {
+  ns <- asNamespace("HockeyModel")
+  orig_parse <- get0(".parse_dc_params", envir = ns)
+
+  counter <- new.env(parent = ns)
+  counter$n <- 0L
+
+  counting_parse <- function(params = NULL, defaults = NULL) {
+    counter$n <- counter$n + 1L
+    orig_parse(params = params, defaults = defaults)
+  }
+
+  assignInNamespace(
+    ".parse_dc_params",
+    counting_parse,
+    ns = "HockeyModel"
+  )
+  on.exit(
+    assignInNamespace(
+      ".parse_dc_params",
+      orig_parse,
+      ns = "HockeyModel"
+    ),
+    add = TRUE
+  )
+
+  counter$n <- 0L
+  out <- code
+  list(result = out, calls = counter$n)
+}
+
+test_that("DCPredict parses params exactly once per call", {
+  set.seed(1)
+  tracked <- .track_parse_count({
+    DCPredict(home = "Toronto Maple Leafs", away = "Ottawa Senators")
+  })
+
+  expect_length(tracked$result, 3)
+  expect_equal(tracked$calls, 1L)
+})
+
+test_that("dcSample parses params exactly once per call", {
+  set.seed(1)
+  tracked <- .track_parse_count({
+    dcSample(home = "Toronto Maple Leafs", away = "Ottawa Senators")
+  })
+
+  expect_true(tracked$result %in% c(0, 0.25, 0.4, 0.6, 0.75, 1))
+  expect_equal(tracked$calls, 1L)
+})
+
+test_that(".dcPredictVectorized parses params exactly once per call", {
+  home <- c("Toronto Maple Leafs", "Ottawa Senators", "New Jersey Devils")
+  away <- c("Ottawa Senators", "Toronto Maple Leafs", "Philadelphia Flyers")
+  tracked <- .track_parse_count({
+    .dcPredictVectorized(home = home, away = away, draws = TRUE)
+  })
+
+  expect_equal(nrow(tracked$result), 3)
+  expect_equal(tracked$calls, 1L)
+})
+
+test_that("playoffWin parses params exactly once per call", {
+  tracked <- .track_parse_count({
+    playoffWin(
+      home_team = "Toronto Maple Leafs",
+      away_team = "Ottawa Senators"
+    )
+  })
+
+  expect_true(tracked$result > 0 && tracked$result < 1)
+  expect_equal(tracked$calls, 1L)
+})
+
+test_that("randomSeriesWinner parses params exactly once per call", {
+  set.seed(42)
+  tracked <- .track_parse_count({
+    randomSeriesWinner(
+      home_team = "Toronto Maple Leafs",
+      away_team = "Ottawa Senators"
+    )
+  })
+
+  expect_true(
+    tracked$result %in% c("Toronto Maple Leafs", "Ottawa Senators")
+  )
+  expect_equal(tracked$calls, 1L)
 })

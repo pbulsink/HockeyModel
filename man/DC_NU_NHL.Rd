@@ -9,6 +9,6 @@ DC_NU_NHL
 \description{
 \code{nu = 0} disables cross-season discounting for NHL (seasons are relatively
 stable year-to-year).  Increase to down-weight older seasons more
-aggressively.  Tune with \code{\link[=tune_dc_weight]{tune_dc_weight()}}.
+aggressively.  Tune with \code{\link[=.tune_dc_weight]{.tune_dc_weight()}}.
 }
 \keyword{internal}

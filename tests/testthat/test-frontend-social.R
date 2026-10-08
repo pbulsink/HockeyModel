@@ -49,7 +49,7 @@ test_that(".summarize_post_results() handles an empty batch without warning (#no
   expect_named(summary, c("description", "success", "error"))
 })
 
-test_that("tweet() reports (not silently swallows) a failed post (#noissue)", {
+test_that(".tweet() reports (not silently swallows) a failed post (#noissue)", {
   withr::local_options(list(HockeyModel.graphics.path = withr::local_tempdir()))
   local_mocked_bindings(
     inRegularSeason = function() TRUE,
@@ -60,18 +60,18 @@ test_that("tweet() reports (not silently swallows) a failed post (#noissue)", {
     .package = "atrrr"
   )
 
-  result <- suppressWarnings(suppressMessages(tweet(delay = 0)))
+  result <- suppressWarnings(suppressMessages(.tweet(delay = 0)))
   expect_equal(nrow(result), 3)
   expect_true(all(!result$success))
   expect_true(all(result$error == "rate limited"))
 })
 
-test_that("tweet() does nothing outside the regular season (#noissue)", {
+test_that(".tweet() does nothing outside the regular season (#noissue)", {
   local_mocked_bindings(
     inRegularSeason = function() FALSE,
     .package = "HockeyModel"
   )
 
-  result <- tweet(delay = 0)
+  result <- .tweet(delay = 0)
   expect_equal(nrow(result), 0)
 })

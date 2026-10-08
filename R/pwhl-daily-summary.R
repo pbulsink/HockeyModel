@@ -2,21 +2,13 @@
 
 #' Daily PWHL summary — update, predict, and post
 #'
-#' @description The PWHL equivalent of [dailySummary()]. Fetches the latest
+#' @description The PWHL branch of [dailySummary()]. Fetches the latest
 #'   schedule and scores, re-fits the Dixon-Coles model, generates graphics for
 #'   today's games and season-wide predictions, and optionally posts them to
 #'   social media via [atrrr::post()].
 #'
-#' Running `dailyPWHLSummary()` with no arguments performs the full daily
-#' workflow using the package's stored PWHL datasets.
-#'
-#' @param graphic_dir (`character(1)`) Directory to save generated PNG files.
-#' @param delay (`double(1)`) Seconds to wait between social-media posts.
-#'
-#' @returns (`data.frame`) A summary of every attempted social post (see
-#'   `.summarize_post_results()` in `frontend-social.R`), invisibly.
-#' @export
-dailyPWHLSummary <- function(
+#' @keywords internal
+.daily_summary_pwhl <- function(
   graphic_dir = file.path(
     getOption("HockeyModel.prediction.path", "./prediction_results"),
     "pwhl_graphics"
@@ -24,10 +16,10 @@ dailyPWHLSummary <- function(
   delay = stats::runif(1, min = 2, max = 6) * 60
 ) {
   post_results <- list()
-  model_data <- updatePWHLModel()
+  model_data <- .update_model_pwhl()
   schedule <- model_data$schedule
   scores <- model_data$scores
-  params <- parse_pwhl_dc_params(model_data$params)
+  params <- .parse_pwhl_dc_params(model_data$params)
 
   if (nrow(schedule) == 0 || Sys.Date() > max(schedule$Date)) {
     cli::cli_alert_info("No PWHL games scheduled; nothing to do.")

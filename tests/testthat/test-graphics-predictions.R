@@ -1,6 +1,6 @@
 test_that("Points Predictions by Team Graphics Produce", {
   skip_if_not_installed("ggforce")
-  if (!requireNamespace('ggforce')) {
+  if (!requireNamespace("ggforce")) {
     expect_error(
       suppressWarnings(plot_prediction_points_by_team(
         all_predictions = HockeyModel::example_predictions,
@@ -50,7 +50,7 @@ test_that("Playoffs Predictions by Team Graphics Produce", {
 })
 
 test_that("Presidents Predictions by Team Graphics Produce", {
-  if (!requireNamespace('ggforce')) {
+  if (!requireNamespace("ggforce")) {
     expect_error(
       suppressWarnings(plot_prediction_presidents_by_team(
         all_predictions = HockeyModel::example_predictions,
@@ -88,7 +88,7 @@ test_that("Presidents predictions keep a PWHL facet", {
     Presidents = c(0.15, 0.2)
   )
 
-  if (!requireNamespace('ggforce')) {
+  if (!requireNamespace("ggforce")) {
     expect_error(
       suppressWarnings(plot_prediction_presidents_by_team(
         all_predictions = all_predictions,
@@ -114,7 +114,7 @@ test_that("Presidents predictions keep a PWHL facet", {
 
 # ============ plot_prediction_playoffs_by_team tests ============
 test_that("plot_prediction_playoffs_by_team executes gracefully", {
-  if (!requireNamespace('ggforce')) {
+  if (!requireNamespace("ggforce")) {
     expect_error(
       plot_prediction_playoffs_by_team(all_predictions = example_predictions),
       "Package ggforce is required"

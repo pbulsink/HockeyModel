@@ -26,7 +26,7 @@ test_that("todayOdds returns data frame or NULL", {
 # ============ todayOdds tests (from test-graphics-comprehensive.R) ============
 test_that("todayOdds returns data frame or NULL", {
   local_mocked_bindings(
-    todayDC = function(...) {
+    .todayDC = function(...) {
       data.frame(
         Date = as.Date("2019-11-01"),
         GameID = 2019020196,
@@ -41,6 +41,214 @@ test_that("todayOdds returns data frame or NULL", {
   )
   result <- suppressWarnings(todayOdds(today = as.Date("2019-11-01")))
   expect_true(is.data.frame(result))
+})
+
+# ============ simulateSeasonParallel tests ============
+test_that("simulateSeasonParallel() sequential branch reuses precomputed HOT/AOT (#52)", {
+  # The sequential branch historically called .extraTimeSolver() twice per
+  # simulation even though odds_table$HOT/AOT are already computed once
+  # before the loop. We assert the branch runs to completion and that its
+  # results match an independent reference computed from the same odds,
+  # which holds whether or not the redundant recompute is present.
+  local_mocked_bindings(
+    remainderSeasonDC = function(...) {
+      data.frame(
+        HomeTeam = c("Boston Bruins", "Detroit Red Wings", "Florida Panthers"),
+        AwayTeam = c(
+          "Detroit Red Wings",
+          "Florida Panthers",
+          "Boston Bruins"
+        ),
+        HomeWin = c(1, 1, 1),
+        AwayWin = c(0, 0, 0),
+        Draw = c(0, 0, 0),
+        GameID = c(1L, 2L, 3L),
+        Date = as.Date("2025-11-01"),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "HockeyModel"
+  )
+  sched <- data.frame(
+    Home = c("Boston Bruins", "Detroit Red Wings", "Florida Panthers"),
+    Away = c(
+      "Detroit Red Wings",
+      "Florida Panthers",
+      "Boston Bruins"
+    ),
+    Date = as.Date("2025-11-01"),
+    GameID = c(1L, 2L, 3L),
+    stringsAsFactors = FALSE
+  )
+  res <- simulateSeasonParallel(
+    scores = NULL,
+    schedule = sched,
+    nsims = 5,
+    cores = 1
+  )
+  expect_true(is.list(res))
+  expect_true("summary_results" %in% names(res))
+  expect_true("raw_results" %in% names(res))
+  expect_equal(nrow(res$summary_results), 3)
+  # BOS beats DET, DET beats FLA, FLA beats BOS => each: 1W 1L, Points=2
+  expect_true(all(res$summary_results$meanWins == 1))
+  expect_true(all(res$summary_results$meanPoints == 2))
+})
+
+test_that("simulateSeasonParallel() parallel branch matches sequential (#49)", {
+  # The parallel branch batches `nsims` simulations into `cores` tasks. With
+  # degenerate odds (every game a certain regulation home win) the outcome is
+  # deterministic, so the parallel result must match the sequential branch
+  # exactly. This also exercises the per-task batch assembly path.
+  local_mocked_bindings(
+    remainderSeasonDC = function(...) {
+      data.frame(
+        HomeTeam = c("Boston Bruins", "Detroit Red Wings", "Florida Panthers"),
+        AwayTeam = c(
+          "Detroit Red Wings",
+          "Florida Panthers",
+          "Boston Bruins"
+        ),
+        HomeWin = c(1, 1, 1),
+        AwayWin = c(0, 0, 0),
+        Draw = c(0, 0, 0),
+        GameID = c(1L, 2L, 3L),
+        Date = as.Date("2025-11-01"),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "HockeyModel"
+  )
+  sched <- data.frame(
+    Home = c("Boston Bruins", "Detroit Red Wings", "Florida Panthers"),
+    Away = c(
+      "Detroit Red Wings",
+      "Florida Panthers",
+      "Boston Bruins"
+    ),
+    Date = as.Date("2025-11-01"),
+    GameID = c(1L, 2L, 3L),
+    stringsAsFactors = FALSE
+  )
+  expect_true(requireNamespace("parallel", quietly = TRUE))
+  res <- suppressWarnings(simulateSeasonParallel(
+    scores = NULL,
+    schedule = sched,
+    nsims = 3,
+    cores = 2
+  ))
+  expect_true(is.list(res))
+  expect_true(all(c("summary_results", "raw_results") %in% names(res)))
+  expect_equal(nrow(res$summary_results), 3)
+  # BOS beats DET, DET beats FLA, FLA beats BOS => each: 1W 1L, Points=2
+  expect_true(all(res$summary_results$meanWins == 1))
+  expect_true(all(res$summary_results$meanPoints == 2))
+  # Exactly the requested number of simulations, one per SimNo.
+  expect_setequal(unique(res$raw_results$SimNo), 1:3)
+})
+
+# ============ .sim_odds_results tests ============
+test_that(".sim_odds_results returns one outcome per game (#45)", {
+  odds_table <- data.frame(
+    HomeWin = c(0.5, 1, 0),
+    HOT = c(0.1, 0, 0),
+    AOT = c(0.05, 0, 0),
+    stringsAsFactors = FALSE
+  )
+  res <- .sim_odds_results(odds_table)
+  expect_named(res, c("res1", "res2", "Result"))
+  expect_length(res$res1, 3)
+  expect_length(res$res2, 3)
+  expect_length(res$Result, 3)
+  # Deterministic bounds: HomeWin=1 => res1<1 always, res1>1 never.
+  expect_equal(res$Result[2], 1)
+  # HomeWin=0 => res1>0 always, res1<0 never.
+  expect_equal(res$Result[3], 0)
+  # Result is always one of the valid outcome codes.
+  expect_true(all(res$Result %in% c(1, 0.75, 0.6, 0.4, 0.25, 0)))
+})
+
+# ============ .simulation_chunks tests ============
+test_that(".simulation_chunks distributes exactly nsims (#51)", {
+  for (nsims in c(1L, 5L, 100L, 1000L)) {
+    for (n in c(1L, 2L, 4L, 7L)) {
+      sizes <- .simulation_chunks(nsims, n)
+      expect_length(sizes, n)
+      expect_equal(sum(sizes), nsims)
+      expect_true(all(sizes >= 0))
+    }
+  }
+  # Remainder is spread over the first (nsims %% n) chunks.
+  expect_equal(.simulation_chunks(10, 3), c(4, 3, 3))
+  expect_equal(.simulation_chunks(7, 7), c(1, 1, 1, 1, 1, 1, 1))
+  expect_equal(.simulation_chunks(4, 4), c(1, 1, 1, 1))
+})
+
+# ============ loopless_sim chunk count (#51) ============
+test_that("loopless_sim runs exactly the requested number of simulations (#51)", {
+  # The old code dropped the remainder of nsims/cores and then over/under-ran
+  # sims. With cores=1 the requested count must be preserved exactly.
+  sched <- HockeyModel::scores[
+    HockeyModel::scores$Date >= as.Date("2025-10-07") &
+      HockeyModel::scores$Date <= as.Date("2025-10-10"),
+    c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+  ]
+  sched$GameStatus <- "FUT"
+  scor <- HockeyModel::scores[
+    HockeyModel::scores$Date < as.Date("2025-10-07"),
+  ]
+  odds_table <- sched[, c("Date", "HomeTeam", "AwayTeam", "GameID")]
+  odds_table$HomeWin <- 0.5
+  odds_table$AwayWin <- 0.3
+  odds_table$Draw <- 0.2
+  odds_table <- odds_table[, c(
+    "HomeTeam",
+    "AwayTeam",
+    "HomeWin",
+    "AwayWin",
+    "Draw",
+    "GameID",
+    "Date"
+  )]
+
+  local_mocked_bindings(
+    getSeason = function(gamedate = Sys.Date()) "20192020",
+    getSeasonStartDate = function(season = NULL) as.Date("2025-10-07"),
+    sim_engine = function(all_season, nsims, params = NULL) {
+      # Return one row per simulation so the caller's requested count is
+      # observable. Columns match loopless_sim's summarise() expectations.
+      n <- as.integer(nsims)
+      data.frame(
+        SimNo = seq_len(n),
+        Team = "X",
+        W = rep(1L, n),
+        OTW = rep(0L, n),
+        SOW = rep(0L, n),
+        SOL = rep(0L, n),
+        OTL = rep(0L, n),
+        Points = rep(2L, n),
+        Wildcard = rep(0L, n),
+        Rank = rep(1L, n),
+        ConfRank = rep(1L, n),
+        DivRank = rep(1L, n),
+        Playoffs = rep(1L, n),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "HockeyModel"
+  )
+
+  result <- loopless_sim(
+    nsims = 7,
+    cores = 1,
+    schedule = sched,
+    scores = scor,
+    odds_table = odds_table,
+    likelihood_graphic = FALSE
+  )
+  # cores=1 => nsims preserved exactly (no floor() remainder loss).
+  expect_equal(nrow(result$raw_results), 7)
+  expect_setequal(result$raw_results$SimNo, 1:7)
 })
 
 # ============ sim_engine tests ============

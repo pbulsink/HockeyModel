@@ -1,6 +1,6 @@
 # Prediction-evaluation metrics (log loss, accuracy, AUC, RMSE, R^2, MSE)
 
-validate_metric_inputs <- function(predicted, actual, fn_name) {
+.validate_metric_inputs <- function(predicted, actual, fn_name) {
   if (length(predicted) != length(actual)) {
     cli::cli_abort(c(
       "Error in HockeyModel::{fn_name}()",
@@ -20,7 +20,7 @@ validate_metric_inputs <- function(predicted, actual, fn_name) {
 #' @return a log loss value for the event(s)
 #' @export
 logLoss <- function(predicted, actual) {
-  validate_metric_inputs(predicted, actual, "logLoss")
+  .validate_metric_inputs(predicted, actual, "logLoss")
   predicted[predicted == 0] <- 1e-15
   predicted[predicted == 1] <- 1 - 1e-15
 
@@ -40,7 +40,7 @@ logLoss <- function(predicted, actual) {
 #' @return a percentage of correct predictions
 #' @export
 accuracy <- function(predicted, actual) {
-  validate_metric_inputs(predicted, actual, "accuracy")
+  .validate_metric_inputs(predicted, actual, "accuracy")
 
   predicted <- as.numeric(predicted > 0.5)
   actual <- as.numeric(actual > 0.5)
@@ -60,7 +60,7 @@ accuracy <- function(predicted, actual) {
 #' @return a single value for auc
 #' @export
 auc <- function(predicted, actual) {
-  validate_metric_inputs(predicted, actual, "auc")
+  .validate_metric_inputs(predicted, actual, "auc")
 
   actual <- as.numeric(actual > 0.5)
 
@@ -84,7 +84,7 @@ auc <- function(predicted, actual) {
 #' @return a single value for RMSE
 #' @export
 rmse <- function(predicted, actual) {
-  validate_metric_inputs(predicted, actual, "rmse")
+  .validate_metric_inputs(predicted, actual, "rmse")
 
   return(sqrt(mean((actual - predicted)^2)))
 }
@@ -99,7 +99,7 @@ rmse <- function(predicted, actual) {
 #' @return a single value for R^2
 #' @export
 rsquare <- function(predicted, actual) {
-  validate_metric_inputs(predicted, actual, "rsquare")
+  .validate_metric_inputs(predicted, actual, "rsquare")
 
   return(stats::cor(predicted, actual)^2)
 }
@@ -113,7 +113,7 @@ rsquare <- function(predicted, actual) {
 #' @return a single value for MSE
 #' @export
 mse <- function(predicted, actual) {
-  validate_metric_inputs(predicted, actual, "mse")
+  .validate_metric_inputs(predicted, actual, "mse")
 
   return(mean((actual - predicted)^2))
 }

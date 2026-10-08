@@ -150,20 +150,20 @@ test_that("pwhlSchedule has correct empty structure", {
   )
 })
 
-test_that("getLongTeam and pwhl_get_short_team works for PWHL", {
+test_that(".getLongTeam and pwhl_get_short_team works for PWHL", {
   tc <- HockeyModel::pwhlTeamColours
   codes <- tc$ShortCode
   teams <- tc$Team
 
-  long <- getLongTeam(codes, tc)
+  long <- .getLongTeam(codes, tc)
   expect_equal(long, teams)
 
-  short <- getShortTeam(teams, tc)
+  short <- .getShortTeam(teams, tc)
   expect_equal(short, codes)
 })
 
 test_that("pwhl_get_long_team returns NA for unknown code", {
-  result <- getLongTeam("XYZ", HockeyModel::pwhlTeamColours)
+  result <- .getLongTeam("XYZ", HockeyModel::pwhlTeamColours)
   expect_true(is.na(result))
 })
 

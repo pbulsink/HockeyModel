@@ -46,13 +46,13 @@ test_that("getSeasonStartDate returns dates", {
   })
 })
 
-test_that("getNumGames returns a game count", {
+test_that(".getNumGames returns a game count", {
   vcr::use_cassette("num-games", {
-    n <- getNumGames(season = "20182019")
+    n <- .getNumGames(season = "20182019")
     expect_true(is.numeric(n))
     expect_length(n, 1)
     expect_true(n > 0)
   })
 
-  expect_error(getNumGames(season = "not-a-season"))
+  expect_error(.getNumGames(season = "not-a-season"))
 })

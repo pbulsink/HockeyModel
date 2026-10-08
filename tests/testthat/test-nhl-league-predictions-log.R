@@ -6,7 +6,7 @@ test_that("Predictions File saves", {
   sched <- HockeyModel::scores
   sched <- sched[sched$Date > as.Date("2021-01-01"), ]
   sched <- sched[sched$Date < as.Date("2021-01-31"), ]
-  expect_true(suppressWarnings(build_past_predictions(
+  expect_true(suppressWarnings(.build_past_predictions(
     startDate = "2021-01-29",
     endDate = "2021-01-30",
     filepath = tmpfile,

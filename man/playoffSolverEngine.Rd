@@ -30,7 +30,7 @@ playoffSolverEngine(
 
 \item{homeAwayOdds}{precalculated home & away pairs of odds - if available.}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \link{updateDC} for information on the params list}
+\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
 }
 \description{
 Does the actual simulating. A function so it's parallelizable. Not to be called directly. Exported for parallel's use

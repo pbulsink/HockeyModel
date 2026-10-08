@@ -1,32 +1,27 @@
 # Dixon-Coles workflow: parameter updating, daily/playoff predictions, and season simulation orchestration
 
-#' Update Dixon Coles parameters
+#' Update NHL Dixon-Coles parameters
 #'
-#' @description This function updates the model parameters to best fit the provided data. The parameters for this model are as follows:
-#' * [m] is the result of the main model fit and contains team attack and defense strengths, plus home ice advantage terms
-#' * [rho] is the Dixon-Coles low scores adjustment term.
-#' * [beta] is the Weibull distribution's 'shape' parameter. This is used with [eta] to produce a curve multiplied by the diagonal score possibility matrix to enhance the odds of tie games
-#' * [eta] is the Weibull distribution's 'scale' parameter. See above for its importance
-#' * [k] is the multiplication factor used with the Weibull distribution to enhance ties
+#' @description Fits the Dixon-Coles model to NHL scores data and returns (and
+#'   optionally saves) the five model parameters.
 #'
-#' @param scores scores, if not then HockeyModel::scores is used
-#' @param currentDate Current Date, usually today but useful to set a different date if back calculating results
+#' @param scores (`data.frame`) NHL game scores. Defaults to
+#'   [HockeyModel::scores].
+#' @param currentDate (`Date`) Reference date for time-weighting. Defaults to
+#'   today.
 #' @param xi (`double(1)`) Logistic slope for within-season time-decay
 #'   weighting.  Defaults to [DC_XI_NHL].
 #' @param upsilon (`double(1)`) Logistic midpoint (days) for within-season
 #'   time-decay weighting.  Defaults to [DC_UPSILON_NHL].
 #' @param nu (`double(1)`) Cross-season discounting exponent.  `0` (default
-#'   [DC_NU_NHL]) disables cross-season discounting.  See [DCweights()] for
+#'   [DC_NU_NHL]) disables cross-season discounting.  See [.DCweights()] for
 #'   details.
-#' @param save_data Whether to save parameters to the package.
+#' @param save_data (`logical(1)`) If `TRUE` and `usethis` is installed, writes
+#'   the parameters as package data objects.
 #'
-#' @return a named list containing m, rho, beta, eta and k values for the model.
-#'
-#' @seealso [m], [rho], [beta], [eta], [k], [DC_XI_NHL], [DC_UPSILON_NHL],
-#'   [DC_NU_NHL]
-#'
-#' @export
-updateDC <- function(
+#' @returns A named list with elements `m`, `rho`, `beta`, `eta`, and `k`.
+#' @keywords internal
+.update_dc_nhl <- function(
   scores = HockeyModel::scores,
   currentDate = Sys.Date(),
   xi = DC_XI_NHL,
@@ -66,7 +61,7 @@ updateDC <- function(
 #' DC Predictions Today
 #'
 #' @param today Generate predictions for this date. Defaults to today
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param schedule schedule to use, if not the built-in
 #' @param expected_mean the mean lambda & mu, used only for regression
 #' @param season_percent the percent complete of the season, used for regression
@@ -74,7 +69,7 @@ updateDC <- function(
 #' @param draws whether to report draws in odds (AwayWin/HomeWin/Draw) or not (AwayWin/HomeWin). Default True
 #'
 #' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
-todayDC <- function(
+.todayDC <- function(
   params = NULL,
   today = Sys.Date(),
   schedule = HockeyModel::schedule,
@@ -87,7 +82,7 @@ todayDC <- function(
     cli::cli_abort("{.arg today} must be a Date or date-like value.")
   }
   params <- .parse_dc_params(params)
-  #games <- games_today(date = today)
+  # games <- games_today(date = today)
   games <- schedule[schedule$Date == today, ]
   if (nrow(games) == 0) {
     return(NULL)
@@ -105,26 +100,28 @@ todayDC <- function(
   if (include_xG) {
     preds$Away_xG <- preds$Home_xG <- 0
   }
-  for (i in seq_len(nrow(preds))) {
-    p <- DCPredict(
-      preds$HomeTeam[[i]],
-      preds$AwayTeam[[i]],
-      params = params,
-      expected_mean = expected_mean,
-      season_percent = season_percent,
-      draws = draws
-    )
-    if (draws) {
-      preds$HomeWin[[i]] <- p[[1]]
-      preds$AwayWin[[i]] <- p[[3]]
-      preds$Draw[[i]] <- p[[2]]
-    } else {
-      preds$HomeWin[[i]] <- p[[1]]
-      preds$AwayWin[[i]] <- p[[2]]
-    }
 
-    if (include_xG) {
-      xg <- dcxG(
+  # Compute all games' odds at once via the vectorized path.
+  odds <- .dcPredictVectorized(
+    home = preds$HomeTeam,
+    away = preds$AwayTeam,
+    params = params,
+    expected_mean = expected_mean,
+    season_percent = season_percent,
+    draws = draws
+  )
+  if (draws) {
+    preds$HomeWin <- odds[, "HomeWin"]
+    preds$AwayWin <- odds[, "AwayWin"]
+    preds$Draw <- odds[, "Draw"]
+  } else {
+    preds$HomeWin <- odds[, "HomeWin"]
+    preds$AwayWin <- odds[, "AwayWin"]
+  }
+
+  if (include_xG) {
+    for (i in seq_len(nrow(preds))) {
+      xg <- .dcxG(
         home = preds$HomeTeam[[i]],
         away = preds$AwayTeam[[i]],
         params = params
@@ -145,7 +142,7 @@ todayDC <- function(
 #'
 #' @param home Series Home Ice Advantage Team Name
 #' @param away Away (Opponent) Team Name
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param home_wins Number of wins for home ice advantage team thus far in series
 #' @param away_wins Number of wins for away team thus far in series
 #'
@@ -174,7 +171,7 @@ playoffDC <- function(home, away, params = NULL, home_wins = 0, away_wins = 0) {
 #' @param odds whether to return odds table or simulate season
 #' @param regress whether to apply a regression to the mean for team strength on future predictions
 #' @param mu_lambda whether to return team xG values. Can't be set true if odds is true
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateDC] for information on the params list
+#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return data frame of Team, playoff odds.
 #' @export
@@ -188,22 +185,14 @@ remainderSeasonDC <- function(
   regress = TRUE,
   mu_lambda = FALSE
 ) {
-  odds_table <- data.frame(
-    HomeTeam = character(),
-    AwayTeam = character(),
-    HomeWin = numeric(),
-    AwayWin = numeric(),
-    Draw = numeric(),
-    GameID = numeric(),
-    stringsAsFactors = FALSE
-  )
+  pred_list <- list()
 
-  cores <- parseCores(cores)
+  cores <- .parseCores(cores)
 
   params <- .parse_dc_params(params = params)
 
   last_game_date <- as.Date(max(scores$Date))
-  schedule <- add_postponed_to_schedule_end(schedule)
+  schedule <- .add_postponed_to_schedule_end(schedule)
   schedule <- schedule[schedule$Date > last_game_date, ]
   schedule <- schedule |>
     dplyr::arrange(.data$Date, .data$GameID)
@@ -243,7 +232,7 @@ remainderSeasonDC <- function(
         season_length
     }
 
-    preds <- todayDC(
+    preds <- .todayDC(
       today = d,
       schedule = schedule,
       season_percent = season_percent,
@@ -251,10 +240,24 @@ remainderSeasonDC <- function(
       params = params
     )
     preds$Date <- d
-    odds_table <- rbind(odds_table, preds)
+    pred_list <- c(pred_list, list(preds))
   }
 
-  #odds_table$Date <- schedule$Date
+  # odds_table$Date <- schedule$Date
+  if (length(pred_list) == 0) {
+    odds_table <- data.frame(
+      HomeTeam = character(),
+      AwayTeam = character(),
+      HomeWin = numeric(),
+      AwayWin = numeric(),
+      Draw = numeric(),
+      GameID = numeric(),
+      Date = as.Date(character()),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    odds_table <- dplyr::bind_rows(pred_list)
+  }
   odds_table$GameID <- as.numeric(odds_table$GameID)
 
   if (odds) {
@@ -296,14 +299,14 @@ remainderSeasonDC <- function(
       )
 
       if (!is.numeric(lambda)) {
-        lambda <- DCPredictErrorRecover(
+        lambda <- .DCPredictErrorRecover(
           team = odds_table$HomeTeam[g],
           opponent = odds_table$AwayTeam[g],
           homeiceadv = TRUE
         )
       }
       if (!is.numeric(mu)) {
-        mu <- DCPredictErrorRecover(
+        mu <- .DCPredictErrorRecover(
           team = odds_table$AwayTeam[g],
           opponent = odds_table$HomeTeam[g],
           homeiceadv = FALSE
@@ -368,7 +371,7 @@ dcPredictMultipleDays <- function(
   if (!dir.exists(filedir)) {
     dir.create(filedir, recursive = TRUE)
   }
-  cores <- parseCores(cores)
+  cores <- .parseCores(cores)
 
   if (!is.Date(start)) {
     cli::cli_abort("{.arg start} must be a Date or date-like value.")
@@ -379,7 +382,7 @@ dcPredictMultipleDays <- function(
   predict_dates <- seq(from = as.Date(end), to = as.Date(start), by = -1) # do it backwards to get the most recent date done first
 
   schedule$Date <- as.Date(schedule$Date)
-  schedule <- add_postponed_to_schedule_end(schedule)
+  schedule <- .add_postponed_to_schedule_end(schedule)
 
   message("Running predictions for ", length(predict_dates), " day(s).")
   for (day in predict_dates) {
@@ -388,7 +391,7 @@ dcPredictMultipleDays <- function(
     score <- scores[scores$Date < day, ]
     score <- score[score$Date > as.Date("2008-08-01"), ]
     sched <- schedule[schedule$Date >= day, ]
-    params <- updateDC(scores = score, currentDate = d)
+    params <- .update_dc_nhl(scores = score, currentDate = d)
     preds <- NULL
 
     # preds <- loopless_sim(nsims = nsims, cores = cores, scores = score, schedule = sched, params = params, likelihood_graphic=likelihood_graphic)
@@ -540,7 +543,7 @@ predictMultipleDaysResultsDC <- function(
     params$eta <- w.day$eta
     params$k <- w.day$k
 
-    p <- todayDC(today = d, params = params)
+    p <- .todayDC(today = d, params = params)
 
     sched[sched$Date == d, "HomeWin"] <- p$HomeWin
     sched[sched$Date == d, "AwayWin"] <- p$AwayWin

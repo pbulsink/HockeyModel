@@ -51,3 +51,4 @@ cobertura.xml
 tests/testthat/*.csv
 reference/*.pdf
 *.csv
+.kilo/

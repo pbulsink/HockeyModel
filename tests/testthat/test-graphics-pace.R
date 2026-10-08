@@ -19,7 +19,7 @@ test_that("plot_pace_by_team executes without error", {
 
   local_mocked_bindings(
     getSeasonStartDate = function(season = NULL) as.Date("2019-10-01"),
-    getNumGames = function(season = NULL) 82,
+    .getNumGames = function(season = NULL) 82,
     .package = "HockeyModel"
   )
 
@@ -53,7 +53,7 @@ test_that("plot_pace_by_division executes without error", {
 
   local_mocked_bindings(
     getSeasonStartDate = function(season = NULL) as.Date("2019-10-01"),
-    getNumGames = function(season = NULL) 82,
+    .getNumGames = function(season = NULL) 82,
     .package = "HockeyModel"
   )
 
