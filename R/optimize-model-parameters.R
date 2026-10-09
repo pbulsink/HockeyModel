@@ -132,7 +132,11 @@
 #' @param params (`list`) Named list of DC parameters (`m`, `rho`, `beta`,
 #'   `eta`, `k`).
 #' @param maxgoal (`integer(1)`) Maximum goals to evaluate per team.
-#' @param use_weibull (`logical(1)`) Whether to apply Weibull tie adjustment.
+#' @param use_weibull (`logical(1)`) Apply the Weibull tie adjustment
+#'   (`TRUE`) or use the unmodified standard Dixon-Coles diagonal (`FALSE`).
+#'   The two arms are *not* interchangeable via the `k` multiplier: `.prob_matrix`
+#'   always renormalizes the off-diagonal, so `k = 0` yields the same pipeline
+#'   with a zeroed diagonal, not the standard Dixon-Coles model.
 #' @param draws (`logical(1)`) When `TRUE`, returns 3 probabilities
 #'   (`HomeWin`, `Draw`, `AwayWin`). When `FALSE`, distributes the draw
 #'   proportionally.
@@ -160,7 +164,18 @@
       maxgoal = maxgoal
     )
   } else {
-    # Standard Dixon-Coles without Weibull diagonal multiplier
+    # Standard Dixon-Coles without the Weibull diagonal multiplier.
+    #
+    # This arm cannot be produced by calling .prob_matrix() with k = 0, which
+    # is worth calling out because the two look interchangeable on paper.
+    # .prob_matrix() always renormalizes: it multiplies the diagonal by the
+    # Weibull weights * k and then divides the off-diagonal by (1 - diag_sum).
+    # That off-diagonal renormalization makes the final matrix independent of
+    # k (e.g. a 2x2 with lam = 1, mu = 1, rho = 0 gives
+    # [[0.5, 0.5], [0.5, 0.5]] for every k), so k = 0 is *not* the unmodified
+    # Dixon-Coles model -- it is the same pipeline with the diagonal zeroed.
+    # The genuine standard Dixon-Coles diagonal is the un-renormalized
+    # bivariate-Poisson low-score cells, computed here directly.
     pm <- stats::dpois(0:maxgoal, lam) %*% t(stats::dpois(0:maxgoal, mu))
     scaling_matrix <- matrix(
       c(

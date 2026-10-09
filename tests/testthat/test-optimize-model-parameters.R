@@ -87,6 +87,52 @@ test_that(".fit_m_with_weights validates input and fits model", {
   )
 })
 
+test_that(".predict_dc_probabilities arms differ and k=0 is not the standard arm", {
+  params <- list(
+    m = HockeyModel::m,
+    rho = HockeyModel::rho,
+    beta = HockeyModel::beta,
+    eta = HockeyModel::eta,
+    k = HockeyModel::k
+  )
+
+  # The Weibull arm must carry a larger draw probability than the unmodified
+  # standard Dixon-Coles arm (the whole point of the tie enhancement).
+  weib <- HockeyModel:::.predict_dc_probabilities(
+    home = "TBL",
+    away = "ANA",
+    params = params,
+    use_weibull = TRUE,
+    draws = TRUE
+  )
+  standard <- HockeyModel:::.predict_dc_probabilities(
+    home = "TBL",
+    away = "ANA",
+    params = params,
+    use_weibull = FALSE,
+    draws = TRUE
+  )
+  expect_true(weib["Draw"] > standard["Draw"])
+
+  # Regression guard for a subtle invariant: .prob_matrix() always renormalizes
+  # the off-diagonal by (1 - diag_sum), so driving it with k = 0 reproduces the
+  # Weibull arm exactly (zeroed diagonal + renormalized off-diagonal) and does
+  # NOT produce the standard Dixon-Coles diagonal. The standard arm must keep
+  # its own un-renormalized computation.
+  k_zero <- HockeyModel:::.predict_dc_probabilities(
+    home = "TBL",
+    away = "ANA",
+    params = c(params, list(k = 0)),
+    use_weibull = TRUE,
+    draws = TRUE
+  )
+  expect_equal(as.numeric(k_zero), as.numeric(weib))
+  expect_false(
+    isTRUE(all.equal(as.numeric(standard), as.numeric(k_zero))),
+    info = "standard Dixon-Coles arm must differ from the k=0 pipeline output"
+  )
+})
+
 test_that(".predict_dc_probabilities computes probabilities with and without Weibull", {
   teams <- unique(c(
     as.character(HockeyModel::scores$HomeTeam[1:10]),
