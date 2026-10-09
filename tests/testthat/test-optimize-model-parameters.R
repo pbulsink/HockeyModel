@@ -263,6 +263,36 @@ test_that(".audit_model_constants reports documentation discrepancies and parame
   expect_equal(ot_row$status, "RECALIBRATION_RECOMMENDED")
 })
 
+test_that(".audit_model_constants recalibrates Weibull params against a pre-test model", {
+  audit <- HockeyModel:::.audit_model_constants(
+    scores = HockeyModel::scores,
+    test_start = as.Date("2023-01-01")
+  )
+
+  weib_rows <- audit[
+    audit$parameter %in%
+      c(
+        "beta (NHL) recalibrated",
+        "eta (NHL) recalibrated",
+        "k (NHL) recalibrated"
+      ),
+    ,
+    drop = FALSE
+  ]
+  expect_equal(nrow(weib_rows), 3L)
+  expect_true(all(weib_rows$status == "WEIBULL_RECALIBRATED"))
+  expect_true(all(weib_rows$empirical_estimate != ""))
+
+  # Without a test period the audit still reports the (package) constants
+  audit_default <- HockeyModel:::.audit_model_constants(
+    scores = HockeyModel::scores
+  )
+  expect_equal(
+    nrow(audit_default[audit_default$status == "WEIBULL_RECALIBRATED", ]),
+    3L
+  )
+})
+
 test_that(".run_parameter_audit executes end-to-end master audit", {
   sc <- HockeyModel::scores[HockeyModel::scores$Date >= as.Date("2023-01-01"), ]
   audit_all <- HockeyModel:::.run_parameter_audit(

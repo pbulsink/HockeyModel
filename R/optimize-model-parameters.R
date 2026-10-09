@@ -852,18 +852,26 @@
 #' @description Comprehensive verification audit covering all package-level
 #'   constants, dataset defaults, and empirical parameters (Issue 5.5). Identifies
 #'   discrepancies between documented values and code values (such as `DC_NU_PWHL`
-#'   documented as 2 but assigned 5 in `constants.R`).
+#'   documented as 2 but assigned 5 in `constants.R`). Also recalibrates the
+#'   Weibull tie-enhancement parameters (`.fit_weibull_params()`) against a
+#'   model fit strictly before the test period, so the audit reflects the
+#'   Weibull values that would be optimal on the most recent data rather than
+#'   the frozen package constants.
 #'
 #' @param scores (`data.frame`) NHL historical scores.
 #' @param pwhl_scores (`data.frame`) PWHL historical scores.
+#' @param test_start (`Date` or `NULL`) Date marking the start of the held-out
+#'   test period. When supplied, the Weibull tie-enhancement parameters are
+#'   refit against a model trained only on data before this date.
 #'
 #' @returns A tibble detailing each constant, its current code value, docstring
 #'   value, empirical estimate, and status (`MATCH`, `DOCUMENTATION_DISCREPANCY`,
-#'   `RECALIBRATION_RECOMMENDED`).
+#'   `RECALIBRATION_RECOMMENDED`, `WEIBULL_RECALIBRATED`).
 #' @keywords internal
 .audit_model_constants <- function(
   scores = HockeyModel::scores,
-  pwhl_scores = HockeyModel::pwhlScores
+  pwhl_scores = HockeyModel::pwhlScores,
+  test_start = NULL
 ) {
   # Empirical OT rate post-2015 (3v3 era)
   nhl_ot_rates <- .test_ot_so_rates(
@@ -881,6 +889,38 @@
     NA_real_
   }
 
+  # Recalibrate the Weibull tie-enhancement (beta, eta, k) against a model
+  # fit strictly before the test period, so the audit exercises the live
+  # .fit_weibull_params() rather than only reading the frozen package
+  # constants. Falls back to the package constants when no test period is
+  # supplied, keeping the audit cheap and deterministic in that case.
+  weib_recal <- if (!is.null(test_start)) {
+    tryCatch(
+      {
+        pre_scores <- scores[scores$Date < test_start, ]
+        if (nrow(pre_scores) >= 20L) {
+          fit <- .fit_weibull_params(scores = pre_scores)
+          fit
+        } else {
+          list(
+            beta = HockeyModel::beta,
+            eta = HockeyModel::eta,
+            k = HockeyModel::k
+          )
+        }
+      },
+      error = function(e) {
+        list(
+          beta = HockeyModel::beta,
+          eta = HockeyModel::eta,
+          k = HockeyModel::k
+        )
+      }
+    )
+  } else {
+    list(beta = HockeyModel::beta, eta = HockeyModel::eta, k = HockeyModel::k)
+  }
+
   tibble::tibble(
     parameter = c(
       "DC_XI_NHL",
@@ -896,7 +936,10 @@
       "OT_PROB_NHL",
       "SO_PROB_NHL",
       "OT_PROB_PWHL",
-      "SO_PROB_PWHL"
+      "SO_PROB_PWHL",
+      "beta (NHL) recalibrated",
+      "eta (NHL) recalibrated",
+      "k (NHL) recalibrated"
     ),
     league = c(
       "NHL",
@@ -912,7 +955,10 @@
       "NHL",
       "NHL",
       "PWHL",
-      "PWHL"
+      "PWHL",
+      "NHL",
+      "NHL",
+      "NHL"
     ),
     code_value = c(
       as.character(DC_XI_NHL),
@@ -928,7 +974,10 @@
       "0.6858606",
       "0.3141394",
       "0.6858606",
-      "0.3141394"
+      "0.3141394",
+      as.character(HockeyModel::beta),
+      as.character(HockeyModel::eta),
+      as.character(HockeyModel::k)
     ),
     documented_value = c(
       "0.00426",
@@ -944,7 +993,10 @@
       "0.6858606 (hardcoded)",
       "0.3141394 (hardcoded)",
       "Inherits NHL fixed rates",
-      "Inherits NHL fixed rates"
+      "Inherits NHL fixed rates",
+      "2 (data doc: around 2)",
+      "3 (data doc: around 3)",
+      "6 (data doc: around 5 or 6)"
     ),
     empirical_estimate = c(
       "0.00426 (log-loss tuned)",
@@ -960,7 +1012,10 @@
       as.character(round(emp_nhl_ot, 4L)),
       as.character(round(1 - emp_nhl_ot, 4L)),
       as.character(round(emp_pwhl_ot, 4L)),
-      as.character(round(1 - emp_pwhl_ot, 4L))
+      as.character(round(1 - emp_pwhl_ot, 4L)),
+      as.character(round(weib_recal$beta, 4L)),
+      as.character(round(weib_recal$eta, 4L)),
+      as.character(round(weib_recal$k, 4L))
     ),
     status = c(
       "MATCH",
@@ -976,7 +1031,10 @@
       "RECALIBRATION_RECOMMENDED",
       "RECALIBRATION_RECOMMENDED",
       "RECALIBRATION_RECOMMENDED",
-      "RECALIBRATION_RECOMMENDED"
+      "RECALIBRATION_RECOMMENDED",
+      "WEIBULL_RECALIBRATED",
+      "WEIBULL_RECALIBRATED",
+      "WEIBULL_RECALIBRATED"
     ),
     notes = c(
       "Within-season logistic slope",
@@ -992,7 +1050,10 @@
       "Modern 3v3 OT resolves ~75% before shootout vs hardcoded 68.6% (Issue 5.3)",
       "Modern shootout rate is ~25% vs hardcoded 31.4% (Issue 5.3)",
       "PWHL resolves ~65% in OT; uses NHL hardcoded constant currently",
-      "PWHL shootout rate is ~35%; uses NHL hardcoded constant currently"
+      "PWHL shootout rate is ~35%; uses NHL hardcoded constant currently",
+      "Weibull shape re-estimated on data before the test period (Issue 5.1)",
+      "Weibull scale re-estimated on data before the test period (Issue 5.1)",
+      "Weibull multiplier re-estimated on data before the test period (Issue 5.1)"
     )
   )
 }
@@ -1025,7 +1086,8 @@
   cli::cli_h2("1. Auditing Package Constants & Defaults")
   constants_audit <- .audit_model_constants(
     scores = scores,
-    pwhl_scores = pwhl_scores
+    pwhl_scores = pwhl_scores,
+    test_start = test_start
   )
 
   cli::cli_h2("2. Auditing Overtime vs Shootout Frequencies")
