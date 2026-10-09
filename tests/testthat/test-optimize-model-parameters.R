@@ -304,6 +304,30 @@ test_that(".audit_model_constants reports documentation discrepancies and parame
   expect_equal(ot_row$status, "RECALIBRATION_RECOMMENDED")
 })
 
+test_that(".benchmark_weibull refits a single pre-test model shared by both arms", {
+  sc <- HockeyModel::scores[HockeyModel::scores$Date >= as.Date("2023-01-01"), ]
+  test_start <- as.Date("2023-03-01")
+
+  # Refitting produces a pre-test m used by both arms; the Weibull multiplier
+  # (k) is the only thing that separates them, so their draw probabilities
+  # differ while the home/away probabilities are shared.
+  res <- HockeyModel:::.benchmark_weibull(
+    scores = sc,
+    test_start = test_start,
+    max_dates = 1L
+  )
+  expect_equal(nrow(res), 2L)
+  expect_true(is.finite(res$log_loss[1L]))
+  # Both arms are evaluated on the same games
+  expect_equal(res$games_evaluated[1L], res$games_evaluated[2L])
+  # The Weibull arm must carry the tie-enhancement: its draw rate differs from
+  # the unmodified Dixon-Coles arm (k = 0).
+  expect_true(
+    res$predicted_draw_rate[1L] != res$predicted_draw_rate[2L],
+    info = "Weibull and standard arms should predict different draw rates"
+  )
+})
+
 test_that(".audit_model_constants recalibrates Weibull params against a pre-test model", {
   audit <- HockeyModel:::.audit_model_constants(
     scores = HockeyModel::scores,

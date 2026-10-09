@@ -459,18 +459,25 @@
 
 #' Benchmark Weibull tie adjustment against standard Dixon-Coles model
 #'
-#' @description Answers Issue 5.1: compares prediction performance (log-loss,
-#'   accuracy, Brier score, and predicted tie frequency) of the custom Weibull
-#'   diagonal enhancement versus the standard unmodified Dixon-Coles model on
-#'   held-out test games.
+#' @description Answers Issue 5.1: compares prediction performance of the
+#'   custom Weibull diagonal enhancement versus the standard unmodified
+#'   Dixon-Coles model on held-out test games. To avoid in-sample leakage the
+#'   base model `m` (and `rho`) are fitted only on data before `test_start`,
+#'   and both arms share that single consistent pre-test model (they differ only
+#'   in the Weibull multiplier `k`).
 #'
 #' @param scores (`data.frame`) Game scores. Defaults to [HockeyModel::scores].
 #' @param test_start (`Date`) Date marking the beginning of the held-out test
 #'   set.
-#' @param params (`list` or `NULL`) Pre-parsed DC parameter list.
+#' @param params (`list` or `NULL`) Pre-parsed DC parameter list. When `refit =
+#'   TRUE`, only `rho`/`beta`/`eta`/`k` are taken from it; the base model `m`
+#'   is refit on pre-test data.
 #' @param league (`character(1)`) `"NHL"` or `"PWHL"`.
 #' @param max_dates (`integer(1)` or `NULL`) Maximum number of test dates to
 #'   evaluate (convenient for fast test execution).
+#' @param refit (`logical(1)`) When `TRUE` (default), fit a single `m` on data
+#'   strictly before `test_start` and refit `rho` on it. When `FALSE`, reuse the
+#'   supplied/default model.
 #'
 #' @returns A tibble summarizing prediction metrics for both models.
 #' @keywords internal
@@ -479,10 +486,38 @@
   test_start = as.Date("2023-01-01"),
   params = NULL,
   league = "NHL",
-  max_dates = NULL
+  max_dates = NULL,
+  refit = TRUE
 ) {
   league <- match.arg(league, c("NHL", "PWHL"))
   params <- .parse_dc_params(params)
+
+  # Fit a single consistent base model on data strictly before the test period
+  # (no look-ahead), then refit rho against it. Both benchmark arms reuse this
+  # model, differing only in the Weibull multiplier k, so the comparison is a
+  # true like-for-like test of the tie adjustment.
+  if (refit) {
+    pre_scores <- scores[scores$Date < test_start, ]
+    if (nrow(pre_scores) >= 20L) {
+      m_pre <- getM(scores = pre_scores, currentDate = test_start)
+      rho_pre <- suppressWarnings(
+        getRho(
+          m = m_pre,
+          scores = pre_scores[
+            pre_scores$GameID %in% unique(m_pre$data$GameID),
+          ]
+        )
+      )
+      params <- c(
+        list(m = m_pre, rho = rho_pre),
+        list(
+          beta = params$beta,
+          eta = params$eta,
+          k = params$k
+        )
+      )
+    }
+  }
 
   test_games <- scores[scores$Date >= test_start, ]
   if (nrow(test_games) == 0L) {
@@ -512,41 +547,28 @@
     h <- as.character(test_games$HomeTeam[i])
     a <- as.character(test_games$AwayTeam[i])
 
-    # Model with Weibull tie enhancement
-    odds_w <- .predict_dc_probabilities(
-      home = h,
-      away = a,
-      params = params,
-      use_weibull = TRUE,
-      draws = FALSE
-    )
-    odds_w_3 <- .predict_dc_probabilities(
+    # 3-way probabilities (HomeWin, Draw, AwayWin) for each arm. The two arms
+    # share the same base model and differ only in the Weibull multiplier k,
+    # so their home/away probabilities are identical and only the draw
+    # probability (the Weibull tie enhancement) separates them.
+    p_w <- .predict_dc_probabilities(
       home = h,
       away = a,
       params = params,
       use_weibull = TRUE,
       draws = TRUE
     )
-    preds_with_weib[i] <- odds_w[1L]
-    draws_with_weib[i] <- odds_w_3[2L]
-
-    # Model without Weibull tie enhancement (standard Dixon-Coles)
-    odds_nw <- .predict_dc_probabilities(
-      home = h,
-      away = a,
-      params = params,
-      use_weibull = FALSE,
-      draws = FALSE
-    )
-    odds_nw_3 <- .predict_dc_probabilities(
+    p_nw <- .predict_dc_probabilities(
       home = h,
       away = a,
       params = params,
       use_weibull = FALSE,
       draws = TRUE
     )
-    preds_no_weib[i] <- odds_nw[1L]
-    draws_no_weib[i] <- odds_nw_3[2L]
+    preds_with_weib[i] <- p_w[1L]
+    draws_with_weib[i] <- p_w[2L]
+    preds_no_weib[i] <- p_nw[1L]
+    draws_no_weib[i] <- p_nw[2L]
   }
 
   ll_w <- logLoss(preds_with_weib, actual_home_win)
