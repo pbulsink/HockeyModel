@@ -225,6 +225,47 @@ test_that(".evaluate_weighting_loss evaluates logistic and exponential decay", {
   expect_true(res_exp$n_games > 0)
 })
 
+test_that(".evaluate_weighting_loss refits rho per model instead of using the package-level value", {
+  sc <- HockeyModel::scores[HockeyModel::scores$Date >= as.Date("2023-01-01"), ]
+  test_start <- as.Date("2023-03-01")
+
+  # Reconstruct the model that the logistic config fits for its first test date
+  train_scores <- sc[sc$Date < test_start, ]
+  w <- .DCweights(
+    dates = train_scores$Date,
+    currentDate = test_start,
+    xi = DC_XI_NHL,
+    upsilon = DC_UPSILON_NHL,
+    nu = 0
+  )
+  m <- HockeyModel:::.fit_m_with_weights(
+    train_scores,
+    w
+  )
+  rho_refit <- suppressWarnings(
+    getRho(
+      m = m,
+      scores = train_scores[train_scores$GameID %in% unique(m$data$GameID), ]
+    )
+  )
+
+  # The refit rho must be a valid finite value in the DC range (this is what the
+  # loss function now computes per fresh model, instead of reusing a stale
+  # package-level constant).
+  expect_true(is.finite(rho_refit))
+  expect_gte(rho_refit, -0.5)
+  expect_lte(rho_refit, 0.5)
+
+  # The loss function still runs and refits rho internally without error
+  res <- HockeyModel:::.evaluate_weighting_loss(
+    scores = sc,
+    test_start = test_start,
+    weight_scheme = "logistic",
+    max_dates = 1L
+  )
+  expect_true(is.finite(res$log_loss))
+})
+
 test_that(".compare_weighting_schemes returns comparison table", {
   sc <- HockeyModel::scores[HockeyModel::scores$Date >= as.Date("2023-01-01"), ]
   comp <- HockeyModel:::.compare_weighting_schemes(

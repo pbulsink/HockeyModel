@@ -642,13 +642,12 @@
   earliest_test <- min(test_dates)
   scores_pool <- scores[scores$Date >= (earliest_test - 4000), ]
 
-  # Fixed low-goal/tie parameters
-  params_base <- list(
-    rho = if (league == "PWHL" && !is.null(HockeyModel::pwhl_rho)) {
-      HockeyModel::pwhl_rho
-    } else {
-      HockeyModel::rho
-    },
+  # Weibull tie-enhancement constants are the league's stable parameters
+  # (PWHL-specific when available, otherwise the NHL defaults). `rho` is
+  # deliberately omitted: it is refit against each fresh model below so every
+  # weighting configuration is evaluated with an internally consistent model
+  # rather than a stale package-level value.
+  constants <- list(
     beta = if (league == "PWHL" && !is.null(HockeyModel::pwhl_beta)) {
       HockeyModel::pwhl_beta
     } else {
@@ -693,7 +692,15 @@
     }
 
     m <- .fit_m_with_weights(train_scores, w)
-    params <- c(list(m = m), params_base)
+    # Refit rho against this fresh model so the configuration is internally
+    # consistent (the package-level rho was tuned on a different sample).
+    rho <- suppressWarnings(
+      getRho(
+        m = m,
+        scores = train_scores[train_scores$GameID %in% unique(m$data$GameID), ]
+      )
+    )
+    params <- c(list(m = m, rho = rho), constants)
 
     day_games <- which(truth$Date == d)
     for (g_idx in day_games) {
