@@ -211,6 +211,59 @@
   return(odds)
 }
 
+#' Multi-class log-loss (categorical cross-entropy)
+#'
+#' @description Negative log-likelihood of the one-hot actual class under the
+#'   predicted class-probability matrix. Unlike the binary [logLoss()], this does
+#'   not collapse outcomes to a home/away indicator, so arms that differ only in
+#'   their draw probability produce different scores.
+#'
+#' @param probs (`matrix`) Each row sums to 1 and holds the predicted
+#'   probabilities for the classes (columns).
+#' @param actual (`integer`) 1-based class index per row.
+#'
+#' @returns (`numeric(1)`) Mean per-row cross-entropy.
+#' @keywords internal
+.multiclass_logloss <- function(probs, actual) {
+  p <- probs[cbind(seq_len(nrow(probs)), actual)]
+  p[p <= 0] <- 1e-15
+  p[p >= 1] <- 1 - 1e-15
+  return(-mean(log(p)))
+}
+
+#' Multi-class argmax accuracy
+#'
+#' @description Fraction of rows whose predicted most-likely class equals the
+#'   actual class. Ties are broken by the first (leftmost) class.
+#'
+#' @param probs (`matrix`) Predicted class probabilities (rows sum to 1).
+#' @param actual (`integer`) 1-based class index per row.
+#'
+#' @returns (`numeric(1)`) Accuracy in `[0, 1]`.
+#' @keywords internal
+.multiclass_accuracy <- function(probs, actual) {
+  pred <- apply(probs, 1L, function(p) which.max(p))
+  return(mean(pred == actual))
+}
+
+#' Multi-class Brier score
+#'
+#' @description Mean squared error between the predicted class-probability
+#'   vector and the one-hot actual class, averaged over classes (the standard
+#'   multi-class generalization of the binary Brier score).
+#'
+#' @param probs (`matrix`) Predicted class probabilities (rows sum to 1).
+#' @param actual (`integer`) 1-based class index per row.
+#'
+#' @returns (`numeric(1)`) Brier score in `[0, 1]`.
+#' @keywords internal
+.multiclass_brier <- function(probs, actual) {
+  n_cls <- ncol(probs)
+  onehot <- matrix(0L, nrow = nrow(probs), ncol = n_cls)
+  onehot[cbind(seq_len(nrow(probs)), actual)] <- 1L
+  return(mean(rowSums((probs - onehot)^2)))
+}
+
 #' Test and calibrate historical Overtime vs Shootout probabilities
 #'
 #' @description Audits the hardcoded overtime (`0.6858606`) and shootout
@@ -586,14 +639,35 @@
     draws_no_weib[i] <- p_nw[2L]
   }
 
-  ll_w <- logLoss(preds_with_weib, actual_home_win)
-  ll_nw <- logLoss(preds_no_weib, actual_home_win)
+  # Three-way probability matrices (rows = games, cols = HomeWin/Draw/AwayWin)
+  # and the one-hot actual outcome. The Issue 5.1 comparison must be evaluated
+  # on the 3-way outcomes: scoring the binary home-win indicator is a false
+  # positive, because with draws = FALSE the draw mass is redistributed into
+  # home/away and the two arms collapse onto the same home-win probability. On
+  # the 3-way vectors the arms genuinely differ (their draw probabilities
+  # diverge), so the metrics below separate them.
+  preds3_w <- cbind(
+    HomeWin = preds_with_weib,
+    Draw = draws_with_weib,
+    AwayWin = 1 - preds_with_weib - draws_with_weib
+  )
+  preds3_nw <- cbind(
+    HomeWin = preds_no_weib,
+    Draw = draws_no_weib,
+    AwayWin = 1 - preds_no_weib - draws_no_weib
+  )
+  actual_class <- 1L +
+    as.integer(actual_is_draw) +
+    2L * as.integer(!actual_home_win & !actual_is_draw)
 
-  acc_w <- accuracy(preds_with_weib, actual_home_win)
-  acc_nw <- accuracy(preds_no_weib, actual_home_win)
+  ll_w <- .multiclass_logloss(preds3_w, actual_class)
+  ll_nw <- .multiclass_logloss(preds3_nw, actual_class)
 
-  brier_w <- mean((preds_with_weib - actual_home_win)^2)
-  brier_nw <- mean((preds_no_weib - actual_home_win)^2)
+  acc_w <- .multiclass_accuracy(preds3_w, actual_class)
+  acc_nw <- .multiclass_accuracy(preds3_nw, actual_class)
+
+  brier_w <- .multiclass_brier(preds3_w, actual_class)
+  brier_nw <- .multiclass_brier(preds3_nw, actual_class)
 
   mean_draw_w <- mean(draws_with_weib)
   mean_draw_nw <- mean(draws_no_weib)
