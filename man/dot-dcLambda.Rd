@@ -11,7 +11,10 @@
 
 \item{away}{The away team name}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
+\item{params}{Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+Must be the output of \code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry
+chain are responsible for parsing once (#47). \code{NULL} triggers a fallback
+parse (for direct test calls).}
 }
 \value{
 a list of $home and $away Poisson Lambda values -
