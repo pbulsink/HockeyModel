@@ -114,11 +114,23 @@ test_that(".predict_dc_probabilities arms differ and k=0 is not the standard arm
   )
   expect_true(weib["Draw"] > standard["Draw"])
 
-  # Regression guard for a subtle invariant: .prob_matrix() always renormalizes
-  # the off-diagonal by (1 - diag_sum), so driving it with k = 0 reproduces the
-  # Weibull arm exactly (zeroed diagonal + renormalized off-diagonal) and does
-  # NOT produce the standard Dixon-Coles diagonal. The standard arm must keep
-  # its own un-renormalized computation.
+  # The standard arm is exactly .prob_matrix(enhance = FALSE): the same
+  # Dixon-Coles pipeline with the Weibull multiplier skipped and the
+  # off-diagonal NOT renormalized against a zeroed diagonal.
+  standard_via_enhance <- HockeyModel:::.predict_dc_probabilities(
+    home = "TBL",
+    away = "ANA",
+    params = params,
+    use_weibull = FALSE,
+    draws = TRUE
+  )
+  expect_equal(as.numeric(standard_via_enhance), as.numeric(standard))
+
+  # Regression guard for the subtle invariant that motivated the `enhance`
+  # outlet: the DEFAULT .prob_matrix() (enhance = TRUE) always renormalizes the
+  # off-diagonal by (1 - diag_sum), so driving it with k = 0 reproduces the
+  # Weibull arm (zeroed diagonal + renormalized off-diagonal) and is NOT the
+  # standard Dixon-Coles diagonal. Only enhance = FALSE yields the standard arm.
   k_zero <- HockeyModel:::.predict_dc_probabilities(
     home = "TBL",
     away = "ANA",
@@ -129,7 +141,7 @@ test_that(".predict_dc_probabilities arms differ and k=0 is not the standard arm
   expect_equal(as.numeric(k_zero), as.numeric(weib))
   expect_false(
     isTRUE(all.equal(as.numeric(standard), as.numeric(k_zero))),
-    info = "standard Dixon-Coles arm must differ from the k=0 pipeline output"
+    info = "the enhanced pipeline with k=0 must differ from the standard arm"
   )
 })
 

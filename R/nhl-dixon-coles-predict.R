@@ -403,10 +403,17 @@ DCPredict <- function(
 #'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
 #'   parse (for direct test calls).
 #' @param maxgoal max goals per game
+#' @param enhance (`logical(1)`) Apply the Weibull diagonal tie-enhancement
+#'   (`TRUE`, default) and renormalize the off-diagonal against it. When
+#'   `FALSE` the unmodified standard Dixon-Coles diagonal is kept: the Weibull
+#'   diagonal multiplier is skipped (equivalent to `k = 0`) and the off-diagonal
+#'   is *not* renormalized against a zeroed diagonal, so the returned matrix is
+#'   the tau-adjusted bivariate-Poisson score distribution normalized to sum to
+#'   1.
 #'
 #' @return a square matrix of maxgoal:maxgoal, with all entries in `[0, 1]` and
 #'   summing to 1 (see [.validateProbMatrix])
-.prob_matrix <- function(lambda, mu, params = NULL, maxgoal) {
+.prob_matrix <- function(lambda, mu, params = NULL, maxgoal, enhance = TRUE) {
   if (is.null(params)) {
     params <- .parse_dc_params(params)
   }
@@ -431,6 +438,19 @@ DCPredict <- function(
   # diagonal/off-diagonal renormalization below, so a negative low-goal cell
   # can't leak into the final matrix or corrupt the renormalization sums.
   probability_matrix[1:2, 1:2][probability_matrix[1:2, 1:2] < 0] <- 0
+
+  # enhance = FALSE (or a non-positive k) returns the unmodified standard
+  # Dixon-Coles score distribution: the Weibull diagonal multiplier is skipped
+  # and, crucially, the off-diagonal is NOT renormalized against a zeroed
+  # diagonal (that renormalization is what makes the enhanced pipeline's
+  # output independent of k). The matrix is simply the tau-adjusted
+  # bivariate-Poisson mass normalized to sum to 1, so the diagonal is the
+  # genuine theoretical tie probability.
+  if (!enhance || params$k <= 0) {
+    probability_matrix <- probability_matrix / sum(probability_matrix)
+    .validateProbMatrix(probability_matrix, context = ".prob_matrix")
+    return(probability_matrix)
+  }
 
   diag(probability_matrix) <- diag(probability_matrix) *
     stats::dweibull(

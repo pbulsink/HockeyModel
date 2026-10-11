@@ -4,16 +4,27 @@
 \alias{.prob_matrix}
 \title{Probability Matrix}
 \usage{
-.prob_matrix(lambda, mu, params, maxgoal)
+.prob_matrix(lambda, mu, params = NULL, maxgoal, enhance = TRUE)
 }
 \arguments{
 \item{lambda}{home lambda}
 
 \item{mu}{away mu}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
+\item{params}{Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+Must be the output of \code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry
+chain are responsible for parsing once (#47). \code{NULL} triggers a fallback
+parse (for direct test calls).}
 
 \item{maxgoal}{max goals per game}
+
+\item{enhance}{(\code{logical(1)}) Apply the Weibull diagonal tie-enhancement
+(\code{TRUE}, default) and renormalize the off-diagonal against it. When
+\code{FALSE} the unmodified standard Dixon-Coles diagonal is kept: the Weibull
+diagonal multiplier is skipped (equivalent to \code{k = 0}) and the off-diagonal
+is \emph{not} renormalized against a zeroed diagonal, so the returned matrix is
+the tau-adjusted bivariate-Poisson score distribution normalized to sum to
+1.}
 }
 \value{
 a square matrix of maxgoal:maxgoal, with all entries in \verb{[0, 1]} and

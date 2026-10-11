@@ -156,40 +156,20 @@
   lam <- as.numeric(xg$home)
   mu <- as.numeric(xg$away)
 
-  if (use_weibull) {
-    pm <- .prob_matrix(
-      lambda = lam,
-      mu = mu,
-      params = params,
-      maxgoal = maxgoal
-    )
-  } else {
-    # Standard Dixon-Coles without the Weibull diagonal multiplier.
-    #
-    # This arm cannot be produced by calling .prob_matrix() with k = 0, which
-    # is worth calling out because the two look interchangeable on paper.
-    # .prob_matrix() always renormalizes: it multiplies the diagonal by the
-    # Weibull weights * k and then divides the off-diagonal by (1 - diag_sum).
-    # That off-diagonal renormalization makes the final matrix independent of
-    # k (e.g. a 2x2 with lam = 1, mu = 1, rho = 0 gives
-    # [[0.5, 0.5], [0.5, 0.5]] for every k), so k = 0 is *not* the unmodified
-    # Dixon-Coles model -- it is the same pipeline with the diagonal zeroed.
-    # The genuine standard Dixon-Coles diagonal is the un-renormalized
-    # bivariate-Poisson low-score cells, computed here directly.
-    pm <- stats::dpois(0:maxgoal, lam) %*% t(stats::dpois(0:maxgoal, mu))
-    scaling_matrix <- matrix(
-      c(
-        1 - (lam * mu * params$rho),
-        1 + (mu * params$rho),
-        1 + (lam * params$rho),
-        1 - params$rho
-      ),
-      nrow = 2L
-    )
-    pm[1:2, 1:2] <- pm[1:2, 1:2] * scaling_matrix
-    pm[1:2, 1:2][pm[1:2, 1:2] < 0] <- 0
-    pm <- pm / sum(pm)
-  }
+  # Both arms run the single Dixon-Coles pipeline in .prob_matrix(); the
+  # use_weibull flag maps to its `enhance` outlet. With enhance = FALSE the
+  # Weibull diagonal multiplier is skipped (k = 0) AND the off-diagonal is not
+  # renormalized against a zeroed diagonal -- which is exactly the unmodified
+  # standard Dixon-Coles score distribution. (Note: .prob_matrix() with the
+  # default enhance = TRUE is NOT equivalent to k = 0, because its
+  # off-diagonal renormalization makes the enhanced output independent of k.)
+  pm <- .prob_matrix(
+    lambda = lam,
+    mu = mu,
+    params = params,
+    maxgoal = maxgoal,
+    enhance = use_weibull
+  )
 
   home_win <- sum(pm[lower.tri(pm)])
   draw_prob <- sum(diag(pm))
