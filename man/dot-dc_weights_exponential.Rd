@@ -33,7 +33,7 @@ cross-season discounting.}
 }
 \description{
 Implements standard Dixon-Coles (1997) exponential time-decay
-weighting where $w(t) = \exp(-\xi \cdot \Delta t)$.  Also supports optional
-cross-season discounting $1 / (1 + s^\nu)$ identical to \code{\link[=.DCweights]{.DCweights()}}.
+weighting where \eqn{w(t) = \exp(-\xi \cdot \Delta t)}.  Also supports optional
+cross-season discounting \eqn{1 / (1 + s^\nu)} identical to \code{\link[=.DCweights]{.DCweights()}}.
 }
 \keyword{internal}

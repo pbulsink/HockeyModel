@@ -19,7 +19,7 @@
 
 \item{league}{(\code{character(1)}) \code{"NHL"} or \code{"PWHL"}.}
 
-\item{xi_bounds}{(\code{numeric(2)}) Lower and upper search bounds for $\xi$.}
+\item{xi_bounds}{(\code{numeric(2)}) Lower and upper search bounds for \eqn{\xi}.}
 
 \item{max_dates}{(\code{integer(1)} or \code{NULL}) Maximum dates to evaluate per step.}
 }
@@ -27,7 +27,7 @@
 Named list with \code{optimal_xi} and \code{log_loss}.
 }
 \description{
-Finds the optimal exponential decay rate $\xi$ that minimizes
+Finds the optimal exponential decay rate \eqn{\xi} that minimizes
 log-loss on held-out test games using \code{\link[stats:optimize]{stats::optimize()}} (Issue 5.2).
 }
 \keyword{internal}

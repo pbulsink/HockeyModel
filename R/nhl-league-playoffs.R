@@ -399,7 +399,8 @@ simulatePlayoffs <- function(
     cl <- parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
 
-    `%dopar%` <- foreach::`%dopar%`
+    `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD Check
+    i <- NA_real_ # This hack passes R CMD Check
 
     simresults <- foreach::foreach(
       i = 1:(cores * 100),

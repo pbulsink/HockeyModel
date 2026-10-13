@@ -180,6 +180,7 @@ simulateSeasonParallel <- function(
     }
 
     `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK
+    i <- NA_real_ # This hack passes R CMD CHK
     cl <- parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
     if (progress) {
@@ -372,6 +373,7 @@ loopless_sim <- function(
   } else {
     # this fixes CRAN checks
     `%dopar%` <- foreach::`%dopar%`
+    i <- NA_real_
     # `%do%` <- foreach::`%do%`
 
     cl <- parallel::makeCluster(cores)

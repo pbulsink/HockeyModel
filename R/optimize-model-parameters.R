@@ -9,8 +9,8 @@
 #' Compute exponential time-decay weights for historical matches
 #'
 #' @description Implements standard Dixon-Coles (1997) exponential time-decay
-#'   weighting where $w(t) = \exp(-\xi \cdot \Delta t)$.  Also supports optional
-#'   cross-season discounting $1 / (1 + s^\nu)$ identical to [.DCweights()].
+#'   weighting where \eqn{w(t) = \exp(-\xi \cdot \Delta t)}.  Also supports optional
+#'   cross-season discounting \eqn{1 / (1 + s^\nu)} identical to [.DCweights()].
 #'
 #' @param dates (`Date`) Match dates.
 #' @param currentDate (`Date`) Reference date for weighting. Defaults to
@@ -425,8 +425,8 @@
 
 #' Fit Weibull tie-enhancement parameters on historical scores
 #'
-#' @description Fits the Weibull diagonal enhancement parameters $(\beta, \eta,
-#'   k)$ by minimizing squared difference between observed tie goal ratios and
+#' @description Fits the Weibull diagonal enhancement parameters \eqn{(\beta, \eta,
+#'   k)} by minimizing squared difference between observed tie goal ratios and
 #'   Weibull-scaled probabilities (Issue 5.1).
 #'
 #' @param scores (`data.frame`) Historical score records. Defaults to
@@ -824,13 +824,13 @@
 
 #' Tune Dixon-Coles exponential decay slope parameter
 #'
-#' @description Finds the optimal exponential decay rate $\xi$ that minimizes
+#' @description Finds the optimal exponential decay rate \eqn{\xi} that minimizes
 #'   log-loss on held-out test games using [stats::optimize()] (Issue 5.2).
 #'
 #' @param scores (`data.frame`) Historical scores.
 #' @param test_start (`Date`) Date of first test game.
 #' @param league (`character(1)`) `"NHL"` or `"PWHL"`.
-#' @param xi_bounds (`numeric(2)`) Lower and upper search bounds for $\xi$.
+#' @param xi_bounds (`numeric(2)`) Lower and upper search bounds for \eqn{\xi}.
 #' @param max_dates (`integer(1)` or `NULL`) Maximum dates to evaluate per step.
 #'
 #' @returns Named list with `optimal_xi` and `log_loss`.

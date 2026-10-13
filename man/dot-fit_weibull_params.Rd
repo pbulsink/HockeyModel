@@ -18,8 +18,8 @@
 (\code{list}) Named list with \code{beta}, \code{eta}, \code{k}, and \code{objective_loss}.
 }
 \description{
-Fits the Weibull diagonal enhancement parameters $(\beta, \eta,
-k)$ by minimizing squared difference between observed tie goal ratios and
+Fits the Weibull diagonal enhancement parameters \eqn{(\beta, \eta,
+  k)} by minimizing squared difference between observed tie goal ratios and
 Weibull-scaled probabilities (Issue 5.1).
 }
 \keyword{internal}
