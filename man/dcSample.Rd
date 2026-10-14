@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-predict.R
 \name{dcSample}
 \alias{dcSample}
-\title{DC Sample}
+\title{Sample a single random game result from the Dixon-Coles model}
 \usage{
 dcSample(
   home,
@@ -16,28 +16,55 @@ dcSample(
 )
 }
 \arguments{
-\item{home}{home team}
+\item{home}{(\code{character(1)}) Home team name.}
 
-\item{away}{away team}
+\item{away}{(\code{character(1)}) Away team name.}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
+\item{params}{(\code{list} or \code{NULL}) The named list containing \code{m}, \code{rho},
+\code{beta}, \code{eta}, and \code{k}.  If \code{NULL}, the package defaults are used (see
+\code{\link[=updateModel]{updateModel()}}).}
 
-\item{maxgoal}{max number of goals per team}
+\item{maxgoal}{(\code{integer(1)}) Maximum number of goals per team to include.
+Defaults to \code{10}.}
 
-\item{scores}{optional, if not supplying m & rho, scores used to calculate them.}
+\item{scores}{(\code{data.frame}) Historical scores, used only to compute \code{m} and
+\code{rho} when they are not in \code{params}.  Defaults to \link{scores}.}
 
-\item{expected_mean}{the mean lambda & mu, used only for regression}
+\item{expected_mean}{(\code{double} or \code{NULL}) League mean of \code{lambda}/\code{mu} for
+regression-to-the-mean; used only with \code{season_percent}.}
 
-\item{season_percent}{the percent complete of the season, used for regression}
+\item{season_percent}{(\code{double} or \code{NULL}) Fraction of the season complete
+for the regression blend.}
 
-\item{as_result}{Whether to give a score or just flatten it to result type (see \link{scores} for score result)}
+\item{as_result}{(\code{logical(1)}) If \code{TRUE} (default), return a single
+\code{scores$Result}-style code (\code{1}, \code{0.75}, \code{0.6}, \code{0.4}, \code{0.25}, or \code{0}).
+If \code{FALSE}, return a list with the raw \code{HomeGoals}, \code{AwayGoals}, and
+\code{OTStatus}.}
 }
 \value{
-a random Home & away goals & OT/SO status if needed
+A single \code{Result} code when \code{as_result = TRUE}, or a list with
+\code{HomeGoals}, \code{AwayGoals}, and \code{OTStatus} when \code{as_result = FALSE}.
 }
 \description{
-Get a random single game result using DC method. repeated running should give a new value each time
+Draws one random game outcome by sampling a final score from
+the Dixon-Coles score-probability matrix (\code{\link[=.dcProbMatrix]{.dcProbMatrix()}}).  If the
+sampled score is a tie, an overtime/shootout winner is drawn (OT vs SO at
+the historical \code{0.686}/\code{0.314} split, with the side chosen by
+\code{\link[=.extraTimeSolver]{.extraTimeSolver()}}) and an extra goal is added to the winner — mirroring
+how a real tie is resolved in extra time.
+
+Each call is independent, so repeated calls return a new random result.
 }
 \examples{
-dcSample("Toronto Maple Leafs", "Montreal Canadiens")
+\dontrun{
+  # A random regulation/OT/SO result (one of: 1, 0.75, 0.6, 0.4, 0.25, 0)
+  dcSample("Toronto Maple Leafs", "Montreal Canadiens")
+
+  # Or the raw final score and extra-time status
+  dcSample(
+    "Toronto Maple Leafs",
+    "Montreal Canadiens",
+    as_result = FALSE
+  )
+}
 }

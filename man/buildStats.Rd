@@ -15,3 +15,4 @@ a stats table (as tibble)
 \description{
 Bulid Stats Table
 }
+\keyword{internal}

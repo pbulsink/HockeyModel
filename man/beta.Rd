@@ -3,14 +3,20 @@
 \docType{data}
 \name{beta}
 \alias{beta}
-\title{Beta}
+\title{Weibull shape parameter \eqn{\beta}}
 \format{
-a single numerical value usually around 2
+a single numeric value, usually around 2
 }
 \usage{
 beta
 }
 \description{
-Beta for adjustment of tie games in the model. Beta is the shape parameter (also known as the Weibull 'slope') for the Weibull distribution, optimized to fit the ties data. Should be around 2
+The shape (\eqn{\beta}) of the Weibull distribution used for the
+HockeyModel \emph{diagonal (tie) enhancement}: \code{\link[=.prob_matrix]{.prob_matrix()}} inflates each
+tied cell \eqn{(x,x)} by \eqn{k \cdot \text{Weibull}(x;\beta,\eta)} before
+renormalising, so the \emph{shape} of the diagonal mass matches the observed
+distribution of tied scorelines (0-0, 1-1, 2-2, ...).  Fitted with
+\code{\link[=.fit_weibull_params]{.fit_weibull_params()}} / \code{\link[=getWeibullParams]{getWeibullParams()}}.  Typical values are around
+2.
 }
 \keyword{datasets}

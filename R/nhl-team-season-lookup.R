@@ -32,7 +32,7 @@ getSeasonStartDate <- function(season = NULL) {
 #'
 #' @returns (`character(1)`) Season ID in eight-digit format such as
 #'   `"20172018"`.
-#' @export
+#' @keywords internal
 getCurrentSeason8 <- function() {
   url <- "https://api.nhle.com/stats/rest/en/season"
   seasons <- httr2::request(url) |>

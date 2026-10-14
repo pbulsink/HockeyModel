@@ -7,6 +7,7 @@
 DC_UPSILON_PWHL
 }
 \description{
-Default PWHL Dixon-Coles sigmoid time-decay midpoint
+\code{upsilon} is the inflection point of the within-season logistic curve
+(days), tuned for the PWHL calendar.
 }
 \keyword{internal}

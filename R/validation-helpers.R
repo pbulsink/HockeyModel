@@ -28,7 +28,7 @@
 #' @param odds a vector of odds to normalize
 #'
 #' @return odds summing to 1
-#' @export
+#' @keywords internal
 normalizeOdds <- function(odds) {
   odds <- unlist(odds)
   odds[odds > 1] <- 1 - 1e-10
@@ -130,7 +130,7 @@ normalizeOdds <- function(odds) {
 #' @param gameIDs a single game ID or vector of game IDs
 #'
 #' @return TRUE if gameIDs is valid, or FALSE if gameIDs is not (or a vector of length of input of TRUE/FALSE
-#' @export
+#' @keywords internal
 gameIDValidator <- function(gameIDs) {
   return(grepl("(19|20)\\d{2}0[1-4][0-1]\\d{3}", gameIDs))
 }
@@ -142,10 +142,12 @@ gameIDValidator <- function(gameIDs) {
 #' @param date is this a date?
 #'
 #' @return is it a date?
-#' @export
+#' @keywords internal
 #'
-#' @examples is.Date("2020-12-13")
+#' @examples \dontrun{
+#' is.Date("2020-12-13")
 #' is.Date("bob")
+#' }
 is.Date <- function(date) {
   # A bare numeric (e.g. 12345) is not a valid date-like value, even though
   # as.Date() would silently interpret it as a days-since-epoch offset.

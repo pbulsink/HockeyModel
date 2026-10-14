@@ -15,12 +15,16 @@
 
 \item{mu}{(\code{double(1)}) Away expected goals.}
 
-\item{rho}{(\code{double(1)}) Low-score dependence parameter.}
+\item{rho}{(\code{double(1)}) Low-score dependence parameter (see \code{\link[=getRho]{getRho()}}).}
 }
 \value{
 (\code{double(1)}) Tau scaling factor for one score pair.
 }
 \description{
-Compute one Dixon-Coles low-score adjustment factor
+Returns the Dixon-Coles \eqn{\tau(x,y)} scaling factor for a
+single score pair.  It adjusts the four low-score cells of the score
+matrix for the dependence between the two teams' counts in tight games,
+and is \code{1} (no adjustment) for every other score.
+\deqn{\tau(0,0)=1-\lambda\mu\rho,\ \tau(0,1)=1+\lambda\rho,\ \tau(1,0)=1+\mu\rho,\ \tau(1,1)=1-\rho.}
 }
 \keyword{internal}

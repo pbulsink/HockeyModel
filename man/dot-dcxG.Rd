@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-predict.R
 \name{.dcxG}
 \alias{.dcxG}
-\title{Compute expected goals from a Dixon-Coles probability matrix}
+\title{Compute expected goals from the Dixon-Coles probability matrix}
 \usage{
 .dcxG(home, away, params = NULL, maxgoal = 10)
 }
@@ -11,14 +11,23 @@
 
 \item{away}{(\code{character(1)}) Away team name.}
 
-\item{params}{(\code{list} or \code{NULL}) Dixon-Coles parameter list.}
+\item{params}{(\code{list} or \code{NULL}) Pre-parsed Dixon-Coles parameter list
+(\code{m}, \code{rho}, \code{beta}, \code{eta}, \code{k}).  Must be the output of
+\code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry chain are responsible
+for parsing once (#47).  \code{NULL} triggers a fallback parse (for direct
+test calls).}
 
 \item{maxgoal}{(\code{integer(1)}) Maximum goals included per team.}
 }
 \value{
-(\code{list}) Home and away expected goals.
+(\code{list}) A named list with elements \code{home} and \code{away}, each the
+expected-goals value for that side.
 }
 \description{
-Compute expected goals from a Dixon-Coles probability matrix
+Returns the model's expected-goals \code{xg} for a pairing by taking
+the weighted mean of each side's goals under the full Dixon-Coles score
+matrix (\code{\link[=.dcProbMatrix]{.dcProbMatrix()}}).  Because the matrix includes the Dixon-Coles
+low-score and Weibull diagonal adjustments, the expected goals here differ
+slightly from the raw Poisson \code{lambda}/\code{mu} in \code{\link[=.dcLambda]{.dcLambda()}}.
 }
 \keyword{internal}

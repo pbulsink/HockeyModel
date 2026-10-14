@@ -29,3 +29,4 @@ recordTodaysPredictions(
 \description{
 Record today's predictions to file (for easy later retrieval). Run \code{cleanupPredictionsFile} periodically to tidy
 }
+\keyword{internal}

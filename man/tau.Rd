@@ -2,21 +2,35 @@
 % Please edit documentation in R/nhl-dixon-coles-fit.R
 \name{tau}
 \alias{tau}
-\title{Tau function}
+\title{Dixon-Coles low-score adjustment factor (\code{tau})}
 \usage{
 tau(xx, yy, lambda, mu, rho)
 }
 \arguments{
-\item{xx}{Homeoal value for adjustment factor calculation}
+\item{xx}{(\code{integer} or \code{double}) Home goal count(s) to adjust.}
 
-\item{yy}{Away Goal value for adjustment factor calculation}
+\item{yy}{(\code{integer} or \code{double}) Away goal count(s) to adjust.}
 
-\item{lambda}{Home goal expected for adjustment factor calculation}
+\item{lambda}{(\code{double}) Home expected goal(s).}
 
-\item{mu}{Away Goal expected for adjustment factor calculation}
+\item{mu}{(\code{double}) Away expected goal(s).}
 
-\item{rho}{the factor for adjustment calculations}
+\item{rho}{(\code{double(1)}) Low-score dependence parameter.}
+}
+\value{
+(\code{double}) A vector of \eqn{\tau} factors, one per input element.
 }
 \description{
-Used in Dixon-Coles's to adjust low scores
+Vectorised version of \code{\link[=.tau_singular]{.tau_singular()}}.  Returns the
+Dixon-Coles \eqn{\tau(x,y)} factor for each (score, expected-goals) pair,
+adjusting the four low-score cells of the score matrix for the dependence
+between the two teams' goal counts in tight games (see \code{\link[=getRho]{getRho()}}).
+Scores outside the \eqn{(0,1)} block are unadjusted (\code{1}).
 }
+\examples{
+\dontrun{
+  # Adjust the four low-score cells of a 2 x 2 matrix
+  tau(c(0, 0, 1, 1), c(0, 1, 0, 1), lambda = 2.5, mu = 2.4, rho = -0.2)
+}
+}
+\keyword{internal}

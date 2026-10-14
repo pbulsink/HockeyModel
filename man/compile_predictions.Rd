@@ -15,3 +15,4 @@ a data frame.
 \description{
 compiles predictions from a group of .RDS files to one data.frame
 }
+\keyword{internal}

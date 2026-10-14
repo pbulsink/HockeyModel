@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-fit.R
 \name{getWeibullParams}
 \alias{getWeibullParams}
-\title{Get Weibull Params}
+\title{Fit the Weibull tie-enhancement parameters (\code{beta}, \code{eta}, \code{k})}
 \usage{
 getWeibullParams(
   m = HockeyModel::m,
@@ -11,15 +11,49 @@ getWeibullParams(
 )
 }
 \arguments{
-\item{m}{HockeyModel::m}
+\item{m}{(\code{glm} or \code{NULL}) The model from \code{\link[=getM]{getM()}}.  If \code{NULL}, it is fit
+internally.}
 
-\item{rho}{HockeyMoel::rho}
+\item{rho}{(\code{double(1)} or \code{NULL}) The parameter from \code{\link[=getRho]{getRho()}}.  If
+\code{NULL}, it is estimated internally.}
 
-\item{scores}{HockeyModel::scores}
+\item{scores}{(\code{data.frame}) Historical scores containing \code{GameID},
+\code{Result}, \code{HomeGoals}, and \code{AwayGoals}.  Defaults to \link{scores}.}
 }
 \value{
-a \link{beta} and \link{eta} and \link{k} value as a list
+(\code{list}) A named list with elements \code{beta} (shape), \code{eta} (scale),
+and \code{k} (diagonal multiplier).
 }
 \description{
-Weibull Params determine is the diagonal enhancement for goals, helping to more accurately predict tie games.
+A standard Dixon-Coles model treats a tied final score (0-0,
+1-1, ...) as a regulation draw.  Hockey resolves ties in extra time, so the
+teams are incentivised to play to a draw instead of risking a loss when tied late.
+Thus the raw diagonal of the score matrix under-represents tied games.  This
+function fits a Weibull \emph{diagonal enhancement} that rescales every tied
+cell \eqn{(x,x)} of the probability matrix by
+\deqn{w_x = \text{Weibull}(x;\, \text{shape}=\beta,\, \text{scale}=\eta) \cdot k,}
+so the diagonal mass grows toward the empirical tie rate.  The off-diagonal
+(win/loss) mass is then renormalised against the inflated diagonal (see
+\code{\link[=.prob_matrix]{.prob_matrix()}}), which is why the final result is independent of the
+absolute scale of \code{k} — only the relative Weibull shape across \code{x} matters.
+
+The three parameters are fit by least-squares (\code{\link[stats:optim]{stats::optim()}}) so the
+Weibull curve matches the observed ratio of tied games (by the lower
+scoring total, shifted up by one so that \code{x = 0} maps to a 0-0 tie) to
+non-tied games scoring that total:
+\deqn{\min_{\beta,\,\eta,\,k}\ \sum_{x} \big(R_x - \text{Weibull}(x;\beta,\eta)\cdot k\big)^2,}
+where \eqn{R_x} is the doubled tied-to-scoring ratio for goal total
+\eqn{x}.
+
+This is the third and final Dixon-Coles parameter set — with \code{m}
+(\code{\link[=getM]{getM()}}) and \code{rho} (\code{\link[=getRho]{getRho()}}) it fully describes the prediction model
+used by \code{\link[=DCPredict]{DCPredict()}} and \code{\link[=dcSample]{dcSample()}}.
 }
+\examples{
+\dontrun{
+  m <- getM()
+  rho <- getRho(m = m)
+  wp <- getWeibullParams(m = m, rho = rho)
+}
+}
+\keyword{internal}

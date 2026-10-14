@@ -99,7 +99,7 @@
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #'
 #' @return a data frame of results
-#' @export
+#' @keywords internal
 simulateSeasonParallel <- function(
   scores = HockeyModel::scores,
   nsims = 10000,
@@ -180,6 +180,7 @@ simulateSeasonParallel <- function(
     }
 
     `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK
+    i <- NA_real_ # This hack passes R CMD CHK
     cl <- parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
     if (progress) {
@@ -254,7 +255,7 @@ simulateSeasonParallel <- function(
 #' @param dir Directory holding the prediction .RDS files.
 #'
 #' @return a data frame.
-#' @export
+#' @keywords internal
 compile_predictions <- function(
   dir = getOption("HockeyModel.prediction.path")
 ) {
@@ -284,7 +285,7 @@ compile_predictions <- function(
 #' which is a data.frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID and Date
 #'
 #' @return a two member list, of all results and summary results
-#' @export
+#' @keywords internal
 loopless_sim <- function(
   nsims = 1e5,
   cores = NULL,
@@ -372,6 +373,7 @@ loopless_sim <- function(
   } else {
     # this fixes CRAN checks
     `%dopar%` <- foreach::`%dopar%`
+    i <- NA_real_
     # `%do%` <- foreach::`%do%`
 
     cl <- parallel::makeCluster(cores)

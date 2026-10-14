@@ -4,14 +4,17 @@
 \alias{.dcProbArray}
 \title{Vectorized Dixon-Coles probability array}
 \usage{
-.dcProbArray(lambda, mu, params, maxgoal)
+.dcProbArray(lambda, mu, params = NULL, maxgoal)
 }
 \arguments{
 \item{lambda}{(\code{double(n)}) Home expected goals, one value per game.}
 
 \item{mu}{(\code{double(n)}) Away expected goals, one value per game.}
 
-\item{params}{(\code{list}) Dixon-Coles parameter list (m, rho, beta, eta, k).}
+\item{params}{Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
+Must be the output of \code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry
+chain are responsible for parsing once (#47). \code{NULL} triggers a fallback
+parse (for direct test calls).}
 
 \item{maxgoal}{(\code{integer(1)}) Maximum goals per team.}
 }

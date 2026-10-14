@@ -14,3 +14,4 @@ cleanupPredictionsFile(
 \description{
 Sometimes the predictions file may end up with game duplicates (last minute postponements, etc,) This deduplicates, taking only the latest instance of a prediction (Games are unique by GameID)
 }
+\keyword{internal}

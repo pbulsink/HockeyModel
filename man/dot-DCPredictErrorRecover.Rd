@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-predict.R
 \name{.DCPredictErrorRecover}
 \alias{.DCPredictErrorRecover}
-\title{Recover fallback expected goals when model prediction fails}
+\title{Recover fallback expected goals when a team is missing from the model}
 \usage{
 .DCPredictErrorRecover(team, opponent, homeiceadv = FALSE, m = HockeyModel::m)
 }
@@ -11,14 +11,22 @@
 
 \item{opponent}{(\code{character(1)}) Opponent team.}
 
-\item{homeiceadv}{(\code{logical(1)}) Whether to include home-ice coefficient.}
+\item{homeiceadv}{(\code{logical(1)}) Whether to include the home-ice
+coefficient.  Defaults to \code{FALSE}.}
 
-\item{m}{(\code{glm}) Fitted Dixon-Coles model.}
+\item{m}{(\code{glm}) Fitted Dixon-Coles model.  Defaults to
+\link{m}.}
 }
 \value{
-(\code{double(1)}) Fallback expected goals estimate.
+(\code{double(1)}) Fallback expected-goals estimate.
 }
 \description{
-Recover fallback expected goals when model prediction fails
+Used by \code{\link[=.dcLambda]{.dcLambda()}} and \code{\link[=.dcPredictVectorized]{.dcPredictVectorized()}} when a team
+or opponent is not in the fitted model (e.g. a newly-expanded team).  It
+estimates expected goals by pairing the known team's coefficient with a
+conservative opponent coefficient (the lowest attack or highest defence in
+the model), or falls back to the historical league-average goal rate
+(home \code{3.32}, away \code{2.83}) when both are unknown.  This keeps the model
+from erroring on unseen teams.
 }
 \keyword{internal}

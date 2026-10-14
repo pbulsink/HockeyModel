@@ -2,20 +2,31 @@
 % Please edit documentation in R/nhl-dixon-coles-predict.R
 \name{.dcLambda}
 \alias{.dcLambda}
-\title{DC Expected Goals}
+\title{Compute expected goals for a home/away pairing}
 \usage{
 .dcLambda(home, away, params = NULL)
 }
 \arguments{
-\item{home}{The home team name}
+\item{home}{(\code{character(1)}) Home team name.}
 
-\item{away}{The away team name}
+\item{away}{(\code{character(1)}) Away team name.}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
+\item{params}{(\code{list} or \code{NULL}) Pre-parsed Dixon-Coles parameter list
+(\code{m}, \code{rho}, \code{beta}, \code{eta}, \code{k}).  Must be the output of
+\code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry chain are responsible
+for parsing once (#47).  \code{NULL} triggers a fallback parse (for direct
+test calls).}
 }
 \value{
-a list of $home and $away Poisson Lambda values -
+(\code{list}) A named list with elements \code{home} and \code{away}, each a
+single expected-goals (\code{lambda}/\code{mu}) value.
 }
 \description{
-Given a home and away team, provide lambda values
+Returns the Poisson expected-goals \code{lambda} (home) and \code{mu}
+(away) for a pairing by reading the home and away coefficients out of the
+fitted model \code{m} (via \code{\link[stats:predict]{stats::predict()}} at \code{Home = 1} / \code{Home = 0}).
+These are the rate parameters that \code{\link[=.prob_matrix]{.prob_matrix()}} uses to build the
+score matrix.  If a team or opponent is not in the model (e.g. a new
+expansion team), a fallback estimate is supplied by
+\code{\link[=.DCPredictErrorRecover]{.DCPredictErrorRecover()}}.
 }

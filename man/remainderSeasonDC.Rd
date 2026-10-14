@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-workflow.R
 \name{remainderSeasonDC}
 \alias{remainderSeasonDC}
-\title{DC remainder of season}
+\title{Dixon-Coles remainder-of-season projections}
 \usage{
 remainderSeasonDC(
   nsims = 10000,
@@ -16,25 +16,45 @@ remainderSeasonDC(
 )
 }
 \arguments{
-\item{nsims}{Number of simulations}
+\item{nsims}{(\code{integer}) Number of season simulations to run.  Defaults to
+\code{1e4}.}
 
-\item{cores}{The number of cores to use if using parallel processing, or 1 for single-core, NULL defaults to all cores or 1 if \code{parallel} package not installed.}
+\item{cores}{(\code{integer} or \code{NULL}) Number of cores for parallel
+simulation; \code{1} for single-core, or \code{NULL} to use all cores (falling back
+to 1 if the \code{parallel} package is unavailable).}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
+\item{params}{(\code{list} or \code{NULL}) Named list with \code{m}, \code{rho}, \code{beta}, \code{eta},
+and \code{k} (as returned by \code{\link[=updateModel]{updateModel()}} / \code{\link[=.update_dc_nhl]{.update_dc_nhl()}}).  Defaults
+to the frozen package data.}
 
-\item{scores}{the historical scores}
+\item{scores}{(\code{data.frame}) Historical scores.  Defaults to
+\link{scores}.}
 
-\item{schedule}{un-played future games}
+\item{schedule}{(\code{data.frame}) Unplayed future games.  Defaults to
+\link{schedule}.}
 
-\item{odds}{whether to return odds table or simulate season}
+\item{odds}{(\code{logical(1)}) If \code{TRUE}, return the per-game odds table
+instead of simulating.  Defaults to \code{FALSE}.}
 
-\item{regress}{whether to apply a regression to the mean for team strength on future predictions}
+\item{regress}{(\code{logical(1)}) If \code{TRUE} (default), apply
+regression-to-mean shrinkage of team-strength predictions as the season
+progresses.  Automatically disabled once the regular season has ended.}
 
-\item{mu_lambda}{whether to return team xG values. Can't be set true if odds is true}
+\item{mu_lambda}{(\code{logical(1)}) If \code{TRUE}, return each team's expected
+goals (mu/lambda) instead of simulating.  Cannot be used with
+\code{odds = TRUE}.  Defaults to \code{FALSE}.}
 }
 \value{
-data frame of Team, playoff odds.
+Depending on the flags: the season-simulation summary (playoff and
+Cup odds per team), a per-game odds data frame (\code{odds = TRUE}), or a
+data frame of team expected goals (\code{mu_lambda = TRUE}).
 }
 \description{
-Odds for each team to get to playoffs.
+Projects the rest of the NHL season using the Dixon-Coles
+model.  By default this runs a full season simulation
+(\code{\link[=simulateSeasonParallel]{simulateSeasonParallel()}}) and returns each team's playoff and Cup
+odds.  Alternatively, it can return the per-game win/draw odds for every
+remaining scheduled game (\code{odds = TRUE}), or each team's expected goals
+(\code{mu_lambda = TRUE}; mutually exclusive with \code{odds}).
 }
+\keyword{internal}

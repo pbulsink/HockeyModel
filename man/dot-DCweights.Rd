@@ -24,8 +24,9 @@
 this age.}
 
 \item{nu}{(\code{double(1)}) Cross-season exponent.  \code{nu = 0} (default) disables
-cross-season discounting.  \code{nu = 2} is a reasonable starting value for
-leagues with high year-to-year roster volatility (e.g. PWHL).}
+cross-season discounting.  Larger values discount older seasons more
+aggressively; PWHL uses \code{nu = 5} (\link{DC_NU_PWHL}) to reflect its high
+year-to-year roster volatility.}
 
 \item{season_start_dates}{(\code{Date} or \code{NULL}) A sorted vector of season start
 dates used to determine which season each game belongs to.  Required when

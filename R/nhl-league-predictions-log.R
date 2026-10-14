@@ -12,7 +12,7 @@
 #' @param draws whether to record draw odds (True) or not (False). Default is True
 #'
 #' @return NULL
-#' @export
+#' @keywords internal
 recordTodaysPredictions <- function(
   today = Sys.Date(),
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv"),
@@ -119,7 +119,7 @@ recordTodaysPredictions <- function(
 #' @param filepath file path to cleanup
 #'
 #' @return NULL
-#' @export
+#' @keywords internal
 cleanupPredictionsFile <- function(
   filepath = file.path(getOption("HockeyModel.data.path"), "dailyodds.csv")
 ) {

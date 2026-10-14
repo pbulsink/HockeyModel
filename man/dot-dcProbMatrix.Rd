@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-predict.R
 \name{.dcProbMatrix}
 \alias{.dcProbMatrix}
-\title{Generate the Dixon-Coles' Probability Matrix}
+\title{Build the Dixon-Coles score-probability matrix for a pairing}
 \usage{
 .dcProbMatrix(
   home,
@@ -15,23 +15,37 @@
 )
 }
 \arguments{
-\item{home}{home team}
+\item{home}{(\code{character(1)}) Home team name.}
 
-\item{away}{away team}
+\item{away}{(\code{character(1)}) Away team name.}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
+\item{params}{(\code{list} or \code{NULL}) Pre-parsed Dixon-Coles parameter list
+(\code{m}, \code{rho}, \code{beta}, \code{eta}, \code{k}).  Must be the output of
+\code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry chain are responsible
+for parsing once (#47).  \code{NULL} triggers a fallback parse (for direct
+test calls).}
 
-\item{maxgoal}{max number of goals per team}
+\item{maxgoal}{(\code{integer(1)}) Maximum number of goals per team to include.}
 
-\item{scores}{optional, if not supplying m & rho, scores used to calculate them.}
+\item{scores}{(\code{data.frame}) Historical scores, used only to compute \code{m}
+and \code{rho} if they are missing from \code{params}.  Defaults to
+\link{scores}.}
 
-\item{expected_mean}{the mean lambda & mu, used only for regression}
+\item{expected_mean}{(\code{double} or \code{NULL}) League mean of \code{lambda}/\code{mu},
+used only together with \code{season_percent} for the regression blend.}
 
-\item{season_percent}{the percent complete of the season, used for regression}
+\item{season_percent}{(\code{double} or \code{NULL}) Fraction of the season complete
+for the regression blend.}
 }
 \value{
-a square matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
+(\code{matrix}) A square \verb{(maxgoal + 1) x (maxgoal + 1)} probability
+matrix with home goals on rows and away goals on columns, summing to \code{1}.
 }
 \description{
-Generate the Dixon-Coles' Probability Matrix
+Team-aware wrapper around \code{\link[=.prob_matrix]{.prob_matrix()}}.  Resolves the
+expected-goals \code{lambda} (home) and \code{mu} (away) for the given pairing via
+\code{\link[=.dcLambda]{.dcLambda()}}, optionally applies the regression-to-the-mean blend (see
+\code{expected_mean} / \code{season_percent}), and delegates to \code{\link[=.prob_matrix]{.prob_matrix()}} to
+produce the adjusted score matrix.  Use this when you have \emph{teams}; use
+\code{\link[=.prob_matrix]{.prob_matrix()}} directly when you already have \code{lambda} and \code{mu}.
 }

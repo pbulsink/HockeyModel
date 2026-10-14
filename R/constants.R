@@ -15,9 +15,9 @@
 #      nu = 0 disables the multiplier (backward-compatible default for NHL).
 #
 # NHL values were originally tuned on full NHL history; PWHL values use
-# nu = 2 as a starting point to reflect the high year-to-year roster churn
-# from expansion drafts. Run `.tune_dc_weight(league = "PWHL")` to find the
-# optimal values.
+# nu = 5 to reflect the high year-to-year roster churn from expansion
+# drafts.  Run `.tune_dc_weight(league = "PWHL")` to find the optimal
+# values.
 
 #' Default NHL Dixon-Coles sigmoid time-decay slope
 #'
@@ -41,18 +41,23 @@ DC_NU_NHL <- 0
 
 #' Default PWHL Dixon-Coles sigmoid time-decay slope
 #'
+#' `xi` controls how steeply the within-season logistic weighting curve drops.
+#'   PWHL uses a steeper slope than NHL to let recent games dominate the fit.
 #' @keywords internal
 DC_XI_PWHL <- 0.0500
 
 #' Default PWHL Dixon-Coles sigmoid time-decay midpoint
 #'
+#' `upsilon` is the inflection point of the within-season logistic curve
+#'   (days), tuned for the PWHL calendar.
 #' @keywords internal
 DC_UPSILON_PWHL <- 461.0156
 
 #' Default PWHL Dixon-Coles cross-season discounting exponent
 #'
-#' `nu = 2` provides moderate cross-season discounting for PWHL, reflecting
-#' the high year-to-year roster volatility from expansion drafts.  Tune with
+#' `nu = 5` provides aggressive cross-season discounting for PWHL, reflecting
+#' the high year-to-year roster volatility from expansion drafts (older
+#' seasons carry little signal about the current roster).  Tune with
 #' `.tune_dc_weight(league = "PWHL")`.
 #' @keywords internal
 DC_NU_PWHL <- 5

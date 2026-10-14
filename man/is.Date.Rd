@@ -16,6 +16,9 @@ is it a date?
 Is this a date?
 }
 \examples{
+\dontrun{
 is.Date("2020-12-13")
 is.Date("bob")
 }
+}
+\keyword{internal}

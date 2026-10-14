@@ -1,11 +1,31 @@
 # Dixon-Coles model fitting: parameter estimation (m, rho, weibull), weighting, and helpers
 
-#' Fast Dixon-Coles model fitting 'm'.
+#' Fit the Dixon-Coles attack/defence model (`m`)
 #'
-#' @description Produces a DC model
+#' @description Fits the base Dixon-Coles (1997) model to historical scores.
+#'   Home and away goals are modelled as independent Poisson counts in a single
+#'   weighted GLM:
+#'   \deqn{\text{Goals} \sim \text{Poisson}(\exp(\alpha_{\text{team}} +
+#'   \beta_{\text{opponent}} + \gamma \cdot \text{Home})).}
+#'   Each coefficient is a log-rate, so a team's expected goals against a given
+#'   opponent on a given side of the ice is
+#'   \eqn{\exp(\alpha + \beta + \gamma \cdot \text{Home})}.
 #'
-#' @param scores the historical scores to evaluate
-#' @param currentDate (for date weight adjustment)
+#'   Every historical match is weighted by [.DCweights()] so that recent games
+#'   (and, when `nu != 0`, recent seasons) dominate the fit; the model is
+#'   restricted to roughly the last 11 years of data, beyond which it grows
+#'   without improving.
+#'
+#'   This is the first of the five Dixon-Coles parameters — it supplies the
+#'   expected-goals `lambda` (home) and `mu` (away) that [getRho()],
+#'   [getWeibullParams()], and [DCPredict()] build on.
+#'
+#' @param scores (`data.frame`) Historical game scores containing `Date`,
+#'   `GameID`, `HomeTeam`, `AwayTeam`, `HomeGoals`, and `AwayGoals`.  Defaults
+#'   to [HockeyModel::scores].
+#' @param currentDate (`Date`) Reference date used to compute time-decay
+#'   weights (more recent games are weighted more heavily).  Defaults to
+#'   [Sys.Date()].
 #' @param xi (`double(1)`) Logistic slope for within-season time decay.
 #'   Defaults to [DC_XI_NHL].
 #' @param upsilon (`double(1)`) Logistic midpoint (days) for within-season time
@@ -15,8 +35,15 @@
 #'   custom value) to discount older seasons for leagues with high year-to-year
 #'   roster volatility.
 #'
-#' @export
-#' @return a model 'm' of Dixon-Coles' type parameters.
+#' @returns (`glm`) A fitted Poisson GLM (`m`) holding the per-team attack
+#'   (`Team*`), defence (`Opponent*`), and home-ice (`Home`) log-rate
+#'   coefficients, plus the weighted game matrix in `m$data`.
+#' @keywords internal
+#'
+#' @examples \dontrun{
+#'   # Refit the model as of a specific date
+#'   m <- getM(currentDate = as.Date("2024-02-01"))
+#' }
 getM <- function(
   scores = HockeyModel::scores,
   currentDate = Sys.Date(),
@@ -74,13 +101,37 @@ getM <- function(
   return(m)
 }
 
-#' Generate a 'rho' factor for low scoring games
+#' Estimate the Dixon-Coles low-score parameter (`rho`)
 #'
-#' @param m result from getM
-#' @param scores the historical scores to evaluate
+#' @description Dixon-Coles (1997) showed that the two teams' goal counts are
+#'   not independent in low-scoring games: in a tight game each team is slightly
+#'   more likely to be the one to score first, which inflates the frequency of
+#'   0-0, 1-0, 0-1, and 1-1 results relative to independent Poissons.
 #'
-#' @return a numeric value (typically -0.5 to 0)
-#' @export
+#'   `rho` captures that dependence through the scaling factor [tau()], applied
+#'   to those four low-score cells only:
+#'   \deqn{\tau(0,0) = 1 - \lambda\mu\rho,\quad
+#'   \tau(0,1) = 1 + \lambda\rho,\quad
+#'   \tau(1,0) = 1 + \mu\rho,\quad \tau(1,1) = 1 - \rho.}
+#'
+#'   `rho` is estimated by maximising the full Dixon-Coles log-likelihood
+#'   ([.DCRhoLogLik()]) with [stats::optim()] (Brent, bounded to `[-0.5, 0.5]`).
+#'   Negative `rho` is typical for hockey (observed values around `-0.17` to
+#'   `-0.28`), meaning low-scoring games occur more often than the independent
+#'   model predicts.
+#'
+#' @param m (`glm` or `NULL`) The model from [getM()].  If `NULL`, it is fit
+#'   internally via [getM()].
+#' @param scores (`data.frame`) Historical scores used to evaluate the
+#'   likelihood.  Defaults to [HockeyModel::scores].
+#'
+#' @returns (`double(1)`) The estimated `rho`.  Typically in `[−0.5, 0]`.
+#' @keywords internal
+#'
+#' @examples \dontrun{
+#'   m <- getM()
+#'   rho <- getRho(m = m)
+#' }
 getRho <- function(m = HockeyModel::m, scores = HockeyModel::scores) {
   if (is.null(m)) {
     m <- getM(scores)
@@ -121,16 +172,48 @@ getRho <- function(m = HockeyModel::m, scores = HockeyModel::scores) {
   # of course, res$par is rho. Ranges from -0.2779 for last decade, -0.175 for 20152016 or 0.09 fo the whole league's history
 }
 
-#' Get Weibull Params
+#' Fit the Weibull tie-enhancement parameters (`beta`, `eta`, `k`)
 #'
-#' @description Weibull Params determine is the diagonal enhancement for goals, helping to more accurately predict tie games.
+#' @description A standard Dixon-Coles model treats a tied final score (0-0,
+#'   1-1, ...) as a regulation draw.  Hockey resolves ties in extra time, so the
+#'   teams are incentivised to play to a draw instead of risking a loss when tied late.
+#'   Thus the raw diagonal of the score matrix under-represents tied games.  This
+#'   function fits a Weibull *diagonal enhancement* that rescales every tied
+#'   cell \eqn{(x,x)} of the probability matrix by
+#'   \deqn{w_x = \text{Weibull}(x;\, \text{shape}=\beta,\, \text{scale}=\eta) \cdot k,}
+#'   so the diagonal mass grows toward the empirical tie rate.  The off-diagonal
+#'   (win/loss) mass is then renormalised against the inflated diagonal (see
+#'   [.prob_matrix()]), which is why the final result is independent of the
+#'   absolute scale of `k` — only the relative Weibull shape across `x` matters.
 #'
-#' @param m HockeyModel::m
-#' @param rho HockeyMoel::rho
-#' @param scores HockeyModel::scores
+#'   The three parameters are fit by least-squares ([stats::optim()]) so the
+#'   Weibull curve matches the observed ratio of tied games (by the lower
+#'   scoring total, shifted up by one so that `x = 0` maps to a 0-0 tie) to
+#'   non-tied games scoring that total:
+#'   \deqn{\min_{\beta,\,\eta,\,k}\ \sum_{x} \big(R_x - \text{Weibull}(x;\beta,\eta)\cdot k\big)^2,}
+#'   where \eqn{R_x} is the doubled tied-to-scoring ratio for goal total
+#'   \eqn{x}.
 #'
-#' @return a [beta] and [eta] and [k] value as a list
-#' @export
+#'   This is the third and final Dixon-Coles parameter set — with `m`
+#'   ([getM()]) and `rho` ([getRho()]) it fully describes the prediction model
+#'   used by [DCPredict()] and [dcSample()].
+#'
+#' @param m (`glm` or `NULL`) The model from [getM()].  If `NULL`, it is fit
+#'   internally.
+#' @param rho (`double(1)` or `NULL`) The parameter from [getRho()].  If
+#'   `NULL`, it is estimated internally.
+#' @param scores (`data.frame`) Historical scores containing `GameID`,
+#'   `Result`, `HomeGoals`, and `AwayGoals`.  Defaults to [HockeyModel::scores].
+#'
+#' @returns (`list`) A named list with elements `beta` (shape), `eta` (scale),
+#'   and `k` (diagonal multiplier).
+#' @keywords internal
+#'
+#' @examples \dontrun{
+#'   m <- getM()
+#'   rho <- getRho(m = m)
+#'   wp <- getWeibullParams(m = m, rho = rho)
+#' }
 getWeibullParams <- function(
   m = HockeyModel::m,
   rho = HockeyModel::rho,
@@ -202,11 +285,17 @@ getWeibullParams <- function(
 
 #' Compute one Dixon-Coles low-score adjustment factor
 #'
+#' @description Returns the Dixon-Coles \eqn{\tau(x,y)} scaling factor for a
+#'   single score pair.  It adjusts the four low-score cells of the score
+#'   matrix for the dependence between the two teams' counts in tight games,
+#'   and is `1` (no adjustment) for every other score.
+#'   \deqn{\tau(0,0)=1-\lambda\mu\rho,\ \tau(0,1)=1+\lambda\rho,\ \tau(1,0)=1+\mu\rho,\ \tau(1,1)=1-\rho.}
+#'
 #' @param xx (`integer(1)`) Home goals.
 #' @param yy (`integer(1)`) Away goals.
 #' @param lambda (`double(1)`) Home expected goals.
 #' @param mu (`double(1)`) Away expected goals.
-#' @param rho (`double(1)`) Low-score dependence parameter.
+#' @param rho (`double(1)`) Low-score dependence parameter (see [getRho()]).
 #' @returns (`double(1)`) Tau scaling factor for one score pair.
 #' @keywords internal
 .tau_singular <- function(xx, yy, lambda, mu, rho) {
@@ -223,16 +312,27 @@ getWeibullParams <- function(
   }
 }
 
-#' Tau function
-#' @description Used in Dixon-Coles's to adjust low scores
+#' Dixon-Coles low-score adjustment factor (`tau`)
 #'
-#' @param xx Homeoal value for adjustment factor calculation
-#' @param yy Away Goal value for adjustment factor calculation
-#' @param lambda Home goal expected for adjustment factor calculation
-#' @param mu Away Goal expected for adjustment factor calculation
-#' @param rho the factor for adjustment calculations
+#' @description Vectorised version of [.tau_singular()].  Returns the
+#'   Dixon-Coles \eqn{\tau(x,y)} factor for each (score, expected-goals) pair,
+#'   adjusting the four low-score cells of the score matrix for the dependence
+#'   between the two teams' goal counts in tight games (see [getRho()]).
+#'   Scores outside the \eqn{(0,1)} block are unadjusted (`1`).
 #'
-#' @export
+#' @param xx (`integer` or `double`) Home goal count(s) to adjust.
+#' @param yy (`integer` or `double`) Away goal count(s) to adjust.
+#' @param lambda (`double`) Home expected goal(s).
+#' @param mu (`double`) Away expected goal(s).
+#' @param rho (`double(1)`) Low-score dependence parameter.
+#'
+#' @returns (`double`) A vector of \eqn{\tau} factors, one per input element.
+#' @keywords internal
+#'
+#' @examples \dontrun{
+#'   # Adjust the four low-score cells of a 2 x 2 matrix
+#'   tau(c(0, 0, 1, 1), c(0, 1, 0, 1), lambda = 2.5, mu = 2.4, rho = -0.2)
+#' }
 tau <- Vectorize(.tau_singular, c("xx", "yy", "lambda", "mu"))
 
 #' Compute sigmoid time-decay weights for historical matches
@@ -256,8 +356,9 @@ tau <- Vectorize(.tau_singular, c("xx", "yy", "lambda", "mu"))
 #' @param upsilon (`double(1)`) Logistic midpoint (days). Weights are ≈0.5 at
 #'   this age.
 #' @param nu (`double(1)`) Cross-season exponent.  `nu = 0` (default) disables
-#'   cross-season discounting.  `nu = 2` is a reasonable starting value for
-#'   leagues with high year-to-year roster volatility (e.g. PWHL).
+#'   cross-season discounting.  Larger values discount older seasons more
+#'   aggressively; PWHL uses `nu = 5` ([DC_NU_PWHL]) to reflect its high
+#'   year-to-year roster volatility.
 #' @param season_start_dates (`Date` or `NULL`) A sorted vector of season start
 #'   dates used to determine which season each game belongs to.  Required when
 #'   `nu != 0`; if `NULL` and `nu != 0` an error is raised.  Obtain from
