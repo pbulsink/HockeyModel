@@ -26,12 +26,12 @@ value, empirical estimate, and status (\code{MATCH}, \code{DOCUMENTATION_DISCREP
 }
 \description{
 Comprehensive verification audit covering all package-level
-constants, dataset defaults, and empirical parameters (Issue 5.5). Identifies
-discrepancies between documented values and code values (such as \code{DC_NU_PWHL}
-documented as 2 but assigned 5 in \code{constants.R}). Also recalibrates the
-Weibull tie-enhancement parameters (\code{.fit_weibull_params()}) against a
-model fit strictly before the test period, so the audit reflects the
-Weibull values that would be optimal on the most recent data rather than
-the frozen package constants.
+constants, dataset defaults, and empirical parameters (Issue 5.5). Flags
+discrepancies between documented and code values (a \code{MATCH} status means
+the two agree) and reports where recalibration is warranted.  It also
+recalibrates the Weibull tie-enhancement parameters
+(\code{\link[=.fit_weibull_params]{.fit_weibull_params()}}) against a model fit strictly before the test
+period, so the audit reflects the Weibull values that would be optimal on
+the most recent data rather than the frozen package constants.
 }
 \keyword{internal}

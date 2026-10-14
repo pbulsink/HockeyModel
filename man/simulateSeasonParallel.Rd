@@ -32,3 +32,4 @@ a data frame of results
 \description{
 Simulate the remainder of the season
 }
+\keyword{internal}

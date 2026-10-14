@@ -2,7 +2,7 @@
 % Please edit documentation in R/optimize-model-parameters.R
 \name{.fit_m_with_weights}
 \alias{.fit_m_with_weights}
-\title{Fit Dixon-Coles Poisson GLM with arbitrary sample weights}
+\title{Fit the Dixon-Coles Poisson GLM with arbitrary sample weights}
 \usage{
 .fit_m_with_weights(scores, weights)
 }
@@ -10,12 +10,21 @@
 \item{scores}{(\code{data.frame}) Historical score records containing \code{HomeTeam},
 \code{AwayTeam}, \code{HomeGoals}, \code{AwayGoals}, \code{Date}, \code{GameID}.}
 
-\item{weights}{(\code{numeric}) Weights corresponding to each row of \code{scores}.}
+\item{weights}{(\code{numeric}) Weights corresponding to each row of \code{scores}
+(e.g. from \code{\link[=.dc_weights_exponential]{.dc_weights_exponential()}} or \code{\link[=.DCweights]{.DCweights()}}).}
 }
 \value{
-A cleaned GLM model object.
+(\code{glm}) A cleaned Dixon-Coles GLM model object (via
+\code{\link[=.cleanModel]{.cleanModel()}}).
 }
 \description{
-Fit Dixon-Coles Poisson GLM with arbitrary sample weights
+Mirrors the long-format fit in \code{\link[=getM]{getM()}}: expands each game
+into a home and an away row, attaches the supplied per-game \code{weights} to
+both rows, drops rows with (near-)zero weight, and fits
+\eqn{\text{Goals} \sim \text{Team} + \text{Opponent} + \text{Home} + 0}
+as a log-linked Poisson GLM.  Used by the Phase 5 weighting tooling
+(\code{\link[=.evaluate_weighting_loss]{.evaluate_weighting_loss()}}, \code{\link[=.tune_exponential_weight]{.tune_exponential_weight()}},
+\code{\link[=.compare_weighting_schemes]{.compare_weighting_schemes()}}) to refit a fresh, internally consistent
+model under each time-decay weighting scheme.
 }
 \keyword{internal}

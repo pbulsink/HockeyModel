@@ -3,14 +3,19 @@
 \docType{data}
 \name{rho}
 \alias{rho}
-\title{Dixon Coles' \code{rho}}
+\title{Dixon-Coles low-score correction parameter \eqn{\rho}}
 \format{
-a single numerical value usually around -0.25
+a single numeric value, usually around \eqn{-0.25}
 }
 \usage{
 rho
 }
 \description{
-Rho for low score correction to Dixon Coles. Should be around -0.25
+The Dixon-Coles low-score correction (\eqn{\rho}) accounts for the fact that
+low-scoring scorelines (0-0, 1-0, 0-1, 1-1) are more common than a plain
+bivariate Poisson would predict.  A \emph{negative} \eqn{\rho} suppresses the
+0-0 cell and inflates the 1-1 tie cell, while the 1-0 and 0-1 cells are
+lifted.  It is fitted with \code{\link[=getRho]{getRho()}} and applied to the score matrix in
+\code{\link[=.prob_matrix]{.prob_matrix()}}.  Typical NHL values are around \eqn{-0.25}.
 }
 \keyword{datasets}

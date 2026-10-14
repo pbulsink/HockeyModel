@@ -2,27 +2,35 @@
 % Please edit documentation in R/nhl-dixon-coles-predict.R
 \name{.dcResult}
 \alias{.dcResult}
-\title{DC Result Sample}
+\title{Sample game result(s) from the Dixon-Coles score matrix}
 \usage{
 .dcResult(lambda, mu, params = NULL, maxgoal = 8, nsim = 1)
 }
 \arguments{
-\item{lambda}{home team lambda}
+\item{lambda}{(\code{double} or \code{numeric}) Home expected goal(s), one per game.}
 
-\item{mu}{away team mu}
+\item{mu}{(\code{double} or \code{numeric}) Away expected goal(s), one per game.}
 
-\item{params}{Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
-Must be the output of \code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry
-chain are responsible for parsing once (#47). \code{NULL} triggers a fallback
-parse (for direct test calls).}
+\item{params}{(\code{list} or \code{NULL}) Pre-parsed Dixon-Coles parameter list
+(\code{m}, \code{rho}, \code{beta}, \code{eta}, \code{k}).  Must be the output of
+\code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry chain are responsible
+for parsing once (#47).  \code{NULL} triggers a fallback parse (for direct
+test calls).}
 
-\item{maxgoal}{max goals predicable per game, default 10}
+\item{maxgoal}{(\code{integer(1)}) Maximum goals per team to include.  Defaults
+to \code{8}.}
 
-\item{nsim}{the number of simulations in each result}
+\item{nsim}{(\code{integer(1)}) Number of simulations to draw per game.}
 }
 \value{
-a result from 0 to 1 corresponding to \link{scores} results
+(\code{numeric}) One or more result codes from \code{c(1, 0.75, 0.6, 0.4, 0.25, 0)}, matching the \code{scores$Result} encoding (see \link{scores}).
 }
 \description{
-DC Result Sample
+Builds the score matrix via \code{\link[=.prob_matrix]{.prob_matrix()}}, decomposes the
+draw mass into overtime/shootout outcomes with \code{\link[=.extraTimeSolver]{.extraTimeSolver()}}, then
+draws \code{nsim} result code(s) from the six-outcome distribution
+(home win, home OT, home SO, away SO, away OT, away win) at the historical
+\code{0.686}/\code{0.314} OT/SO split.  A convenient sampling counterpart to
+\code{\link[=.dcExpandedOdds]{.dcExpandedOdds()}} (which returns the probabilities without sampling).
 }
+\keyword{internal}

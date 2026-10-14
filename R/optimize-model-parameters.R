@@ -64,13 +64,24 @@
   return(weights)
 }
 
-#' Fit Dixon-Coles Poisson GLM with arbitrary sample weights
+#' Fit the Dixon-Coles Poisson GLM with arbitrary sample weights
+#'
+#' @description Mirrors the long-format fit in [getM()]: expands each game
+#'   into a home and an away row, attaches the supplied per-game `weights` to
+#'   both rows, drops rows with (near-)zero weight, and fits
+#'   \eqn{\text{Goals} \sim \text{Team} + \text{Opponent} + \text{Home} + 0}
+#'   as a log-linked Poisson GLM.  Used by the Phase 5 weighting tooling
+#'   ([.evaluate_weighting_loss()], [.tune_exponential_weight()],
+#'   [.compare_weighting_schemes()]) to refit a fresh, internally consistent
+#'   model under each time-decay weighting scheme.
 #'
 #' @param scores (`data.frame`) Historical score records containing `HomeTeam`,
 #'   `AwayTeam`, `HomeGoals`, `AwayGoals`, `Date`, `GameID`.
-#' @param weights (`numeric`) Weights corresponding to each row of `scores`.
+#' @param weights (`numeric`) Weights corresponding to each row of `scores`
+#'   (e.g. from [.dc_weights_exponential()] or [.DCweights()]).
 #'
-#' @returns A cleaned GLM model object.
+#' @returns (`glm`) A cleaned Dixon-Coles GLM model object (via
+#'   [.cleanModel()]).
 #' @keywords internal
 .fit_m_with_weights <- function(scores, weights) {
   if (!is.data.frame(scores)) {
@@ -423,18 +434,28 @@
   c("OT" = p_ot, "SO" = 1 - p_ot)
 }
 
-#' Fit Weibull tie-enhancement parameters on historical scores
+#' Fit the Weibull diagonal-inflation parameters on historical scores
 #'
-#' @description Fits the Weibull diagonal enhancement parameters \eqn{(\beta, \eta,
-#'   k)} by minimizing squared difference between observed tie goal ratios and
-#'   Weibull-scaled probabilities (Issue 5.1).
+#' @description Fits the Weibull diagonal-enhancement parameters
+#'   \eqn{(\beta, \eta, k)} that [.prob_matrix()] uses to inflate the tie
+#'   diagonal (see [getWeibullParams()]).  The objective minimises the squared
+#'   difference between the *observed* tie-goal-distribution — for each tied
+#'   goal count \eqn{x}, the fraction of tied games that ended at \eqn{x} goals
+#'   on each side — and the Weibull density \eqn{\text{Weibull}(x;\beta,\eta)}
+#'   scaled by \eqn{k}.  In effect this calibrates the *shape* of the diagonal
+#'   mass (which tied scorelines are most common) rather than its absolute
+#'   level, which is why [.prob_matrix()] renormalises the off-diagonal after
+#'   applying it (Issue 5.1).
 #'
 #' @param scores (`data.frame`) Historical score records. Defaults to
 #'   [HockeyModel::scores].
-#' @param m Dixon-Coles GLM model `m`. If `NULL`, fit via [getM()].
-#' @param rho Dixon-Coles parameter `rho`. If `NULL`, fit via [getRho()].
+#' @param m (`glm` or `NULL`) Dixon-Coles GLM model.  If `NULL`, fit via
+#'   [getM()].
+#' @param rho (`double(1)` or `NULL`) Dixon-Coles low-score parameter.  If
+#'   `NULL`, fit via [getRho()].
 #'
-#' @returns (`list`) Named list with `beta`, `eta`, `k`, and `objective_loss`.
+#' @returns (`list`) Named list with `beta`, `eta`, `k`, `objective_loss`, and
+#'   `convergence` (the [stats::optim()] status code, `0` on success).
 #' @keywords internal
 .fit_weibull_params <- function(
   scores = HockeyModel::scores,
@@ -948,13 +969,13 @@
 #' Audit package constants against documentation and empirical data
 #'
 #' @description Comprehensive verification audit covering all package-level
-#'   constants, dataset defaults, and empirical parameters (Issue 5.5). Identifies
-#'   discrepancies between documented values and code values (such as `DC_NU_PWHL`
-#'   documented as 2 but assigned 5 in `constants.R`). Also recalibrates the
-#'   Weibull tie-enhancement parameters (`.fit_weibull_params()`) against a
-#'   model fit strictly before the test period, so the audit reflects the
-#'   Weibull values that would be optimal on the most recent data rather than
-#'   the frozen package constants.
+#'   constants, dataset defaults, and empirical parameters (Issue 5.5). Flags
+#'   discrepancies between documented and code values (a `MATCH` status means
+#'   the two agree) and reports where recalibration is warranted.  It also
+#'   recalibrates the Weibull tie-enhancement parameters
+#'   ([.fit_weibull_params()]) against a model fit strictly before the test
+#'   period, so the audit reflects the Weibull values that would be optimal on
+#'   the most recent data rather than the frozen package constants.
 #'
 #' @param scores (`data.frame`) NHL historical scores.
 #' @param pwhl_scores (`data.frame`) PWHL historical scores.
@@ -1083,7 +1104,7 @@
       "0",
       "0.05",
       "461.0156",
-      "2 (doc in constants.R:18,54)",
+      "5 (doc in constants.R)",
       "-0.25 (data doc: around -0.25)",
       "2 (data doc: around 2)",
       "3 (data doc: around 3)",
@@ -1102,7 +1123,7 @@
       "0 (single-league stability)",
       "0.05 (rapid churn)",
       "461 days (~1.5 seasons)",
-      "5 (expansion churn tuned)",
+      "5 (aggressive expansion-churn discounting)",
       as.character(round(HockeyModel::rho, 4L)),
       as.character(round(HockeyModel::beta, 2L)),
       as.character(round(HockeyModel::eta, 2L)),
@@ -1121,7 +1142,7 @@
       "MATCH",
       "MATCH",
       "MATCH",
-      "DOCUMENTATION_DISCREPANCY",
+      "MATCH",
       "MATCH",
       "MATCH",
       "MATCH",
@@ -1140,7 +1161,7 @@
       "Cross-season decay exponent (0 disables)",
       "Higher slope reflects smaller schedule",
       "Empirical midpoint for PWHL schedule",
-      "Constants.R line 54 notes nu=2, but variable DC_NU_PWHL is set to 5 (Issue 5.5)",
+      "nu=5 discounts older seasons aggressively (expansion churn)",
       "Negative dependence accounts for low-scoring match deficit",
       "Weibull shape parameter for diagonal tie boost",
       "Weibull scale parameter for diagonal tie boost",

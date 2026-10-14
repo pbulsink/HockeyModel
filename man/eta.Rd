@@ -3,14 +3,18 @@
 \docType{data}
 \name{eta}
 \alias{eta}
-\title{Eta}
+\title{Weibull scale parameter \eqn{\eta}}
 \format{
-a single numerical value usually around 3
+a single numeric value, usually around 3
 }
 \usage{
 eta
 }
 \description{
-Eta for adjustment of tie games in the model. Eta is the Weibull 'scale' parameter, the distribution is multiplied by the diagonal to get it to better estimate tie game odds. Should be around 3
+The scale (\eqn{\eta}) of the Weibull distribution for the diagonal
+(tie) enhancement.  Together with the shape \eqn{\beta} (see \link{beta}) it
+controls how the diagonal mass is distributed across tied scorelines.  Fitted
+with \code{\link[=.fit_weibull_params]{.fit_weibull_params()}} / \code{\link[=getWeibullParams]{getWeibullParams()}}.  Typical values are
+around 3.
 }
 \keyword{datasets}

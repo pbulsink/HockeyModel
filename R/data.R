@@ -63,32 +63,51 @@
 #' @format a glm model fit
 "m"
 
-#' Dixon Coles' `rho`
+#' Dixon-Coles low-score correction parameter \eqn{\rho}
 #'
-#' Rho for low score correction to Dixon Coles. Should be around -0.25
+#' The Dixon-Coles low-score correction (\eqn{\rho}) accounts for the fact that
+#' low-scoring scorelines (0-0, 1-0, 0-1, 1-1) are more common than a plain
+#' bivariate Poisson would predict.  A *negative* \eqn{\rho} suppresses the
+#' 0-0 cell and inflates the 1-1 tie cell, while the 1-0 and 0-1 cells are
+#' lifted.  It is fitted with [getRho()] and applied to the score matrix in
+#' [.prob_matrix()].  Typical NHL values are around \eqn{-0.25}.
 #'
-#' @format a single numerical value usually around -0.25
+#' @format a single numeric value, usually around \eqn{-0.25}
 "rho"
 
-#' Beta
+#' Weibull shape parameter \eqn{\beta}
 #'
-#' Beta for adjustment of tie games in the model. Beta is the shape parameter (also known as the Weibull 'slope') for the Weibull distribution, optimized to fit the ties data. Should be around 2
+#' The shape (\eqn{\beta}) of the Weibull distribution used for the
+#' HockeyModel *diagonal (tie) enhancement*: [.prob_matrix()] inflates each
+#' tied cell \eqn{(x,x)} by \eqn{k \cdot \text{Weibull}(x;\beta,\eta)} before
+#' renormalising, so the *shape* of the diagonal mass matches the observed
+#' distribution of tied scorelines (0-0, 1-1, 2-2, ...).  Fitted with
+#' [.fit_weibull_params()] / [getWeibullParams()].  Typical values are around
+#' 2.
 #'
-#' @format a single numerical value usually around 2
+#' @format a single numeric value, usually around 2
 "beta"
 
-#' Eta
+#' Weibull scale parameter \eqn{\eta}
 #'
-#' Eta for adjustment of tie games in the model. Eta is the Weibull 'scale' parameter, the distribution is multiplied by the diagonal to get it to better estimate tie game odds. Should be around 3
+#' The scale (\eqn{\eta}) of the Weibull distribution for the diagonal
+#' (tie) enhancement.  Together with the shape \eqn{\beta} (see [beta]) it
+#' controls how the diagonal mass is distributed across tied scorelines.  Fitted
+#' with [.fit_weibull_params()] / [getWeibullParams()].  Typical values are
+#' around 3.
 #'
-#' @format a single numerical value usually around 3
+#' @format a single numeric value, usually around 3
 "eta"
 
-#' k
+#' Weibull multiplier \eqn{k}
 #'
-#' k for adjustment of tie games in the model. k is a multiplication value to the Weibull multiplier to the diagonal to get it to better estimate tie game odds. Should be around 5 or 6
+#' The overall scale (\eqn{k}) applied to the Weibull diagonal-enhancement
+#' multiplier in [.prob_matrix()] (\eqn{k \cdot \text{Weibull}(x;\beta,\eta)}).
+#' It sets the *strength* of the tie boost relative to the raw bivariate
+#' Poisson diagonal.  Fitted with [.fit_weibull_params()] / [getWeibullParams()].
+#' Typical values are around 5 or 6.
 #'
-#' @format a single numerical value usually around 5 or 6
+#' @format a single numeric value, usually around 5 or 6
 "k"
 
 

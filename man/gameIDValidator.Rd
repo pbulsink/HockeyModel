@@ -15,3 +15,4 @@ TRUE if gameIDs is valid, or FALSE if gameIDs is not (or a vector of length of i
 \description{
 Validate GameID numbers
 }
+\keyword{internal}

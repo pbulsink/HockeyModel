@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-workflow.R
 \name{getSeasonMetricsDC}
 \alias{getSeasonMetricsDC}
-\title{Get Season Metrics}
+\title{Get Dixon-Coles season metrics (log loss and accuracy)}
 \usage{
 getSeasonMetricsDC(
   schedule = HockeyModel::schedule,
@@ -10,13 +10,20 @@ getSeasonMetricsDC(
 )
 }
 \arguments{
-\item{schedule}{HockeyModel::schedule used to help with calculations}
+\item{schedule}{(\code{data.frame}) The schedule used for the calculations.
+Defaults to \link{schedule}.}
 
-\item{scores}{HockeyModel::scores used to compare to predictions}
+\item{scores}{(\code{data.frame}) Historical scores used to compare predictions
+against.  Defaults to \link{scores}.}
 }
 \value{
-a list of log loss and accuracy for the season
+(\code{list}) A named list with \code{LogLoss} and \code{Accuracy} for the season.
 }
 \description{
-Calculates the Log Loss and Accuracy of the model by re-estimating m and rho daily and creating game odds
+Computes the season-long log loss and top-pick accuracy of the
+Dixon-Coles model.  For each day, it re-estimates the full parameter set
+(\code{m}, \code{rho}, \code{beta}, \code{eta}, \code{k}) using only games played before that day
+(via \code{\link[=predictMultipleDaysResultsDC]{predictMultipleDaysResultsDC()}}), produces home/away/draw odds, and
+compares them against the actual results.  See \code{\link[=logLoss]{logLoss()}} and
+\code{\link[=accuracy]{accuracy()}} for the metric definitions.
 }

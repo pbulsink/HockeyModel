@@ -3,14 +3,18 @@
 \docType{data}
 \name{k}
 \alias{k}
-\title{k}
+\title{Weibull multiplier \eqn{k}}
 \format{
-a single numerical value usually around 5 or 6
+a single numeric value, usually around 5 or 6
 }
 \usage{
 k
 }
 \description{
-k for adjustment of tie games in the model. k is a multiplication value to the Weibull multiplier to the diagonal to get it to better estimate tie game odds. Should be around 5 or 6
+The overall scale (\eqn{k}) applied to the Weibull diagonal-enhancement
+multiplier in \code{\link[=.prob_matrix]{.prob_matrix()}} (\eqn{k \cdot \text{Weibull}(x;\beta,\eta)}).
+It sets the \emph{strength} of the tie boost relative to the raw bivariate
+Poisson diagonal.  Fitted with \code{\link[=.fit_weibull_params]{.fit_weibull_params()}} / \code{\link[=getWeibullParams]{getWeibullParams()}}.
+Typical values are around 5 or 6.
 }
 \keyword{datasets}

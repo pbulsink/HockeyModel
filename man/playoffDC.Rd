@@ -2,24 +2,36 @@
 % Please edit documentation in R/nhl-dixon-coles-workflow.R
 \name{playoffDC}
 \alias{playoffDC}
-\title{Playoff Odds DC}
+\title{Dixon-Coles odds to win a best-of-seven playoff series}
 \usage{
 playoffDC(home, away, params = NULL, home_wins = 0, away_wins = 0)
 }
 \arguments{
-\item{home}{Series Home Ice Advantage Team Name}
+\item{home}{(\code{character}) The team name with home-ice advantage for the
+series.}
 
-\item{away}{Away (Opponent) Team Name}
+\item{away}{(\code{character}) The opponent team name.}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
+\item{params}{(\code{list} or \code{NULL}) Named list with \code{m}, \code{rho}, \code{beta}, \code{eta},
+and \code{k} (as returned by \code{\link[=updateModel]{updateModel()}}).  Defaults to the frozen package
+data.}
 
-\item{home_wins}{Number of wins for home ice advantage team thus far in series}
+\item{home_wins}{(\code{integer}) Games already won by the home team in the
+series.  Defaults to 0.}
 
-\item{away_wins}{Number of wins for away team thus far in series}
+\item{away_wins}{(\code{integer}) Games already won by the away team in the
+series.  Defaults to 0.}
 }
 \value{
-home ice advantage team odds to win series
+(\code{double(1)}) The probability that the home team wins the series
+from the current state.
 }
 \description{
-Playoff Odds DC
+Combines the single-game Dixon-Coles win probability of the
+home team (with home-ice advantage) and the away team into a best-of-seven
+series win probability for the home team, given the current series score
+(\code{home_wins}, \code{away_wins}).  Single-game probabilities come from
+\code{\link[=DCPredict]{DCPredict()}} and are normalised to exclude the draw; the series
+probability is computed with \code{\link[=playoffSeriesOdds]{playoffSeriesOdds()}}.
 }
+\keyword{internal}

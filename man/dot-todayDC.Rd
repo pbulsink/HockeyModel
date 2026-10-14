@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-workflow.R
 \name{.todayDC}
 \alias{.todayDC}
-\title{DC Predictions Today}
+\title{Dixon-Coles predictions for a single day}
 \usage{
 .todayDC(
   params = NULL,
@@ -15,23 +15,39 @@
 )
 }
 \arguments{
-\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
+\item{params}{(\code{list} or \code{NULL}) Named list with \code{m}, \code{rho}, \code{beta}, \code{eta},
+and \code{k} (as returned by \code{\link[=updateModel]{updateModel()}} / \code{\link[=.update_dc_nhl]{.update_dc_nhl()}}).  Defaults
+to the frozen package data.}
 
-\item{today}{Generate predictions for this date. Defaults to today}
+\item{today}{(\code{Date}) The date to predict.  Defaults to today.}
 
-\item{schedule}{schedule to use, if not the built-in}
+\item{schedule}{(\code{data.frame}) The schedule to source games from.  Defaults
+to \link{schedule}.}
 
-\item{expected_mean}{the mean lambda & mu, used only for regression}
+\item{expected_mean}{(\code{double(1)} or \code{NULL}) League-average goals used only
+for the regression-to-mean shrinkage.  Defaults to \code{NULL} (no regression).}
 
-\item{season_percent}{the percent complete of the season, used for regression}
+\item{season_percent}{(\code{double(1)} or \code{NULL}) Fraction of the season
+complete, used only for the regression-to-mean shrinkage.  Defaults to
+\code{NULL}.}
 
-\item{include_xG}{Whether to include team expected goals. default FALSE}
+\item{include_xG}{(\code{logical(1)}) If \code{TRUE}, also returns \code{Home_xG} and
+\code{Away_xG} (expected goals) and drops \code{GameID}.  Defaults to \code{FALSE}.}
 
-\item{draws}{whether to report draws in odds (AwayWin/HomeWin/Draw) or not (AwayWin/HomeWin). Default True}
+\item{draws}{(\code{logical(1)}) If \code{TRUE} (default), return \code{HomeWin},
+\code{AwayWin}, and \code{Draw}; if \code{FALSE}, renormalise to a two-way \code{HomeWin} /
+\code{AwayWin}.}
 }
 \value{
-a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
+(\code{data.frame}) One row per game on the given date with \code{HomeTeam},
+\code{AwayTeam}, \code{HomeWin}, \code{AwayWin}, \code{Draw}, and \code{GameID}; or \code{NULL} if no
+games are scheduled that day.
 }
 \description{
-DC Predictions Today
+Predicts home/away/draw win probabilities for every game in
+the \link{schedule} played on the given date using \code{\link[=DCPredict]{DCPredict()}}, which builds
+the bivariate Poisson score matrix with the Dixon-Coles low-score
+correction (\code{rho}) and the Weibull tie enhancement (\code{beta}, \code{eta}, \code{k}).
+Returns \code{NULL} when there are no games on the given day.
 }
+\keyword{internal}

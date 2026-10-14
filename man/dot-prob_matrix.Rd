@@ -2,21 +2,24 @@
 % Please edit documentation in R/nhl-dixon-coles-predict.R
 \name{.prob_matrix}
 \alias{.prob_matrix}
-\title{Probability Matrix}
+\title{Build the Dixon-Coles score-probability matrix from expected goals}
 \usage{
 .prob_matrix(lambda, mu, params = NULL, maxgoal, enhance = TRUE)
 }
 \arguments{
-\item{lambda}{home lambda}
+\item{lambda}{(\code{double(1)}) Home expected goals (Poisson \code{lambda}, from
+\code{\link[=getM]{getM()}} \verb{$m} or \code{\link[=.dcLambda]{.dcLambda()}}).}
 
-\item{mu}{away mu}
+\item{mu}{(\code{double(1)}) Away expected goals (Poisson \code{mu}, from \code{\link[=getM]{getM()}}
+\verb{$m} or \code{\link[=.dcLambda]{.dcLambda()}}).}
 
-\item{params}{Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
-Must be the output of \code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry
-chain are responsible for parsing once (#47). \code{NULL} triggers a fallback
-parse (for direct test calls).}
+\item{params}{(\code{list} or \code{NULL}) Pre-parsed Dixon-Coles parameter list
+(\code{m}, \code{rho}, \code{beta}, \code{eta}, \code{k}).  Must be the output of
+\code{\link[=.parse_dc_params]{.parse_dc_params()}}; callers in the public entry chain are responsible
+for parsing once (#47).  \code{NULL} triggers a fallback parse (for direct
+test calls).}
 
-\item{maxgoal}{max goals per game}
+\item{maxgoal}{(\code{integer(1)}) Maximum number of goals per team to include.}
 
 \item{enhance}{(\code{logical(1)}) Apply the Weibull diagonal tie-enhancement
 (\code{TRUE}, default) and renormalize the off-diagonal against it. When
@@ -27,9 +30,33 @@ the tau-adjusted bivariate-Poisson score distribution normalized to sum to
 1.}
 }
 \value{
-a square matrix of maxgoal:maxgoal, with all entries in \verb{[0, 1]} and
-summing to 1 (see \link{.validateProbMatrix})
+(\code{matrix}) A square \verb{(maxgoal + 1) x (maxgoal + 1)} probability
+matrix with home goals on rows and away goals on columns, all entries in
+\verb{[0, 1]} and summing to \code{1} (validated by \code{\link[=.validateProbMatrix]{.validateProbMatrix()}}).
 }
 \description{
-Given a mu, lambda, rho, and theta, generate a probability matrix. Differs from .dcProbMatrix in that no regresson or solving for supplied teams happens
+The central score-matrix builder, operating directly on the
+expected-goals \code{lambda} and \code{mu}.  It differs from \code{\link[=.dcProbMatrix]{.dcProbMatrix()}} only
+in that no team lookup or regression-to-the-mean happens here — callers
+supply \code{lambda} and \code{mu} directly (e.g. from \code{\link[=.dcLambda]{.dcLambda()}}).
+
+Starting from independent Poisson counts with rates \code{lambda} (home) and
+\code{mu} (away) over scores \code{0:maxgoal}, it applies three adjustments and
+renormalises:
+\enumerate{
+\item \strong{Dixon-Coles low-score correction} — multiplies the four low-score
+cells by \code{\link[=tau]{tau()}} (via \code{rho}, the dependence between the teams' counts
+in tight games, see \code{\link[=getRho]{getRho()}}).  Cells pushed slightly negative near
+the edges of \code{rho}'s range are clipped to \code{0}.
+\item \strong{Weibull diagonal enhancement} — when \code{enhance = TRUE}, multiplies
+each tied cell \eqn{(x,x)} by \eqn{\text{Weibull}(x;\beta,\eta)\cdot k}
+so the diagonal mass approaches the empirical tie rate (see
+\code{\link[=getWeibullParams]{getWeibullParams()}}).
+\item \strong{Renormalisation} — the off-diagonal (win/loss) mass is scaled by
+\code{1 - sum(diag) / sum(all)} so the matrix always sums to \code{1} after the
+diagonal inflation.  Because the off-diagonal is scaled relative to the
+inflated diagonal, the result depends on the Weibull \emph{shape}, not the
+absolute scale of \code{k}.
 }
+}
+\keyword{internal}

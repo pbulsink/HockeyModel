@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-workflow.R
 \name{predictMultipleDaysResultsDC}
 \alias{predictMultipleDaysResultsDC}
-\title{Predict Multiple Days's W/L/D results}
+\title{Predict Dixon-Coles W/L/D results for a range of days}
 \usage{
 predictMultipleDaysResultsDC(
   startDate,
@@ -12,17 +12,25 @@ predictMultipleDaysResultsDC(
 )
 }
 \arguments{
-\item{startDate}{First day of predicted results}
+\item{startDate}{(\code{Date}) First day of predicted results.}
 
-\item{endDate}{Last day of predicted results}
+\item{endDate}{(\code{Date}) Last day of predicted results.}
 
-\item{schedule}{HockeyModel::schedule}
+\item{schedule}{(\code{data.frame}) The schedule.  Defaults to
+\link{schedule}.}
 
-\item{scores}{HockeyModel::scores}
+\item{scores}{(\code{data.frame}) Historical scores.  Defaults to
+\link{scores}.}
 }
 \value{
-a data frame like HockeyModel::schedule with HomeWin, AwayWin and Draw odds
+(\code{data.frame}) A data frame like \link{schedule} with
+\code{HomeWin}, \code{AwayWin}, and \code{Draw} odds added for the date range.
 }
 \description{
-Calculate what each days' game predictions were by recalculating rho and m using games only up to the previous day. This is kinda slow, so a full season might take an hour or more depending on your hardware. Split out of the SeasonMetrics code to help with requests by @JB4991 on twitter.
+Recalculates the full Dixon-Coles parameter set (\link{m}, \link{rho},
+\link{beta}, \link{eta}, \link{k}) for each day using only games played before that day,
+and returns the home/away/draw odds it would have produced.  This is a
+backtest-style "what the model predicted at the time" view.  It is
+relatively slow: a full season can take an hour or more depending on
+hardware.
 }

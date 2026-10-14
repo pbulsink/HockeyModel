@@ -1,20 +1,52 @@
 # Dixon-Coles predictions: probability matrices, expected goals, and result sampling
 
-#' DC Predict home/draw/away win
+#' Predict home / draw / away win probability for a single game
 #'
-#' @description Using Dixon-Coles' technique, predict odds each of home win, draw, and away win.
+#' @description The main Dixon-Coles prediction entry point.  It builds the
+#'   full score-probability matrix for the pairing via [.dcProbMatrix()] (which
+#'   composes the `lambda`/`mu` expected goals from `m`, the Dixon-Coles
+#'   low-score adjustment `rho` via [tau()], and the Weibull tie-enhancement
+#'   `beta`/`eta`/`k` from [getWeibullParams()]), then sums the lower triangle
+#'   (home win), the diagonal (draw), and the upper triangle (away win) and
+#'   normalises the result.
 #'
-#' @param home home team
-#' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
-#' @param maxgoal max number of goals per team
-#' @param scores optional, if not supplying m & rho, scores used to calculate them.
-#' @param expected_mean the mean lambda & mu, used only for regression
-#' @param season_percent the percent complete of the season, used for regression
-#' @param draws Whether draws are allowed. Default True
+#'   When `draws = FALSE` (e.g. for a best-of series) the draw mass is
+#'   distributed proportionally onto the home and away outcomes using the
+#'   original pre-redistribution values, so neither outcome is biased by the
+#'   other's update.
 #'
-#' @return a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
+#' @param home (`character(1)`) Home team name.
+#' @param away (`character(1)`) Away team name.
+#' @param params (`list` or `NULL`) The named list containing `m`, `rho`,
+#'   `beta`, `eta`, and `k`.  If `NULL`, the package defaults are used (see
+#'   [updateModel()] for how to obtain a fresh params list).
+#' @param maxgoal (`integer(1)`) Maximum number of goals per team to include in
+#'   the score matrix.  Defaults to `10`.
+#' @param scores (`data.frame`) Historical scores.  Used only to compute `m`
+#'   and `rho` when they are not already in `params`; normally not needed.
+#'   Defaults to [HockeyModel::scores].
+#' @param expected_mean (`double` or `NULL`) The league-wide mean of
+#'   `lambda`/`mu`.  When supplied together with `season_percent`, expected
+#'   goals are regressed toward this value (used for remainder-of-season
+#'   projections).
+#' @param season_percent (`double` or `NULL`) Fraction of the season complete,
+#'   used only together with `expected_mean` for the regression blend.
+#' @param draws (`logical(1)`) Whether draws are an allowed outcome.  Defaults
+#'   to `TRUE`.  When `FALSE`, the draw probability is redistributed to home
+#'   and away and a two-element result is returned.
+#'
+#' @returns (`numeric`) A named probability vector — `HomeWin`, `Draw`, and
+#'   `AwayWin` when `draws = TRUE`, or `HomeWin` and `AwayWin` when
+#'   `draws = FALSE` — summing to `1`.
 #' @export
+#'
+#' @examples \dontrun{
+#'   # Regulation win/draw/loss probabilities for one matchup
+#'   DCPredict(home = "Toronto Maple Leafs", away = "Montreal Canadiens")
+#'
+#'   # Best-of series (no draws)
+#'   DCPredict("Boston Bruins", "Tampa Bay Lightning", draws = FALSE)
+#' }
 DCPredict <- function(
   home,
   away,
@@ -259,18 +291,26 @@ DCPredict <- function(
   ))
 }
 
-#' DC Expected Goals
+#' Compute expected goals for a home/away pairing
 #'
-#' @description Given a home and away team, provide lambda values
+#' @description Returns the Poisson expected-goals `lambda` (home) and `mu`
+#'   (away) for a pairing by reading the home and away coefficients out of the
+#'   fitted model `m` (via [stats::predict()] at `Home = 1` / `Home = 0`).
+#'   These are the rate parameters that [.prob_matrix()] uses to build the
+#'   score matrix.  If a team or opponent is not in the model (e.g. a new
+#'   expansion team), a fallback estimate is supplied by
+#'   [.DCPredictErrorRecover()].
 #'
-#' @param home The home team name
-#' @param away The away team name
-#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
-#'   Must be the output of [.parse_dc_params()]; callers in the public entry
-#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
-#'   parse (for direct test calls).
+#' @param home (`character(1)`) Home team name.
+#' @param away (`character(1)`) Away team name.
+#' @param params (`list` or `NULL`) Pre-parsed Dixon-Coles parameter list
+#'   (`m`, `rho`, `beta`, `eta`, `k`).  Must be the output of
+#'   [.parse_dc_params()]; callers in the public entry chain are responsible
+#'   for parsing once (#47).  `NULL` triggers a fallback parse (for direct
+#'   test calls).
 #'
-#' @return a list of $home and $away Poisson Lambda values -
+#' @returns (`list`) A named list with elements `home` and `away`, each a
+#'   single expected-goals (`lambda`/`mu`) value.
 .dcLambda <- function(home, away, params = NULL) {
   if (is.null(params)) {
     params <- .parse_dc_params(params)
@@ -315,16 +355,25 @@ DCPredict <- function(
   return(xg)
 }
 
-#' Compute expected goals from a Dixon-Coles probability matrix
+#' Compute expected goals from the Dixon-Coles probability matrix
+#'
+#' @description Returns the model's expected-goals `xg` for a pairing by taking
+#'   the weighted mean of each side's goals under the full Dixon-Coles score
+#'   matrix ([.dcProbMatrix()]).  Because the matrix includes the Dixon-Coles
+#'   low-score and Weibull diagonal adjustments, the expected goals here differ
+#'   slightly from the raw Poisson `lambda`/`mu` in [.dcLambda()].
 #'
 #' @param home (`character(1)`) Home team name.
 #' @param away (`character(1)`) Away team name.
-#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
-#'   Must be the output of [.parse_dc_params()]; callers in the public entry
-#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
-#'   parse (for direct test calls).
+#' @param params (`list` or `NULL`) Pre-parsed Dixon-Coles parameter list
+#'   (`m`, `rho`, `beta`, `eta`, `k`).  Must be the output of
+#'   [.parse_dc_params()]; callers in the public entry chain are responsible
+#'   for parsing once (#47).  `NULL` triggers a fallback parse (for direct
+#'   test calls).
 #' @param maxgoal (`integer(1)`) Maximum goals included per team.
-#' @returns (`list`) Home and away expected goals.
+#'
+#' @returns (`list`) A named list with elements `home` and `away`, each the
+#'   expected-goals value for that side.
 #' @keywords internal
 .dcxG <- function(home, away, params = NULL, maxgoal = 10) {
   pm <- .dcProbMatrix(
@@ -340,20 +389,33 @@ DCPredict <- function(
   return(list("home" = home_xg, "away" = away_xg))
 }
 
-#' Generate the Dixon-Coles' Probability Matrix
+#' Build the Dixon-Coles score-probability matrix for a pairing
 #'
-#' @param home home team
-#' @param away away team
-#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
-#'   Must be the output of [.parse_dc_params()]; callers in the public entry
-#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
-#'   parse (for direct test calls).
-#' @param maxgoal max number of goals per team
-#' @param scores optional, if not supplying m & rho, scores used to calculate them.
-#' @param expected_mean the mean lambda & mu, used only for regression
-#' @param season_percent the percent complete of the season, used for regression
+#' @description Team-aware wrapper around [.prob_matrix()].  Resolves the
+#'   expected-goals `lambda` (home) and `mu` (away) for the given pairing via
+#'   [.dcLambda()], optionally applies the regression-to-the-mean blend (see
+#'   `expected_mean` / `season_percent`), and delegates to [.prob_matrix()] to
+#'   produce the adjusted score matrix.  Use this when you have *teams*; use
+#'   [.prob_matrix()] directly when you already have `lambda` and `mu`.
 #'
-#' @return a square matrix of dims 0:maxgoal with odds at each count of  home goals on 'rows' and away goals  on 'columns'
+#' @param home (`character(1)`) Home team name.
+#' @param away (`character(1)`) Away team name.
+#' @param params (`list` or `NULL`) Pre-parsed Dixon-Coles parameter list
+#'   (`m`, `rho`, `beta`, `eta`, `k`).  Must be the output of
+#'   [.parse_dc_params()]; callers in the public entry chain are responsible
+#'   for parsing once (#47).  `NULL` triggers a fallback parse (for direct
+#'   test calls).
+#' @param maxgoal (`integer(1)`) Maximum number of goals per team to include.
+#' @param scores (`data.frame`) Historical scores, used only to compute `m`
+#'   and `rho` if they are missing from `params`.  Defaults to
+#'   [HockeyModel::scores].
+#' @param expected_mean (`double` or `NULL`) League mean of `lambda`/`mu`,
+#'   used only together with `season_percent` for the regression blend.
+#' @param season_percent (`double` or `NULL`) Fraction of the season complete
+#'   for the regression blend.
+#'
+#' @returns (`matrix`) A square `(maxgoal + 1) x (maxgoal + 1)` probability
+#'   matrix with home goals on rows and away goals on columns, summing to `1`.
 .dcProbMatrix <- function(
   home,
   away,
@@ -392,17 +454,40 @@ DCPredict <- function(
   return(probability_matrix)
 }
 
-#' Probability Matrix
+#' Build the Dixon-Coles score-probability matrix from expected goals
 #'
-#' @description Given a mu, lambda, rho, and theta, generate a probability matrix. Differs from .dcProbMatrix in that no regresson or solving for supplied teams happens
+#' @description The central score-matrix builder, operating directly on the
+#'   expected-goals `lambda` and `mu`.  It differs from [.dcProbMatrix()] only
+#'   in that no team lookup or regression-to-the-mean happens here — callers
+#'   supply `lambda` and `mu` directly (e.g. from [.dcLambda()]).
 #'
-#' @param lambda home lambda
-#' @param mu away mu
-#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
-#'   Must be the output of [.parse_dc_params()]; callers in the public entry
-#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
-#'   parse (for direct test calls).
-#' @param maxgoal max goals per game
+#'   Starting from independent Poisson counts with rates `lambda` (home) and
+#'   `mu` (away) over scores `0:maxgoal`, it applies three adjustments and
+#'   renormalises:
+#'   1. **Dixon-Coles low-score correction** — multiplies the four low-score
+#'      cells by [tau()] (via `rho`, the dependence between the teams' counts
+#'      in tight games, see [getRho()]).  Cells pushed slightly negative near
+#'      the edges of `rho`'s range are clipped to `0`.
+#'   2. **Weibull diagonal enhancement** — when `enhance = TRUE`, multiplies
+#'      each tied cell \eqn{(x,x)} by \eqn{\text{Weibull}(x;\beta,\eta)\cdot k}
+#'      so the diagonal mass approaches the empirical tie rate (see
+#'      [getWeibullParams()]).
+#'   3. **Renormalisation** — the off-diagonal (win/loss) mass is scaled by
+#'      `1 - sum(diag) / sum(all)` so the matrix always sums to `1` after the
+#'      diagonal inflation.  Because the off-diagonal is scaled relative to the
+#'      inflated diagonal, the result depends on the Weibull *shape*, not the
+#'      absolute scale of `k`.
+#'
+#' @param lambda (`double(1)`) Home expected goals (Poisson `lambda`, from
+#'   [getM()] `$m` or [.dcLambda()]).
+#' @param mu (`double(1)`) Away expected goals (Poisson `mu`, from [getM()]
+#'   `$m` or [.dcLambda()]).
+#' @param params (`list` or `NULL`) Pre-parsed Dixon-Coles parameter list
+#'   (`m`, `rho`, `beta`, `eta`, `k`).  Must be the output of
+#'   [.parse_dc_params()]; callers in the public entry chain are responsible
+#'   for parsing once (#47).  `NULL` triggers a fallback parse (for direct
+#'   test calls).
+#' @param maxgoal (`integer(1)`) Maximum number of goals per team to include.
 #' @param enhance (`logical(1)`) Apply the Weibull diagonal tie-enhancement
 #'   (`TRUE`, default) and renormalize the off-diagonal against it. When
 #'   `FALSE` the unmodified standard Dixon-Coles diagonal is kept: the Weibull
@@ -411,8 +496,10 @@ DCPredict <- function(
 #'   the tau-adjusted bivariate-Poisson score distribution normalized to sum to
 #'   1.
 #'
-#' @return a square matrix of maxgoal:maxgoal, with all entries in `[0, 1]` and
-#'   summing to 1 (see [.validateProbMatrix])
+#' @returns (`matrix`) A square `(maxgoal + 1) x (maxgoal + 1)` probability
+#'   matrix with home goals on rows and away goals on columns, all entries in
+#'   `[0, 1]` and summing to `1` (validated by [.validateProbMatrix()]).
+#' @keywords internal
 .prob_matrix <- function(lambda, mu, params = NULL, maxgoal, enhance = TRUE) {
   if (is.null(params)) {
     params <- .parse_dc_params(params)
@@ -502,23 +589,50 @@ DCPredict <- function(
   .validateProbMatrix(probability_matrix, context = ".prob_matrix")
 }
 
-#' DC Sample
+#' Sample a single random game result from the Dixon-Coles model
 #'
-#' @description Get a random single game result using DC method. repeated running should give a new value each time
+#' @description Draws one random game outcome by sampling a final score from
+#'   the Dixon-Coles score-probability matrix ([.dcProbMatrix()]).  If the
+#'   sampled score is a tie, an overtime/shootout winner is drawn (OT vs SO at
+#'   the historical `0.686`/`0.314` split, with the side chosen by
+#'   [.extraTimeSolver()]) and an extra goal is added to the winner — mirroring
+#'   how a real tie is resolved in extra time.
 #'
-#' @param home home team
-#' @param away away team
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
-#' @param maxgoal max number of goals per team
-#' @param scores optional, if not supplying m & rho, scores used to calculate them.
-#' @param expected_mean the mean lambda & mu, used only for regression
-#' @param season_percent the percent complete of the season, used for regression
-#' @param as_result Whether to give a score or just flatten it to result type (see \link{scores} for score result)
+#'   Each call is independent, so repeated calls return a new random result.
 #'
-#' @return a random Home & away goals & OT/SO status if needed
+#' @param home (`character(1)`) Home team name.
+#' @param away (`character(1)`) Away team name.
+#' @param params (`list` or `NULL`) The named list containing `m`, `rho`,
+#'   `beta`, `eta`, and `k`.  If `NULL`, the package defaults are used (see
+#'   [updateModel()]).
+#' @param maxgoal (`integer(1)`) Maximum number of goals per team to include.
+#'   Defaults to `10`.
+#' @param scores (`data.frame`) Historical scores, used only to compute `m` and
+#'   `rho` when they are not in `params`.  Defaults to [HockeyModel::scores].
+#' @param expected_mean (`double` or `NULL`) League mean of `lambda`/`mu` for
+#'   regression-to-the-mean; used only with `season_percent`.
+#' @param season_percent (`double` or `NULL`) Fraction of the season complete
+#'   for the regression blend.
+#' @param as_result (`logical(1)`) If `TRUE` (default), return a single
+#'   `scores$Result`-style code (`1`, `0.75`, `0.6`, `0.4`, `0.25`, or `0`).
+#'   If `FALSE`, return a list with the raw `HomeGoals`, `AwayGoals`, and
+#'   `OTStatus`.
+#'
+#' @returns A single `Result` code when `as_result = TRUE`, or a list with
+#'   `HomeGoals`, `AwayGoals`, and `OTStatus` when `as_result = FALSE`.
 #' @export
 #'
-#' @examples dcSample("Toronto Maple Leafs", "Montreal Canadiens")
+#' @examples \dontrun{
+#'   # A random regulation/OT/SO result (one of: 1, 0.75, 0.6, 0.4, 0.25, 0)
+#'   dcSample("Toronto Maple Leafs", "Montreal Canadiens")
+#'
+#'   # Or the raw final score and extra-time status
+#'   dcSample(
+#'     "Toronto Maple Leafs",
+#'     "Montreal Canadiens",
+#'     as_result = FALSE
+#'   )
+#' }
 dcSample <- function(
   home,
   away,
@@ -587,18 +701,29 @@ dcSample <- function(
   }
 }
 
-#' DC Result Sample
+#' Sample game result(s) from the Dixon-Coles score matrix
 #'
-#' @param lambda home team lambda
-#' @param mu away team mu
-#' @param params Pre-parsed Dixon-Coles parameter list (m, rho, beta, eta, k).
-#'   Must be the output of [.parse_dc_params()]; callers in the public entry
-#'   chain are responsible for parsing once (#47). `NULL` triggers a fallback
-#'   parse (for direct test calls).
-#' @param maxgoal max goals predicable per game, default 10
-#' @param nsim the number of simulations in each result
+#' @description Builds the score matrix via [.prob_matrix()], decomposes the
+#'   draw mass into overtime/shootout outcomes with [.extraTimeSolver()], then
+#'   draws `nsim` result code(s) from the six-outcome distribution
+#'   (home win, home OT, home SO, away SO, away OT, away win) at the historical
+#'   `0.686`/`0.314` OT/SO split.  A convenient sampling counterpart to
+#'   [.dcExpandedOdds()] (which returns the probabilities without sampling).
 #'
-#' @return a result from 0 to 1 corresponding to \link{scores} results
+#' @param lambda (`double` or `numeric`) Home expected goal(s), one per game.
+#' @param mu (`double` or `numeric`) Away expected goal(s), one per game.
+#' @param params (`list` or `NULL`) Pre-parsed Dixon-Coles parameter list
+#'   (`m`, `rho`, `beta`, `eta`, `k`).  Must be the output of
+#'   [.parse_dc_params()]; callers in the public entry chain are responsible
+#'   for parsing once (#47).  `NULL` triggers a fallback parse (for direct
+#'   test calls).
+#' @param maxgoal (`integer(1)`) Maximum goals per team to include.  Defaults
+#'   to `8`.
+#' @param nsim (`integer(1)`) Number of simulations to draw per game.
+#'
+#' @returns (`numeric`) One or more result codes from `c(1, 0.75, 0.6, 0.4,
+#'   0.25, 0)`, matching the `scores$Result` encoding (see [scores]).
+#' @keywords internal
 .dcResult <- function(lambda, mu, params = NULL, maxgoal = 8, nsim = 1) {
   if (is.null(params)) {
     params <- .parse_dc_params(params)
@@ -733,13 +858,24 @@ dcSample <- function(
   }
 }
 
-#' Recover fallback expected goals when model prediction fails
+#' Recover fallback expected goals when a team is missing from the model
+#'
+#' @description Used by [.dcLambda()] and [.dcPredictVectorized()] when a team
+#'   or opponent is not in the fitted model (e.g. a newly-expanded team).  It
+#'   estimates expected goals by pairing the known team's coefficient with a
+#'   conservative opponent coefficient (the lowest attack or highest defence in
+#'   the model), or falls back to the historical league-average goal rate
+#'   (home `3.32`, away `2.83`) when both are unknown.  This keeps the model
+#'   from erroring on unseen teams.
 #'
 #' @param team (`character(1)`) Team being predicted.
 #' @param opponent (`character(1)`) Opponent team.
-#' @param homeiceadv (`logical(1)`) Whether to include home-ice coefficient.
-#' @param m (`glm`) Fitted Dixon-Coles model.
-#' @returns (`double(1)`) Fallback expected goals estimate.
+#' @param homeiceadv (`logical(1)`) Whether to include the home-ice
+#'   coefficient.  Defaults to `FALSE`.
+#' @param m (`glm`) Fitted Dixon-Coles model.  Defaults to
+#'   [HockeyModel::m].
+#'
+#' @returns (`double(1)`) Fallback expected-goals estimate.
 #' @keywords internal
 .DCPredictErrorRecover <- function(
   team,

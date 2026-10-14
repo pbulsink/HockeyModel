@@ -350,10 +350,11 @@ test_that(".audit_model_constants reports documentation discrepancies and parame
       names(audit)
   ))
 
-  # Issue 5.5: DC_NU_PWHL documented as 2, code value is 5
+  # DC_NU_PWHL code value is 5 and constants.R documents nu = 5, so the doc and
+  # code now agree (the old documented value of 2 was a discrepancy, since fixed).
   nu_row <- audit[audit$parameter == "DC_NU_PWHL", ]
   expect_equal(nrow(nu_row), 1L)
-  expect_equal(nu_row$status, "DOCUMENTATION_DISCREPANCY")
+  expect_equal(nu_row$status, "MATCH")
   expect_equal(nu_row$code_value, "5")
 
   # Issue 5.3: OT_PROB_NHL should flag recalibration recommended

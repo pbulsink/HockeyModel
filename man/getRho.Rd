@@ -2,18 +2,42 @@
 % Please edit documentation in R/nhl-dixon-coles-fit.R
 \name{getRho}
 \alias{getRho}
-\title{Generate a 'rho' factor for low scoring games}
+\title{Estimate the Dixon-Coles low-score parameter (\code{rho})}
 \usage{
 getRho(m = HockeyModel::m, scores = HockeyModel::scores)
 }
 \arguments{
-\item{m}{result from getM}
+\item{m}{(\code{glm} or \code{NULL}) The model from \code{\link[=getM]{getM()}}.  If \code{NULL}, it is fit
+internally via \code{\link[=getM]{getM()}}.}
 
-\item{scores}{the historical scores to evaluate}
+\item{scores}{(\code{data.frame}) Historical scores used to evaluate the
+likelihood.  Defaults to \link{scores}.}
 }
 \value{
-a numeric value (typically -0.5 to 0)
+(\code{double(1)}) The estimated \code{rho}.  Typically in \verb{[−0.5, 0]}.
 }
 \description{
-Generate a 'rho' factor for low scoring games
+Dixon-Coles (1997) showed that the two teams' goal counts are
+not independent in low-scoring games: in a tight game each team is slightly
+more likely to be the one to score first, which inflates the frequency of
+0-0, 1-0, 0-1, and 1-1 results relative to independent Poissons.
+
+\code{rho} captures that dependence through the scaling factor \code{\link[=tau]{tau()}}, applied
+to those four low-score cells only:
+\deqn{\tau(0,0) = 1 - \lambda\mu\rho,\quad
+  \tau(0,1) = 1 + \lambda\rho,\quad
+  \tau(1,0) = 1 + \mu\rho,\quad \tau(1,1) = 1 - \rho.}
+
+\code{rho} is estimated by maximising the full Dixon-Coles log-likelihood
+(\code{\link[=.DCRhoLogLik]{.DCRhoLogLik()}}) with \code{\link[stats:optim]{stats::optim()}} (Brent, bounded to \verb{[-0.5, 0.5]}).
+Negative \code{rho} is typical for hockey (observed values around \code{-0.17} to
+\code{-0.28}), meaning low-scoring games occur more often than the independent
+model predicts.
 }
+\examples{
+\dontrun{
+  m <- getM()
+  rho <- getRho(m = m)
+}
+}
+\keyword{internal}

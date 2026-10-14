@@ -58,17 +58,35 @@
   return(list("m" = m, "rho" = rho, "beta" = beta, "eta" = eta, "k" = k))
 }
 
-#' DC Predictions Today
+#' Dixon-Coles predictions for a single day
 #'
-#' @param today Generate predictions for this date. Defaults to today
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
-#' @param schedule schedule to use, if not the built-in
-#' @param expected_mean the mean lambda & mu, used only for regression
-#' @param season_percent the percent complete of the season, used for regression
-#' @param include_xG Whether to include team expected goals. default FALSE
-#' @param draws whether to report draws in odds (AwayWin/HomeWin/Draw) or not (AwayWin/HomeWin). Default True
+#' @description Predicts home/away/draw win probabilities for every game in
+#'   the [schedule] played on the given date using [DCPredict()], which builds
+#'   the bivariate Poisson score matrix with the Dixon-Coles low-score
+#'   correction (`rho`) and the Weibull tie enhancement (`beta`, `eta`, `k`).
+#'   Returns `NULL` when there are no games on the given day.
 #'
-#' @return a data frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID; or NULL if no games today
+#' @param today (`Date`) The date to predict.  Defaults to today.
+#' @param params (`list` or `NULL`) Named list with `m`, `rho`, `beta`, `eta`,
+#'   and `k` (as returned by [updateModel()] / [.update_dc_nhl()]).  Defaults
+#'   to the frozen package data.
+#' @param schedule (`data.frame`) The schedule to source games from.  Defaults
+#'   to [HockeyModel::schedule].
+#' @param expected_mean (`double(1)` or `NULL`) League-average goals used only
+#'   for the regression-to-mean shrinkage.  Defaults to `NULL` (no regression).
+#' @param season_percent (`double(1)` or `NULL`) Fraction of the season
+#'   complete, used only for the regression-to-mean shrinkage.  Defaults to
+#'   `NULL`.
+#' @param include_xG (`logical(1)`) If `TRUE`, also returns `Home_xG` and
+#'   `Away_xG` (expected goals) and drops `GameID`.  Defaults to `FALSE`.
+#' @param draws (`logical(1)`) If `TRUE` (default), return `HomeWin`,
+#'   `AwayWin`, and `Draw`; if `FALSE`, renormalise to a two-way `HomeWin` /
+#'   `AwayWin`.
+#'
+#' @returns (`data.frame`) One row per game on the given date with `HomeTeam`,
+#'   `AwayTeam`, `HomeWin`, `AwayWin`, `Draw`, and `GameID`; or `NULL` if no
+#'   games are scheduled that day.
+#' @keywords internal
 .todayDC <- function(
   params = NULL,
   today = Sys.Date(),
@@ -138,16 +156,29 @@
   return(preds)
 }
 
-#' Playoff Odds DC
+#' Dixon-Coles odds to win a best-of-seven playoff series
 #'
-#' @param home Series Home Ice Advantage Team Name
-#' @param away Away (Opponent) Team Name
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
-#' @param home_wins Number of wins for home ice advantage team thus far in series
-#' @param away_wins Number of wins for away team thus far in series
+#' @description Combines the single-game Dixon-Coles win probability of the
+#'   home team (with home-ice advantage) and the away team into a best-of-seven
+#'   series win probability for the home team, given the current series score
+#'   (`home_wins`, `away_wins`).  Single-game probabilities come from
+#'   [DCPredict()] and are normalised to exclude the draw; the series
+#'   probability is computed with [playoffSeriesOdds()].
 #'
-#' @return home ice advantage team odds to win series
-#' @export
+#' @param home (`character`) The team name with home-ice advantage for the
+#'   series.
+#' @param away (`character`) The opponent team name.
+#' @param params (`list` or `NULL`) Named list with `m`, `rho`, `beta`, `eta`,
+#'   and `k` (as returned by [updateModel()]).  Defaults to the frozen package
+#'   data.
+#' @param home_wins (`integer`) Games already won by the home team in the
+#'   series.  Defaults to 0.
+#' @param away_wins (`integer`) Games already won by the away team in the
+#'   series.  Defaults to 0.
+#'
+#' @returns (`double(1)`) The probability that the home team wins the series
+#'   from the current state.
+#' @keywords internal
 playoffDC <- function(home, away, params = NULL, home_wins = 0, away_wins = 0) {
   params <- .parse_dc_params(params)
   # Odds of home ice advantage team win at home
@@ -161,20 +192,40 @@ playoffDC <- function(home, away, params = NULL, home_wins = 0, away_wins = 0) {
   return(homewin)
 }
 
-#' DC remainder of season
-#' @description Odds for each team to get to playoffs.
+#' Dixon-Coles remainder-of-season projections
 #'
-#' @param nsims Number of simulations
-#' @param cores The number of cores to use if using parallel processing, or 1 for single-core, NULL defaults to all cores or 1 if `parallel` package not installed.
-#' @param scores the historical scores
-#' @param schedule un-played future games
-#' @param odds whether to return odds table or simulate season
-#' @param regress whether to apply a regression to the mean for team strength on future predictions
-#' @param mu_lambda whether to return team xG values. Can't be set true if odds is true
-#' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
+#' @description Projects the rest of the NHL season using the Dixon-Coles
+#'   model.  By default this runs a full season simulation
+#'   ([simulateSeasonParallel()]) and returns each team's playoff and Cup
+#'   odds.  Alternatively, it can return the per-game win/draw odds for every
+#'   remaining scheduled game (`odds = TRUE`), or each team's expected goals
+#'   (`mu_lambda = TRUE`; mutually exclusive with `odds`).
 #'
-#' @return data frame of Team, playoff odds.
-#' @export
+#' @param nsims (`integer`) Number of season simulations to run.  Defaults to
+#'   `1e4`.
+#' @param cores (`integer` or `NULL`) Number of cores for parallel
+#'   simulation; `1` for single-core, or `NULL` to use all cores (falling back
+#'   to 1 if the `parallel` package is unavailable).
+#' @param params (`list` or `NULL`) Named list with `m`, `rho`, `beta`, `eta`,
+#'   and `k` (as returned by [updateModel()] / [.update_dc_nhl()]).  Defaults
+#'   to the frozen package data.
+#' @param scores (`data.frame`) Historical scores.  Defaults to
+#'   [HockeyModel::scores].
+#' @param schedule (`data.frame`) Unplayed future games.  Defaults to
+#'   [HockeyModel::schedule].
+#' @param odds (`logical(1)`) If `TRUE`, return the per-game odds table
+#'   instead of simulating.  Defaults to `FALSE`.
+#' @param regress (`logical(1)`) If `TRUE` (default), apply
+#'   regression-to-mean shrinkage of team-strength predictions as the season
+#'   progresses.  Automatically disabled once the regular season has ended.
+#' @param mu_lambda (`logical(1)`) If `TRUE`, return each team's expected
+#'   goals (mu/lambda) instead of simulating.  Cannot be used with
+#'   `odds = TRUE`.  Defaults to `FALSE`.
+#'
+#' @returns Depending on the flags: the season-simulation summary (playoff and
+#'   Cup odds per team), a per-game odds data frame (`odds = TRUE`), or a
+#'   data frame of team expected goals (`mu_lambda = TRUE`).
+#' @keywords internal
 remainderSeasonDC <- function(
   nsims = 1e4,
   cores = NULL,
@@ -343,21 +394,34 @@ remainderSeasonDC <- function(
   return(summary_results)
 }
 
-#' DC Predict Multiple Days
+#' Dixon-Coles predictions for a range of days (catch-up)
 #'
-#' @description For catching up on daily predictions
+#' @description Backfills Dixon-Coles season projections for every date in
+#'   `start` through `end`.  For each date it refits the full Dixon-Coles
+#'   parameter set on all scores up to that day ([.update_dc_nhl()]) and then
+#'   simulates the season ([loopless_sim()]), saving each day's results to
+#'   the prediction directory.  Intended for catching up after a gap in daily
+#'   predictions.
 #'
-#' @param start First day to predict. Default start of season
-#' @param end Last day to predict. Default today
-#' @param scores HockeyModel::scores
-#' @param schedule HockeyModel::schedule
-#' @param filedir Where to save prediction files.
-#' @param nsims number of simulations to run
-#' @param cores number of cores in parallel to simulate on
-#' @param likelihood_graphic Whether to call for creation of likelihood graphic. Default True
+#' @param start (`Date`) First day to predict.  Defaults to the start of the
+#'   season.
+#' @param end (`Date`) Last day to predict.  Defaults to today.
+#' @param scores (`data.frame`) Historical scores.  Defaults to
+#'   [HockeyModel::scores].
+#' @param schedule (`data.frame`) The schedule.  Defaults to
+#'   [HockeyModel::schedule].
+#' @param filedir (`character`) Directory where the daily prediction files are
+#'   saved.  Defaults to the `HockeyModel.prediction.path` option.
+#' @param nsims (`integer`) Number of season simulations per day.  Defaults to
+#'   `1e5`.
+#' @param cores (`integer` or `NULL`) Number of cores for parallel
+#'   simulation; `1` for single-core, or `NULL` to use all cores.
+#' @param likelihood_graphic (`logical(1)`) If `TRUE` (default), also produce
+#'   the point-likelihood graphic for today's predictions.
 #'
-#' @return true, if successful
-#' @export
+#' @returns (`logical(1)`) `TRUE` on completion (individual day failures are
+#'   reported via `message()`).
+#' @keywords internal
 dcPredictMultipleDays <- function(
   start = as.Date(getSeasonStartDate()),
   end = Sys.Date(),
@@ -458,14 +522,21 @@ dcPredictMultipleDays <- function(
   return(TRUE)
 }
 
-#' Get Season Metrics
+#' Get Dixon-Coles season metrics (log loss and accuracy)
 #'
-#' @description Calculates the Log Loss and Accuracy of the model by re-estimating m and rho daily and creating game odds
+#' @description Computes the season-long log loss and top-pick accuracy of the
+#'   Dixon-Coles model.  For each day, it re-estimates the full parameter set
+#'   (`m`, `rho`, `beta`, `eta`, `k`) using only games played before that day
+#'   (via [predictMultipleDaysResultsDC()]), produces home/away/draw odds, and
+#'   compares them against the actual results.  See [logLoss()] and
+#'   [accuracy()] for the metric definitions.
 #'
-#' @param schedule HockeyModel::schedule used to help with calculations
-#' @param scores HockeyModel::scores used to compare to predictions
+#' @param schedule (`data.frame`) The schedule used for the calculations.
+#'   Defaults to [HockeyModel::schedule].
+#' @param scores (`data.frame`) Historical scores used to compare predictions
+#'   against.  Defaults to [HockeyModel::scores].
 #'
-#' @return a list of log loss and accuracy for the season
+#' @returns (`list`) A named list with `LogLoss` and `Accuracy` for the season.
 #' @export
 getSeasonMetricsDC <- function(
   schedule = HockeyModel::schedule,
@@ -502,16 +573,24 @@ getSeasonMetricsDC <- function(
   return(list("LogLoss" = logloss, "Accuracy" = accuracy))
 }
 
-#' Predict Multiple Days's W/L/D results
+#' Predict Dixon-Coles W/L/D results for a range of days
 #'
-#' @description Calculate what each days' game predictions were by recalculating rho and m using games only up to the previous day. This is kinda slow, so a full season might take an hour or more depending on your hardware. Split out of the SeasonMetrics code to help with requests by @JB4991 on twitter.
+#' @description Recalculates the full Dixon-Coles parameter set ([m], [rho],
+#'   [beta], [eta], [k]) for each day using only games played before that day,
+#'   and returns the home/away/draw odds it would have produced.  This is a
+#'   backtest-style "what the model predicted at the time" view.  It is
+#'   relatively slow: a full season can take an hour or more depending on
+#'   hardware.
 #'
-#' @param startDate First day of predicted results
-#' @param endDate Last day of predicted results
-#' @param schedule HockeyModel::schedule
-#' @param scores HockeyModel::scores
+#' @param startDate (`Date`) First day of predicted results.
+#' @param endDate (`Date`) Last day of predicted results.
+#' @param schedule (`data.frame`) The schedule.  Defaults to
+#'   [HockeyModel::schedule].
+#' @param scores (`data.frame`) Historical scores.  Defaults to
+#'   [HockeyModel::scores].
 #'
-#' @return a data frame like HockeyModel::schedule with HomeWin, AwayWin and Draw odds
+#' @returns (`data.frame`) A data frame like [HockeyModel::schedule] with
+#'   `HomeWin`, `AwayWin`, and `Draw` odds added for the date range.
 #' @export
 predictMultipleDaysResultsDC <- function(
   startDate,

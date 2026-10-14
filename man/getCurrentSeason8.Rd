@@ -13,3 +13,4 @@ getCurrentSeason8()
 \description{
 Get the latest NHL season ID
 }
+\keyword{internal}

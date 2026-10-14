@@ -39,3 +39,4 @@ a two member list, of all results and summary results
 \description{
 'Loopless' simulation
 }
+\keyword{internal}

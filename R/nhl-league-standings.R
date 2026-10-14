@@ -5,7 +5,7 @@
 #' @param scores scores to use to build stats table
 #'
 #' @return a stats table (as tibble)
-#' @export
+#' @keywords internal
 buildStats <- function(scores) {
   scores <- droplevels(scores)
   teamlist <- sort(unique(c(

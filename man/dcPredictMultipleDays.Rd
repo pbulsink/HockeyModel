@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-workflow.R
 \name{dcPredictMultipleDays}
 \alias{dcPredictMultipleDays}
-\title{DC Predict Multiple Days}
+\title{Dixon-Coles predictions for a range of days (catch-up)}
 \usage{
 dcPredictMultipleDays(
   start = as.Date(getSeasonStartDate()),
@@ -16,25 +16,39 @@ dcPredictMultipleDays(
 )
 }
 \arguments{
-\item{start}{First day to predict. Default start of season}
+\item{start}{(\code{Date}) First day to predict.  Defaults to the start of the
+season.}
 
-\item{end}{Last day to predict. Default today}
+\item{end}{(\code{Date}) Last day to predict.  Defaults to today.}
 
-\item{scores}{HockeyModel::scores}
+\item{scores}{(\code{data.frame}) Historical scores.  Defaults to
+\link{scores}.}
 
-\item{schedule}{HockeyModel::schedule}
+\item{schedule}{(\code{data.frame}) The schedule.  Defaults to
+\link{schedule}.}
 
-\item{filedir}{Where to save prediction files.}
+\item{filedir}{(\code{character}) Directory where the daily prediction files are
+saved.  Defaults to the \code{HockeyModel.prediction.path} option.}
 
-\item{nsims}{number of simulations to run}
+\item{nsims}{(\code{integer}) Number of season simulations per day.  Defaults to
+\code{1e5}.}
 
-\item{cores}{number of cores in parallel to simulate on}
+\item{cores}{(\code{integer} or \code{NULL}) Number of cores for parallel
+simulation; \code{1} for single-core, or \code{NULL} to use all cores.}
 
-\item{likelihood_graphic}{Whether to call for creation of likelihood graphic. Default True}
+\item{likelihood_graphic}{(\code{logical(1)}) If \code{TRUE} (default), also produce
+the point-likelihood graphic for today's predictions.}
 }
 \value{
-true, if successful
+(\code{logical(1)}) \code{TRUE} on completion (individual day failures are
+reported via \code{message()}).
 }
 \description{
-For catching up on daily predictions
+Backfills Dixon-Coles season projections for every date in
+\code{start} through \code{end}.  For each date it refits the full Dixon-Coles
+parameter set on all scores up to that day (\code{\link[=.update_dc_nhl]{.update_dc_nhl()}}) and then
+simulates the season (\code{\link[=loopless_sim]{loopless_sim()}}), saving each day's results to
+the prediction directory.  Intended for catching up after a gap in daily
+predictions.
 }
+\keyword{internal}

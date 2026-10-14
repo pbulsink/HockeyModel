@@ -7,6 +7,7 @@
 DC_XI_PWHL
 }
 \description{
-Default PWHL Dixon-Coles sigmoid time-decay slope
+\code{xi} controls how steeply the within-season logistic weighting curve drops.
+PWHL uses a steeper slope than NHL to let recent games dominate the fit.
 }
 \keyword{internal}

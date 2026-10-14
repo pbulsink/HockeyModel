@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-fit.R
 \name{getM}
 \alias{getM}
-\title{Fast Dixon-Coles model fitting 'm'.}
+\title{Fit the Dixon-Coles attack/defence model (\code{m})}
 \usage{
 getM(
   scores = HockeyModel::scores,
@@ -13,9 +13,13 @@ getM(
 )
 }
 \arguments{
-\item{scores}{the historical scores to evaluate}
+\item{scores}{(\code{data.frame}) Historical game scores containing \code{Date},
+\code{GameID}, \code{HomeTeam}, \code{AwayTeam}, \code{HomeGoals}, and \code{AwayGoals}.  Defaults
+to \link{scores}.}
 
-\item{currentDate}{(for date weight adjustment)}
+\item{currentDate}{(\code{Date}) Reference date used to compute time-decay
+weights (more recent games are weighted more heavily).  Defaults to
+\code{\link[=Sys.Date]{Sys.Date()}}.}
 
 \item{xi}{(\code{double(1)}) Logistic slope for within-season time decay.
 Defaults to \link{DC_XI_NHL}.}
@@ -29,8 +33,33 @@ custom value) to discount older seasons for leagues with high year-to-year
 roster volatility.}
 }
 \value{
-a model 'm' of Dixon-Coles' type parameters.
+(\code{glm}) A fitted Poisson GLM (\code{m}) holding the per-team attack
+(\verb{Team*}), defence (\verb{Opponent*}), and home-ice (\code{Home}) log-rate
+coefficients, plus the weighted game matrix in \code{m$data}.
 }
 \description{
-Produces a DC model
+Fits the base Dixon-Coles (1997) model to historical scores.
+Home and away goals are modelled as independent Poisson counts in a single
+weighted GLM:
+\deqn{\text{Goals} \sim \text{Poisson}(\exp(\alpha_{\text{team}} +
+  \beta_{\text{opponent}} + \gamma \cdot \text{Home})).}
+Each coefficient is a log-rate, so a team's expected goals against a given
+opponent on a given side of the ice is
+\eqn{\exp(\alpha + \beta + \gamma \cdot \text{Home})}.
+
+Every historical match is weighted by \code{\link[=.DCweights]{.DCweights()}} so that recent games
+(and, when \code{nu != 0}, recent seasons) dominate the fit; the model is
+restricted to roughly the last 11 years of data, beyond which it grows
+without improving.
+
+This is the first of the five Dixon-Coles parameters — it supplies the
+expected-goals \code{lambda} (home) and \code{mu} (away) that \code{\link[=getRho]{getRho()}},
+\code{\link[=getWeibullParams]{getWeibullParams()}}, and \code{\link[=DCPredict]{DCPredict()}} build on.
 }
+\examples{
+\dontrun{
+  # Refit the model as of a specific date
+  m <- getM(currentDate = as.Date("2024-02-01"))
+}
+}
+\keyword{internal}

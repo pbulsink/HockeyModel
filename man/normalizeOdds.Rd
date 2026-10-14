@@ -15,3 +15,4 @@ odds summing to 1
 \description{
 Normalize Odds
 }
+\keyword{internal}

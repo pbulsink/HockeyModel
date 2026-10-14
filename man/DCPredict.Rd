@@ -2,7 +2,7 @@
 % Please edit documentation in R/nhl-dixon-coles-predict.R
 \name{DCPredict}
 \alias{DCPredict}
-\title{DC Predict home/draw/away win}
+\title{Predict home / draw / away win probability for a single game}
 \usage{
 DCPredict(
   home,
@@ -16,25 +16,58 @@ DCPredict(
 )
 }
 \arguments{
-\item{home}{home team}
+\item{home}{(\code{character(1)}) Home team name.}
 
-\item{away}{away team}
+\item{away}{(\code{character(1)}) Away team name.}
 
-\item{params}{The named list containing m, rho, beta, eta, and k. See \code{\link[=updateModel]{updateModel()}} for information on the params list}
+\item{params}{(\code{list} or \code{NULL}) The named list containing \code{m}, \code{rho},
+\code{beta}, \code{eta}, and \code{k}.  If \code{NULL}, the package defaults are used (see
+\code{\link[=updateModel]{updateModel()}} for how to obtain a fresh params list).}
 
-\item{maxgoal}{max number of goals per team}
+\item{maxgoal}{(\code{integer(1)}) Maximum number of goals per team to include in
+the score matrix.  Defaults to \code{10}.}
 
-\item{scores}{optional, if not supplying m & rho, scores used to calculate them.}
+\item{scores}{(\code{data.frame}) Historical scores.  Used only to compute \code{m}
+and \code{rho} when they are not already in \code{params}; normally not needed.
+Defaults to \link{scores}.}
 
-\item{expected_mean}{the mean lambda & mu, used only for regression}
+\item{expected_mean}{(\code{double} or \code{NULL}) The league-wide mean of
+\code{lambda}/\code{mu}.  When supplied together with \code{season_percent}, expected
+goals are regressed toward this value (used for remainder-of-season
+projections).}
 
-\item{season_percent}{the percent complete of the season, used for regression}
+\item{season_percent}{(\code{double} or \code{NULL}) Fraction of the season complete,
+used only together with \code{expected_mean} for the regression blend.}
 
-\item{draws}{Whether draws are allowed. Default True}
+\item{draws}{(\code{logical(1)}) Whether draws are an allowed outcome.  Defaults
+to \code{TRUE}.  When \code{FALSE}, the draw probability is redistributed to home
+and away and a two-element result is returned.}
 }
 \value{
-a vector of home win, draw, and away win probability, or if draws=False, a vector of home and away win probability
+(\code{numeric}) A named probability vector — \code{HomeWin}, \code{Draw}, and
+\code{AwayWin} when \code{draws = TRUE}, or \code{HomeWin} and \code{AwayWin} when
+\code{draws = FALSE} — summing to \code{1}.
 }
 \description{
-Using Dixon-Coles' technique, predict odds each of home win, draw, and away win.
+The main Dixon-Coles prediction entry point.  It builds the
+full score-probability matrix for the pairing via \code{\link[=.dcProbMatrix]{.dcProbMatrix()}} (which
+composes the \code{lambda}/\code{mu} expected goals from \code{m}, the Dixon-Coles
+low-score adjustment \code{rho} via \code{\link[=tau]{tau()}}, and the Weibull tie-enhancement
+\code{beta}/\code{eta}/\code{k} from \code{\link[=getWeibullParams]{getWeibullParams()}}), then sums the lower triangle
+(home win), the diagonal (draw), and the upper triangle (away win) and
+normalises the result.
+
+When \code{draws = FALSE} (e.g. for a best-of series) the draw mass is
+distributed proportionally onto the home and away outcomes using the
+original pre-redistribution values, so neither outcome is biased by the
+other's update.
+}
+\examples{
+\dontrun{
+  # Regulation win/draw/loss probabilities for one matchup
+  DCPredict(home = "Toronto Maple Leafs", away = "Montreal Canadiens")
+
+  # Best-of series (no draws)
+  DCPredict("Boston Bruins", "Tampa Bay Lightning", draws = FALSE)
+}
 }

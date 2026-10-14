@@ -2,7 +2,7 @@
 % Please edit documentation in R/optimize-model-parameters.R
 \name{.fit_weibull_params}
 \alias{.fit_weibull_params}
-\title{Fit Weibull tie-enhancement parameters on historical scores}
+\title{Fit the Weibull diagonal-inflation parameters on historical scores}
 \usage{
 .fit_weibull_params(scores = HockeyModel::scores, m = NULL, rho = NULL)
 }
@@ -10,16 +10,26 @@
 \item{scores}{(\code{data.frame}) Historical score records. Defaults to
 \link{scores}.}
 
-\item{m}{Dixon-Coles GLM model \code{m}. If \code{NULL}, fit via \code{\link[=getM]{getM()}}.}
+\item{m}{(\code{glm} or \code{NULL}) Dixon-Coles GLM model.  If \code{NULL}, fit via
+\code{\link[=getM]{getM()}}.}
 
-\item{rho}{Dixon-Coles parameter \code{rho}. If \code{NULL}, fit via \code{\link[=getRho]{getRho()}}.}
+\item{rho}{(\code{double(1)} or \code{NULL}) Dixon-Coles low-score parameter.  If
+\code{NULL}, fit via \code{\link[=getRho]{getRho()}}.}
 }
 \value{
-(\code{list}) Named list with \code{beta}, \code{eta}, \code{k}, and \code{objective_loss}.
+(\code{list}) Named list with \code{beta}, \code{eta}, \code{k}, \code{objective_loss}, and
+\code{convergence} (the \code{\link[stats:optim]{stats::optim()}} status code, \code{0} on success).
 }
 \description{
-Fits the Weibull diagonal enhancement parameters \eqn{(\beta, \eta,
-  k)} by minimizing squared difference between observed tie goal ratios and
-Weibull-scaled probabilities (Issue 5.1).
+Fits the Weibull diagonal-enhancement parameters
+\eqn{(\beta, \eta, k)} that \code{\link[=.prob_matrix]{.prob_matrix()}} uses to inflate the tie
+diagonal (see \code{\link[=getWeibullParams]{getWeibullParams()}}).  The objective minimises the squared
+difference between the \emph{observed} tie-goal-distribution — for each tied
+goal count \eqn{x}, the fraction of tied games that ended at \eqn{x} goals
+on each side — and the Weibull density \eqn{\text{Weibull}(x;\beta,\eta)}
+scaled by \eqn{k}.  In effect this calibrates the \emph{shape} of the diagonal
+mass (which tied scorelines are most common) rather than its absolute
+level, which is why \code{\link[=.prob_matrix]{.prob_matrix()}} renormalises the off-diagonal after
+applying it (Issue 5.1).
 }
 \keyword{internal}
