@@ -92,6 +92,198 @@ getCurrentPWHLSeason <- function() {
   return(max(reg$id))
 }
 
+#' Check if a date falls in a PWHL regular season
+#'
+#' @description Internal league-specific implementation of [inRegularSeason()]
+#'   for the PWHL. Queries the PWHL HockeyTech API via [getPWHLSeasons()] and
+#'   falls back to inspecting `schedule` when the API is unavailable. When the
+#'   fallback is used with `boolean = FALSE`, no season ID can be derived from
+#'   the schedule alone, so `FALSE` is returned. Where a playoff window
+#'   overlaps a regular season row in the API data, the date counts as
+#'   playoffs rather than regular season.
+#'
+#' @param date (`Date` or `character(1)`) Date to check. Defaults to [Sys.Date()].
+#' @param boolean (`logical(1)`) When `TRUE`, returns a logical indicator; when
+#'   `FALSE`, returns the season ID string if in a regular season, else `FALSE`.
+#' @param schedule (`data.frame`) PWHL schedule used for the fallback check.
+#'   Defaults to [HockeyModel::pwhlSchedule].
+#'
+#' @returns `logical(1)`, or a season ID string / `FALSE` when `boolean = FALSE`.
+#' @keywords internal
+.in_regular_season_pwhl <- function(
+  date = Sys.Date(),
+  boolean = TRUE,
+  schedule = HockeyModel::pwhlSchedule
+) {
+  if (!is.Date(date)) {
+    if (!is.character(date) || length(date) != 1L) {
+      cli::cli_abort("{.arg date} must be a Date or date-like value.")
+    }
+    date <- tryCatch(
+      suppressWarnings(as.Date(date)),
+      error = function(e) NA
+    )
+    if (is.na(date)) {
+      cli::cli_abort("{.arg date} must be a Date or date-like value.")
+    }
+  }
+  if (!is.logical(boolean) || length(boolean) != 1 || is.na(boolean)) {
+    cli::cli_abort("{.arg boolean} must be a single TRUE/FALSE value.")
+  }
+
+  seasons <- tryCatch(getPWHLSeasons(), error = function(e) NULL)
+  if (!is.null(seasons) && nrow(seasons) > 0) {
+    # Playoff windows take precedence where they overlap regular season rows
+    in_playoffs <- seasons[
+      seasons$career == 1 &
+        seasons$playoff == 1 &
+        seasons$start_date <= date &
+        seasons$end_date >= date,
+    ]
+    if (nrow(in_playoffs) > 0) {
+      return(FALSE)
+    }
+
+    match <- seasons[
+      seasons$career == 1 &
+        seasons$playoff == 0 &
+        seasons$start_date <= date &
+        seasons$end_date >= date,
+    ]
+    if (nrow(match) > 0) {
+      return(if (boolean) TRUE else as.character(match$id))
+    }
+    return(FALSE)
+  }
+
+  reg_games <- schedule[!is.na(schedule$Date) & schedule$GameType == "R", ]
+  if (nrow(reg_games) == 0) {
+    return(FALSE)
+  }
+  min_date <- min(reg_games$Date)
+  max_date <- max(reg_games$Date)
+  if (date < min_date || date > max_date) {
+    return(FALSE)
+  }
+  boolean
+}
+
+.inRegularSeasonPWHL <- .in_regular_season_pwhl
+
+#' Check if a date falls in the PWHL playoffs
+#'
+#' @description Internal league-specific implementation of [inPlayoffs()] for
+#'   the PWHL. Queries the PWHL HockeyTech API via [getPWHLSeasons()] and falls
+#'   back to inspecting `schedule` when the API is unavailable. When the
+#'   fallback is used with `boolean = FALSE`, no season ID can be derived from
+#'   the schedule alone, so `FALSE` is returned.
+#'
+#' @param date (`Date` or `character(1)`) Date to check. Defaults to [Sys.Date()].
+#' @param boolean (`logical(1)`) When `TRUE`, returns a logical indicator; when
+#'   `FALSE`, returns the season ID string if in the playoffs, else `FALSE`.
+#' @param schedule (`data.frame`) PWHL schedule used for the fallback check.
+#'   Defaults to [HockeyModel::pwhlSchedule].
+#'
+#' @returns `logical(1)`, or a season ID string / `FALSE` when `boolean = FALSE`.
+#' @keywords internal
+.in_playoffs_pwhl <- function(
+  date = Sys.Date(),
+  boolean = TRUE,
+  schedule = HockeyModel::pwhlSchedule
+) {
+  if (!is.Date(date)) {
+    if (!is.character(date) || length(date) != 1L) {
+      cli::cli_abort("{.arg date} must be a Date or date-like value.")
+    }
+    date <- tryCatch(
+      suppressWarnings(as.Date(date)),
+      error = function(e) NA
+    )
+    if (is.na(date)) {
+      cli::cli_abort("{.arg date} must be a Date or date-like value.")
+    }
+  }
+  if (!is.logical(boolean) || length(boolean) != 1 || is.na(boolean)) {
+    cli::cli_abort("{.arg boolean} must be a single TRUE/FALSE value.")
+  }
+
+  seasons <- tryCatch(getPWHLSeasons(), error = function(e) NULL)
+  if (!is.null(seasons) && nrow(seasons) > 0) {
+    match <- seasons[
+      seasons$career == 1 &
+        seasons$playoff == 1 &
+        seasons$start_date <= date &
+        seasons$end_date >= date,
+    ]
+    if (nrow(match) > 0) {
+      return(if (boolean) TRUE else as.character(match$id))
+    }
+    return(FALSE)
+  }
+
+  playoff_games <- schedule[!is.na(schedule$Date) & schedule$GameType == "P", ]
+  if (nrow(playoff_games) == 0) {
+    return(FALSE)
+  }
+  min_date <- min(playoff_games$Date)
+  max_date <- max(playoff_games$Date)
+  if (date < min_date || date > max_date) {
+    return(FALSE)
+  }
+  boolean
+}
+
+.inPlayoffsPWHL <- .in_playoffs_pwhl
+
+#' Check if a date falls in the PWHL off-season
+#'
+#' @description Internal league-specific implementation of [inOffSeason()] for
+#'   the PWHL. Queries the PWHL HockeyTech API via [getPWHLSeasons()] and falls
+#'   back to inspecting `schedule` when the API is unavailable. Preseason
+#'   windows (career == 0) count as off-season.
+#'
+#' @param date (`Date` or `character(1)`) Date to check. Defaults to [Sys.Date()].
+#' @param schedule (`data.frame`) PWHL schedule used for the fallback check.
+#'   Defaults to [HockeyModel::pwhlSchedule].
+#'
+#' @returns `logical(1)` indicating whether the date is in the off-season.
+#' @keywords internal
+.in_off_season_pwhl <- function(
+  date = Sys.Date(),
+  schedule = HockeyModel::pwhlSchedule
+) {
+  if (!is.Date(date)) {
+    if (!is.character(date) || length(date) != 1L) {
+      cli::cli_abort("{.arg date} must be a Date or date-like value.")
+    }
+    date <- tryCatch(
+      suppressWarnings(as.Date(date)),
+      error = function(e) NA
+    )
+    if (is.na(date)) {
+      cli::cli_abort("{.arg date} must be a Date or date-like value.")
+    }
+  }
+
+  seasons <- tryCatch(getPWHLSeasons(), error = function(e) NULL)
+  if (!is.null(seasons) && nrow(seasons) > 0) {
+    in_season <- seasons[
+      seasons$career == 1 &
+        seasons$start_date <= date &
+        seasons$end_date >= date,
+    ]
+    return(nrow(in_season) == 0)
+  }
+
+  if (nrow(schedule) == 0 || all(is.na(schedule$Date))) {
+    return(TRUE)
+  }
+  min_date <- min(schedule$Date, na.rm = TRUE)
+  max_date <- max(schedule$Date, na.rm = TRUE)
+  date < min_date || date > max_date
+}
+
+.inOffSeasonPWHL <- .in_off_season_pwhl
 
 #' Get PWHL Schedule
 #'

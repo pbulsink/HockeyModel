@@ -14,7 +14,7 @@
   subdir = "pace",
   delay = stats::runif(1, min = 2, max = 6) * 60
 ) {
-  if (inOffSeason()) {
+  if (inOffSeason(league = "NHL")) {
     if (
       getSeasonStartDate() - Sys.Date() > 7 ||
         getSeasonStartDate() - Sys.Date() < 0
@@ -113,7 +113,7 @@
     )
   }
 
-  if (inRegularSeason()) {
+  if (inRegularSeason(league = "NHL")) {
     updatePredictions(
       scores = modelparams$scores,
       schedule = modelparams$schedule,
@@ -206,7 +206,7 @@
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if (inRegularSeason()) {
+  if (inRegularSeason(league = "NHL")) {
     post_results[[length(post_results) + 1]] <- tweetPlayoffOdds(
       graphic_dir = graphic_dir,
       params = params
@@ -214,7 +214,7 @@
 
     message("Delaying ", delay / 2, " seconds to space tweets...")
     Sys.sleep(delay / 2)
-  } else if (inPlayoffs()) {
+  } else if (inPlayoffs(league = "NHL")) {
     message("Calculating Playoff Odds")
     post_results[[length(post_results) + 1]] <- tweetPlayoffOdds(
       graphic_dir = graphic_dir,
@@ -222,7 +222,9 @@
     )
   }
 
-  if (as.numeric(format(Sys.Date(), "%w")) == 1 && inRegularSeason()) {
+  if (
+    as.numeric(format(Sys.Date(), "%w")) == 1 && inRegularSeason(league = "NHL")
+  ) {
     # On monday post pace plots
     post_results[[length(post_results) + 1]] <- tweetPace(
       delay = delay,
@@ -230,13 +232,17 @@
     )
   }
 
-  if (as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason()) {
+  if (
+    as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason(league = "NHL")
+  ) {
     message("Tweeting Metrics")
     # On Sunday post metrics
     post_results[[length(post_results) + 1]] <- tweetMetrics()
   }
 
-  if (as.numeric(format(Sys.Date(), "%w")) == 2 && inRegularSeason()) {
+  if (
+    as.numeric(format(Sys.Date(), "%w")) == 2 && inRegularSeason(league = "NHL")
+  ) {
     message("Tweeting Likelihoods")
     # On Tuesday post expected points (likelihood)
     post_results[[length(post_results) + 1]] <- tweetLikelihoods(
