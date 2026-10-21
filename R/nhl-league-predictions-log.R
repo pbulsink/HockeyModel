@@ -10,6 +10,9 @@
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param include_xG Whether to record daily XG values
 #' @param draws whether to record draw odds (True) or not (False). Default is True
+#' @param history Prior games (`Date`, `HomeTeam`, `AwayTeam`) used for
+#'   back-to-back detection. When `NULL` (default), `.todayDC()` derives it from
+#'   the rows of `schedule` dated before `today`.
 #'
 #' @return NULL
 #' @keywords internal
@@ -19,7 +22,8 @@ recordTodaysPredictions <- function(
   schedule = HockeyModel::schedule,
   params = NULL,
   include_xG = FALSE,
-  draws = TRUE
+  draws = TRUE,
+  history = NULL
 ) {
   params <- .parse_dc_params(params)
   if (!is.Date(today)) {
@@ -35,7 +39,8 @@ recordTodaysPredictions <- function(
     params = params,
     schedule = schedule,
     include_xG = include_xG,
-    draws = draws
+    draws = draws,
+    history = history
   )
   preds <- dplyr::full_join(
     today_sched,
@@ -190,13 +195,16 @@ cleanupPredictionsFile <- function(
     params$eta <- w.day$eta
     params$k <- w.day$k
 
+    # Pass the actual prior games as history so back-to-back status (#64) is
+    # correct for historical dates even if the bundled schedule lacks them.
     recordTodaysPredictions(
       today = d,
       filepath = filepath,
       schedule = sched,
       params = params,
       include_xG = include_xG,
-      draws = draws
+      draws = draws,
+      history = scores[scores$Date < day, ]
     )
   }
   cleanupPredictionsFile(filepath = filepath)

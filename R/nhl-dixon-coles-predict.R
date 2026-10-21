@@ -34,6 +34,19 @@
 #' @param draws (`logical(1)`) Whether draws are an allowed outcome.  Defaults
 #'   to `TRUE`.  When `FALSE`, the draw probability is redistributed to home
 #'   and away and a two-element result is returned.
+#' @param home_b2b (`logical(1)`) Whether the home team is on a back-to-back
+#'   (played its previous game exactly one day earlier).  When `TRUE`, the home
+#'   expected goals are scaled by `exp(-B2B_HOME_NHL)` and the away expected
+#'   goals against it by `exp(+B2B_HOME_NHL)`.  Defaults to `FALSE` (no
+#'   adjustment), so existing calls are unchanged.
+#' @param away_b2b (`logical(1)`) Whether the away team is on a back-to-back.
+#'   When `TRUE`, the away expected goals are scaled by `exp(-B2B_AWAY_NHL)` and
+#'   the home expected goals against it by `exp(+B2B_AWAY_NHL)`.  Defaults to
+#'   `FALSE` (no adjustment).
+#' @param eps_home (`double` or `NULL`) Home b2b magnitude; defaults to
+#'   [B2B_HOME_NHL].  Overridable for tuning.
+#' @param eps_away (`double` or `NULL`) Away b2b magnitude; defaults to
+#'   [B2B_AWAY_NHL].  Overridable for tuning.
 #'
 #' @returns (`numeric`) A named probability vector — `HomeWin`, `Draw`, and
 #'   `AwayWin` when `draws = TRUE`, or `HomeWin` and `AwayWin` when
@@ -55,7 +68,11 @@ DCPredict <- function(
   scores = HockeyModel::scores,
   expected_mean = NULL,
   season_percent = NULL,
-  draws = TRUE
+  draws = TRUE,
+  home_b2b = FALSE,
+  away_b2b = FALSE,
+  eps_home = NULL,
+  eps_away = NULL
 ) {
   if (is.null(params)) {
     params <- .parse_dc_params(params)
@@ -66,7 +83,11 @@ DCPredict <- function(
     params = params,
     maxgoal = maxgoal,
     expected_mean = expected_mean,
-    season_percent = season_percent
+    season_percent = season_percent,
+    home_b2b = home_b2b,
+    away_b2b = away_b2b,
+    eps_home = eps_home,
+    eps_away = eps_away
   )
 
   HomeWinProbability <- sum(probability_matrix[lower.tri(probability_matrix)])
@@ -178,6 +199,12 @@ DCPredict <- function(
 #' @param draws (`logical(1)`) Whether to return a 3-column (home, draw, away)
 #'   matrix; if `FALSE`, returns a 2-column (home, away) matrix with the draw
 #'   probability distributed proportionally.
+#' @param home_b2b (`logical(n)`) Per-game flag for whether the home team is on
+#'   a back-to-back; scales that game's expected goals by exp(+/- `B2B_HOME_NHL`).
+#'   Defaults to all `FALSE`.
+#' @param away_b2b (`logical(n)`) Per-game flag for whether the away team is on
+#'   a back-to-back; scales that game's expected goals by exp(+/- `B2B_AWAY_NHL`).
+#'   Defaults to all `FALSE`.
 #' @returns (`matrix(n x 3)` or `matrix(n x 2)`) Probability columns.
 #' @keywords internal
 .dcPredictVectorized <- function(
@@ -187,7 +214,9 @@ DCPredict <- function(
   maxgoal = 10,
   expected_mean = NULL,
   season_percent = NULL,
-  draws = TRUE
+  draws = TRUE,
+  home_b2b = FALSE,
+  away_b2b = FALSE
 ) {
   if (is.null(params)) {
     params <- .parse_dc_params(params)
@@ -252,6 +281,19 @@ DCPredict <- function(
       expected_mean * (1 / 3 * season_percent)
   }
 
+  # Back-to-back adjustment (#64), applied after the regression blend so this
+  # fixed situational effect is not shrunk by `season_percent`. Mirrors the
+  # per-game scaling in [.dcLambda()]: a b2b home team scores less and concedes
+  # more; a b2b away team does the opposite. Both can apply to the same game.
+  if (any(home_b2b)) {
+    lam[home_b2b] <- lam[home_b2b] * exp(-B2B_HOME_NHL)
+    mu[home_b2b] <- mu[home_b2b] * exp(B2B_HOME_NHL)
+  }
+  if (any(away_b2b)) {
+    mu[away_b2b] <- mu[away_b2b] * exp(-B2B_AWAY_NHL)
+    lam[away_b2b] <- lam[away_b2b] * exp(B2B_AWAY_NHL)
+  }
+
   pm <- .dcProbArray(lambda = lam, mu = mu, params = params, maxgoal = maxgoal)
 
   # Per-game raw (home, draw, away) regulation probabilities from the matrix.
@@ -308,7 +350,6 @@ DCPredict <- function(
 #'   [.parse_dc_params()]; callers in the public entry chain are responsible
 #'   for parsing once (#47).  `NULL` triggers a fallback parse (for direct
 #'   test calls).
-#'
 #' @returns (`list`) A named list with elements `home` and `away`, each a
 #'   single expected-goals (`lambda`/`mu`) value.
 .dcLambda <- function(home, away, params = NULL) {
@@ -355,6 +396,55 @@ DCPredict <- function(
   return(xg)
 }
 
+#' Apply the back-to-back (b2b) adjustment to expected goals (#64)
+#'
+#' @description Scales a home/away expected-goals pair for a game in which one or
+#'   both teams are on a back-to-back.  On the log link this is exactly equivalent
+#'   to subtracting from the b2b team's attack and defensive-strength coefficients:
+#'   a b2b home team scores less (`lambda` down) and concedes more (`mu` up); a b2b
+#'   away team does the opposite.  Both teams can be on a b2b in the same game, so
+#'   both adjustments compose.  This is applied *after* any regression-to-mean
+#'   blend (see [.dcProbMatrix()] and [.dcPredictVectorized()]) because it is a fixed
+#'   situational adjustment that should not be shrunk by `season_percent`.
+#'
+#' @param lambda (`double`) Home expected goals.
+#' @param mu (`double`) Away expected goals.
+#' @param home_b2b (`logical(1)`) Whether the home team is on a back-to-back.
+#'   Defaults to `FALSE`.
+#' @param away_b2b (`logical(1)`) Whether the away team is on a back-to-back.
+#'   Defaults to `FALSE`.
+#' @param eps_home (`double` or `NULL`) Home b2b magnitude; defaults to
+#'   [B2B_HOME_NHL].  Overridable so [.tune_b2b()] can evaluate candidate values.
+#' @param eps_away (`double` or `NULL`) Away b2b magnitude; defaults to
+#'   [B2B_AWAY_NHL].  Overridable for tuning.
+#'
+#' @returns (`list`) A named list with elements `lambda` and `mu`, each adjusted.
+#' @keywords internal
+.apply_b2b <- function(
+  lambda,
+  mu,
+  home_b2b = FALSE,
+  away_b2b = FALSE,
+  eps_home = NULL,
+  eps_away = NULL
+) {
+  if (is.null(eps_home)) {
+    eps_home <- B2B_HOME_NHL
+  }
+  if (is.null(eps_away)) {
+    eps_away <- B2B_AWAY_NHL
+  }
+  if (isTRUE(home_b2b)) {
+    lambda <- lambda * exp(-eps_home)
+    mu <- mu * exp(eps_home)
+  }
+  if (isTRUE(away_b2b)) {
+    mu <- mu * exp(-eps_away)
+    lambda <- lambda * exp(eps_away)
+  }
+  return(list(lambda = lambda, mu = mu))
+}
+
 #' Compute expected goals from the Dixon-Coles probability matrix
 #'
 #' @description Returns the model's expected-goals `xg` for a pairing by taking
@@ -371,16 +461,30 @@ DCPredict <- function(
 #'   for parsing once (#47).  `NULL` triggers a fallback parse (for direct
 #'   test calls).
 #' @param maxgoal (`integer(1)`) Maximum goals included per team.
+#' @param home_b2b (`logical(1)`) Whether the home team is on a back-to-back;
+#'   passed to [.dcProbMatrix()] so the displayed xG matches the adjusted odds.
+#'   Defaults to `FALSE`.
+#' @param away_b2b (`logical(1)`) Whether the away team is on a back-to-back;
+#'   passed to [.dcProbMatrix()].  Defaults to `FALSE`.
 #'
 #' @returns (`list`) A named list with elements `home` and `away`, each the
 #'   expected-goals value for that side.
 #' @keywords internal
-.dcxG <- function(home, away, params = NULL, maxgoal = 10) {
+.dcxG <- function(
+  home,
+  away,
+  params = NULL,
+  maxgoal = 10,
+  home_b2b = FALSE,
+  away_b2b = FALSE
+) {
   pm <- .dcProbMatrix(
     home = home,
     away = away,
     params = params,
-    maxgoal = maxgoal
+    maxgoal = maxgoal,
+    home_b2b = home_b2b,
+    away_b2b = away_b2b
   )
 
   away_xg <- stats::weighted.mean(0:maxgoal, colSums(pm))
@@ -414,6 +518,17 @@ DCPredict <- function(
 #' @param season_percent (`double` or `NULL`) Fraction of the season complete
 #'   for the regression blend.
 #'
+#' @param home_b2b (`logical(1)`) Whether the home team is on a back-to-back.
+#'   When `TRUE`, [.apply_b2b()] scales the expected goals by exp(+/-
+#'   `B2B_HOME_NHL`).  Defaults to `FALSE`.
+#' @param away_b2b (`logical(1)`) Whether the away team is on a back-to-back.
+#'   When `TRUE`, [.apply_b2b()] scales the expected goals by exp(+/-
+#'   `B2B_AWAY_NHL`).  Defaults to `FALSE`.
+#' @param eps_home (`double` or `NULL`) Home b2b magnitude; defaults to
+#'   [B2B_HOME_NHL].  Overridable for tuning.
+#' @param eps_away (`double` or `NULL`) Away b2b magnitude; defaults to
+#'   [B2B_AWAY_NHL].  Overridable for tuning.
+#'
 #' @returns (`matrix`) A square `(maxgoal + 1) x (maxgoal + 1)` probability
 #'   matrix with home goals on rows and away goals on columns, summing to `1`.
 .dcProbMatrix <- function(
@@ -423,7 +538,11 @@ DCPredict <- function(
   maxgoal = 10,
   scores = HockeyModel::scores,
   expected_mean = NULL,
-  season_percent = NULL
+  season_percent = NULL,
+  home_b2b = FALSE,
+  away_b2b = FALSE,
+  eps_home = NULL,
+  eps_away = NULL
 ) {
   if (is.null(params)) {
     params <- .parse_dc_params(params)
@@ -443,6 +562,19 @@ DCPredict <- function(
       (1 - 1 / 3 * season_percent) +
       expected_mean * (1 / 3 * season_percent)
   }
+
+  # Back-to-back adjustment (#64), applied after the regression blend so this
+  # fixed situational effect is not shrunk by `season_percent`.
+  b2b <- .apply_b2b(
+    lambda,
+    mu,
+    home_b2b = home_b2b,
+    away_b2b = away_b2b,
+    eps_home = eps_home,
+    eps_away = eps_away
+  )
+  lambda <- b2b$lambda
+  mu <- b2b$mu
 
   probability_matrix <- .prob_matrix(
     lambda = lambda,

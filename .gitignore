@@ -52,3 +52,4 @@ tests/testthat/*.csv
 reference/*.pdf
 *.csv
 .kilo/
+.posit/

@@ -19,6 +19,7 @@ email.md
 ^AGENTS\.md$
 ^\.lintr$
 ^\.positai$
+^\.posit$
 ^\.claude$
 20252026.csv
 ^\.vscode$
