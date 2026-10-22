@@ -404,7 +404,23 @@ loopless_sim <- function(
   }
 
   summary_results <- all_results |>
+    dplyr::mutate(
+      Conference = .getTeamConferences(.data$Team)
+    ) |>
     # dtplyr::lazy_dt() |>
+    # Seed 3-6: division 2nd/3rd place teams ordered by conference rank
+    dplyr::group_by(.data$SimNo, .data$Conference) |>
+    dplyr::mutate(
+      Seed36 = dplyr::if_else(
+        .data$DivRank %in% 2:3,
+        2L +
+          as.integer(rank(
+            dplyr::if_else(.data$DivRank %in% 2:3, .data$ConfRank, Inf),
+            ties.method = "first"
+          )),
+        NA_integer_
+      )
+    ) |>
     dplyr::group_by(.data$Team) |>
     dplyr::summarise(
       Playoffs = mean(.data$Playoffs),
@@ -427,13 +443,16 @@ loopless_sim <- function(
       sdDivRank = stats::sd(.data$DivRank, na.rm = TRUE),
       p_rank1 = sum(.data$ConfRank == 1 & .data$DivRank == 1) / dplyr::n(),
       p_rank2 = sum(.data$ConfRank != 1 & .data$DivRank == 1) / dplyr::n(),
-      # Solving 3 & 4 & 5 & 6 doesn't *really* matter, because 3/4 play the 5/6 within their own division.
-      # In 2nd round, 1/8 or 2/7 play the 3/6 or 4/5 from their own division. No re-seeding occurs.
-      # See: https://en.wikipedia.org/wiki/Stanley_Cup_playoffs#Current_format
-      p_rank_34 = sum(.data$DivRank == 2) / dplyr::n(),
-      p_rank_56 = sum(.data$DivRank == 3) / dplyr::n(),
+      # Seeds 3-6 don't affect bracket (no re-seeding), but are bragging rights:
+      # the four non-winning top-3 division teams per conference are ordered by points.
+      p_rank3 = sum(.data$Seed36 == 3, na.rm = TRUE) / dplyr::n(),
+      p_rank4 = sum(.data$Seed36 == 4, na.rm = TRUE) / dplyr::n(),
+      p_rank5 = sum(.data$Seed36 == 5, na.rm = TRUE) / dplyr::n(),
+      p_rank6 = sum(.data$Seed36 == 6, na.rm = TRUE) / dplyr::n(),
       p_rank7 = sum(.data$Wildcard == 1) / dplyr::n(),
-      p_rank8 = sum(.data$Wildcard == 2) / dplyr::n()
+      p_rank8 = sum(.data$Wildcard == 2) / dplyr::n(),
+      p_rank_34 = sum(.data$p_rank3, .data$p_rank4, na.rm = TRUE),
+      p_rank_56 = sum(.data$p_rank5, .data$p_rank6, na.rm = TRUE),
     ) |>
     tibble::as_tibble()
 
