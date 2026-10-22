@@ -27,8 +27,8 @@ Internal league-specific implementation of \code{\link[=inRegularSeason]{inRegul
 for the PWHL. Queries the PWHL HockeyTech API via \code{\link[=getPWHLSeasons]{getPWHLSeasons()}} and
 falls back to inspecting \code{schedule} when the API is unavailable. When the
 fallback is used with \code{boolean = FALSE}, no season ID can be derived from
-the schedule alone, so \code{FALSE} is returned. Where a playoff window
-overlaps a regular season row in the API data, the date counts as
-playoffs rather than regular season.
+the schedule alone, so \code{FALSE} is returned (with a warning). Where a
+playoff window overlaps a regular season row in the API data, the date
+counts as playoffs rather than regular season.
 }
 \keyword{internal}

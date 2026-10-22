@@ -334,20 +334,24 @@ test_that(".in_regular_season_pwhl() falls back to the schedule when the API fai
     .package = "HockeyModel"
   )
 
+  # No warning when only a logical indicator is requested
   expect_true(
-    .in_regular_season_pwhl(
+    expect_no_warning(.in_regular_season_pwhl(
       date = as.Date("2024-12-15"),
       schedule = mock_pwhl_schedule
-    )
+    ))
   )
-  # PWHL season IDs cannot be derived from the schedule alone in fallback mode
-  expect_false(
+  # PWHL season IDs cannot be derived from the schedule alone in fallback mode;
+  # the degradation is signalled with a warning rather than silent.
+  res <- expect_warning(
     .in_regular_season_pwhl(
       date = as.Date("2024-12-15"),
       boolean = FALSE,
       schedule = mock_pwhl_schedule
-    )
+    ),
+    "season ID"
   )
+  expect_false(res)
   # Past the last scheduled regular season game
   expect_false(
     .in_regular_season_pwhl(
@@ -370,19 +374,22 @@ test_that(".in_playoffs_pwhl() falls back to the schedule when the API fails (#4
     .package = "HockeyModel"
   )
 
+  # No warning when only a logical indicator is requested
   expect_true(
-    .in_playoffs_pwhl(
+    expect_no_warning(.in_playoffs_pwhl(
       date = as.Date("2025-05-15"),
       schedule = mock_pwhl_schedule
-    )
+    ))
   )
-  expect_false(
+  res <- expect_warning(
     .in_playoffs_pwhl(
       date = as.Date("2025-05-15"),
       boolean = FALSE,
       schedule = mock_pwhl_schedule
-    )
+    ),
+    "season ID"
   )
+  expect_false(res)
   expect_false(
     .in_playoffs_pwhl(
       date = as.Date("2024-12-15"),

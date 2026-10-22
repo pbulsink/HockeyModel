@@ -98,9 +98,9 @@ getCurrentPWHLSeason <- function() {
 #'   for the PWHL. Queries the PWHL HockeyTech API via [getPWHLSeasons()] and
 #'   falls back to inspecting `schedule` when the API is unavailable. When the
 #'   fallback is used with `boolean = FALSE`, no season ID can be derived from
-#'   the schedule alone, so `FALSE` is returned. Where a playoff window
-#'   overlaps a regular season row in the API data, the date counts as
-#'   playoffs rather than regular season.
+#'   the schedule alone, so `FALSE` is returned (with a warning). Where a
+#'   playoff window overlaps a regular season row in the API data, the date
+#'   counts as playoffs rather than regular season.
 #'
 #' @param date (`Date` or `character(1)`) Date to check. Defaults to [Sys.Date()].
 #' @param boolean (`logical(1)`) When `TRUE`, returns a logical indicator; when
@@ -115,21 +115,8 @@ getCurrentPWHLSeason <- function() {
   boolean = TRUE,
   schedule = HockeyModel::pwhlSchedule
 ) {
-  if (!is.Date(date)) {
-    if (!is.character(date) || length(date) != 1L) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-    date <- tryCatch(
-      suppressWarnings(as.Date(date)),
-      error = function(e) NA
-    )
-    if (is.na(date)) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-  }
-  if (!is.logical(boolean) || length(boolean) != 1 || is.na(boolean)) {
-    cli::cli_abort("{.arg boolean} must be a single TRUE/FALSE value.")
-  }
+  date <- .coerce_date(date)
+  .validate_boolean(boolean)
 
   seasons <- tryCatch(getPWHLSeasons(), error = function(e) NULL)
   if (!is.null(seasons) && nrow(seasons) > 0) {
@@ -165,6 +152,13 @@ getCurrentPWHLSeason <- function() {
   if (date < min_date || date > max_date) {
     return(FALSE)
   }
+  # The schedule carries no season column, so a season ID cannot be derived in
+  # fallback mode; warn rather than silently returning FALSE.
+  if (!boolean) {
+    cli::cli_warn(
+      "PWHL API unavailable and the schedule carries no season information, so no season ID can be derived in fallback mode; returning {.val FALSE} for {.arg boolean = FALSE}."
+    )
+  }
   boolean
 }
 
@@ -176,7 +170,7 @@ getCurrentPWHLSeason <- function() {
 #'   the PWHL. Queries the PWHL HockeyTech API via [getPWHLSeasons()] and falls
 #'   back to inspecting `schedule` when the API is unavailable. When the
 #'   fallback is used with `boolean = FALSE`, no season ID can be derived from
-#'   the schedule alone, so `FALSE` is returned.
+#'   the schedule alone, so `FALSE` is returned (with a warning).
 #'
 #' @param date (`Date` or `character(1)`) Date to check. Defaults to [Sys.Date()].
 #' @param boolean (`logical(1)`) When `TRUE`, returns a logical indicator; when
@@ -191,21 +185,8 @@ getCurrentPWHLSeason <- function() {
   boolean = TRUE,
   schedule = HockeyModel::pwhlSchedule
 ) {
-  if (!is.Date(date)) {
-    if (!is.character(date) || length(date) != 1L) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-    date <- tryCatch(
-      suppressWarnings(as.Date(date)),
-      error = function(e) NA
-    )
-    if (is.na(date)) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-  }
-  if (!is.logical(boolean) || length(boolean) != 1 || is.na(boolean)) {
-    cli::cli_abort("{.arg boolean} must be a single TRUE/FALSE value.")
-  }
+  date <- .coerce_date(date)
+  .validate_boolean(boolean)
 
   seasons <- tryCatch(getPWHLSeasons(), error = function(e) NULL)
   if (!is.null(seasons) && nrow(seasons) > 0) {
@@ -230,6 +211,13 @@ getCurrentPWHLSeason <- function() {
   if (date < min_date || date > max_date) {
     return(FALSE)
   }
+  # The schedule carries no season column, so a season ID cannot be derived in
+  # fallback mode; warn rather than silently returning FALSE.
+  if (!boolean) {
+    cli::cli_warn(
+      "PWHL API unavailable and the schedule carries no season information, so no season ID can be derived in fallback mode; returning {.val FALSE} for {.arg boolean = FALSE}."
+    )
+  }
   boolean
 }
 
@@ -252,18 +240,7 @@ getCurrentPWHLSeason <- function() {
   date = Sys.Date(),
   schedule = HockeyModel::pwhlSchedule
 ) {
-  if (!is.Date(date)) {
-    if (!is.character(date) || length(date) != 1L) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-    date <- tryCatch(
-      suppressWarnings(as.Date(date)),
-      error = function(e) NA
-    )
-    if (is.na(date)) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-  }
+  date <- .coerce_date(date)
 
   seasons <- tryCatch(getPWHLSeasons(), error = function(e) NULL)
   if (!is.null(seasons) && nrow(seasons) > 0) {
@@ -543,13 +520,7 @@ pwhl_games_today <- function(
   schedule = HockeyModel::pwhlSchedule,
   date = Sys.Date()
 ) {
-  if (!inherits(date, c("Date", "character"))) {
-    cli::cli_abort("{.arg date} must be a Date or date-like value.")
-  }
-  date <- suppressWarnings(as.Date(date))
-  if (length(date) != 1 || is.na(date)) {
-    cli::cli_abort("{.arg date} must be a Date or date-like value.")
-  }
+  date <- .coerce_date(date)
   games <- schedule[
     !is.na(schedule$Date) &
       schedule$Date == date &
@@ -688,8 +659,6 @@ getPWHLPlayoffSeries <- function(season_id = NULL) {
   if (length(matchups) == 0) {
     return(NULL)
   }
-
-  nmatchups <- length(matchups[[1]]$series_letter)
 
   # Flatten all rounds/series
   series_list <- data.frame(

@@ -27,6 +27,6 @@ Internal league-specific implementation of \code{\link[=inPlayoffs]{inPlayoffs()
 the PWHL. Queries the PWHL HockeyTech API via \code{\link[=getPWHLSeasons]{getPWHLSeasons()}} and falls
 back to inspecting \code{schedule} when the API is unavailable. When the
 fallback is used with \code{boolean = FALSE}, no season ID can be derived from
-the schedule alone, so \code{FALSE} is returned.
+the schedule alone, so \code{FALSE} is returned (with a warning).
 }
 \keyword{internal}

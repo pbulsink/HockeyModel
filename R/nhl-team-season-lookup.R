@@ -134,21 +134,8 @@ getSeasonEndDate <- function(season = NULL) {
   boolean = TRUE,
   schedule = HockeyModel::schedule
 ) {
-  if (!is.Date(date)) {
-    if (!is.character(date) || length(date) != 1L) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-    date <- tryCatch(
-      suppressWarnings(as.Date(date)),
-      error = function(e) NA
-    )
-    if (is.na(date)) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-  }
-  if (!is.logical(boolean) || length(boolean) != 1 || is.na(boolean)) {
-    cli::cli_abort("{.arg boolean} must be a single TRUE/FALSE value.")
-  }
+  date <- .coerce_date(date)
+  .validate_boolean(boolean)
 
   seasons_data <- .fetch_nhl_seasons()
   if (!is.null(seasons_data) && nrow(seasons_data) > 0) {
@@ -192,18 +179,7 @@ getSeasonEndDate <- function(season = NULL) {
   date = Sys.Date(),
   schedule = HockeyModel::schedule
 ) {
-  if (!is.Date(date)) {
-    if (!is.character(date) || length(date) != 1L) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-    date <- tryCatch(
-      suppressWarnings(as.Date(date)),
-      error = function(e) NA
-    )
-    if (is.na(date)) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-  }
+  date <- .coerce_date(date)
 
   seasons_data <- .fetch_nhl_seasons()
   if (!is.null(seasons_data) && nrow(seasons_data) > 0) {
@@ -246,21 +222,8 @@ getSeasonEndDate <- function(season = NULL) {
   boolean = TRUE,
   schedule = HockeyModel::schedule
 ) {
-  if (!is.Date(date)) {
-    if (!is.character(date) || length(date) != 1L) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-    date <- tryCatch(
-      suppressWarnings(as.Date(date)),
-      error = function(e) NA
-    )
-    if (is.na(date)) {
-      cli::cli_abort("{.arg date} must be a Date or date-like value.")
-    }
-  }
-  if (!is.logical(boolean) || length(boolean) != 1 || is.na(boolean)) {
-    cli::cli_abort("{.arg boolean} must be a single TRUE/FALSE value.")
-  }
+  date <- .coerce_date(date)
+  .validate_boolean(boolean)
 
   seasons_data <- .fetch_nhl_seasons()
   if (!is.null(seasons_data) && nrow(seasons_data) > 0) {

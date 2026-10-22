@@ -173,6 +173,42 @@ is.Date <- function(date) {
 }
 
 
+#' Coerce a date-like value to `Date`
+#'
+#' @description Accepts a single `Date`, `POSIXt`, or character string
+#'   parseable by [as.Date()], and returns it as `Date`. Anything else
+#'   (including bare numerics, which would otherwise be silently read as days
+#'   since the epoch) raises an error. Shared by the league season-state
+#'   internals so date validation lives in one place.
+#'
+#' @param date (`Date` or `character(1)`) Date to check. Defaults to [Sys.Date()].
+#' @returns (`Date`) The coerced date.
+#' @keywords internal
+.coerce_date <- function(date = Sys.Date()) {
+  # Check length first so vector input errors cleanly instead of inside is.Date()
+  if (length(date) != 1L || !is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
+  suppressWarnings(as.Date(date))
+}
+
+
+#' Validate a single logical flag argument
+#'
+#' @description Shared by the league season-state internals so `boolean`
+#'   validation lives in one place.
+#'
+#' @param boolean (`logical(1)`) Value to validate.
+#' @returns (`logical(1)`) The validated value, invisibly.
+#' @keywords internal
+.validate_boolean <- function(boolean) {
+  if (!is.logical(boolean) || length(boolean) != 1L || is.na(boolean)) {
+    cli::cli_abort("{.arg boolean} must be a single TRUE/FALSE value.")
+  }
+  invisible(boolean)
+}
+
+
 #' Split draw probability into overtime/shootout outcomes
 #'
 #' @param home_win (`double`) Regulation home-win probabilities.
