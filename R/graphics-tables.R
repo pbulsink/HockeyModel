@@ -312,6 +312,14 @@ daily_odds_table <- function(
       heading.align = "left",
       table.border.bottom.color = "white",
       table.border.top.color = "white"
+    ) |>
+    gt::cols_align(
+      align = "left", 
+      columns = c(2,6,7,8)
+    ) |>
+    gt::cols_align(
+      align = "right",
+      columns = c(3,4,5,9)
     )
 
   if (include_images) {
