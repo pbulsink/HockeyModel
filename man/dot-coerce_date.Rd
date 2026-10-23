@@ -13,10 +13,10 @@
 (\code{Date}) The coerced date.
 }
 \description{
-Accepts a \code{Date}, or a single character string parseable by
-\code{\link[=as.Date]{as.Date()}}, and returns it as \code{Date}. Anything else (including bare
-numerics, which would otherwise be silently read as days since the epoch)
-raises an error. Shared by the league season-state internals so date
-validation lives in one place.
+Accepts a single \code{Date}, \code{POSIXt}, or character string
+parseable by \code{\link[=as.Date]{as.Date()}}, and returns it as \code{Date}. Anything else
+(including bare numerics, which would otherwise be silently read as days
+since the epoch) raises an error. Shared by the league season-state
+internals so date validation lives in one place.
 }
 \keyword{internal}

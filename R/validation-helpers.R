@@ -270,3 +270,61 @@ is.Date <- function(date) {
     dplyr::arrange(.data$Date, .data$GameID)
   return(schedule)
 }
+
+#' Determine back-to-back (b2b) status for a set of games
+#'
+#' @description A team is on a b2b for a game on date `d` if it played any game
+#'   exactly one day earlier (`d - 1`).  Given today's games and a frame of prior
+#'   games, returns per-game logical flags for whether the home or away team is
+#'   on a back-to-back.  Only rows dated exactly one day before each game are
+#'   used; future-dated or older rows are ignored.
+#'
+#' @param games (`data.frame`) Today's games with `Date`, `HomeTeam`, and
+#'   `AwayTeam` columns (one row per game).
+#' @param history (`data.frame`) Prior games with `Date`, `HomeTeam`, and
+#'   `AwayTeam` columns.  May be empty; only rows dated exactly one day before a
+#'   game's date are used to flag that game.
+#'
+#' @returns (`list`) A named list with elements `home_b2b` and `away_b2b`, each a
+#'   logical vector of length `nrow(games)` that is `TRUE` when the team played
+#'   exactly one day before its game in `games`.
+#' @keywords internal
+.b2b_flags <- function(games, history) {
+  n <- nrow(games)
+  if (n == 0) {
+    return(list(home_b2b = logical(0), away_b2b = logical(0)))
+  }
+
+  # Union of teams playing on each date in `history`, keyed by that date, so a
+  # "who played yesterday?" lookup is O(1) per game instead of rescanning.
+  hist_dates <- unique(history$Date)
+  teams_by_date <- lapply(
+    hist_dates,
+    function(dt) {
+      rows <- history[history$Date == dt, ]
+      c(rows$HomeTeam, rows$AwayTeam)
+    }
+  )
+  names(teams_by_date) <- format(hist_dates)
+
+  .yesterday_teams <- function(dt) {
+    key <- format(as.Date(dt - 1))
+    if (is.null(key) || !(key %in% names(teams_by_date))) {
+      return(logical(0))
+    }
+    teams_by_date[[key]]
+  }
+
+  home_b2b <- vapply(
+    seq_len(n),
+    function(i) games$HomeTeam[i] %in% .yesterday_teams(games$Date[i]),
+    logical(1)
+  )
+  away_b2b <- vapply(
+    seq_len(n),
+    function(i) games$AwayTeam[i] %in% .yesterday_teams(games$Date[i]),
+    logical(1)
+  )
+
+  return(list(home_b2b = home_b2b, away_b2b = away_b2b))
+}

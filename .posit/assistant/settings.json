@@ -16,7 +16,8 @@
       "air *": "allow",
       "tail *": "allow",
       "git add *": "allow",
-      "git commit *": "allow"
+      "git commit *": "allow",
+      "git push *": "allow"
     },
     "skill": {
       "implement-issue": "allow",
