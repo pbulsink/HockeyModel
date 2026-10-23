@@ -89,6 +89,32 @@ test_that("Season Validates", {
   expect_false(.seasonValidator(TRUE))
 })
 
+test_that(".coerce_date() accepts Dates and date-like strings (#43)", {
+  d <- as.Date("2024-05-15")
+  expect_identical(.coerce_date(d), d)
+  expect_equal(.coerce_date("2024-05-15"), d)
+})
+
+test_that(".coerce_date() rejects non-date input (#43)", {
+  expect_error(.coerce_date("not-a-date"), "date")
+  # Bare numerics would be silently read as days since the epoch by as.Date()
+  expect_error(.coerce_date(12345), "date")
+  expect_error(.coerce_date(TRUE), "date")
+  expect_error(.coerce_date(c("2024-05-15", "2024-06-01")), "date")
+})
+
+test_that(".validate_boolean() accepts single logicals (#43)", {
+  expect_true(isTRUE(.validate_boolean(TRUE)))
+  expect_false(isTRUE(.validate_boolean(FALSE)))
+})
+
+test_that(".validate_boolean() rejects invalid flags (#43)", {
+  expect_error(.validate_boolean(c(TRUE, FALSE)), "boolean")
+  expect_error(.validate_boolean(NA), "boolean")
+  expect_error(.validate_boolean("yes"), "boolean")
+  expect_error(.validate_boolean(1L), "boolean")
+})
+
 test_that("Draws Normalize", {
   expect_equal(
     .extraTimeSolver(0.45, 0.35, 0.2),

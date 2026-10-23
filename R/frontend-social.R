@@ -85,7 +85,7 @@
 ) {
   post_results <- list()
 
-  if (inRegularSeason()) {
+  if (inRegularSeason(league = "NHL")) {
     # Only runs if schedule has regular season games remaining
     post_results[[length(post_results) + 1]] <- .safe_post(
       "predicted points",

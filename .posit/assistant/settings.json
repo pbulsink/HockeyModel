@@ -1,0 +1,37 @@
+{
+  "permission": {
+    "bash": {
+      "gh issue view *": "allow",
+      "head *": "allow",
+      "grep *": "allow",
+      "echo *": "allow",
+      "sed *": "allow",
+      "cat *": "allow",
+      "ls *": "allow",
+      "gh api user *": "allow",
+      "git branch *": "allow",
+      "git checkout *": "allow",
+      "gh api repos/pbulsink/HockeyModel/issues/64/comments *": "allow",
+      "Rscript *": "allow",
+      "air *": "allow",
+      "tail *": "allow",
+      "git add *": "allow",
+      "git commit *": "allow"
+    },
+    "skill": {
+      "implement-issue": "allow",
+      "github": "allow",
+      "plan-review": "allow",
+      "grill-me": "allow",
+      "r-code": "allow",
+      "tdd-workflow": "allow"
+    },
+    "edit": {
+      "*.md": "allow",
+      "*.R": "allow"
+    },
+    "executeCode": {
+      "*": "allow"
+    }
+  }
+}
