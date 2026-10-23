@@ -21,11 +21,21 @@ For any feature, fix, or refactor:
 7. **Document** — document any new or changed exports.
 8. **Verify**: Run `devtools::test(reporter = "check")`, then `devtools::check(error_on = "warning")`. Resolve warnings, errors, and NOTEs.
 9. **Review**: Evaluate the changes you've made as if you're doing a new code review. Action any obvious improvements and highlight the questionable or unclear bits as if from a code review when writing your summary comment.
-10. **News** — add a bullet at the top of `NEWS.md` under the dev heading, following [NEWS.md rules](docs/agent-instructions/news.md).
+10. **News** — add a bullet at the top of `NEWS.md` under the dev heading.
 
 ## Repository structure
 
 Standard R package layout; see [structure](docs/agent-instructions/structure.md) for the full tree. In `R/`, one file ~= 1 exported function, and `man/` is roxygen-generated.
+
+## Annexes (read before calculation, modelling, or graphics work)
+
+Use these instead of re-exploring the package.
+
+| Topic | Path |
+|-------|------|
+| NHL model, simulation, playoffs, tuning | [model-nhl](docs/agent-instructions/model-nhl.md) |
+| PWHL model and differences from NHL | [model-pwhl](docs/agent-instructions/model-pwhl.md) |
+| Graphics, tables, and posting workflow (both leagues) | [graphics-products](docs/agent-instructions/graphics-products.md) |
 
 ## Skills
 
