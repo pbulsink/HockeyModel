@@ -1,34 +1,12 @@
 # AGENTS.md
 
-## Repository overview
+**HockeyModel** — R package that predicts NHL game winners, season points, and playoff/cup odds; includes PWHL support via the HockeyTech API. https://github.com/pbulsink/HockeyModel
 
-**HockeyModel** — NHL Hockey Model for 2018-2019
+## Conventions
 
-Using various techniques, predict the winners of upcoming NHL hockey games, the expected points for the season, and odds for playoffs & cup winning.
-
-https://github.com/pbulsink/HockeyModel
-
-### Overall structure
-
-The project follows standard R package conventions with these key directories:
-
-HockeyModel/
-├── R/                          # R source code
-│   ├── HockeyModel-package.R # Auto-generated package docs
-│   └── *.R                     # Function definitions, 1 file ~= 1 exported function
-├── .github/
-│   ├── ISSUE_TEMPLATE/         # GitHub issue templates
-│   ├── skills/                 # Agent skill definitions
-│   └── workflows/              # CI/CD configurations
-├── tests/testthat/             # Test suite
-├── man/                        # Generated documentation
-├── AGENTS.md                   # Main agent setup file
-├── DESCRIPTION                 # Package metadata
-├── NAMESPACE                   # Auto-generated export information
-├── NEWS.md                     # Changelog
-└── Various config files        # .gitignore, codecov.yml, etc.
-
----
+- R console: use `--quiet --vanilla`.
+- Always run `air format .` after generating R code.
+- Comments explain *why*, not *what*.
 
 ## Standard workflow
 
@@ -43,20 +21,11 @@ For any feature, fix, or refactor:
 7. **Document** — document any new or changed exports.
 8. **Verify**: Run `devtools::test(reporter = "check")`, then `devtools::check(error_on = "warning")`. Resolve warnings, errors, and NOTEs.
 9. **Review**: Evaluate the changes you've made as if you're doing a new code review. Action any obvious improvements and highlight the questionable or unclear bits as if from a code review when writing your summary comment.
-10. **News** — add bullet at top of `NEWS.md` (under dev heading):
-   - User-facing changes only. 1 line, end with `.`
-   - Present tense, positive framing, function names (backticks + `()`) near start: `` * `fn()` now accepts ... `` not `* Fixed ...`
-   - Issue/contributor before final period: `` * `fn()` now accepts ... (@user, #N). `` where `#N` is the GitHub issue number being implemented (e.g. `#42`).
-   - Get username: `gh api user --jq .login`; get issue number from the user's prompt, the branch name (`git branch --show-current`), or `gh issue list`.
-   - **Never guess or invent an issue number.** Before writing it, verify: (1) you received it from the user or the branch name, OR (2) you looked it up with `gh`. If you cannot trace the number to a concrete source, use `#noissue`.
+10. **News** — add a bullet at the top of `NEWS.md` under the dev heading, following [NEWS.md rules](docs/agent-instructions/news.md).
 
----
+## Repository structure
 
-## General
-
-- R console: use `--quiet --vanilla`.
-- Always run `air format .` after generating R code.
-- Comments explain *why*, not *what*.
+Standard R package layout; see [structure](docs/agent-instructions/structure.md) for the full tree. In `R/`, one file ~= 1 exported function, and `man/` is roxygen-generated.
 
 ## Skills
 
@@ -67,4 +36,6 @@ For any feature, fix, or refactor:
 | from github | @.github/skills/github/SKILL.md |
 | implement issue / work on #NNN | @.github/skills/implement-issue/SKILL.md |
 | writing R functions / API design / error handling | @.github/skills/r-code/SKILL.md |
-| verify / check package / | @.github/skills/cmd-check/SKILL.md |
+| writing or reviewing tests | @.github/skills/tdd-workflow/SKILL.md |
+| search / rewrite code (astgrepr) | @.github/skills/search-code/SKILL.md |
+| verify / check package | @.github/skills/cmd-check/SKILL.md |
