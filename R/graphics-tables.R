@@ -32,6 +32,7 @@ format_playoff_odds <- function(
     )
   }
 
+  # TODO: REsolve league
   if (league == "PWHL") {
     teamColours <- HockeyModel::pwhlTeamColours
     table_title <- paste(caption_text, "Playoff Odds")
@@ -633,4 +634,76 @@ series_odds_table <- function(
   }
 
   return(series_gt)
+}
+
+season_finish_table <- function(
+  summary_results,
+  caption_text = "",
+  include_images = TRUE,
+  league = "NHL"
+) {
+
+  # TODO use compile_predictions for this?
+  if (is.null(summary_results)) {
+    pdates <- .get_prediction_dates(getOption("HockeyModel.prediction.path"))
+    if (length(pdates) == 0L) {
+      cli::cli_alert_info(
+        "No prediction files found; skipping playoff simulation."
+      )
+      return(invisible(NULL))
+    }
+    lastp <- max(pdates)
+    if (lastp < Sys.Date() - 7) {
+      cli::cli_alert_info(
+        "Most recent prediction ({.val {lastp}}) is more than 7 days old; skipping playoff simulation."
+      )
+      return(invisible(NULL))
+    }
+    summary_results <- readRDS(file.path(
+      getOption("HockeyModel.prediction.path"),
+      paste0(lastp, "-predictions.RDS")
+    ))
+  }
+
+    # TODO: REsolve league
+  if (league == "PWHL") {
+    teamColours <- HockeyModel::pwhlTeamColours
+    table_title <- paste(caption_text, "Playoff Odds")
+  } else {
+    teamColours <- HockeyModel::teamColours
+    table_title <- paste(caption_text, "NHL Playoff Odds")
+  }
+
+  finish_tbl <- summary_results |>
+    dplyr::mutate(
+      Conference = .getTeamConferences(.data$Team),
+      miss_playoffs = 1-.data$Playoffs
+    ) |>
+    dplyr::arrange(
+      .data$Conference,
+      .data$meanConfRank
+    ) |>  
+    dplyr::select(
+      .data$Team,
+      .data$Conference,
+      .data$p_rank1,
+      .data$p_rank2,
+      .data$p_rank3,
+      .data$p_rank4,
+      .data$p_rank5,
+      .data$p_rank6,
+      .data$p_rank7,
+      .data$p_rank8,
+      .data$miss_playoffs
+    ) |>
+    tibble::add_column("teamcolour" = "  ", .before = 1)
+
+  if (include_images) {
+    finish_tbl <- finish_tbl |>
+      tibble::add_column("teamimage" = .data$Team, .after = 1)
+  }
+
+  finish_tbl |>
+    gt::gt()
+    
 }

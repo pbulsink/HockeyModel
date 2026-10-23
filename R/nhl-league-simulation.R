@@ -451,8 +451,9 @@ loopless_sim <- function(
       p_rank6 = sum(.data$Seed36 == 6, na.rm = TRUE) / dplyr::n(),
       p_rank7 = sum(.data$Wildcard == 1) / dplyr::n(),
       p_rank8 = sum(.data$Wildcard == 2) / dplyr::n(),
-      p_rank_34 = sum(.data$p_rank3, .data$p_rank4, na.rm = TRUE),
-      p_rank_56 = sum(.data$p_rank5, .data$p_rank6, na.rm = TRUE),
+      # These are done in nhl-league-playoffs.R (around line 303) when needed.
+      # p_rank_34 = sum(.data$p_rank3, .data$p_rank4, na.rm = TRUE),
+      # p_rank_56 = sum(.data$p_rank5, .data$p_rank6, na.rm = TRUE),
     ) |>
     tibble::as_tibble()
 
