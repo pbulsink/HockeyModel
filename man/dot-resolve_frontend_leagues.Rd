@@ -4,11 +4,17 @@
 \alias{.resolve_frontend_leagues}
 \title{Resolve requested front-end leagues}
 \usage{
-.resolve_frontend_leagues(league = NULL)
+.resolve_frontend_leagues(league = NULL, active_only = FALSE)
 }
 \arguments{
 \item{league}{(\code{character(1)} or \code{NULL}) Requested league selector. \code{NULL},
-\code{NA}, and \code{"both"} expand to both leagues.}
+\code{NA}, and \code{"both"} expand to both leagues (or, with \code{active_only = TRUE},
+to whichever leagues are currently active).}
+
+\item{active_only}{(\code{logical(1)}) When \code{TRUE} and \code{league} is \code{NULL} or \code{NA},
+only leagues that currently have games on (regular season or playoffs)
+are returned, via \code{\link[=.active_frontend_leagues]{.active_frontend_leagues()}}. Workflow entry points use
+this; date-query functions like \code{\link[=inRegularSeason]{inRegularSeason()}} do not.}
 }
 \value{
 (\code{character}) Normalised league names.

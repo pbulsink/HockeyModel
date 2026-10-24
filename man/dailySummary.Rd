@@ -23,7 +23,9 @@ omitted, NHL uses \code{\link[=getOption]{getOption()}} \code{HockeyModel.graphi
 \item{league}{(\code{character(1)} or \code{NULL}) Which league front-end to run. Can
 be one of:
 \itemize{
-\item \code{NULL}, \code{NA}, or \code{"both"}: Run both leagues.
+\item \code{NULL} or \code{NA}: Run whichever leagues are currently active (regular
+season or playoffs).
+\item \code{"both"}: Run both leagues regardless of activity.
 \item \code{"nhl"}: Run the NHL workflow only.
 \item \code{"pwhl"}: Run the PWHL workflow only.
 }}

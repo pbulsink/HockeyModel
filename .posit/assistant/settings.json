@@ -11,13 +11,13 @@
       "gh api user *": "allow",
       "git branch *": "allow",
       "git checkout *": "allow",
-      "gh api repos/pbulsink/HockeyModel/issues/64/comments *": "allow",
       "Rscript *": "allow",
       "air *": "allow",
       "tail *": "allow",
       "git add *": "allow",
       "git commit *": "allow",
-      "git push *": "allow"
+      "git push *": "allow",
+      "gh api *": "allow"
     },
     "skill": {
       "implement-issue": "allow",
@@ -33,6 +33,9 @@
     },
     "executeCode": {
       "*": "allow"
+    },
+    "positronCommand": {
+      "workbench.action.language.runtime.restartActiveSession": "allow"
     }
   }
 }

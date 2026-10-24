@@ -3,12 +3,18 @@
 #' Resolve requested front-end leagues
 #'
 #' @param league (`character(1)` or `NULL`) Requested league selector. `NULL`,
-#'   `NA`, and `"both"` expand to both leagues.
+#'   `NA`, and `"both"` expand to both leagues (or, with `active_only = TRUE`,
+#'   to whichever leagues are currently active).
+#' @param active_only (`logical(1)`) When `TRUE` and `league` is `NULL` or `NA`,
+#'   only leagues that currently have games on (regular season or playoffs)
+#'   are returned, via [.active_frontend_leagues()]. Workflow entry points use
+#'   this; date-query functions like [inRegularSeason()] do not.
 #' @returns (`character`) Normalised league names.
 #' @keywords internal
-.resolve_frontend_leagues <- function(league = NULL) {
+.resolve_frontend_leagues <- function(league = NULL, active_only = FALSE) {
   if (is.null(league) || (length(league) == 1 && is.na(league))) {
-    return(c("NHL", "PWHL"))
+    # Default selection only touches leagues that currently have games on.
+    return(if (active_only) .active_frontend_leagues() else c("NHL", "PWHL"))
   }
 
   if (!is.character(league) || length(league) != 1) {
@@ -29,6 +35,36 @@
   cli::cli_abort(
     "{.arg league} must be NULL, NA, {.val both}, {.val nhl}, or {.val pwhl}."
   )
+}
+
+
+#' Resolve active front-end leagues for default league selection
+#'
+#' @description Used when a caller omits `league` (`NULL` or `NA`). A league is
+#'   considered active while it has games on — regular season or playoffs — so
+#'   the NHL stays active through its June playoffs and the PWHL through its
+#'   spring cup. Leagues in their off-season are skipped, and an error is
+#'   raised when neither league is active.
+#' @returns (`character`) Active league names, in NHL/PWHL order.
+#' @keywords internal
+.active_frontend_leagues <- function() {
+  l <- character(0)
+
+  if (!isTRUE(.in_off_season_nhl())) {
+    l <- c(l, "NHL")
+  }
+
+  if (!isTRUE(.in_off_season_pwhl())) {
+    l <- c(l, "PWHL")
+  }
+
+  if (length(l) == 0L) {
+    cli::cli_abort(
+      "Neither NHL nor PWHL are active now; to force a league you must specify one or both explicitly."
+    )
+  }
+
+  l
 }
 
 
@@ -167,18 +203,20 @@
 
 #' Update Model
 #' @description Updates the requested league model data. With `league = NULL`,
-#'   `NA`, or `"both"`, both NHL and PWHL models are updated in one call.
+#'   `NA`, or `"both"`, both leagues are updated in one call — including out of
+#'   season, so league schedules stay current; `"nhl"` and `"pwhl"` run one
+#'   league only.
 #'
 #' @param save_data whether to save data to the package file
-#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
-#'   both leagues; `"nhl"` and `"pwhl"` run one league only
+#' @param league which league front-end to run: `NULL`, `NA`, and `"both"`
+#'   update both leagues; `"nhl"` and `"pwhl"` run one league only
 #'
 #' @return For a single league, a list of scores, schedule, and params. For
 #'   both leagues, a named list with `nhl` and `pwhl` entries of that same form.
 #'
 #' @export
 updateModel <- function(save_data = TRUE, league = NULL) {
-  leagues <- .resolve_frontend_leagues(league)
+  leagues <- .resolve_frontend_leagues(league, active_only = FALSE) # explicit false to update league schedules
   result <- list()
 
   if ("NHL" %in% leagues) {
@@ -282,7 +320,8 @@ updateModel <- function(save_data = TRUE, league = NULL) {
 #' @param scores HockeyModel::scores or a custom value
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
-#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#' @param league which league front-end to run: `NULL` and `NA` run whichever
+#'   leagues are currently active (regular season or playoffs); `"both"` runs
 #'   both leagues; `"nhl"` and `"pwhl"` run one league only
 #'
 #' @return NULL
@@ -295,7 +334,7 @@ updatePredictions <- function(
   params = NULL,
   league = NULL
 ) {
-  leagues <- .resolve_frontend_leagues(league)
+  leagues <- .resolve_frontend_leagues(league, active_only = TRUE)
   scores_missing <- missing(scores)
   schedule_missing <- missing(schedule)
   data_dirs <- .frontend_prediction_dirs(data_dir)
