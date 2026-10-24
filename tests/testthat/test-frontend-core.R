@@ -185,15 +185,16 @@ test_that(".active_frontend_leagues returns only leagues with games on (#44)", {
   expect_error(.active_frontend_leagues(), "Neither NHL nor PWHL are active")
 })
 
-test_that("updateModel() only updates active leagues by default (#44)", {
+test_that("updateModel() updates both leagues by default (#44)", {
   local_mocked_bindings(
-    .active_frontend_leagues = function() "NHL",
     .update_model_nhl = function(save_data = TRUE) list(source = "nhl"),
-    .update_model_pwhl = function(save_data = TRUE) stop("should not run"),
+    .update_model_pwhl = function(save_data = TRUE) list(source = "pwhl"),
     .package = "HockeyModel"
   )
 
-  expect_identical(updateModel(), list(source = "nhl"))
+  result <- updateModel()
+
+  expect_named(result, c("nhl", "pwhl"))
 })
 
 test_that("league = 'both' forces both leagues regardless of activity (#44)", {

@@ -202,14 +202,14 @@
 }
 
 #' Update Model
-#' @description Updates the requested league model data. With `league = NULL`
-#'   or `NA`, only currently active leagues (regular season or playoffs) are
-#'   updated in one call; `"both"` forces both regardless of activity.
+#' @description Updates the requested league model data. With `league = NULL`,
+#'   `NA`, or `"both"`, both leagues are updated in one call — including out of
+#'   season, so league schedules stay current; `"nhl"` and `"pwhl"` run one
+#'   league only.
 #'
 #' @param save_data whether to save data to the package file
-#' @param league which league front-end to run: `NULL` and `NA` run whichever
-#'   leagues are currently active (regular season or playoffs); `"both"` runs
-#'   both leagues; `"nhl"` and `"pwhl"` run one league only
+#' @param league which league front-end to run: `NULL`, `NA`, and `"both"`
+#'   update both leagues; `"nhl"` and `"pwhl"` run one league only
 #'
 #' @return For a single league, a list of scores, schedule, and params. For
 #'   both leagues, a named list with `nhl` and `pwhl` entries of that same form.
