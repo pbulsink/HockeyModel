@@ -216,7 +216,7 @@
 #'
 #' @export
 updateModel <- function(save_data = TRUE, league = NULL) {
-  leagues <- .resolve_frontend_leagues(league, active_only = TRUE)
+  leagues <- .resolve_frontend_leagues(league, active_only = FALSE) # explicit false to update league schedules
   result <- list()
 
   if ("NHL" %in% leagues) {
