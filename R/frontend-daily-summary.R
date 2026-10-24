@@ -289,7 +289,9 @@
 #' @param delay (`double(1)`) Delay between social-media posts in seconds.
 #' @param league (`character(1)` or `NULL`) Which league front-end to run. Can
 #'   be one of:
-#'   * `NULL`, `NA`, or `"both"`: Run both leagues.
+#'   * `NULL` or `NA`: Run whichever leagues are currently active (regular
+#'     season or playoffs).
+#'   * `"both"`: Run both leagues regardless of activity.
 #'   * `"nhl"`: Run the NHL workflow only.
 #'   * `"pwhl"`: Run the PWHL workflow only.
 #'
@@ -303,7 +305,7 @@ dailySummary <- function(
   league = NULL
 ) {
   graphic_dir_missing <- missing(graphic_dir)
-  leagues <- .resolve_frontend_leagues(league)
+  leagues <- .resolve_frontend_leagues(league, active_only = TRUE)
   result <- list()
 
   if ("NHL" %in% leagues) {

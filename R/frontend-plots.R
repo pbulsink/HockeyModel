@@ -75,11 +75,13 @@
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
 #' @param schedule HockeyModel::schedule or a custom value
 #' @param scores HockeyModel::scores or a custom value
-#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#' @param league which league front-end to run: `NULL` and `NA` run whichever
+#'   leagues are currently active (regular season or playoffs); `"both"` runs
 #'   both leagues; `"nhl"` and `"pwhl"` run one league only
 #'
 #' @return Today's odds ggplot object for a single league, or a named list of
-#'   league plots when both leagues are requested.
+#'   plots for the currently active leagues when `league` is `NULL`/`NA`, or
+#'   for both leagues when `"both"`.
 #' @export
 todayOddsPlot <- function(
   date = Sys.Date(),
@@ -88,7 +90,7 @@ todayOddsPlot <- function(
   scores = HockeyModel::scores,
   league = NULL
 ) {
-  leagues <- .resolve_frontend_leagues(league)
+  leagues <- .resolve_frontend_leagues(league, active_only = TRUE)
   schedule_missing <- missing(schedule)
   scores_missing <- missing(scores)
   result <- list()
@@ -185,18 +187,19 @@ todayOddsPlot <- function(
 #'
 #' @param data_dir (`character(1)`) Directory of saved prediction snapshots.
 #' @param league (`character(1)` or `NULL`) Which league front-end to run.
-#'   `NULL`, `NA`, and `"both"` run both leagues; `"nhl"` and `"pwhl"` run one
+#'   `NULL` and `NA` run whichever leagues are currently active (regular
+#'   season or playoffs); `"both"` runs both; `"nhl"` and `"pwhl"` run one
 #'   league only.
 #'
 #' @returns If `league` is `"nhl"` or `"pwhl"`, a playoff-odds
-#'   [ggplot2::ggplot()] object. If `league` is `NULL`, `NA`, or `"both"`, a
-#'   named list with `nhl` and `pwhl` playoff-odds plots.
+#'   [ggplot2::ggplot()] object. If `league` is `NULL` or `NA`, a named list of
+#'   plots for the currently active leagues; if `"both"`, both leagues' plots.
 #' @export
 playoffOdds <- function(
   data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
   league = NULL
 ) {
-  leagues <- .resolve_frontend_leagues(league)
+  leagues <- .resolve_frontend_leagues(league, active_only = TRUE)
   result <- list()
 
   if ("NHL" %in% leagues) {
@@ -244,18 +247,19 @@ playoffOdds <- function(
 #'
 #' @param data_dir (`character(1)`) Directory of saved prediction snapshots.
 #' @param league (`character(1)` or `NULL`) Which league front-end to run.
-#'   `NULL`, `NA`, and `"both"` run both leagues; `"nhl"` and `"pwhl"` run one
+#'   `NULL` and `NA` run whichever leagues are currently active (regular
+#'   season or playoffs); `"both"` runs both; `"nhl"` and `"pwhl"` run one
 #'   league only.
 #'
 #' @returns If `league` is `"nhl"` or `"pwhl"`, a President's Trophy odds
-#'   [ggplot2::ggplot()] object. If `league` is `NULL`, `NA`, or `"both"`, a
-#'   named list with `nhl` and `pwhl` President's Trophy odds plots.
+#'   [ggplot2::ggplot()] object. If `league` is `NULL` or `NA`, a named list of
+#'   plots for the currently active leagues; if `"both"`, both leagues' plots.
 #' @export
 presidentOdds <- function(
   data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
   league = NULL
 ) {
-  leagues <- .resolve_frontend_leagues(league)
+  leagues <- .resolve_frontend_leagues(league, active_only = TRUE)
   result <- list()
 
   if ("NHL" %in% leagues) {
@@ -303,18 +307,19 @@ presidentOdds <- function(
 #'
 #' @param data_dir (`character(1)`) Directory of saved prediction snapshots.
 #' @param league (`character(1)` or `NULL`) Which league front-end to run.
-#'   `NULL`, `NA`, and `"both"` run both leagues; `"nhl"` and `"pwhl"` run one
+#'   `NULL` and `NA` run whichever leagues are currently active (regular
+#'   season or playoffs); `"both"` runs both; `"nhl"` and `"pwhl"` run one
 #'   league only.
 #'
 #' @returns If `league` is `"nhl"` or `"pwhl"`, a point-projection
-#'   [ggplot2::ggplot()] object. If `league` is `NULL`, `NA`, or `"both"`, a
-#'   named list with `nhl` and `pwhl` point-projection plots.
+#'   [ggplot2::ggplot()] object. If `league` is `NULL` or `NA`, a named list of
+#'   plots for the currently active leagues; if `"both"`, both leagues' plots.
 #' @export
 pointPredict <- function(
   data_dir = getOption("HockeyModel.prediction.path", "./prediction_results"),
   league = NULL
 ) {
-  leagues <- .resolve_frontend_leagues(league)
+  leagues <- .resolve_frontend_leagues(league, active_only = TRUE)
   result <- list()
 
   if ("NHL" %in% leagues) {
@@ -350,14 +355,16 @@ pointPredict <- function(
 #' Current ratings
 #'
 #' @param m HockeyModel::m or a custom value
-#' @param league which league front-end to run: `NULL`, `NA`, or `"both"` runs
+#' @param league which league front-end to run: `NULL` and `NA` run whichever
+#'   leagues are currently active (regular season or playoffs); `"both"` runs
 #'   both leagues; `"nhl"` and `"pwhl"` run one league only
 #'
 #' @return Today's ratings ggplot object for a single league, or a named list of
-#'   league plots when both leagues are requested.
+#'   plots for the currently active leagues when `league` is `NULL`/`NA`, or
+#'   for both leagues when `"both"`.
 #' @export
 ratings <- function(m = HockeyModel::m, league = NULL) {
-  leagues <- .resolve_frontend_leagues(league)
+  leagues <- .resolve_frontend_leagues(league, active_only = TRUE)
   m_missing <- missing(m)
   result <- list()
 

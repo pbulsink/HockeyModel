@@ -9,6 +9,7 @@ test_that("dailySummary uses option-based graphic defaults for both leagues (#39
   observed <- new.env(parent = emptyenv())
 
   local_mocked_bindings(
+    .active_frontend_leagues = function() c("NHL", "PWHL"),
     .daily_summary_nhl = function(graphic_dir, ...) {
       observed$nhl <- graphic_dir
       "nhl-summary"

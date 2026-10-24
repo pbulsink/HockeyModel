@@ -9,6 +9,7 @@ test_that(".resolve_frontend_leagues normalizes supported inputs (#39)", {
 
 test_that("updateModel dispatches both leagues by default (#39)", {
   local_mocked_bindings(
+    .active_frontend_leagues = function() c("NHL", "PWHL"),
     .update_model_nhl = function(save_data = TRUE) {
       list(source = "nhl", save_data = save_data)
     },
@@ -154,4 +155,118 @@ test_that("PWHL front ends use league defaults for omitted inputs", {
   expect_identical(observed$today_scores, HockeyModel::pwhlScores)
   expect_null(observed$today_params)
   expect_identical(observed$ratings_m, HockeyModel::pwhl_m)
+})
+
+# Front-end active-league dispatch tests for issue #44
+
+test_that(".active_frontend_leagues returns only leagues with games on (#44)", {
+  local_mocked_bindings(
+    .in_off_season_nhl = function(...) FALSE,
+    .in_off_season_pwhl = function(...) TRUE,
+    .package = "HockeyModel"
+  )
+
+  expect_identical(.active_frontend_leagues(), "NHL")
+
+  local_mocked_bindings(
+    .in_off_season_nhl = function(...) TRUE,
+    .in_off_season_pwhl = function(...) FALSE,
+    .package = "HockeyModel"
+  )
+
+  expect_identical(.active_frontend_leagues(), "PWHL")
+
+  local_mocked_bindings(
+    .in_off_season_nhl = function(...) TRUE,
+    .in_off_season_pwhl = function(...) TRUE,
+    .package = "HockeyModel"
+  )
+
+  expect_error(.active_frontend_leagues(), "Neither NHL nor PWHL are active")
+})
+
+test_that("updateModel() only updates active leagues by default (#44)", {
+  local_mocked_bindings(
+    .active_frontend_leagues = function() "NHL",
+    .update_model_nhl = function(save_data = TRUE) list(source = "nhl"),
+    .update_model_pwhl = function(save_data = TRUE) stop("should not run"),
+    .package = "HockeyModel"
+  )
+
+  expect_identical(updateModel(), list(source = "nhl"))
+})
+
+test_that("league = 'both' forces both leagues regardless of activity (#44)", {
+  local_mocked_bindings(
+    .update_model_nhl = function(save_data = TRUE) list(source = "nhl"),
+    .update_model_pwhl = function(save_data = TRUE) list(source = "pwhl"),
+    .package = "HockeyModel"
+  )
+
+  result <- updateModel(league = "both")
+
+  expect_named(result, c("nhl", "pwhl"))
+})
+
+test_that("updatePredictions() only updates active leagues by default (#44)", {
+  local_mocked_bindings(
+    .active_frontend_leagues = function() "NHL",
+    .update_predictions_nhl = function(...) invisible(NULL),
+    .update_predictions_pwhl = function(...) stop("should not run"),
+    .package = "HockeyModel"
+  )
+
+  expect_null(updatePredictions())
+})
+
+test_that("dailySummary() only runs active league workflows by default (#44)", {
+  local_mocked_bindings(
+    .active_frontend_leagues = function() "PWHL",
+    .daily_summary_nhl = function(...) stop("should not run"),
+    .daily_summary_pwhl = function(...) "pwhl-summary",
+    .package = "HockeyModel"
+  )
+
+  expect_identical(dailySummary(), "pwhl-summary")
+})
+
+test_that("plot wrappers only plot active leagues by default (#44)", {
+  local_mocked_bindings(
+    .active_frontend_leagues = function() "NHL",
+    .today_odds_plot_nhl = function(...) "nhl-today",
+    .today_odds_plot_pwhl = function(...) stop("should not run"),
+    .playoff_odds_nhl = function(data_dir) list(kind = "playoffs"),
+    .playoff_odds_pwhl = function(data_dir) stop("should not run"),
+    .president_odds_nhl = function(data_dir) list(kind = "presidents"),
+    .president_odds_pwhl = function(data_dir) stop("should not run"),
+    .point_predict_nhl = function(data_dir) list(kind = "points"),
+    .point_predict_pwhl = function(data_dir) stop("should not run"),
+    .ratings_nhl = function(m) "nhl-ratings",
+    .ratings_pwhl = function(m) stop("should not run"),
+    .package = "HockeyModel"
+  )
+
+  expect_identical(todayOddsPlot(), "nhl-today")
+  expect_identical(playoffOdds(data_dir = tempdir())$kind, "playoffs")
+  expect_identical(presidentOdds(data_dir = tempdir())$kind, "presidents")
+  expect_identical(pointPredict(data_dir = tempdir())$kind, "points")
+  expect_identical(ratings(), "nhl-ratings")
+})
+
+test_that("season-state queries still evaluate both leagues by default (#44)", {
+  local_mocked_bindings(
+    .in_regular_season_nhl = function(...) TRUE,
+    .in_playoffs_nhl = function(...) FALSE,
+    .in_off_season_nhl = function(...) FALSE,
+    .in_regular_season_pwhl = function(...) FALSE,
+    .in_playoffs_pwhl = function(...) FALSE,
+    .in_off_season_pwhl = function(...) TRUE,
+    .package = "HockeyModel"
+  )
+
+  result <- inRegularSeason()
+
+  expect_named(result, c("nhl", "pwhl"))
+  expect_true(result$nhl)
+  expect_false(result$pwhl)
 })
