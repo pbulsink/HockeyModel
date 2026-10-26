@@ -242,7 +242,7 @@ plot_point_likelihood <- function(
       ggridges::theme_ridges(grid = TRUE) +
       ggplot2::theme(
         legend.position = "none",
-        panel.grid.major.y = ggplot2::element_line(size = .1, color = "grey")
+        panel.grid.major.y = ggplot2::element_line(linewidth = .1, color = "grey")
       )
 
     p[[conf]] <- plot

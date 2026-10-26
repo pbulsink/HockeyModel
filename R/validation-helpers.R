@@ -308,7 +308,7 @@ is.Date <- function(date) {
   names(teams_by_date) <- format(hist_dates)
 
   .yesterday_teams <- function(dt) {
-    key <- format(as.Date(dt - 1))
+    key <- format(as.Date(dt) - 1)
     if (is.null(key) || !(key %in% names(teams_by_date))) {
       return(logical(0))
     }

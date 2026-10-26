@@ -54,6 +54,7 @@ plot_odds_today <- function(
         sep = ",",
         dec = ".",
         row.names = FALSE,
+        col.names = FALSE,
         append = TRUE
       )
     }
