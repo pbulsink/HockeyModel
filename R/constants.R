@@ -77,16 +77,16 @@ DC_NU_PWHL <- 5
 #'
 #' Log-scale subtraction applied to a b2b team's attack and defensive-strength
 #' coefficients when it plays at home.  On the log link this scales the home
-#' expected goals by `exp(-B2B_HOME_NHL)` and the away expected goals against
-#' it by `exp(+B2B_HOME_NHL)`.  Tune with [.tune_b2b()].
+#' expected goals by `-B2B_HOME_NHL` and the away expected goals against
+#' it by `+B2B_HOME_NHL`.  Tune with [.tune_b2b()].
 #' @keywords internal
-B2B_HOME_NHL <- 0.037
+B2B_HOME_NHL <- 0.1090351
 
 #' Default NHL back-to-back adjustment for a b2b team playing on the road
 #'
 #' Log-scale subtraction applied to a b2b team's attack and defensive-strength
 #' coefficients when it plays away.  On the log link this scales the away
-#' expected goals by `exp(-B2B_AWAY_NHL)` and the home expected goals against
-#' it by `exp(+B2B_AWAY_NHL)`.  Tune with [.tune_b2b()].
+#' expected goals by `-B2B_AWAY_NHL` and the home expected goals against
+#' it by `+B2B_AWAY_NHL`.  Tune with [.tune_b2b()].
 #' @keywords internal
-B2B_AWAY_NHL <- 0.0645
+B2B_AWAY_NHL <- 0.200418

@@ -260,6 +260,9 @@ remainderSeasonDC <- function(
 
   last_game_date <- as.Date(max(scores$Date))
   schedule <- .add_postponed_to_schedule_end(schedule)
+  #Type correct for bind_rows, else convert scores$Date to character
+  schedule$Date <- as.Date(schedule$Date)
+  
   # Full context (played + scheduled games) for back-to-back detection (#64),
   # built before the future-only filter so projected b2b pairs are flagged.
   history <- dplyr::distinct(dplyr::bind_rows(scores, schedule))

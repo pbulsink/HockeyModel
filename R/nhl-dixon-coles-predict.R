@@ -286,12 +286,16 @@ DCPredict <- function(
   # per-game scaling in [.dcLambda()]: a b2b home team scores less and concedes
   # more; a b2b away team does the opposite. Both can apply to the same game.
   if (any(home_b2b)) {
-    lam[home_b2b] <- lam[home_b2b] * exp(-B2B_HOME_NHL)
-    mu[home_b2b] <- mu[home_b2b] * exp(B2B_HOME_NHL)
+    # lam[home_b2b] <- lam[home_b2b] * exp(-B2B_HOME_NHL)
+    lam[home_b2b] <- lam[home_b2b] - B2B_HOME_NHL
+    # mu[home_b2b] <- mu[home_b2b] * exp(B2B_HOME_NHL)
+    mu[home_b2b] <- mu[home_b2b] + B2B_HOME_NHL
   }
   if (any(away_b2b)) {
-    mu[away_b2b] <- mu[away_b2b] * exp(-B2B_AWAY_NHL)
-    lam[away_b2b] <- lam[away_b2b] * exp(B2B_AWAY_NHL)
+    # mu[away_b2b] <- mu[away_b2b] * exp(-B2B_AWAY_NHL)
+    mu[away_b2b] <- mu[away_b2b] - B2B_AWAY_NHL
+    # lam[away_b2b] <- lam[away_b2b] * exp(B2B_AWAY_NHL)
+    lam[away_b2b] <- lam[away_b2b] + B2B_AWAY_NHL
   }
 
   pm <- .dcProbArray(lambda = lam, mu = mu, params = params, maxgoal = maxgoal)
@@ -435,12 +439,16 @@ DCPredict <- function(
     eps_away <- B2B_AWAY_NHL
   }
   if (isTRUE(home_b2b)) {
-    lambda <- lambda * exp(-eps_home)
-    mu <- mu * exp(eps_home)
+    # lambda <- lambda * exp(-eps_home)
+    lambda <- lambda - eps_home
+    # mu <- mu * exp(eps_home)
+    mu <- mu + eps_home
   }
   if (isTRUE(away_b2b)) {
-    mu <- mu * exp(-eps_away)
-    lambda <- lambda * exp(eps_away)
+    # mu <- mu * exp(-eps_away)
+    mu <- mu - eps_away
+    # lambda <- lambda * exp(eps_away)
+    lambda <- lambda + eps_away
   }
   return(list(lambda = lambda, mu = mu))
 }
