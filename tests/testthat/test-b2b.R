@@ -121,8 +121,8 @@ test_that(".dcProbMatrix scales lambda/mu by exactly exp(+/- eps)", {
   # so away scores more (mu * exp(+eps_h)).
   pm_home <- .dcProbMatrix(home, away, params, home_b2b = TRUE)
   ref_home <- .prob_matrix(
-    lambda = base$home * exp(-eps_h),
-    mu = base$away * exp(eps_h),
+    lambda = base$home - eps_h,
+    mu = base$away + eps_h,
     params = params,
     maxgoal = 10
   )
@@ -132,8 +132,8 @@ test_that(".dcProbMatrix scales lambda/mu by exactly exp(+/- eps)", {
   # home scores more (lam * exp(+eps_a)).
   pm_away <- .dcProbMatrix(home, away, params, away_b2b = TRUE)
   ref_away <- .prob_matrix(
-    lambda = base$home * exp(eps_a),
-    mu = base$away * exp(-eps_a),
+    lambda = base$home + eps_a,
+    mu = base$away - eps_a,
     params = params,
     maxgoal = 10
   )
@@ -142,8 +142,8 @@ test_that(".dcProbMatrix scales lambda/mu by exactly exp(+/- eps)", {
   # Both on b2b: both adjustments compose.
   pm_both <- .dcProbMatrix(home, away, params, home_b2b = TRUE, away_b2b = TRUE)
   ref_both <- .prob_matrix(
-    lambda = base$home * exp(-eps_h + eps_a),
-    mu = base$away * exp(eps_h - eps_a),
+    lambda = base$home - eps_h + eps_a,
+    mu = base$away + eps_h - eps_a,
     params = params,
     maxgoal = 10
   )

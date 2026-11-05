@@ -295,36 +295,21 @@ is.Date <- function(date) {
     return(list(home_b2b = logical(0), away_b2b = logical(0)))
   }
 
-  # Union of teams playing on each date in `history`, keyed by that date, so a
-  # "who played yesterday?" lookup is O(1) per game instead of rescanning.
-  hist_dates <- unique(history$Date)
-  teams_by_date <- lapply(
-    hist_dates,
-    function(dt) {
-      rows <- history[history$Date == dt, ]
-      c(rows$HomeTeam, rows$AwayTeam)
-    }
-  )
-  names(teams_by_date) <- format(hist_dates)
+  # Plain integer day numbers avoid slow Date method dispatch; restricting
+  # history to the needed "yesterdays" keeps this cheap when called per day.
+  game_days <- as.integer(as.Date(games$Date))
+  hist_days <- as.integer(as.Date(history$Date))
+  keep <- hist_days %in% (game_days - 1L)
+  hist_days <- hist_days[keep]
 
-  .yesterday_teams <- function(dt) {
-    key <- format(as.Date(dt) - 1)
-    if (is.null(key) || !(key %in% names(teams_by_date))) {
-      return(logical(0))
-    }
-    teams_by_date[[key]]
-  }
+  played <- paste(
+    c(hist_days, hist_days),
+    c(history$HomeTeam[keep], history$AwayTeam[keep])
+  )
+  yesterday <- game_days - 1L
 
-  home_b2b <- vapply(
-    seq_len(n),
-    function(i) games$HomeTeam[i] %in% .yesterday_teams(games$Date[i]),
-    logical(1)
-  )
-  away_b2b <- vapply(
-    seq_len(n),
-    function(i) games$AwayTeam[i] %in% .yesterday_teams(games$Date[i]),
-    logical(1)
-  )
+  home_b2b <- paste(yesterday, games$HomeTeam) %in% played
+  away_b2b <- paste(yesterday, games$AwayTeam) %in% played
 
   return(list(home_b2b = home_b2b, away_b2b = away_b2b))
 }

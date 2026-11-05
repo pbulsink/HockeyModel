@@ -123,7 +123,6 @@
     playoff <- playoffOdds(league = "NHL")
     president <- presidentOdds(league = "NHL")
     point <- pointPredict(league = "NHL")
-    rating <- ratings(m = params$m, league = "NHL")
 
     Sys.sleep(15)
 
@@ -165,19 +164,6 @@
       res = 300
     )
     print(point)
-    Sys.sleep(5)
-    while (grDevices::dev.cur() != 1) {
-      grDevices::dev.off()
-    }
-
-    grDevices::png(
-      filename = file.path(graphic_dir, "current_rating.png"),
-      width = 11,
-      height = 8.5,
-      units = "in",
-      res = 300
-    )
-    print(rating)
     Sys.sleep(5)
     while (grDevices::dev.cur() != 1) {
       grDevices::dev.off()

@@ -296,6 +296,7 @@ loopless_sim <- function(
   likelihood_graphic = TRUE,
   odds_table = NULL
 ) {
+  cli::cli_inform("Preparing data for season simulations")
   params <- .parse_dc_params(params)
 
   cores <- .parseCores(cores)
@@ -357,13 +358,14 @@ loopless_sim <- function(
   all_season$HomeSO <- oddsseason[, 2] * 0.3141394
   all_season$AwaySO <- oddsseason[, 3] * 0.3141394
   all_season$AwayOT <- oddsseason[, 3] * 0.6858606
-
+  cli::cli_inform("Done preparing data for season simulations")
   rm(oddsseason, season_sofar, odds_table)
 
   if (cores == 1 || !requireNamespace("parallel", quietly = TRUE)) {
     if (cores > 1) {
-      message("Multi-core processing requires the parallel package.")
+      cli::cli_inform("Multi-core processing requires the parallel package.")
     }
+    cli::cli_inform("Simulating {nsims} seasons in a single core.")
     # for testing only, really.
     all_results <- sim_engine(
       all_season = all_season,
@@ -372,6 +374,7 @@ loopless_sim <- function(
     )
   } else {
     # this fixes CRAN checks
+    cli::cli_inform("Simulating {nsims} seasons in parallel across {cores} cores.")
     `%dopar%` <- foreach::`%dopar%`
     i <- NA_real_
     # `%do%` <- foreach::`%do%`
@@ -402,7 +405,8 @@ loopless_sim <- function(
     parallel::stopCluster(cl)
     gc(verbose = FALSE)
   }
-
+  cli::cli_inform("Simulated {nsims} seasons in parallel across {cores} cores.")
+  cli::cli_inform("Compiling summary statistics for {length(all_results)} sims.")
   summary_results <- all_results |>
     # dtplyr::lazy_dt() |>
     dplyr::group_by(.data$Team) |>
