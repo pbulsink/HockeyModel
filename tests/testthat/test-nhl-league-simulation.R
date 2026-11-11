@@ -251,6 +251,96 @@ test_that("loopless_sim runs exactly the requested number of simulations (#51)",
   expect_setequal(result$raw_results$SimNo, 1:7)
 })
 
+# ============ loopless_sim fixed-chunk parallel branch ============
+test_that("loopless_sim parallel branch uses fixed-size chunks with unique SimNo", {
+  # Peak memory per worker must be bounded by chunk_size regardless of nsims,
+  # so the run is dispatched as ceiling(nsims / chunk_size) tasks. With a small
+  # chunk_size this forces multiple chunks; each chunk's SimNo must be offset
+  # so every simulation keeps a unique ID.
+  mk_fixture <- function() {
+    sched <- HockeyModel::scores[
+      HockeyModel::scores$Date >= as.Date("2025-10-07") &
+        HockeyModel::scores$Date <= as.Date("2025-10-10"),
+      c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+    ]
+    sched$GameStatus <- "FUT"
+    scor <- HockeyModel::scores[
+      HockeyModel::scores$Date < as.Date("2025-10-07"),
+    ]
+    odds_table <- sched[, c("Date", "HomeTeam", "AwayTeam", "GameID")]
+    odds_table$HomeWin <- 0.5
+    odds_table$AwayWin <- 0.3
+    odds_table$Draw <- 0.2
+    odds_table <- odds_table[, c(
+      "HomeTeam",
+      "AwayTeam",
+      "HomeWin",
+      "AwayWin",
+      "Draw",
+      "GameID",
+      "Date"
+    )]
+    list(sched = sched, scor = scor, odds_table = odds_table)
+  }
+
+  local_mocked_bindings(
+    getSeason = function(gamedate = Sys.Date()) "20192020",
+    getSeasonStartDate = function(season = NULL) as.Date("2025-10-07"),
+    sim_engine = function(all_season, nsims, params = NULL, sim_offset = 0L) {
+      # One row per simulation; SimNo reflects the requested offset so the
+      # caller's chunking is observable. Columns match loopless_sim's
+      # summarise() expectations.
+      n <- as.integer(nsims)
+      data.frame(
+        SimNo = seq_len(n) + as.integer(sim_offset),
+        Team = "X",
+        W = rep(1L, n),
+        OTW = rep(0L, n),
+        SOW = rep(0L, n),
+        SOL = rep(0L, n),
+        OTL = rep(0L, n),
+        Points = rep(2L, n),
+        Wildcard = rep(0L, n),
+        Rank = rep(1L, n),
+        ConfRank = rep(1L, n),
+        DivRank = rep(1L, n),
+        Playoffs = rep(1L, n),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "HockeyModel"
+  )
+
+  expect_true(requireNamespace("parallel", quietly = TRUE))
+  fx <- mk_fixture()
+
+  # chunk_size = 3 => three tasks (offsets 0, 3, 6), sizes 3/3/1.
+  result <- loopless_sim(
+    nsims = 7,
+    cores = 2,
+    schedule = fx$sched,
+    scores = fx$scor,
+    odds_table = fx$odds_table,
+    likelihood_graphic = FALSE,
+    chunk_size = 3
+  )
+  expect_equal(nrow(result$raw_results), 7*length(unique(result$raw_results$Team)))
+  expect_setequal(result$raw_results$SimNo, 1:7)
+
+  # chunk_size = 4 => two tasks (offsets 0, 4), sizes 4/3.
+  result2 <- loopless_sim(
+    nsims = 7,
+    cores = 2,
+    schedule = fx$sched,
+    scores = fx$scor,
+    odds_table = fx$odds_table,
+    likelihood_graphic = FALSE,
+    chunk_size = 4
+  )
+  expect_equal(nrow(result2$raw_results), 7*length(unique(result2$raw_results$Team)))
+  expect_setequal(result2$raw_results$SimNo, 1:7)
+})
+
 # ============ sim_engine tests ============
 test_that("sim_engine preserves played results and samples unplayed games", {
   mk <- function(h, a, hw, hot, hso, aso, aot, aw, result, gid) {
@@ -350,6 +440,50 @@ test_that("sim_engine preserves played results and samples unplayed games", {
   expect_true(all(
     res$Points == res$W * 2 + res$OTW * 2 + res$SOW * 2 + res$OTL + res$SOL
   ))
+})
+
+test_that("sim_engine offsets SimNo by sim_offset", {
+  # Parallel chunks each run their own sim_engine() call; offsetting SimNo per
+  # chunk keeps every simulation ID unique across the combined result.
+  teams <- c(
+    "Boston Bruins",
+    "Buffalo Sabres",
+    "Detroit Red Wings",
+    "Florida Panthers"
+  )
+  all_season <- data.frame(
+    HomeTeam = rep(c("Boston Bruins", "Detroit Red Wings"), each = 2),
+    AwayTeam = c(
+      "Buffalo Sabres",
+      "Florida Panthers",
+      "Buffalo Sabres",
+      "Florida Panthers"
+    ),
+    GameID = 1:4,
+    Date = as.Date("2025-11-01"),
+    HomeWin = c(1, 1, 0, 0),
+    HomeOT = rep(0, 4),
+    HomeSO = rep(0, 4),
+    AwaySO = rep(0, 4),
+    AwayOT = rep(0, 4),
+    AwayWin = c(0, 0, 1, 1),
+    Result = NA,
+    stringsAsFactors = FALSE
+  )
+
+  res <- as.data.frame(sim_engine(
+    all_season = all_season,
+    nsims = 3,
+    params = NULL,
+    sim_offset = 5L
+  ))
+  expect_setequal(unique(res$SimNo), 6:8)
+  # One row per team per simulation.
+  expect_equal(nrow(res), length(teams) * 3)
+
+  # Default offset preserves the historical 1..nsims numbering.
+  res0 <- as.data.frame(sim_engine(all_season = all_season, nsims = 3))
+  expect_setequal(unique(res0$SimNo), 1:3)
 })
 
 test_that("sim_engine handles a full-season-sized schedule", {

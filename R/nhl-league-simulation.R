@@ -283,6 +283,9 @@ compile_predictions <- function(
 #' @param likelihood_graphic whether to create a likelihood graphic
 #' @param odds_table a table of odds for all games in schedule. Null, unless provided. Should be similar to the output of `remainderSeasonDC(odds=TRUE)`,
 #' which is a data.frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID and Date
+#' @param chunk_size Maximum number of simulations per parallel task. The run is
+#'   split into fixed-size chunks so peak memory per worker stays bounded
+#'   regardless of `nsims`.
 #'
 #' @return a two member list, of all results and summary results
 #' @keywords internal
@@ -294,7 +297,8 @@ loopless_sim <- function(
   params = NULL,
   season_sofar = NULL,
   likelihood_graphic = TRUE,
-  odds_table = NULL
+  odds_table = NULL,
+  chunk_size = 1000L
 ) {
   cli::cli_inform("Preparing data for season simulations")
   params <- .parse_dc_params(params)
@@ -374,7 +378,9 @@ loopless_sim <- function(
     )
   } else {
     # this fixes CRAN checks
-    cli::cli_inform("Simulating {nsims} seasons in parallel across {cores} cores.")
+    cli::cli_inform(
+      "Simulating {nsims} seasons in parallel across {cores} cores."
+    )
     `%dopar%` <- foreach::`%dopar%`
     i <- NA_real_
     # `%do%` <- foreach::`%do%`
@@ -382,15 +388,15 @@ loopless_sim <- function(
     cl <- parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
 
-    # Distribute exactly `nsims` simulations across `cores` chunks so the
-    # remainder is not dropped and the total matches the requested count
-    # (previously `floor(nsims / cores)` lost the remainder, and `cores * 100`
-    # tasks each ran `ceiling(nsims / 100)` simulations, so the total rarely
-    # matched `nsims`). Each task also runs many simulations before returning,
-    # reducing serialisation round-trips (#51, #49).
-    chunk_sizes <- .simulation_chunks(nsims, cores)
+    # Split `nsims` into fixed-size chunks (at most `chunk_size` simulations
+    # each) and dispatch one task per chunk, so peak memory per worker is
+    # bounded regardless of `nsims`. Each chunk's SimNo is offset by the
+    # number of earlier simulations so every simulation keeps a unique ID.
+    n_chunks <- ceiling(nsims / chunk_size)
+    chunk_sizes <- .simulation_chunks(nsims, n_chunks)
+    sim_offsets <- c(0L, cumsum(chunk_sizes[-length(chunk_sizes)]))
     all_results <- foreach::foreach(
-      i = seq_len(cores),
+      i = seq_len(n_chunks),
       .combine = "rbind",
       .packages = "HockeyModel"
     ) %dopar%
@@ -398,7 +404,8 @@ loopless_sim <- function(
         sim_engine(
           all_season = all_season,
           nsims = chunk_sizes[i],
-          params = params
+          params = params,
+          sim_offset = sim_offsets[i]
         )
       }
 
@@ -406,7 +413,7 @@ loopless_sim <- function(
     gc(verbose = FALSE)
   }
   cli::cli_inform("Simulated {nsims} seasons in parallel across {cores} cores.")
-  cli::cli_inform("Compiling summary statistics for {length(all_results)} sims.")
+  cli::cli_inform("Compiling summary statistics for {nrow(all_results)} sims.")
   summary_results <- all_results |>
     # dtplyr::lazy_dt() |>
     dplyr::group_by(.data$Team) |>
@@ -450,13 +457,19 @@ loopless_sim <- function(
 
 #' Simulation engine to be parallelized or used in single core
 #'
+#' @description Simulates a season given scores and odds, returns results. This is 
+#'   exported because doSNOW needs to access it for parallel runs. It's not particularly
+#'   meant for direct calling by users.
 #' @param all_season One seasons' scores & odds schedule
 #' @param nsims Number of simulations to run
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
+#' @param sim_offset Integer added to every `SimNo` so that chunks run by
+#'   separate workers keep unique simulation IDs when their results are
+#'   combined.
 #'
 #' @return results of `nsims` season simulations, as one long data frame score table.
 #' @export
-sim_engine <- function(all_season, nsims, params = NULL) {
+sim_engine <- function(all_season, nsims, params = NULL, sim_offset = 0L) {
   params <- .parse_dc_params(params)
 
   season_length <- nrow(all_season)
@@ -531,7 +544,7 @@ sim_engine <- function(all_season, nsims, params = NULL) {
   }
 
   all_results <- data.frame(
-    SimNo = rep(1:nsims, length(teamlist)),
+    SimNo = rep(seq_len(nsims) + sim_offset, length(teamlist)),
     Team = rep(teamlist, each = nsims)
   )
   # Each team's W/OTW/SOW counts both home and away wins; L/OTL/SOL counts

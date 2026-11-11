@@ -9,7 +9,7 @@ B2B_AWAY_NHL
 \description{
 Log-scale subtraction applied to a b2b team's attack and defensive-strength
 coefficients when it plays away.  On the log link this scales the away
-expected goals by \code{exp(-B2B_AWAY_NHL)} and the home expected goals against
-it by \code{exp(+B2B_AWAY_NHL)}.  Tune with \code{\link[=.tune_b2b]{.tune_b2b()}}.
+expected goals by \code{-B2B_AWAY_NHL} and the home expected goals against
+it by \code{+B2B_AWAY_NHL}.  Tune with \code{\link[=.tune_b2b]{.tune_b2b()}}.
 }
 \keyword{internal}

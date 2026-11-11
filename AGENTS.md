@@ -27,6 +27,8 @@ For any feature, fix, or refactor:
 
 Standard R package layout; see [structure](docs/agent-instructions/structure.md) for the full tree. In `R/`, one file ~= 1 exported function, and `man/` is roxygen-generated.
 
+.rda files may change from time to time, this is unrelated to your work and is raw data updates based on the current date. 
+
 ## Annexes (read before calculation, modelling, or graphics work)
 
 Use these instead of re-exploring the package.
