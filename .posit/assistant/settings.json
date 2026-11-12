@@ -19,7 +19,9 @@
       "git push *": "allow",
       "gh api *": "allow",
       "gh auth status *": "allow",
-      "git remote *": "allow"
+      "git remote *": "allow",
+      "gh repo view *": "allow",
+      "git status *": "allow"
     },
     "skill": {
       "implement-issue": "allow",
@@ -27,7 +29,8 @@
       "plan-review": "allow",
       "grill-me": "allow",
       "r-code": "allow",
-      "tdd-workflow": "allow"
+      "tdd-workflow": "allow",
+      "skills:implement-issue": "allow"
     },
     "edit": {
       "*.md": "allow",
