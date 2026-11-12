@@ -4,7 +4,7 @@
 \alias{.sim_odds_results}
 \title{Sample simulated results for odds-table games}
 \usage{
-.sim_odds_results(odds_table)
+.sim_odds_results(odds_table = remainderSeasonDC(odds = TRUE))
 }
 \arguments{
 \item{odds_table}{(\code{data.frame}) Odds table with \code{HomeWin}, \code{HOT}, \code{AOT}
@@ -20,5 +20,6 @@ Draws the regulation/OT/SO outcome for every game in \code{odds_table}
 two-draw \code{res1}/\code{res2} scheme. Only the sampled columns are built here; the
 invariant odds columns are not copied, so callers can reuse the same
 \code{odds_table} across simulations without re-copying it each iteration.
+The \code{odds_table} is produced by \code{remainderSeasonDC()}.
 }
 \keyword{internal}

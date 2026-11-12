@@ -7,16 +7,18 @@
 #'   two-draw `res1`/`res2` scheme. Only the sampled columns are built here; the
 #'   invariant odds columns are not copied, so callers can reuse the same
 #'   `odds_table` across simulations without re-copying it each iteration.
+#'   The `odds_table` is produced by `remainderSeasonDC()`.
 #'
 #' @param odds_table (`data.frame`) Odds table with `HomeWin`, `HOT`, `AOT`
 #'   (and any other columns). Used for its row count and the per-game odds.
 #' @return `list(res1 = <double>, res2 = <double>, Result = <double>)` each of
 #'   length `nrow(odds_table)`.
 #' @keywords internal
-.sim_odds_results <- function(odds_table) {
+.sim_odds_results <- function(odds_table = remainderSeasonDC(odds=TRUE)) {
   res1 <- stats::runif(n = nrow(odds_table))
   res2 <- stats::runif(n = nrow(odds_table))
   home_win <- odds_table$HomeWin
+  # HOT and AOT aren't provided by odds_table anymore.
   hot <- odds_table$HOT
   aot <- odds_table$AOT
   in_ot <- as.numeric(res1 > home_win & res1 < (home_win + hot))

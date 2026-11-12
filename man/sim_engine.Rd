@@ -21,5 +21,7 @@ combined.}
 results of \code{nsims} season simulations, as one long data frame score table.
 }
 \description{
-Simulation engine to be parallelized or used in single core
+Simulates a season given scores and odds, returns results. This is
+exported because doSNOW needs to access it for parallel runs. It's not particularly
+meant for direct calling by users.
 }

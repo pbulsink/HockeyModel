@@ -17,7 +17,9 @@
       "git add *": "allow",
       "git commit *": "allow",
       "git push *": "allow",
-      "gh api *": "allow"
+      "gh api *": "allow",
+      "gh auth status *": "allow",
+      "git remote *": "allow"
     },
     "skill": {
       "implement-issue": "allow",
