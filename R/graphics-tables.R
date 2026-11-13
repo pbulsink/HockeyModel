@@ -32,6 +32,7 @@ format_playoff_odds <- function(
     )
   }
 
+  # TODO: REsolve league
   if (league == "PWHL") {
     teamColours <- HockeyModel::pwhlTeamColours
     table_title <- paste(caption_text, "Playoff Odds")
@@ -312,6 +313,14 @@ daily_odds_table <- function(
       heading.align = "left",
       table.border.bottom.color = "white",
       table.border.top.color = "white"
+    ) |>
+    gt::cols_align(
+      align = "left", 
+      columns = c(2,6,7,8)
+    ) |>
+    gt::cols_align(
+      align = "right",
+      columns = c(3,4,5,9)
     )
 
   if (include_images) {
@@ -498,24 +507,6 @@ series_odds_table <- function(
     include_images <- TRUE
   }
 
-  # Resolve a team name to its local logo path (falls back to nhl or pwhl logo)
-  .team_logo_path <- function(team_name, league) {
-    candidate <- file.path(
-      getOption("HockeyModel.data.path"),
-      "logos",
-      paste0(tolower(gsub(" ", "_", team_name)), ".png")
-    )
-    ifelse(
-      file.exists(candidate),
-      candidate,
-      file.path(
-        getOption("HockeyModel.data.path"),
-        "logos",
-        paste0(tolower(league), ".png")
-      )
-    )
-  }
-
   series_tbl <- series |>
     tibble::add_column("homeblock" = "  ", .before = 1) |>
     tibble::add_column("awayblock" = "  ")
@@ -625,4 +616,169 @@ series_odds_table <- function(
   }
 
   return(series_gt)
+}
+
+
+#' @export
+season_finish_table <- function(
+  summary_results,
+  caption_text = "",
+  include_images = TRUE,
+  league = "NHL"
+) {
+
+  # TODO use compile_predictions for this?
+  if (is.null(summary_results)) {
+    pdates <- .get_prediction_dates(getOption("HockeyModel.prediction.path"))
+    if (length(pdates) == 0L) {
+      cli::cli_alert_info(
+        "No prediction files found; skipping playoff simulation."
+      )
+      return(invisible(NULL))
+    }
+    lastp <- max(pdates)
+    if (lastp < Sys.Date() - 7) {
+      cli::cli_alert_info(
+        "Most recent prediction ({.val {lastp}}) is more than 7 days old; skipping playoff simulation."
+      )
+      return(invisible(NULL))
+    }
+    summary_results <- readRDS(file.path(
+      getOption("HockeyModel.prediction.path"),
+      paste0(lastp, "-predictions.RDS")
+    ))
+  }
+
+  # TODO: Rssolve league
+  if (league == "PWHL") {
+    teamColours <- HockeyModel::pwhlTeamColours
+    table_title <- paste(caption_text, "PWHL Season Finishing Position")
+    cli::cli_alert_warning("PWHL finishing position table is not yet implemented; Results may be meaningless.")
+  } else {
+    teamColours <- HockeyModel::teamColours
+    table_title <- paste(caption_text, "NHL Season Finishing Position")
+  }
+
+  finish_tbl <- summary_results |>
+    dplyr::mutate(
+      Conference = .getTeamConferences(.data$Team),
+      miss_playoffs = 1-.data$Playoffs
+    ) |>
+    dplyr::arrange(
+      .data$Conference,
+      .data$meanConfRank
+    ) |>  
+    dplyr::select(
+      .data$Team,
+      .data$Conference,
+      .data$p_rank1,
+      .data$p_rank2,
+      .data$p_rank3,
+      .data$p_rank4,
+      .data$p_rank5,
+      .data$p_rank6,
+      .data$p_rank7,
+      .data$p_rank8,
+      .data$miss_playoffs
+    ) |>
+    tibble::add_column("teamcolour" = "  ", .before = 1)
+
+  if (include_images) {
+    finish_tbl <- finish_tbl |>
+      tibble::add_column("teamimage" = "", .after = 1)
+    finish_tbl$teamimage <- finish_tbl$Team
+  }
+
+  finish_gt <- finish_tbl |>
+    gt::gt(groupname_col = "Conference") |>
+    gt::tab_header(
+      title = table_title,
+      subtitle = paste0(
+        "Generated ",
+        Sys.Date(),
+        " | P. Bulsink (@bot.bulsink.ca)"
+      )
+    ) |>
+    gt::cols_label(
+      "teamcolour" = " ",
+      "Team" = "Team",
+      "Conference" = "Conference",
+      "p_rank1" = "1st",
+      "p_rank2" = "2nd",
+      "p_rank3" = "3rd",
+      "p_rank4" = "4th",
+      "p_rank5" = "5th",
+      "p_rank6" = "6th",
+      "p_rank7" = "7th",
+      "p_rank8" = "8th",
+      "miss_playoffs" = "Miss Playoffs"
+    ) |>
+    gt::data_color(
+      columns = c("p_rank1", "p_rank2", "p_rank3", "p_rank4", "p_rank5", "p_rank6", "p_rank7", "p_rank8", "miss_playoffs"),
+      fn = scales::col_numeric(
+        palette = c("#ffffff", "#68c400"),
+        domain = c(0, 1)
+      )
+    ) |>
+    gt::fmt_percent(columns = c("p_rank1", "p_rank2", "p_rank3", "p_rank4", "p_rank5", "p_rank6", "p_rank7", "p_rank8", "miss_playoffs"), decimals = 1) |>
+    gt::tab_options(
+      heading.align = "left",
+      table.border.bottom.color = "white",
+      table.border.top.color = "white"
+    )
+  
+  if (include_images) {
+    finish_gt <- finish_gt |>
+      gt::cols_label("teamimage" = " ")
+  }
+
+  for (i in seq_len(nrow(finish_tbl))) {
+    finish_gt <- finish_gt |>
+      gt::tab_style(
+        style = gt::cell_fill(
+          color = teamColours[
+            teamColours$Team == finish_tbl$Team[i],
+            "Hex"
+          ]
+        ),
+        locations = gt::cells_body(columns = "teamcolour", rows = i)
+      )
+    if (include_images) {
+      finish_gt <- finish_gt |>
+        gt::text_transform(
+          locations = gt::cells_body(columns = "teamimage", rows = i),
+          fn = function(x) {
+            gt::local_image(
+              filename = .team_logo_path(x, league),
+              height = "30px"
+            )
+          }
+        ) 
+    }
+  }
+  finish_gt
+}
+
+#' Resolve team name to logo path
+#' 
+#' @description Resolve a team name to its local logo path (falls back to nhl or pwhl logo)
+#' @param team_name Name of the team
+#' @param league League of the team (e.g., "NHL" or "PWHL")
+#' @return File path to the team's logo
+#' @keywords internal
+.team_logo_path <- function(team_name, league) {
+    candidate <- file.path(
+      getOption("HockeyModel.data.path"),
+      "logos",
+      paste0(tolower(gsub(" ", "_", team_name)), ".png")
+    )
+    ifelse(
+      file.exists(candidate),
+      candidate,
+      file.path(
+        getOption("HockeyModel.data.path"),
+        "logos",
+        paste0(tolower(league), ".png")
+      )
+    )
 }
