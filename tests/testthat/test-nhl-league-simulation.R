@@ -147,6 +147,85 @@ test_that("simulateSeasonParallel() parallel branch matches sequential (#49)", {
   expect_setequal(unique(res$raw_results$SimNo), 1:3)
 })
 
+test_that("simulateSeasonParallel() worker scores extra-time correctly (#68)", {
+  # The parallel branch inlines its own copy of the result-sampling logic (doSNOW
+  # workers can only see exported functions), so it must be fixed and verified
+  # independently of .sim_odds_results(). With HOT = AOT > 0, a large share of
+  # games land in an extra-time window and produce OT/SO result codes. The
+  # fixture is a full three-team round robin because buildStats() requires each
+  # team to have both home and away rows.
+  local_mocked_bindings(
+    remainderSeasonDC = function(...) {
+      data.frame(
+        HomeTeam = c(
+          "Boston Bruins",
+          "Detroit Red Wings",
+          "Florida Panthers"
+        ),
+        AwayTeam = c(
+          "Detroit Red Wings",
+          "Florida Panthers",
+          "Boston Bruins"
+        ),
+        HomeWin = c(0.4, 0.5, 0.3),
+        AwayWin = c(0.2, 0.3, 0.15),
+        Draw = c(0.4, 0.2, 0.55),
+        GameID = c(1L, 2L, 3L),
+        Date = as.Date("2025-11-01"),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "HockeyModel"
+  )
+  sched <- data.frame(
+    Home = c(
+      "Boston Bruins",
+      "Detroit Red Wings",
+      "Florida Panthers"
+    ),
+    Away = c(
+      "Detroit Red Wings",
+      "Florida Panthers",
+      "Boston Bruins"
+    ),
+    Date = as.Date("2025-11-01"),
+    GameID = c(1L, 2L, 3L),
+    stringsAsFactors = FALSE
+  )
+
+  expect_true(requireNamespace("parallel", quietly = TRUE))
+  res <- suppressWarnings(simulateSeasonParallel(
+    scores = NULL,
+    schedule = sched,
+    nsims = 500,
+    cores = 2
+  ))
+
+  # raw_results is per-team aggregated (no per-game Result column). With HOT +
+  # AOT > 0 for every game, ~35 ET games occur per simulation across 500
+  # simulations, so all six outcome categories must be non-zero. The buggy
+  # masks produced no OT/SO outcomes at all.
+  expect_true(sum(res$raw_results$W) > 0)
+  expect_true(sum(res$raw_results$L) > 0)
+  expect_true(sum(res$raw_results$OTW) > 0)
+  expect_true(sum(res$raw_results$SOW) > 0)
+  expect_true(sum(res$raw_results$OTL) > 0)
+  expect_true(sum(res$raw_results$SOL) > 0)
+
+  # Each game awards 2 points (regulation W/L: 2+0) or 3 (OT/SO: winner 2,
+  # loser 1), so a simulation's league total is exactly 2 * n_games + (# ET
+  # games); each ET game contributes exactly one OTW or SOW. The buggy engine
+  # undercounted by dropping the away team's extra-time point.
+  G <- nrow(sched)
+  per_sim <- res$raw_results |>
+    dplyr::group_by(.data$SimNo) |>
+    dplyr::summarise(
+      total = sum(.data$Points),
+      et_games = sum(.data$OTW) + sum(.data$SOW)
+    )
+  expect_true(all(per_sim$total == 2 * G + per_sim$et_games))
+})
+
 # ============ .sim_odds_results tests ============
 test_that(".sim_odds_results returns one outcome per game (#45)", {
   odds_table <- data.frame(
@@ -166,6 +245,73 @@ test_that(".sim_odds_results returns one outcome per game (#45)", {
   expect_equal(res$Result[3], 0)
   # Result is always one of the valid outcome codes.
   expect_true(all(res$Result %in% c(1, 0.75, 0.6, 0.4, 0.25, 0)))
+})
+
+test_that(".sim_odds_results produces all six result codes (#68)", {
+  # The old masks were overlapping (the SO window contained the OT window), so
+  # a home extra-time win scored 0.75 + 0.25 = 1 and 0.6 + 0.4 = 1: no 0.75 or
+  # 0.6 outcomes were ever produced, and every away team in the home ET window
+  # took a regulation loss instead of an OT/SO point.
+  n <- 2e4
+  odds_table <- data.frame(
+    HomeWin = rep(0.5, n),
+    HOT = rep(0.15, n),
+    AOT = rep(0.15, n),
+    stringsAsFactors = FALSE
+  )
+  res <- .sim_odds_results(odds_table)
+
+  # Every outcome code occurs at roughly its expected frequency. The home ET
+  # window (HOT + AOT here) splits into OT/SO in proportion to the away team's
+  # extra-time odds, so P(0.75) = HOT * 0.6858606 and P(0.4) = AOT * 0.3141394.
+  freqs <- table(factor(res$Result, levels = c(1, 0.75, 0.6, 0.4, 0.25, 0))) / n
+  expect_true(all(freqs > 0))
+  expect_equal(unname(freqs["1"]), 0.5, tolerance = 0.02)
+  expect_equal(
+    unname(freqs["0.75"]),
+    0.15 * 0.6858606,
+    tolerance = 0.05
+  )
+  expect_equal(
+    unname(freqs["0.4"]),
+    0.15 * 0.3141394,
+    tolerance = 0.05
+  )
+})
+
+test_that(".sim_odds_results home ET results match the .sampleResult engine (#68)", {
+  # The fallback engine must agree with sim_engine's sampling scheme
+  # (.sampleResult): a game in the home extra-time window resolves via the
+  # away team's second draw, OT (p = 0.6858606) or SO, and the winner is always
+  # the home team there.
+  set.seed(20261112)
+  n <- 5e4
+  res <- .sim_odds_results(
+    data.frame(HomeWin = rep(0.5, n), HOT = rep(0.2, n), AOT = rep(0.1, n))
+  )
+
+  in_home_et <- res$res1 >= 0.5 & res$res1 < 0.7
+  expect_gt(sum(in_home_et), 3e3)
+
+  # Only the away draw decides OT vs SO within the home ET window: every such
+  # game is an OT win (away OT loss) or a SO win (away SO win).
+  in_home_ot <- in_home_et & res$res2 < 0.6858606
+  in_home_so <- in_home_et & res$res2 > 0.6858606
+  expect_true(all(res$Result[in_home_ot] == 0.75))
+  expect_true(all(res$Result[in_home_so] == 0.6))
+
+  # The OT/SO split of the home ET window is exactly 0.6858606, matching the
+  # primary engine's constant.
+  expect_equal(
+    mean(in_home_et & res$res2 < 0.6858606) / mean(in_home_et),
+    0.6858606,
+    tolerance = 0.03
+  )
+
+  # Away team keeps its extra-time point: away OT loss => 1 - Result = 0.25;
+  # away SO win => 1 - Result = 0.4.
+  expect_true(all(1 - res$Result[in_home_ot] == 0.25))
+  expect_true(all(1 - res$Result[in_home_so] == 0.4))
 })
 
 # ============ .simulation_chunks tests ============
@@ -324,7 +470,10 @@ test_that("loopless_sim parallel branch uses fixed-size chunks with unique SimNo
     likelihood_graphic = FALSE,
     chunk_size = 3
   )
-  expect_equal(nrow(result$raw_results), 7*length(unique(result$raw_results$Team)))
+  expect_equal(
+    nrow(result$raw_results),
+    7 * length(unique(result$raw_results$Team))
+  )
   expect_setequal(result$raw_results$SimNo, 1:7)
 
   # chunk_size = 4 => two tasks (offsets 0, 4), sizes 4/3.
@@ -337,7 +486,10 @@ test_that("loopless_sim parallel branch uses fixed-size chunks with unique SimNo
     likelihood_graphic = FALSE,
     chunk_size = 4
   )
-  expect_equal(nrow(result2$raw_results), 7*length(unique(result2$raw_results$Team)))
+  expect_equal(
+    nrow(result2$raw_results),
+    7 * length(unique(result2$raw_results$Team))
+  )
   expect_setequal(result2$raw_results$SimNo, 1:7)
 })
 

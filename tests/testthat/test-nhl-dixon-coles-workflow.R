@@ -163,6 +163,107 @@ test_that("remainderSeasonDC accumulates every day's games in order", {
   expect_type(result$GameID, "double")
 })
 
+test_that("dcPredictMultipleDays warns when falling back from loopless_sim (#68)", {
+  # When the primary engine fails, dcPredictMultipleDays() silently fell back
+  # to the legacy engine and saved its (potentially inconsistent) results. The
+  # fallback is kept (it can recover partial days), but it must be visible.
+  days <- seq.Date(as.Date("2025-11-01"), by = "day", length.out = 3)
+  teams <- c(
+    "Team A",
+    "Team B",
+    "Team C"
+  )
+  sched <- data.frame(
+    Date = rep(days, each = 2),
+    HomeTeam = c(
+      teams[1],
+      teams[2],
+      teams[3]
+    ),
+    AwayTeam = c(
+      teams[2],
+      teams[3],
+      teams[1]
+    ),
+    GameID = 1:6,
+    GameType = rep("R", 6),
+    GameStatus = rep("FUT", 6),
+    stringsAsFactors = FALSE
+  )
+  scor <- data.frame(
+    Date = as.Date("2025-10-20"),
+    HomeTeam = "Team A",
+    AwayTeam = "Team B",
+    GameID = 0,
+    GameType = "R",
+    GameStatus = "FUT",
+    stringsAsFactors = FALSE
+  )
+
+  local_mocked_bindings(
+    .update_dc_nhl = function(...) {
+      list(m = NULL, rho = 0, beta = 1, eta = 1, k = 1)
+    },
+    loopless_sim = function(...) stop("simulated cluster failure"),
+    remainderSeasonDC = function(...) {
+      list(
+        summary_results = data.frame(
+          Team = teams[1:2],
+          Playoffs = 0.5,
+          meanPoints = 40,
+          maxPoints = 60,
+          minPoints = 20,
+          meanWins = 15,
+          maxWins = 30,
+          Presidents = 0,
+          meanRank = 8,
+          bestRank = 1,
+          meanDivRank = 4,
+          bestDivRank = 1,
+          sdPoints = 5,
+          sdWins = 3,
+          sdRank = 2,
+          sdDivRank = 1
+        )
+      )
+    },
+    .package = "HockeyModel"
+  )
+
+  dir <- tempfile("dcPredictMultipleDays-test")
+  msgs <- character()
+  warns <- character()
+  out <- withCallingHandlers(
+    dcPredictMultipleDays(
+      start = days[1],
+      end = days[3],
+      scores = scor,
+      schedule = sched,
+      filedir = dir,
+      nsims = 2,
+      cores = 1,
+      likelihood_graphic = FALSE
+    ),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    },
+    warning = function(w) {
+      warns <<- c(warns, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  # The fallback fired on every day and each firing is reported as a warning.
+  expect_equal(length(warns), length(days))
+  expect_true(all(grepl("falling back", warns, ignore.case = TRUE)))
+  # And the legacy engine's results were still saved for those days.
+  expect_equal(
+    length(list.files(dir, pattern = "-predictions\\.RDS$")),
+    length(days)
+  )
+})
+
 test_that("loopless_sim returns summary and raw results", {
   sched <- HockeyModel::scores[
     HockeyModel::scores$Date >= as.Date("2025-10-07") &

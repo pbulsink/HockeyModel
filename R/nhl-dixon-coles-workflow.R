@@ -262,7 +262,7 @@ remainderSeasonDC <- function(
   schedule <- .add_postponed_to_schedule_end(schedule)
   #Type correct for bind_rows, else convert scores$Date to character
   schedule$Date <- as.Date(schedule$Date)
-  
+
   # Full context (played + scheduled games) for back-to-back detection (#64),
   # built before the future-only filter so projected b2b pairs are flagged.
   history <- dplyr::distinct(dplyr::bind_rows(scores, schedule))
@@ -511,8 +511,7 @@ dcPredictMultipleDays <- function(
         )
       },
       error = function(error) {
-        message("An error occurred:")
-        message(error)
+        message("An error occurred: ", conditionMessage(error))
         return(NULL)
       }
     )
@@ -527,6 +526,12 @@ dcPredictMultipleDays <- function(
         plot_point_likelihood(preds = preds$raw_results)
       }
     } else {
+      # The fallback is kept (it can recover partial days), but it must be
+      # visible: the legacy engine has historically produced inconsistent
+      # results (#68).
+      cli::cli_warn(
+        "loopless_sim() failed for {.date {d}}; falling back to the legacy simulation engine (remainderSeasonDC())."
+      )
       message("An error occurred, retrying ", d, ".")
       preds <- NULL
       preds <- tryCatch(
@@ -540,8 +545,7 @@ dcPredictMultipleDays <- function(
           )
         },
         error = function(error) {
-          message("An error occurred:")
-          message(error)
+          message("An error occurred: ", conditionMessage(error))
           return(NULL)
         }
       )
