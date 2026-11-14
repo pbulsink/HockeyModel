@@ -22,7 +22,9 @@
       "git remote *": "allow",
       "gh repo view *": "allow",
       "git status *": "allow",
-      "gh issue list *": "allow"
+      "gh issue list *": "allow",
+      "gh pr view *": "allow",
+      "gh pr checks *": "allow"
     },
     "skill": {
       "implement-issue": "allow",
