@@ -21,7 +21,8 @@
       "gh auth status *": "allow",
       "git remote *": "allow",
       "gh repo view *": "allow",
-      "git status *": "allow"
+      "git status *": "allow",
+      "gh issue list *": "allow"
     },
     "skill": {
       "implement-issue": "allow",
