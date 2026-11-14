@@ -14,16 +14,19 @@
 #' @return `list(res1 = <double>, res2 = <double>, Result = <double>)` each of
 #'   length `nrow(odds_table)`.
 #' @keywords internal
-.sim_odds_results <- function(odds_table = remainderSeasonDC(odds=TRUE)) {
+.sim_odds_results <- function(odds_table = remainderSeasonDC(odds = TRUE)) {
   res1 <- stats::runif(n = nrow(odds_table))
   res2 <- stats::runif(n = nrow(odds_table))
   home_win <- odds_table$HomeWin
   # HOT and AOT aren't provided by odds_table anymore.
   hot <- odds_table$HOT
   aot <- odds_table$AOT
-  in_ot <- as.numeric(res1 > home_win & res1 < (home_win + hot))
-  in_so <- as.numeric(
-    res1 > home_win &
+  # The extra-time windows must be mutually exclusive: with overlapping masks a
+  # home ET win scores 0.75 + 0.25 = 1 (or 0.6 + 0.4 = 1), so no OT/SO results
+  # are ever produced and the away team's extra-time point is lost (#68).
+  in_home_et <- as.numeric(res1 >= home_win & res1 < (home_win + hot))
+  in_away_et <- as.numeric(
+    res1 >= (home_win + hot) &
       res1 < (home_win + hot + aot)
   )
   away_sos <- as.numeric(res2 > 0.6858606)
@@ -31,10 +34,10 @@
   Result <-
     1 *
     (res1 < home_win) +
-    0.75 * in_ot * away_ot +
-    0.6 * in_ot * away_sos +
-    0.4 * in_so * away_sos +
-    0.25 * in_so * away_ot
+    0.75 * in_home_et * away_ot +
+    0.6 * in_home_et * away_sos +
+    0.4 * in_away_et * away_sos +
+    0.25 * in_away_et * away_ot
   return(list(res1 = res1, res2 = res2, Result = Result))
 }
 
@@ -158,17 +161,22 @@ simulateSeasonParallel <- function(
       out <- lapply(sim_ids, function(i) {
         res1 <- stats::runif(n = nrow(odds_table))
         res2 <- stats::runif(n = nrow(odds_table))
-        in_ot <- as.numeric(res1 > home_win & res1 < (home_win + hot))
-        in_so <- as.numeric(res1 > home_win & res1 < (home_win + hot + aot))
+        # Mutually exclusive extra-time windows (#68): overlapping masks made a
+        # home ET win score 1 and dropped the away team's extra-time point.
+        in_home_et <- as.numeric(res1 >= home_win & res1 < (home_win + hot))
+        in_away_et <- as.numeric(
+          res1 >= (home_win + hot) &
+            res1 < (home_win + hot + aot)
+        )
         away_sos <- as.numeric(res2 > 0.6858606)
         away_ot <- as.numeric(res2 < 0.6858606)
         Result <-
           1 *
           (res1 < home_win) +
-          0.75 * in_ot * away_ot +
-          0.6 * in_ot * away_sos +
-          0.4 * in_so * away_sos +
-          0.25 * in_so * away_ot
+          0.75 * in_home_et * away_ot +
+          0.6 * in_home_et * away_sos +
+          0.4 * in_away_et * away_sos +
+          0.25 * in_away_et * away_ot
         score_table <- dplyr::bind_cols(
           season_sofar,
           base_cols,
@@ -459,7 +467,7 @@ loopless_sim <- function(
 
 #' Simulation engine to be parallelized or used in single core
 #'
-#' @description Simulates a season given scores and odds, returns results. This is 
+#' @description Simulates a season given scores and odds, returns results. This is
 #'   exported because doSNOW needs to access it for parallel runs. It's not particularly
 #'   meant for direct calling by users.
 #' @param all_season One seasons' scores & odds schedule
