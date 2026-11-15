@@ -24,16 +24,27 @@
       "git status *": "allow",
       "gh issue list *": "allow",
       "gh pr view *": "allow",
-      "gh pr checks *": "allow"
+      "gh pr checks *": "allow",
+      "sleep *": "allow",
+      "git fetch *": "allow",
+      "git log *": "allow",
+      "gh api repos/pbulsink/HockeyModel/issues/90/timeline *": "allow",
+      "sort *": "allow",
+      "uniq *": "allow",
+      "awk *": "allow"
     },
     "skill": {
-      "implement-issue": "allow",
-      "github": "allow",
-      "plan-review": "allow",
-      "grill-me": "allow",
-      "r-code": "allow",
-      "tdd-workflow": "allow",
-      "skills:implement-issue": "allow"
+      "skills:plan-review": "allow",
+      "skills:grill-me": "allow",
+      "skills:r-code": "allow",
+      "skills:tdd-workflow": "allow",
+      "skills:implement-issue": "allow",
+      "skills:github": "allow",
+      "skills:document": "allow",
+      "skills:agent-md-refactor": "allow",
+      "skills:review": "allow",
+      "skills:test-coverage": "allow",
+      "skills:vignette": "allow"
     },
     "edit": {
       "*.md": "allow",
