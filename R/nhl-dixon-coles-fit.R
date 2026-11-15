@@ -142,12 +142,15 @@ getRho <- function(m = HockeyModel::m, scores = HockeyModel::scores) {
   away.expected <- as.vector(expected[(nrow(scores) + 1):(nrow(scores) * 2)])
   weights <- m$data$Weight[seq_len(nrow(scores))]
 
+  # .DCRhoLogLik() contracts `lambda` as the HOME expected-goals rate (it
+  # scores dpois(y1 = HomeGoals, lambda)), so home and away expectations must
+  # go in under those names (#69).
   .DCoptimRhoFn.fast <- function(par) {
     -.DCRhoLogLik(
       y1 = scores$HomeGoals,
       y2 = scores$AwayGoals,
-      mu = home.expected,
-      lambda = away.expected,
+      lambda = home.expected,
+      mu = away.expected,
       rho = par,
       weights = weights
     )
@@ -411,7 +414,8 @@ tau <- Vectorize(.tau_singular, c("xx", "yy", "lambda", "mu"))
 #' @returns (`double(1)`) Summed (optionally weighted) log-likelihood.
 #' @keywords internal
 .DCRhoLogLik <- function(y1, y2, lambda, mu, rho = 0, weights = NULL) {
-  # rho=0, independence y1 home goals y2 away goals mu:expected Home, lambda: expected Away
+  # At rho = 0 the two counts are independent Poissons. Contract (matching
+  # roxygen): y1/home goals go against `lambda`, y2/away goals against `mu`.
   # tau can cross zero at extreme rho (e.g. tau(0,0) = 1 - lambda*mu*rho), so
   # clamp to a positive floor before log() to keep the likelihood well-defined
   # and warning-free across the whole optimizer search space.
