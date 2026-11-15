@@ -31,7 +31,8 @@
       "gh api repos/pbulsink/HockeyModel/issues/90/timeline *": "allow",
       "sort *": "allow",
       "uniq *": "allow",
-      "awk *": "allow"
+      "awk *": "allow",
+      "gh issue comment *": "allow"
     },
     "skill": {
       "skills:plan-review": "allow",
