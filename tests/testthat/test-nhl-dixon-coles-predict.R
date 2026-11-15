@@ -424,7 +424,7 @@ test_that(".dcPredictVectorized matches DCPredict per-game (draws = FALSE)", {
     numeric(2)
   ))
   expect_equal(unname(vec), unname(ref), tolerance = 1e-10)
-  expect_equal(rowSums(vec), c(1,1,1))
+  expect_equal(rowSums(vec), c(1, 1, 1))
 })
 
 test_that(".dcPredictVectorized matches DCPredict with regression (expected_mean, season_percent)", {
