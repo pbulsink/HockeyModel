@@ -687,3 +687,127 @@ test_that("sim_engine handles a full-season-sized schedule", {
       names(res)
   ))
 })
+
+# ============ shared tiebreakers & wildcard tests (#70/#71) ============
+test_that(".rank_by_tiebreakers applies the NHL criteria in order (#71)", {
+  mk <- function(Points, GP, W, OTW = 0L, SOW = 0L) {
+    data.frame(
+      Points = Points,
+      GP = GP,
+      W = W,
+      OTW = OTW,
+      SOW = SOW,
+      stringsAsFactors = FALSE
+    )
+  }
+  # Point percentage is consulted before wins.
+  r <- .rank_by_tiebreakers(rbind(mk(4, 2, 0), mk(4, 3, 5)))
+  expect_true(r[1] < r[2])
+
+  # Wins break a points + point-percent tie.
+  r <- .rank_by_tiebreakers(rbind(mk(4, 2, 1), mk(4, 2, 3)))
+  expect_true(r[2] < r[1])
+
+  # ROW (W + OTW) breaks a points + pp + wins tie.
+  r <- .rank_by_tiebreakers(rbind(mk(4, 2, 1, 0), mk(4, 2, 1, 1)))
+  expect_true(r[2] < r[1])
+
+  # ROSW (W + OTW + SOW) is the last official criterion.
+  r <- .rank_by_tiebreakers(rbind(mk(4, 2, 1, 1, 0), mk(4, 2, 1, 1, 1)))
+  expect_true(r[2] < r[1])
+
+  # More points always outranks fewer.
+  r <- .rank_by_tiebreakers(rbind(mk(6, 3, 3), mk(4, 2, 0)))
+  expect_equal(r[1], 1L)
+})
+
+test_that("buildStats() wildcards are the best-ranked non-divisional teams (#70)", {
+  # Six real Atlantic (Eastern) teams; index order = points order. In a single
+  # division only the top three qualify, so ranks 4/5/6 compete for two
+  # wildcard slots: head() must pick ranks 4 & 5 (best), not 5 & 6 (worst).
+  teams <- c(
+    "Boston Bruins",
+    "Buffalo Sabres",
+    "Detroit Red Wings",
+    "Florida Panthers",
+    "Montreal Canadiens",
+    "Ottawa Senators"
+  )
+  games <- vector("list", length(teams) * (length(teams) - 1L))
+  g <- 0L
+  for (i in seq_along(teams)) {
+    for (j in seq_along(teams)) {
+      if (i == j) {
+        next
+      }
+      # Lower index beats higher index, so team i's wins = length(teams) - i.
+      g <- g + 1L
+      home_wins <- i < j
+      games[[g]] <- data.frame(
+        HomeTeam = teams[i],
+        AwayTeam = teams[j],
+        HomeGoals = if (home_wins) 3L else 1L,
+        AwayGoals = if (home_wins) 1L else 3L,
+        OTStatus = "",
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  scores <- do.call(rbind, games)
+
+  st <- buildStats(scores) |>
+    dplyr::arrange(desc(.data$Points))
+
+  # Points are strictly decreasing, so the ordering is exact.
+  expect_equal(st$Team, teams)
+  # Top three divisional + top two wildcards (ranks 4 & 5); rank 6 stays out.
+  expect_equal(st$Playoffs, c(1L, 1L, 1L, 1L, 1L, 0L))
+})
+
+test_that("simulateSeasonParallel() uses explicit schedule column names (#83)", {
+  # The schedule carries only HomeTeam/AwayTeam (no legacy Home/Away), so the
+  # function must not rely on partial `$` matching to build its team list.
+  local_mocked_bindings(
+    remainderSeasonDC = function(...) {
+      data.frame(
+        HomeTeam = c("Boston Bruins", "Detroit Red Wings", "Florida Panthers"),
+        AwayTeam = c(
+          "Detroit Red Wings",
+          "Florida Panthers",
+          "Boston Bruins"
+        ),
+        HomeWin = c(0.4, 0.5, 0.3),
+        AwayWin = c(0.2, 0.3, 0.15),
+        Draw = c(0.4, 0.2, 0.55),
+        GameID = c(1L, 2L, 3L),
+        Date = as.Date("2025-11-01"),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "HockeyModel"
+  )
+  sched <- data.frame(
+    HomeTeam = c("Boston Bruins", "Detroit Red Wings", "Florida Panthers"),
+    AwayTeam = c(
+      "Detroit Red Wings",
+      "Florida Panthers",
+      "Boston Bruins"
+    ),
+    Date = as.Date("2025-11-01"),
+    GameID = c(1L, 2L, 3L),
+    stringsAsFactors = FALSE
+  )
+
+  # cores = 1 forces the sequential branch so this test never spawns a PSOCK
+  # cluster (which is environment-dependent and can exceed worker limits).
+  res <- simulateSeasonParallel(
+    scores = NULL,
+    schedule = sched,
+    nsims = 20,
+    cores = 1
+  )
+  expect_setequal(
+    unique(res$summary_results$Team),
+    c("Boston Bruins", "Detroit Red Wings", "Florida Panthers")
+  )
+})

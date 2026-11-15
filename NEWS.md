@@ -1,5 +1,9 @@
 # HockeyModel 2026.0.1.9000 (development version)
 
+* The two season simulation engines now share a single standings tiebreaker (`.rank_by_tiebreakers()`): both `buildStats()` and `sim_engine()` rank teams by points, point percentage, wins, regulation wins, and regulation/OT/SO wins, with a random draw only as the final break for exact ties — previously `sim_engine()` broke point ties at random and ignored these criteria, so the two engines produced different standings for identical results (@pbulsink, #71).
+* `buildStats()` now selects the two *best*-ranked non-divisional teams per conference as wildcards (`head(sort(Rank), 2)`); it previously used `tail()`, which picked the two worst-ranked teams (@pbulsink, #70).
+* `simulateSeasonParallel()` no longer builds a `teamlist` from the schedule's `Home`/`Away` columns via partial `$` matching (the schedule uses `HomeTeam`/`AwayTeam`); that dead code was removed so it can't break under exact-only subsetting or a future column rename (@pbulsink, #83).
+
 * The fallback simulation engine's extra-time sampling now uses mutually exclusive home/away ET windows in both `.sim_odds_results()` and the inline worker inside `simulateSeasonParallel()`. Previously the two masks overlapped, so a home extra-time win always scored 1 (e.g. 0.75 + 0.25) instead of an OT/SO result — no OTW/SOW outcomes were ever produced and the away team's extra-time point was lost, which caused the league-wide point drop seen on days that fell back to this engine (@pbulsink, #68).
 * `dcPredictMultipleDays()` now emits a `cli::cli_warn()` when `loopless_sim()` fails and it falls back to `remainderSeasonDC()`, so affected runs are visible instead of silently producing inconsistent results (@pbulsink, #68).
 * `updateModel()` now always updates both leagues when `league` is omitted (`NULL` or `NA`) instead of only active ones, so out-of-season league schedules stay current (@pbulsink, #44).

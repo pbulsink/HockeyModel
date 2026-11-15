@@ -113,18 +113,12 @@ simulateSeasonParallel <- function(
   progress = FALSE,
   params = NULL
 ) {
-  teamlist <- c()
   if (!is.null(scores)) {
     season_sofar <- scores[scores$Date > as.Date(getSeasonStartDate()), ]
     season_sofar <- season_sofar[, c("Date", "HomeTeam", "AwayTeam", "Result")]
   } else {
     season_sofar <- NULL
   }
-
-  teamlist <- c(
-    teamlist,
-    sort(unique(c(as.character(schedule$Home), as.character(schedule$Away))))
-  )
 
   cores <- .parseCores(cores)
 
@@ -553,9 +547,17 @@ sim_engine <- function(all_season, nsims, params = NULL, sim_offset = 0L) {
     out
   }
 
+  # Per-team games played, used by the shared tiebreaker for PointPercent.
+  games_played <- unname(unlist(mapply(
+    function(t) length(home_games[[t]]) + length(away_games[[t]]),
+    seq_along(teamlist),
+    SIMPLIFY = FALSE
+  )))
+
   all_results <- data.frame(
     SimNo = rep(seq_len(nsims) + sim_offset, length(teamlist)),
-    Team = rep(teamlist, each = nsims)
+    Team = rep(teamlist, each = nsims),
+    GP = games_played[match(rep(teamlist, each = nsims), teamlist)]
   )
   # Each team's W/OTW/SOW counts both home and away wins; L/OTL/SOL counts
   # both home and away losses. The away result is `1 - home_result`, so e.g.
@@ -623,7 +625,15 @@ sim_engine <- function(all_season, nsims, params = NULL, sim_offset = 0L) {
   all_results <- all_results |>
     dtplyr::lazy_dt() |>
     dplyr::group_by(.data$SimNo) |>
-    dplyr::mutate(Rank = rank(-.data$Points, ties.method = "random")) |>
+    dplyr::mutate(
+      Rank = .rank_by_tiebreakers(tibble::tibble(
+        Points = .data$Points,
+        GP = .data$GP,
+        W = .data$W,
+        OTW = .data$OTW,
+        SOW = .data$SOW
+      ))
+    ) |> # shared NHL tiebreakers (#71)
     dplyr::ungroup() |>
     dplyr::group_by(.data$SimNo, .data$Conference) |>
     dplyr::mutate(ConfRank = rank(.data$Rank)) |>
