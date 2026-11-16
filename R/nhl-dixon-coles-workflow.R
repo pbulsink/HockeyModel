@@ -165,10 +165,6 @@
     }
   }
 
-  if (include_xG) {
-    preds$GameID <- NULL
-  }
-
   return(preds)
 }
 
