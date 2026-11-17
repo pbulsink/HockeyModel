@@ -137,7 +137,9 @@ playoffSeriesOdds <- function(
     if (ngames == 7) {
       game_home <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE)
     } else {
-      game_home <- rep(c(TRUE, FALSE), as.integer(ngames + 1 / 2))[1:ngames]
+      # (ngames + 1) / 2 rounds up to the number of home games in an alternating
+      # pattern; the trailing [1:ngames] trims it back to ngames entries.
+      game_home <- rep(c(TRUE, FALSE), as.integer((ngames + 1) / 2))[1:ngames]
     }
   }
 
@@ -435,7 +437,7 @@ simulatePlayoffs <- function(
       west_results = west_results,
       currentSeries = currentSeries,
       summary_results = summary_results,
-      homeAwayOdds = homeAwayOdds, 
+      homeAwayOdds = homeAwayOdds,
       params = params
     )
   }
@@ -499,7 +501,11 @@ simulatePlayoffs <- function(
   t1p <- summary_results[summary_results$Team == team1, ]$meanPoints
   t2p <- summary_results[summary_results$Team == team2, ]$meanPoints
 
-  if (!is.null(p1) && !is.null(nrow(p1))) {
+  # nrow() on a character vector is always NULL, so the old check here never
+  # triggered. Honour p1 only when it is exactly one non-empty team name; NULL,
+  # zero-length (an empty currentSeries yields character(0) for a TBD slot), ""
+  # and NA all fall back to meanPoints / coin-flip.
+  if (!is.null(p1) && length(p1) == 1 && !is.na(p1) && nzchar(p1)) {
     if (team1 == p1) {
       return(c(team1, team2))
     } else if (team2 == p1) {

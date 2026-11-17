@@ -54,6 +54,68 @@ test_that("Playoff series honours a user-supplied game_home", {
   )
 })
 
+# #76: simulatePlayoffs() must forward `params` to playoffSolverEngine().
+# Mock the engine so we can capture what was passed without running a full sim.
+test_that("simulatePlayoffs forwards params to playoffSolverEngine (#76)", {
+  summary_results <- HockeyModel::summary_results_testing
+
+  captured_params <- NULL
+  local_mocked_bindings(
+    playoffSolverEngine = function(
+      nsims,
+      completedSeries,
+      east_results,
+      west_results,
+      currentSeries,
+      summary_results,
+      homeAwayOdds,
+      params = NULL
+    ) {
+      captured_params <<- params
+      data.frame(matrix(nrow = nsims, ncol = 30)) |>
+        setNames(c("SimNo", paste0("l", 1:8), paste0("series", 1:15)))
+    },
+    .package = "HockeyModel"
+  )
+
+  simulatePlayoffs(summary_results = summary_results, nsims = 2, cores = 1)
+
+  # A NULL params argument is resolved to a parsed list (with m/rho/beta/eta/k),
+  # not passed through as-is. So we expect a named list with all five keys.
+  expect_true(is.list(captured_params))
+  expect_true(all(
+    c("m", "rho", "beta", "eta", "k") %in% names(captured_params)
+  ))
+})
+
+# #77: .reseedTwoTeams(p1 = ) must honour the forced home-ice team. An earlier
+# version gated this on `!is.null(nrow(p1))`, which is always FALSE for a
+# character vector, so p1 was never honoured and seeding fell back to meanPoints
+# (plus a coin flip on ties) regardless. Now: supplied p1 wins; empty/NULL falls
+# back to meanPoints / coin-flip.
+test_that(".reseedTwoTeams honours the forced home-ice team p1 (#77)", {
+  sr <- data.frame(
+    Team = c("A", "B"),
+    meanPoints = c(80, 90),
+    stringsAsFactors = FALSE
+  )
+
+  # No override: higher-meanPoints team is seeded first.
+  expect_equal(.reseedTwoTeams("A", "B", sr), c("B", "A"))
+  expect_equal(.reseedTwoTeams("B", "A", sr), c("B", "A"))
+
+  # p1 forces the lower-points team to home ice, overriding meanPoints.
+  expect_equal(.reseedTwoTeams("A", "B", sr, p1 = "A"), c("A", "B"))
+  expect_equal(.reseedTwoTeams("B", "A", sr, p1 = "B"), c("B", "A"))
+
+  # Empty-string and NA p1 are both treated as no override. A zero-length p1 is
+  # what an empty currentSeries actually passes for a TBD slot in the real sim,
+  # so that must also fall back (and not error) rather than honouring anything.
+  expect_equal(.reseedTwoTeams("A", "B", sr, p1 = ""), c("B", "A"))
+  expect_equal(.reseedTwoTeams("A", "B", sr, p1 = NA), c("B", "A"))
+  expect_equal(.reseedTwoTeams("A", "B", sr, p1 = character(0)), c("B", "A"))
+})
+
 test_that("Playoff Sim finishes OK", {
   summary_results <- HockeyModel::summary_results_testing
   playoffResults <- simulatePlayoffs(
