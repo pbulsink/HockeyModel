@@ -18,6 +18,104 @@ test_that("Playoff series odds ok", {
   )
 })
 
+test_that("Playoff series honours a user-supplied game_home", {
+  # Home always wins at home (p=1) and never wins on the road (p=0).
+  # All-road pattern: the home team loses every game, so it can only win
+  # with probability 0. The buggy code overwrote this with an alternating
+  # 4-home-game pattern and returned 1.
+  expect_equal(playoffSeriesOdds(1, 0, game_home = rep(FALSE, 7)), 0)
+
+  # A single home game up front: the home team wins only game 1 (p=1), then
+  # loses all six road games (p_road=0), so it cannot reach four wins.
+  expect_equal(
+    playoffSeriesOdds(
+      1,
+      0,
+      game_home = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
+    ),
+    0
+  )
+
+  # A custom pattern equal to the NHL default must match the omitted-argument
+  # result exactly.
+  nhl_default <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE)
+  expect_equal(
+    playoffSeriesOdds(0.6, 0.4, game_home = nhl_default),
+    playoffSeriesOdds(0.6, 0.4)
+  )
+
+  # The default pattern only applies when game_home is omitted: with p_home=1
+  # and p_road=0 the NHL default (four home games) lets the home team win,
+  # whereas an explicit all-road pattern cannot. This distinguishes the
+  # omission path from a forced custom pattern.
+  expect_lt(
+    playoffSeriesOdds(1, 0, game_home = rep(FALSE, 7)),
+    playoffSeriesOdds(1, 0)
+  )
+})
+
+# #76: simulatePlayoffs() must forward `params` to playoffSolverEngine().
+# Mock the engine so we can capture what was passed without running a full sim.
+test_that("simulatePlayoffs forwards params to playoffSolverEngine (#76)", {
+  summary_results <- HockeyModel::summary_results_testing
+
+  captured_params <- NULL
+  local_mocked_bindings(
+    playoffSolverEngine = function(
+      nsims,
+      completedSeries,
+      east_results,
+      west_results,
+      currentSeries,
+      summary_results,
+      homeAwayOdds,
+      params = NULL
+    ) {
+      captured_params <<- params
+      data.frame(matrix(nrow = nsims, ncol = 30)) |>
+        setNames(c("SimNo", paste0("l", 1:8), paste0("series", 1:15)))
+    },
+    .package = "HockeyModel"
+  )
+
+  simulatePlayoffs(summary_results = summary_results, nsims = 2, cores = 1)
+
+  # A NULL params argument is resolved to a parsed list (with m/rho/beta/eta/k),
+  # not passed through as-is. So we expect a named list with all five keys.
+  expect_true(is.list(captured_params))
+  expect_true(all(
+    c("m", "rho", "beta", "eta", "k") %in% names(captured_params)
+  ))
+})
+
+# #77: .reseedTwoTeams(p1 = ) must honour the forced home-ice team. An earlier
+# version gated this on `!is.null(nrow(p1))`, which is always FALSE for a
+# character vector, so p1 was never honoured and seeding fell back to meanPoints
+# (plus a coin flip on ties) regardless. Now: supplied p1 wins; empty/NULL falls
+# back to meanPoints / coin-flip.
+test_that(".reseedTwoTeams honours the forced home-ice team p1 (#77)", {
+  sr <- data.frame(
+    Team = c("A", "B"),
+    meanPoints = c(80, 90),
+    stringsAsFactors = FALSE
+  )
+
+  # No override: higher-meanPoints team is seeded first.
+  expect_equal(.reseedTwoTeams("A", "B", sr), c("B", "A"))
+  expect_equal(.reseedTwoTeams("B", "A", sr), c("B", "A"))
+
+  # p1 forces the lower-points team to home ice, overriding meanPoints.
+  expect_equal(.reseedTwoTeams("A", "B", sr, p1 = "A"), c("A", "B"))
+  expect_equal(.reseedTwoTeams("B", "A", sr, p1 = "B"), c("B", "A"))
+
+  # Empty-string and NA p1 are both treated as no override. A zero-length p1 is
+  # what an empty currentSeries actually passes for a TBD slot in the real sim,
+  # so that must also fall back (and not error) rather than honouring anything.
+  expect_equal(.reseedTwoTeams("A", "B", sr, p1 = ""), c("B", "A"))
+  expect_equal(.reseedTwoTeams("A", "B", sr, p1 = NA), c("B", "A"))
+  expect_equal(.reseedTwoTeams("A", "B", sr, p1 = character(0)), c("B", "A"))
+})
+
 test_that("Playoff Sim finishes OK", {
   summary_results <- HockeyModel::summary_results_testing
   playoffResults <- simulatePlayoffs(

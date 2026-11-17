@@ -76,6 +76,31 @@ test_that("remainderSeasonDC returns odds table directly", {
   expect_true(nrow(result) > 0)
 })
 
+# #82: .todayDC() must keep GameID even when include_xG = TRUE. A prior version
+# dropped GameID on the xG path (`preds$GameID <- NULL`), which broke downstream
+# joins that key games by ID. The drop was removed, so both columns survive.
+test_that(".todayDC keeps GameID alongside xG columns (#82)", {
+  # Use a real matchup from the bundled scores so DCPredict has known teams.
+  first <- HockeyModel::scores[1, ]
+
+  result <- .todayDC(
+    today = as.Date("2025-11-06"),
+    schedule = data.frame(
+      Date = as.Date("2025-11-06"),
+      HomeTeam = first$HomeTeam,
+      AwayTeam = first$AwayTeam,
+      GameID = "G1",
+      stringsAsFactors = FALSE
+    ),
+    include_xG = TRUE
+  )
+
+  expect_true("GameID" %in% names(result))
+  expect_equal(result$GameID, "G1")
+  # xG columns are present on the same rows as GameID (not a separate table).
+  expect_true(all(c("Home_xG", "Away_xG") %in% names(result)))
+})
+
 test_that("remainderSeasonDC accumulates every day's games in order", {
   # Build a 3-day schedule with 2 games each day so the per-day
   # accumulation is exercised across multiple list elements.
