@@ -418,7 +418,8 @@ simulatePlayoffs <- function(
           west_results = west_results,
           currentSeries = currentSeries,
           summary_results = summary_results,
-          homeAwayOdds = homeAwayOdds
+          homeAwayOdds = homeAwayOdds,
+          params = params
         )
         return(simresults)
       }
@@ -434,7 +435,8 @@ simulatePlayoffs <- function(
       west_results = west_results,
       currentSeries = currentSeries,
       summary_results = summary_results,
-      homeAwayOdds = homeAwayOdds
+      homeAwayOdds = homeAwayOdds, 
+      params = params
     )
   }
 
