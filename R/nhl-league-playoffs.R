@@ -499,7 +499,7 @@ simulatePlayoffs <- function(
   t1p <- summary_results[summary_results$Team == team1, ]$meanPoints
   t2p <- summary_results[summary_results$Team == team2, ]$meanPoints
 
-  if (!is.null(p1) && !is.null(nrow(p1)) && nrow(p1) > 0) {
+  if (!is.null(p1) && !is.null(nrow(p1))) {
     if (team1 == p1) {
       return(c(team1, team2))
     } else if (team2 == p1) {
