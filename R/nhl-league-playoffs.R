@@ -131,10 +131,14 @@ playoffSeriesOdds <- function(
   if (is.null(ngames)) {
     ngames <- 7
   }
-  if (is.null(game_home) && ngames == 7) {
-    game_home <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE)
-  } else {
-    game_home <- rep(c(TRUE, FALSE), as.integer(ngames + 1 / 2))[1:ngames]
+  # A supplied game_home is honoured verbatim for custom series formats; only
+  # fall back to a default pattern when it was omitted.
+  if (is.null(game_home)) {
+    if (ngames == 7) {
+      game_home <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE)
+    } else {
+      game_home <- rep(c(TRUE, FALSE), as.integer(ngames + 1 / 2))[1:ngames]
+    }
   }
 
   game_to <- ceiling(ngames / 2)
