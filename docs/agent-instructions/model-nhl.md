@@ -450,9 +450,7 @@ E = exported.
    - The parallel path runs `cores*100` tasks × `ceiling(nsims/(cores*100))` simulations, so the total isn't exactly `nsims`.
    - `params` isn't passed on to `playoffSolverEngine`.
 9. `.reseedTwoTeams(p1 =)` checks `nrow(p1)` on a character vector, so `p1` is never honoured.
-10. `.single_series_solver`:
-    - `is.na(currentSeries)` on a data frame is suspect.
-    - `currentSeries == series_number` compares the whole data frame (?).
+10. ~~`.single_series_solver`:~~ **Resolved** (#78, #79): `is.na()` was called on the `currentSeries` data frame (it now tests for `NULL`/zero rows), and the ongoing branch compared the whole data frame to `series_number` element-wise (it now matches on the `SeriesID` column).
 11. Postponed-game status is inconsistent:
     - `getNHLSchedule` handles `FUT`/`PPD`.
     - `games_today` handles `PPD`/`RESCHEDULED`.

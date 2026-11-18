@@ -116,6 +116,98 @@ test_that(".reseedTwoTeams honours the forced home-ice team p1 (#77)", {
   expect_equal(.reseedTwoTeams("A", "B", sr, p1 = character(0)), c("B", "A"))
 })
 
+# #78/#79: .single_series_solver() must (a) detect an empty/NULL currentSeries
+# without is.na()-on-a-data-frame, and (b) match the requested series by its
+# SeriesID column rather than comparing the whole frame element-wise.
+test_that(".single_series_solver handles empty/NULL currentSeries (#78)", {
+  empty <- data.frame(
+    Round = integer(),
+    Series = integer(),
+    HomeTeam = character(),
+    AwayTeam = character(),
+    HomeWins = integer(),
+    AwayWins = integer(),
+    HomeSeed = integer(),
+    AwaySeed = integer(),
+    Status = character(),
+    SeriesID = integer()
+  )
+
+  home <- "Toronto Maple Leafs"
+  away <- "Ottawa Senators"
+
+  # Empty series: randomSeriesWinner path, returns one of the two teams.
+  expect_true(.single_series_solver(1, empty, home, away) %in% c(home, away))
+
+  # A NULL series (a defensive caller could pass this) takes the same branch
+  # and must not crash.
+  expect_true(.single_series_solver(1, NULL, home, away) %in% c(home, away))
+})
+
+test_that(".single_series_solver selects the ongoing series by SeriesID (#79)", {
+  # A non-empty frame used to trip is.na() on a data frame (coercion error).
+  cs <- data.frame(
+    Round = 1L,
+    Series = 1L,
+    HomeTeam = "Toronto Maple Leafs",
+    AwayTeam = "Ottawa Senators",
+    HomeWins = 2L,
+    AwayWins = 3L,
+    HomeSeed = 1L,
+    AwaySeed = 8L,
+    Status = "Ongoing",
+    SeriesID = 1L
+  )
+
+  # The ongoing branch uses the API teams (not the passed-in home/away) and
+  # returns one of them. Before the fix this errored in is.na(); now it works.
+  expect_true(
+    .single_series_solver(1, cs, "Some Home", "Some Away") %in%
+      c("Toronto Maple Leafs", "Ottawa Senators")
+  )
+})
+
+test_that(".single_series_solver returns the decided winner for a complete series", {
+  cs <- data.frame(
+    Round = 1L,
+    Series = 1L,
+    HomeTeam = "Toronto Maple Leafs",
+    AwayTeam = "Ottawa Senators",
+    HomeWins = 4L,
+    AwayWins = 2L,
+    HomeSeed = 1L,
+    AwaySeed = 8L,
+    Status = "Complete",
+    SeriesID = 1L
+  )
+
+  # Complete: deterministic by win count (home leads 4-2), no randomness.
+  expect_equal(
+    .single_series_solver(1, cs, "Toronto Maple Leafs", "Ottawa Senators"),
+    "Toronto Maple Leafs"
+  )
+})
+
+test_that(".single_series_solver warns on team mismatch for a complete series", {
+  cs <- data.frame(
+    Round = 1L,
+    Series = 1L,
+    HomeTeam = "Toronto Maple Leafs",
+    AwayTeam = "Ottawa Senators",
+    HomeWins = 4L,
+    AwayWins = 2L,
+    HomeSeed = 1L,
+    AwaySeed = 8L,
+    Status = "Complete",
+    SeriesID = 1L
+  )
+
+  expect_warning(
+    .single_series_solver(1, cs, "Wrong Home", "Wrong Away"),
+    regexp = "Team Mismatch"
+  )
+})
+
 test_that("Playoff Sim finishes OK", {
   summary_results <- HockeyModel::summary_results_testing
   playoffResults <- simulatePlayoffs(

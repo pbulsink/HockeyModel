@@ -52,4 +52,7 @@ tests/testthat/*.csv
 reference/*.pdf
 *.csv
 .kilo/
-.posit/
+.posit/*
+!.posit/assistant/
+.posit/assistant/*
+!.posit/assistant/settings.json

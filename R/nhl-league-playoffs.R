@@ -544,7 +544,9 @@ simulatePlayoffs <- function(
   params = NULL
 ) {
   params <- .parse_dc_params(params)
-  if (is.na(currentSeries) || nrow(currentSeries) == 0) {
+  # is.na() on a data frame errors (coercion to logical(1)), so test NULL and
+  # row count explicitly instead.
+  if (is.null(currentSeries) || nrow(currentSeries) == 0) {
     return(randomSeriesWinner(
       homeTeam,
       awayTeam,
@@ -574,12 +576,7 @@ simulatePlayoffs <- function(
       series$HomeTeam,
       series$AwayTeam
     ))
-  } else if (
-    nrow(currentSeries[
-      currentSeries == series_number & currentSeries$Status == "Ongoing",
-    ]) ==
-      1
-  ) {
+  } else if (nrow(series) == 1 && series$Status == "Ongoing") {
     if (series$HomeTeam != homeTeam || series$AwayTeam != awayTeam) {
       warning(
         "Team Mismatch series ",
