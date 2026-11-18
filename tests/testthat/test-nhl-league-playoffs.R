@@ -159,11 +159,13 @@ test_that(".single_series_solver selects the ongoing series by SeriesID (#79)", 
     SeriesID = 1L
   )
 
-  # The ongoing branch uses the API teams (not the passed-in home/away) and
-  # returns one of them. Before the fix this errored in is.na(); now it works.
-  expect_true(
+  # The ongoing branch is reached by matching on SeriesID (before the fix this
+  # errored in is.na()). Intentionally passing mismatched teams exercises both
+  # the selection and the team-mismatch warning.
+  expect_warning(
     .single_series_solver(1, cs, "Some Home", "Some Away") %in%
-      c("Toronto Maple Leafs", "Ottawa Senators")
+      c("Toronto Maple Leafs", "Ottawa Senators"),
+    regexp = "Team Mismatch"
   )
 })
 
