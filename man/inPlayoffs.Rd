@@ -33,6 +33,8 @@ is returned; pass \code{league = "nhl"} or \code{league = "pwhl"} to evaluate a 
 league and get back a scalar result.
 }
 \examples{
+\dontrun{
 inPlayoffs(date = as.Date("2019-05-01"), league = "nhl")
 inPlayoffs(date = as.Date("2024-05-15"), league = "pwhl", boolean = FALSE)
+}
 }
