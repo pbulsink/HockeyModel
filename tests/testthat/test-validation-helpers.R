@@ -30,7 +30,10 @@ test_that("normalizeOdds works with unlisted vectors", {
 })
 
 test_that("Past points function works", {
-  vcr::local_cassette("pastpoints")
+  # getSeason is called once per row; stub it so the test is deterministic
+  testthat::local_mocked_bindings(
+    getSeason = function(gamedate = Sys.Date()) "20172018"
+  )
   # Just test that the function runs without error
   sc <- scores[
     scores$Date > as.Date("2017-11-01") & scores$Date < as.Date("2017-12-01"),
