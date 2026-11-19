@@ -417,7 +417,9 @@ loopless_sim <- function(
     gc(verbose = FALSE)
   }
   cli::cli_inform("Simulated {nsims} seasons in parallel across {cores} cores.")
-  cli::cli_inform("Compiling summary statistics for {nrow(all_results)} sim results.")
+  cli::cli_inform(
+    "Compiling summary statistics for {nrow(all_results)} sim results."
+  )
   summary_results <- all_results |>
     # dtplyr::lazy_dt() |>
     dplyr::group_by(.data$Team) |>

@@ -41,7 +41,7 @@ test_that("DC Functions function", {
         0.0172958092119045,
         0.000196430560280055
       ),
-      .Dim = c(5L, 5L)
+      dim = c(5L, 5L)
     )
   )
 })

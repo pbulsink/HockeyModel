@@ -45,7 +45,8 @@
       "skills:agent-md-refactor": "allow",
       "skills:review": "allow",
       "skills:test-coverage": "allow",
-      "skills:vignette": "allow"
+      "skills:vignette": "allow",
+      "implement-issue": "allow"
     },
     "edit": {
       "*.md": "allow",

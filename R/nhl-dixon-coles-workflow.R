@@ -423,7 +423,7 @@ remainderSeasonDC <- function(
     nsims = nsims,
     cores = cores,
     scores = scores,
-    schedule = schedule, 
+    schedule = schedule,
     params = params
   )
 
