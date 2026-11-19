@@ -210,6 +210,221 @@ test_that(".single_series_solver warns on team mismatch for a complete series", 
   )
 })
 
+# #74: simulatePlayoffs() must fetch live series from getAPISeries() and mix
+# them into the bracket. Previously the call was commented out, so currentSeries
+# was always empty and a team already through round 1 could still lose it in
+# simulation.
+test_that("simulatePlayoffs fetches and maps live API series without erroring (#74)", {
+  summary_results <- HockeyModel::summary_results_testing
+  teams <- c(
+    "Toronto Maple Leafs",
+    "Ottawa Senators",
+    "Boston Bruins",
+    "Detroit Red Wings",
+    "New Jersey Devils",
+    "Philadelphia Flyers",
+    "Tampa Bay Lightning",
+    "Florida Panthers",
+    "Los Angeles Kings",
+    "Vegas Golden Knights",
+    "Dallas Stars",
+    "Colorado Avalanche",
+    "St. Louis Blues",
+    "Minnesota Wild",
+    "Edmonton Oilers",
+    "Winnipeg Jets"
+  )
+
+  # The API reports first-round series as letters A-O; simulatePlayoffs maps
+  # them to numeric SeriesIDs that the engine keys off — any unmapped letter
+  # would crash the solver rather than short-circuit. All eight slots complete,
+  # so the bracket is resolvable through the mapping alone.
+  api_series <- data.frame(
+    Round = rep(1L, 8),
+    Series = LETTERS[1:8],
+    HomeTeam = teams[c(1, 3, 5, 7, 9, 11, 13, 15)],
+    AwayTeam = teams[c(2, 4, 6, 8, 10, 12, 14, 16)],
+    HomeWins = rep(4L, 8),
+    AwayWins = rep(2L, 8),
+    HomeSeed = c(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L),
+    AwaySeed = c(8L, 7L, 6L, 5L, 4L, 3L, 2L, 1L),
+    Status = rep("Complete", 8)
+  )
+
+  local_mocked_bindings(
+    getAPISeries = function(...) api_series,
+    .package = "HockeyModel"
+  )
+
+  # No crash means every letter mapped to a valid SeriesID.
+  res <- simulatePlayoffs(
+    summary_results = summary_results,
+    nsims = 2,
+    cores = 1
+  )
+  expect_true(is.data.frame(res))
+  expect_equal(nrow(res), nrow(summary_results))
+})
+
+test_that("simulatePlayoffs short-circuits completed API series (#74)", {
+  summary_results <- HockeyModel::summary_results_testing
+
+  teams <- c(
+    "Toronto Maple Leafs",
+    "Ottawa Senators",
+    "Boston Bruins",
+    "Detroit Red Wings",
+    "New Jersey Devils",
+    "Philadelphia Flyers",
+    "Tampa Bay Lightning",
+    "Florida Panthers",
+    "Los Angeles Kings",
+    "Vegas Golden Knights",
+    "Dallas Stars",
+    "Colorado Avalanche",
+    "St. Louis Blues",
+    "Minnesota Wild",
+    "Edmonton Oilers",
+    "Winnipeg Jets"
+  )
+
+  api_series <- data.frame(
+    Round = rep(1L, 8),
+    Series = LETTERS[1:8],
+    HomeTeam = teams[c(1, 3, 5, 7, 9, 11, 13, 15)],
+    AwayTeam = teams[c(2, 4, 6, 8, 10, 12, 14, 16)],
+    HomeWins = rep(4L, 8),
+    AwayWins = rep(2L, 8),
+    HomeSeed = c(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L),
+    AwaySeed = c(8L, 7L, 6L, 5L, 4L, 3L, 2L, 1L),
+    Status = rep("Complete", 8)
+  )
+
+  local_mocked_bindings(
+    getAPISeries = function(...) api_series,
+    .package = "HockeyModel"
+  )
+
+  res <- simulatePlayoffs(
+    summary_results = summary_results,
+    nsims = 2,
+    cores = 1
+  )
+
+  expect_true(is.data.frame(res))
+  # Home teams won every mocked series: each clinches round 1 in all sims.
+  expect_equal(
+    sum(res$Win_First_Round[res$Team %in% api_series$HomeTeam]),
+    length(api_series$HomeTeam)
+  )
+  expect_equal(sum(res$Win_First_Round[res$Team %in% api_series$AwayTeam]), 0)
+})
+
+test_that("simulatePlayoffs mixes in ongoing API series (#74)", {
+  summary_results <- HockeyModel::summary_results_testing
+
+  # One live (ongoing) first-round series per conference; the other six slots
+  # are completed so the bracket is fully resolvable.
+  api_series <- data.frame(
+    Round = rep(1L, 8),
+    Series = LETTERS[1:8],
+    HomeTeam = c(
+      "Toronto Maple Leafs",
+      "Boston Bruins",
+      "New Jersey Devils",
+      "Tampa Bay Lightning",
+      "Los Angeles Kings",
+      "Dallas Stars",
+      "St. Louis Blues",
+      "Edmonton Oilers"
+    ),
+    AwayTeam = c(
+      "Ottawa Senators",
+      "Detroit Red Wings",
+      "Philadelphia Flyers",
+      "Florida Panthers",
+      "Vegas Golden Knights",
+      "Colorado Avalanche",
+      "Minnesota Wild",
+      "Winnipeg Jets"
+    ),
+    HomeWins = c(2L, 4L, 4L, 4L, 1L, 4L, 4L, 4L),
+    AwayWins = c(1L, 3L, 3L, 2L, 0L, 2L, 1L, 2L),
+    HomeSeed = c(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L),
+    AwaySeed = c(8L, 7L, 6L, 5L, 4L, 3L, 2L, 1L),
+    Status = c(
+      "Ongoing",
+      "Complete",
+      "Complete",
+      "Complete",
+      "Ongoing",
+      "Complete",
+      "Complete",
+      "Complete"
+    )
+  )
+
+  local_mocked_bindings(
+    getAPISeries = function(...) api_series,
+    .package = "HockeyModel"
+  )
+
+  # Simulated seeding generally differs from the real bracket, so "Team
+  # Mismatch" warnings here are expected and informational.
+  res <- suppressWarnings(
+    simulatePlayoffs(summary_results = summary_results, nsims = 2, cores = 1)
+  )
+
+  expect_true(is.data.frame(res))
+  # Each ongoing series resolves through .single_series_solver() (the old
+  # is.na()-on-a-data-frame bug would have errored here): its two teams together
+  # win that round-1 slot in every sim, so their first-round proportions sum to 1.
+  expect_equal(
+    sum(res$Win_First_Round[
+      res$Team %in% c("Toronto Maple Leafs", "Ottawa Senators")
+    ]),
+    1
+  )
+  expect_equal(
+    sum(res$Win_First_Round[
+      res$Team %in% c("Los Angeles Kings", "Vegas Golden Knights")
+    ]),
+    1
+  )
+  # The six completed series are short-circuited to their winners.
+  expect_equal(
+    sum(res$Win_First_Round[res$Team %in% api_series$HomeTeam[-c(1, 5)]]),
+    length(api_series$HomeTeam) - 2L
+  )
+})
+
+# #75: the parallel path must run exactly `nsims` simulations, not a rounded-up
+# multiple of cores*100 tasks. The chunking is what both engines share, so it
+# is tested directly (doSNOW workers load the installed package and can't be
+# namespace-mocked).
+test_that(".simulation_chunks splits nsims exactly", {
+  expect_equal(.simulation_chunks(10, 2), c(5L, 5L))
+  expect_equal(sum(.simulation_chunks(7, 3)), 7)
+  expect_equal(.simulation_chunks(7, 3), c(3L, 2L, 2L))
+  # nsims < n: some workers get zero sims, total is still exact.
+  expect_equal(sum(.simulation_chunks(1, 4)), 1)
+})
+
+test_that("simulatePlayoffs parallel path runs with chunked nsims (#75)", {
+  skip_if_not_installed("doSNOW")
+
+  summary_results <- HockeyModel::summary_results_testing
+  res <- simulatePlayoffs(
+    summary_results = summary_results,
+    nsims = 4,
+    cores = 2
+  )
+
+  expect_true(is.data.frame(res))
+  expect_equal(nrow(res), nrow(summary_results))
+  expect_true(all(res$Make_Playoffs <= 1))
+})
+
 test_that("Playoff Sim finishes OK", {
   summary_results <- HockeyModel::summary_results_testing
   playoffResults <- simulatePlayoffs(

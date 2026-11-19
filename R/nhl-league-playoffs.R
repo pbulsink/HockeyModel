@@ -342,20 +342,15 @@ simulatePlayoffs <- function(
     "series15" = character()
   )
 
-  # currentSeries<-getAPISeries()
-
-  currentSeries <- data.frame(
-    "Round" = integer(),
-    "Series" = integer(),
-    "HomeTeam" = character(),
-    "AwayTeam" = character(),
-    "HomeWins" = integer(),
-    "AwayWins" = integer(),
-    "HomeSeed" = integer(),
-    "AwaySeed" = integer(),
-    "Status" = character(),
-    "SeriesID" = integer()
-  )
+  currentSeries <- getAPISeries()
+  # The API reports series as letters (A-O); the engine and solvers key off
+  # numeric IDs, so map them here.
+  if (nrow(currentSeries) > 0 && is.character(currentSeries$Series)) {
+    currentSeries$SeriesID <- match(
+      currentSeries$Series,
+      LETTERS[1:15]
+    )
+  }
 
   if (nrow(currentSeries) == 0) {
     message("too early to mix in real-life series")
@@ -366,7 +361,7 @@ simulatePlayoffs <- function(
     )
     currentSeries <- data.frame(
       "Round" = integer(),
-      "Series" = integer(),
+      "Series" = character(),
       "HomeTeam" = character(),
       "AwayTeam" = character(),
       "HomeWins" = integer(),
@@ -408,13 +403,17 @@ simulatePlayoffs <- function(
     `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD Check
     i <- NA_real_ # This hack passes R CMD Check
 
+    # Split nsims exactly across `cores` tasks so the total number of
+    # simulations is not rounded up to a multiple of a fixed task count (#75).
+    chunk_sizes <- .simulation_chunks(nsims, cores)
+
     simresults <- foreach::foreach(
-      i = 1:(cores * 100),
+      i = seq_len(cores),
       .combine = "rbind"
     ) %dopar%
       {
         simresults <- playoffSolverEngine(
-          nsims = ceiling(nsims / (cores * 100)),
+          nsims = chunk_sizes[i],
           completedSeries = completedSeries,
           east_results = east_results,
           west_results = west_results,
