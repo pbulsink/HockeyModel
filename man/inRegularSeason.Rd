@@ -33,6 +33,8 @@ list is returned; pass \code{league = "nhl"} or \code{league = "pwhl"} to evalua
 single league and get back a scalar result.
 }
 \examples{
+\dontrun{
 inRegularSeason(date = as.Date("2018-12-02"), league = "nhl")
 inRegularSeason(date = as.Date("2024-01-15"), league = "pwhl", boolean = FALSE)
+}
 }

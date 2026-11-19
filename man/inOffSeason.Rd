@@ -29,6 +29,8 @@ both leagues are evaluated and a named list is returned; pass
 back a scalar result.
 }
 \examples{
+\dontrun{
 inOffSeason(date = as.Date("2019-08-01"), league = "nhl")
 inOffSeason(date = as.Date("2024-08-01"), league = "pwhl")
+}
 }

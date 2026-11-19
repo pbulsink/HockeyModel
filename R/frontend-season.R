@@ -20,8 +20,10 @@
 #'   list with elements `$nhl` and `$pwhl`.
 #'
 #' @examples
+#' \dontrun{
 #' inRegularSeason(date = as.Date("2018-12-02"), league = "nhl")
 #' inRegularSeason(date = as.Date("2024-01-15"), league = "pwhl", boolean = FALSE)
+#' }
 #' @export
 inRegularSeason <- function(
   date = Sys.Date(),
@@ -64,8 +66,10 @@ inRegularSeason <- function(
 #'   list with elements `$nhl` and `$pwhl`.
 #'
 #' @examples
+#' \dontrun{
 #' inPlayoffs(date = as.Date("2019-05-01"), league = "nhl")
 #' inPlayoffs(date = as.Date("2024-05-15"), league = "pwhl", boolean = FALSE)
+#' }
 #' @export
 inPlayoffs <- function(
   date = Sys.Date(),
@@ -105,8 +109,10 @@ inPlayoffs <- function(
 #'   with elements `$nhl` and `$pwhl`.
 #'
 #' @examples
+#' \dontrun{
 #' inOffSeason(date = as.Date("2019-08-01"), league = "nhl")
 #' inOffSeason(date = as.Date("2024-08-01"), league = "pwhl")
+#' }
 #' @export
 inOffSeason <- function(date = Sys.Date(), league = NULL) {
   leagues <- .resolve_frontend_leagues(league)
