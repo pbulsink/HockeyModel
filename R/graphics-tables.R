@@ -617,11 +617,21 @@ series_odds_table <- function(
 
   return(series_gt)
 }
+ 
 
-
+#' Season Finishing Position Table
+#'
+#' @description Takes a per-team season simulation summary and returns a gt table of each team's probability of finishing in positions 1-8 within its conference, plus the probability of missing the playoffs entirely. Teams are grouped by conference and sorted by mean conference rank. If `summary_results` is not supplied, it is read from the most recent prediction `.RDS` file under the `HockeyModel.prediction.path` option; if no (recent) prediction files exist, the function returns `NULL`.
+#'
+#' @param summary_results A data frame of per-team season simulation summaries with columns `Team`, `meanConfRank`, and `p_rank1` through `p_rank8`. Defaults to `NULL`, in which case it is loaded from the most recent prediction `.RDS` file.
+#' @param caption_text Additional text to prepend to the table title, e.g. `"Eastern Conference"` if only one conference is shown.
+#' @param include_images Whether to include a team logo alongside each team name. Default `TRUE`.
+#' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When `"PWHL"`, PWHL team colours and logos are used; note the PWHL finishing position table is not yet fully implemented, so results may be meaningless.
+#'
+#' @return A gt table, or `NULL` if no (recent) prediction files were found.
 #' @export
 season_finish_table <- function(
-  summary_results,
+  summary_results = NULL,
   caption_text = "",
   include_images = TRUE,
   league = "NHL"
