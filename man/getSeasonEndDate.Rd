@@ -4,10 +4,13 @@
 \alias{getSeasonEndDate}
 \title{GetCurrentSeasonEndDate}
 \usage{
-getSeasonEndDate(season = NULL)
+getSeasonEndDate(season = NULL, schedule = HockeyModel::schedule)
 }
 \arguments{
 \item{season}{Season (8 character code) or NULL for current/most recent season}
+
+\item{schedule}{NHL schedule used to derive dates when the API is
+unavailable. Defaults to \link{schedule}.}
 }
 \value{
 Season end date (as date)

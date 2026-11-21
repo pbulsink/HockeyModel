@@ -4,7 +4,11 @@
 \alias{getCurrentSeason8}
 \title{Get the latest NHL season ID}
 \usage{
-getCurrentSeason8()
+getCurrentSeason8(schedule = HockeyModel::schedule)
+}
+\arguments{
+\item{schedule}{NHL schedule used to derive the current season when the API
+is unavailable. Defaults to \link{schedule}.}
 }
 \value{
 (\code{character(1)}) Season ID in eight-digit format such as

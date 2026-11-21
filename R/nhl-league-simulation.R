@@ -113,8 +113,11 @@ simulateSeasonParallel <- function(
   progress = FALSE,
   params = NULL
 ) {
+  # Local schedule, so the lookup works offline (#87).
   if (!is.null(scores)) {
-    season_sofar <- scores[scores$Date > as.Date(getSeasonStartDate()), ]
+    season_sofar <- scores[
+      scores$Date > as.Date(getSeasonStartDate(schedule = schedule)),
+    ]
     season_sofar <- season_sofar[, c("Date", "HomeTeam", "AwayTeam", "Result")]
   } else {
     season_sofar <- NULL
@@ -337,9 +340,15 @@ loopless_sim <- function(
     )
   }
 
+  # Pass the local schedule so the season lookup works offline (#87).
   season_sofar <- scores[
     scores$Date >=
-      as.Date(getSeasonStartDate(getSeason(schedule[, "Date"][1]))),
+      as.Date(
+        getSeasonStartDate(
+          getSeason(schedule[, "Date"][1], schedule = schedule),
+          schedule = schedule
+        )
+      ),
   ]
 
   if (nrow(season_sofar) > 0) {

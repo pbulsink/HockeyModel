@@ -280,9 +280,11 @@ remainderSeasonDC <- function(
 
   if (regress) {
     season_end_date <- as.Date(max(schedule[schedule$GameType == "R", ]$Date))
+    # Local schedule, so the lookup works offline (#87).
+    season_start <- getSeasonStartDate(schedule = schedule)
     season_start_date <- as.Date(min(c(
-      scores[scores$Date > as.Date(getSeasonStartDate()), "Date"],
-      schedule[schedule$Date > as.Date(getSeasonStartDate()), "Date"]
+      scores[scores$Date > as.Date(season_start), "Date"],
+      schedule[schedule$Date > as.Date(season_start), "Date"]
     )))
     season_length <- as.integer(season_end_date) - as.integer(season_start_date)
     remaining_length <- as.integer(season_end_date) - as.integer(last_game_date)
@@ -344,10 +346,11 @@ remainderSeasonDC <- function(
 
     for (g in seq_len(nrow(odds_table))) {
       d <- as.Date(odds_table[g, "Date"], origin = "1970-01-01")
-      # Expected goals home
+      # params$m, not the bundled fit, so backtests don't leak current-season
+      # coefficients into their expected-goals calculations (#81).
       lambda <- try(
         stats::predict(
-          HockeyModel::m,
+          params$m,
           data.frame(
             Home = 1,
             Team = odds_table$HomeTeam[g],
@@ -361,7 +364,7 @@ remainderSeasonDC <- function(
       # Expected goals away
       mu <- try(
         stats::predict(
-          HockeyModel::m,
+          params$m,
           data.frame(
             Home = 0,
             Team = odds_table$AwayTeam[g],
@@ -376,14 +379,16 @@ remainderSeasonDC <- function(
         lambda <- .DCPredictErrorRecover(
           team = odds_table$HomeTeam[g],
           opponent = odds_table$AwayTeam[g],
-          homeiceadv = TRUE
+          homeiceadv = TRUE,
+          m = params$m
         )
       }
       if (!is.numeric(mu)) {
         mu <- .DCPredictErrorRecover(
           team = odds_table$AwayTeam[g],
           opponent = odds_table$HomeTeam[g],
-          homeiceadv = FALSE
+          homeiceadv = FALSE,
+          m = params$m
         )
       }
 
@@ -584,13 +589,14 @@ getSeasonMetricsDC <- function(
 ) {
   sched <- schedule
   sched$Home.WLD <- sched$Away.WLD <- sched$Draw.WLD <- sched$Home.WL <- sched$Away.WL <- sched$Result <- NA
+  season_start <- getSeasonStartDate(schedule = schedule)
   season_sofar <- scores[
-    scores$Date > as.Date(getSeasonStartDate()),
+    scores$Date > as.Date(season_start),
     c("GameID", "Result")
   ]
 
   sched <- predictMultipleDaysResultsDC(
-    startDate = getSeasonStartDate(),
+    startDate = season_start,
     endDate = Sys.Date()
   )
   sched <- dplyr::left_join(sched, season_sofar, by = "GameID", )
