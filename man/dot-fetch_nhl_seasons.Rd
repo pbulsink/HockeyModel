@@ -11,7 +11,10 @@ A data frame of season metadata, or \code{NULL} on failure.
 }
 \description{
 Retrieves all NHL seasons from
-\verb{https://api.nhle.com/stats/rest/en/season}. Returns \code{NULL} when the
-request fails so callers can fall back to schedule-based checks.
+\verb{https://api.nhle.com/stats/rest/en/season}. Results are cached for the
+session (#87) so repeated lookups do not re-fetch independently. Returns
+\code{NULL} when the request fails so callers can fall back to schedule-based
+checks; failures are not cached, so a recovered connection is picked up on
+the next call.
 }
 \keyword{internal}

@@ -580,3 +580,65 @@ test_that("randomSeriesWinner parses params exactly once per call", {
   )
   expect_equal(tracked$calls, 1L)
 })
+
+# #81: .DCPredictErrorRecover() must use the model it is handed, not the bundled
+# HockeyModel::m, so backtests with historical params don't leak current-season
+# coefficients into their expected-goals fallbacks.
+test_that(".DCPredictErrorRecover uses the supplied model, not package data (#81)", {
+  # A synthetic model whose coefficient scale is deliberately far from the
+  # bundled fit: Team* names follow getM() naming ("Team<name>" / "Opponent<name>").
+  # Coefficient names follow getM() naming: paste0("Team", name) keeps the space.
+  fake_m <- list(
+    coefficients = c(
+      `TeamAnaheim Ducks` = 1,
+      `TeamBoston Bruins` = 2,
+      `OpponentAnaheim Ducks` = -0.5,
+      `OpponentBoston Bruins` = -0.6,
+      Home = 0.3
+    ),
+    data = data.frame(
+      Team = factor(c("Anaheim Ducks", "Boston Bruins")),
+      Opponent = factor(c("Anaheim Ducks", "Boston Bruins"))
+    )
+  )
+
+  # "New York Rangers" is unseen in fake_m, so the recovery path pairs its
+  # coefficient with the minimum Team coefficient of the supplied model.
+  lambda <- .DCPredictErrorRecover(
+    team = "New York Rangers",
+    opponent = "Anaheim Ducks",
+    homeiceadv = TRUE,
+    m = fake_m
+  )
+
+  expect_equal(lambda, exp(min(c(1, 2)) - 0.5 + 0.3))
+  # The historical constant (and any value derived from HockeyModel::m) must not leak in.
+  expect_false(isTRUE(all.equal(lambda, 3.319624)))
+})
+
+test_that(".dcLambda recovers unseen-team expected goals from params$m (#81)", {
+  # Coefficient names follow getM() naming: paste0("Team", name) keeps the space.
+  fake_m <- list(
+    coefficients = c(
+      `TeamAnaheim Ducks` = 1,
+      `TeamBoston Bruins` = 2,
+      `OpponentAnaheim Ducks` = -0.5,
+      `OpponentBoston Bruins` = -0.6,
+      Home = 0.3
+    ),
+    data = data.frame(
+      Team = factor(c("Anaheim Ducks", "Boston Bruins")),
+      Opponent = factor(c("Anaheim Ducks", "Boston Bruins"))
+    )
+  )
+
+  xg <- .dcLambda(
+    home = "New York Rangers",
+    away = "Anaheim Ducks",
+    params = list(m = fake_m)
+  )
+
+  # Home is unseen in the model, so its expected goals come from the recovery
+  # path using this supplied model (not HockeyModel::m).
+  expect_equal(xg$home, exp(min(c(1, 2)) - 0.5 + 0.3))
+})

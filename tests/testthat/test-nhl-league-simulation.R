@@ -359,7 +359,9 @@ test_that("loopless_sim runs exactly the requested number of simulations (#51)",
 
   local_mocked_bindings(
     getSeason = function(gamedate = Sys.Date()) "20192020",
-    getSeasonStartDate = function(season = NULL) as.Date("2025-10-07"),
+    getSeasonStartDate = function(season = NULL, schedule = NULL) {
+      as.Date("2025-10-07")
+    },
     sim_engine = function(all_season, nsims, params = NULL) {
       # Return one row per simulation so the caller's requested count is
       # observable. Columns match loopless_sim's summarise() expectations.
@@ -431,7 +433,9 @@ test_that("loopless_sim parallel branch uses fixed-size chunks with unique SimNo
 
   local_mocked_bindings(
     getSeason = function(gamedate = Sys.Date()) "20192020",
-    getSeasonStartDate = function(season = NULL) as.Date("2025-10-07"),
+    getSeasonStartDate = function(season = NULL, schedule = NULL) {
+      as.Date("2025-10-07")
+    },
     sim_engine = function(all_season, nsims, params = NULL, sim_offset = 0L) {
       # One row per simulation; SimNo reflects the requested offset so the
       # caller's chunking is observable. Columns match loopless_sim's

@@ -125,3 +125,74 @@ test_that("Draws Normalize", {
     c(0.45, 0.1018125, 0.0981875, 0.35)
   )
 })
+
+# #80: postponed-game status handling must use a single source of truth. The
+# API returns "PPD" (postponed) and occasionally "RESCHEDULED"; it never
+# returns "Postponed", so .add_postponed_to_schedule_end() must match on the
+# real statuses or it silently does nothing.
+test_that(".add_postponed_to_schedule_end moves past PPD/RESCHEDULED games to season end (#80)", {
+  today <- Sys.Date()
+  sched <- data.frame(
+    Date = c(
+      as.Date("2025-11-03"), # played regular-season game (past)
+      today - 10, # postponed game with a past date
+      today + 5, # future game
+      today + 9 # future game
+    ),
+    HomeTeam = c("A", "B", "C", "D"),
+    AwayTeam = c("B", "A", "D", "C"),
+    GameID = c(1L, 2L, 3L, 4L),
+    GameType = c("R", "R", "P", "P"),
+    GameStatus = c("Final", "PPD", "FUT", "FUT"),
+    stringsAsFactors = FALSE
+  )
+
+  out <- .add_postponed_to_schedule_end(sched)
+
+  # The postponed game is moved to the end of the schedule: the later of the
+  # last regular-season date and today.
+  expect_equal(out[out$GameID == 2, ]$Date, max(as.Date("2025-11-03"), today))
+  # Non-postponed rows are untouched.
+  expect_equal(
+    out[out$GameID != 2, c("Date", "HomeTeam")],
+    sched[sched$GameID != 2, c("Date", "HomeTeam")]
+  )
+})
+
+test_that(".add_postponed_to_schedule_end also handles RESCHEDULED (#80)", {
+  today <- Sys.Date()
+  sched <- data.frame(
+    Date = c(as.Date("2025-11-03"), today - 4),
+    HomeTeam = c("A", "B"),
+    AwayTeam = c("B", "A"),
+    GameID = c(1L, 2L),
+    GameType = c("R", "R"),
+    GameStatus = c("Final", "RESCHEDULED"),
+    stringsAsFactors = FALSE
+  )
+
+  out <- .add_postponed_to_schedule_end(sched)
+  expect_equal(out[out$GameID == 2, ]$Date, max(as.Date("2025-11-03"), today))
+})
+
+test_that(".add_postponed_to_schedule_end leaves schedules with no postponed games unchanged (#80)", {
+  today <- Sys.Date()
+  sched <- data.frame(
+    Date = c(as.Date("2025-11-03"), today + 5),
+    HomeTeam = c("A", "B"),
+    AwayTeam = c("B", "A"),
+    GameID = c(1L, 2L),
+    GameType = c("R", "P"),
+    GameStatus = c("Final", "FUT"),
+    stringsAsFactors = FALSE
+  )
+
+  out <- .add_postponed_to_schedule_end(sched)
+  expect_equal(out$Date, sched$Date)
+})
+
+test_that(".postponed_statuses is the single source of truth for postponed statuses (#80)", {
+  expect_setequal(.postponed_statuses(), c("PPD", "RESCHEDULED"))
+  # The status string the API never returns must not be in the set.
+  expect_false("Postponed" %in% .postponed_statuses())
+})

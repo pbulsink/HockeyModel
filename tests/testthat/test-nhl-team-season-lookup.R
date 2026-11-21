@@ -1,3 +1,87 @@
+# #87: season lookups must work from the local schedule when the API is down,
+# and repeated lookups within a session must not re-fetch independently.
+offline_nhl_schedule <- data.frame(
+  Date = c(as.Date("2019-04-06"), as.Date("2019-05-30")),
+  HomeTeam = c("Team A", "Team B"),
+  AwayTeam = c("Team B", "Team A"),
+  GameID = c(2018012345, 2018999999), # both in the 2018-19 season (YYYY prefix)
+  GameType = c("R", "P"),
+  GameStatus = c("Final", "FUT"),
+  stringsAsFactors = FALSE
+)
+
+test_that("season lookups derive dates from the local schedule when offline (#87)", {
+  local_mocked_bindings(
+    .fetch_nhl_seasons = function() NULL,
+    .package = "HockeyModel"
+  )
+
+  expect_equal(
+    getSeasonStartDate(season = "20182019", schedule = offline_nhl_schedule),
+    as.Date("2019-04-06")
+  )
+  expect_equal(
+    getSeasonEndDate(season = "20182019", schedule = offline_nhl_schedule),
+    as.Date("2019-05-30")
+  )
+  # The current season is the latest season present in the local schedule.
+  expect_equal(
+    getCurrentSeason8(schedule = offline_nhl_schedule),
+    "20182019"
+  )
+  # A date inside a scheduled season maps to that season.
+  expect_equal(
+    getSeason(as.Date("2019-04-20"), schedule = offline_nhl_schedule),
+    "20182019"
+  )
+  # A date between seasons has no local match.
+  expect_null(getSeason(as.Date("2019-06-15"), schedule = offline_nhl_schedule))
+})
+
+test_that("season lookups error informatively when offline with an empty schedule (#87)", {
+  local_mocked_bindings(
+    .fetch_nhl_seasons = function() NULL,
+    .package = "HockeyModel"
+  )
+
+  expect_error(getSeasonStartDate(season = "20182019"), "no network access")
+  expect_error(getSeasonEndDate(season = "20182019"), "no network access")
+})
+
+test_that("season lookups cache the API response within a session (#87)", {
+  fetches <- new.env()
+  fetches$n <- 0L
+  mock_seasons <- data.frame(
+    id = c(20182019, 20192020),
+    startDate = as.Date(c("2018-10-03", "2019-10-02")),
+    endDate = as.Date(c("2019-06-12", "2020-08-30"))
+  )
+
+  # Caching is disabled under testthat, so re-enable it for this test only.
+  withr::local_envvar(TESTTHAT = "")
+
+  # Mock the uncached HTTP seam so the session cache is what gets exercised.
+  local_mocked_bindings(
+    .fetch_nhl_seasons_http = function() {
+      fetches$n <- fetches$n + 1L
+      mock_seasons
+    },
+    .package = "HockeyModel"
+  )
+
+  clear_nhl_seasons_cache()
+
+  expect_equal(getSeasonStartDate(season = "20182019"), as.Date("2018-10-03"))
+  expect_equal(getSeasonEndDate(season = "20182019"), as.Date("2019-06-12"))
+  expect_equal(getCurrentSeason8(), "20192020")
+  # All three lookups hit the API exactly once, not once each.
+  expect_equal(fetches$n, 1L)
+
+  clear_nhl_seasons_cache()
+  getCurrentSeason8()
+  expect_equal(fetches$n, 2L)
+})
+
 mock_nhl_seasons <- data.frame(
   id = c(20182019, 20192020),
   startDate = as.Date(c("2018-10-03", "2019-10-02")),

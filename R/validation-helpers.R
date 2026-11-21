@@ -237,6 +237,19 @@ is.Date <- function(date) {
 }
 
 
+#' Postponed game statuses returned by the NHL API
+#'
+#' @description Single source of truth for the `GameStatus` values that mark a
+#'   postponed game. The API marks postponements as `"PPD"` (and occasionally
+#'   `"RESCHEDULED"`) — it does not return `"Postponed"` — so every function
+#'   that special-cases postponed games must compare against these values.
+#'
+#' @returns (`character`) The postponed status strings.
+#' @keywords internal
+.postponed_statuses <- function() {
+  c("PPD", "RESCHEDULED")
+}
+
 #' Add Postponed Games to Schedule End
 #'
 #' @description Sometimes games are postponed without a makeup date initially announced. The model just drops those games if this function is not employed to move the games to the end of the season
@@ -246,18 +259,20 @@ is.Date <- function(date) {
 #'
 #' @return a schedule with postponed games moved to the end of the schedule - helps to not drop games that are otherwise in the past but weren't played.
 .add_postponed_to_schedule_end <- function(schedule = HockeyModel::schedule) {
-  if (!any(schedule$GameStatus == "Postponed")) {
+  postponed <- .postponed_statuses()
+
+  if (!any(schedule$GameStatus %in% postponed)) {
     # no postponed games
     return(schedule)
   } else if (
-    all(schedule[schedule$GameStatus == "Postponed", "Date"] > Sys.Date())
+    all(schedule[schedule$GameStatus %in% postponed, "Date"] > Sys.Date())
   ) {
     # all game postponements are in future games - just play them.
     return(schedule)
   }
 
   for (g in schedule[
-    schedule$GameStatus == "Postponed" & schedule$Date < Sys.Date(),
+    schedule$GameStatus %in% postponed & schedule$Date < Sys.Date(),
   ]$GameID) {
     # The model doesn't (currently) account for what games are back to back or anything - so they can all be played on the same (last) date of the schedule
     # Using the last date of the regular season to not interfere with playoffs

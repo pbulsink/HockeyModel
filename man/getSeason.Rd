@@ -4,10 +4,13 @@
 \alias{getSeason}
 \title{Get Season from Game Date}
 \usage{
-getSeason(gamedate = Sys.Date())
+getSeason(gamedate = Sys.Date(), schedule = HockeyModel::schedule)
 }
 \arguments{
 \item{gamedate}{The date of the game to check for season}
+
+\item{schedule}{NHL schedule used to derive the season when the API is
+unavailable. Defaults to \link{schedule}.}
 }
 \value{
 a character season id (e.g. 20172018)

@@ -239,10 +239,12 @@ DCPredict <- function(
       if (is.numeric(x)) {
         x
       } else {
+        # params$m, not the bundled fit, so backtests stay leak-free (#81).
         .DCPredictErrorRecover(
           team = home[i],
           opponent = away[i],
-          homeiceadv = TRUE
+          homeiceadv = TRUE,
+          m = params$m
         )
       }
     },
@@ -262,10 +264,12 @@ DCPredict <- function(
       if (is.numeric(x)) {
         x
       } else {
+        # params$m, not the bundled fit, so backtests stay leak-free (#81).
         .DCPredictErrorRecover(
           team = away[i],
           opponent = home[i],
-          homeiceadv = FALSE
+          homeiceadv = FALSE,
+          m = params$m
         )
       }
     },
@@ -382,18 +386,22 @@ DCPredict <- function(
     TRUE
   )
 
+  # Pass params$m so backtests with historical params don't leak the bundled
+  # current-season fit into the fallback estimates (#81).
   if (!is.numeric(xg$home)) {
     xg$home <- .DCPredictErrorRecover(
       team = home,
       opponent = away,
-      homeiceadv = TRUE
+      homeiceadv = TRUE,
+      m = params$m
     )
   }
   if (!is.numeric(xg$away)) {
     xg$away <- .DCPredictErrorRecover(
       team = away,
       opponent = home,
-      homeiceadv = FALSE
+      homeiceadv = FALSE,
+      m = params$m
     )
   }
 

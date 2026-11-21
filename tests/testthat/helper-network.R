@@ -19,3 +19,12 @@ skip_if_hockey_apis_unavailable <- function(
     )
   }
 }
+
+# #87: clear the session-level NHL seasons cache so tests of the fallback and
+# caching behaviour start from a clean state regardless of test order. The
+# cache is an environment in the package namespace (the enclosing env of
+# .fetch_nhl_seasons), stable across load_all / installed builds.
+clear_nhl_seasons_cache <- function() {
+  ns_env <- environment(HockeyModel:::.fetch_nhl_seasons)
+  rlang::env_unbind(get("nhl_seasons_cache", envir = ns_env), "data")
+}
