@@ -16,6 +16,12 @@
   delay = stats::runif(1, min = 2, max = 6) * 60
 ) {
   post_results <- list()
+
+  if (inOffSeason(league = "PWHL")) {
+    cli::cli_alert_info("PWHL is in the off-season; nothing to do.")
+    return(invisible(.summarize_post_results(post_results)))
+  }
+
   model_data <- .update_model_pwhl()
   schedule <- model_data$schedule
   scores <- model_data$scores

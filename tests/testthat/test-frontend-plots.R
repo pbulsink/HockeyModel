@@ -1,5 +1,6 @@
 test_that("todayOddsPlot and dailySummary fan out by league (#39)", {
   local_mocked_bindings(
+    .active_frontend_leagues = function() c("NHL", "PWHL"),
     .today_odds_plot_nhl = function(...) "nhl-today",
     .today_odds_plot_pwhl = function(...) "pwhl-today",
     .daily_summary_nhl = function(...) "nhl-summary",

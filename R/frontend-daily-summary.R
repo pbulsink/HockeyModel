@@ -14,7 +14,7 @@
   subdir = "pace",
   delay = stats::runif(1, min = 2, max = 6) * 60
 ) {
-  if (inOffSeason()) {
+  if (inOffSeason(league = "NHL")) {
     if (
       getSeasonStartDate() - Sys.Date() > 7 ||
         getSeasonStartDate() - Sys.Date() < 0
@@ -113,7 +113,7 @@
     )
   }
 
-  if (inRegularSeason()) {
+  if (inRegularSeason(league = "NHL")) {
     updatePredictions(
       scores = modelparams$scores,
       schedule = modelparams$schedule,
@@ -123,7 +123,6 @@
     playoff <- playoffOdds(league = "NHL")
     president <- presidentOdds(league = "NHL")
     point <- pointPredict(league = "NHL")
-    rating <- ratings(m = params$m, league = "NHL")
 
     Sys.sleep(15)
 
@@ -170,19 +169,6 @@
       grDevices::dev.off()
     }
 
-    grDevices::png(
-      filename = file.path(graphic_dir, "current_rating.png"),
-      width = 11,
-      height = 8.5,
-      units = "in",
-      res = 300
-    )
-    print(rating)
-    Sys.sleep(5)
-    while (grDevices::dev.cur() != 1) {
-      grDevices::dev.off()
-    }
-
     # Make Pace Plots
     plot_pace_by_team(
       graphic_dir = graphic_dir,
@@ -206,7 +192,7 @@
   message("Delaying ", delay, " seconds to space tweets...")
   Sys.sleep(delay)
 
-  if (inRegularSeason()) {
+  if (inRegularSeason(league = "NHL")) {
     post_results[[length(post_results) + 1]] <- tweetPlayoffOdds(
       graphic_dir = graphic_dir,
       params = params
@@ -214,7 +200,7 @@
 
     message("Delaying ", delay / 2, " seconds to space tweets...")
     Sys.sleep(delay / 2)
-  } else if (inPlayoffs()) {
+  } else if (inPlayoffs(league = "NHL")) {
     message("Calculating Playoff Odds")
     post_results[[length(post_results) + 1]] <- tweetPlayoffOdds(
       graphic_dir = graphic_dir,
@@ -222,7 +208,9 @@
     )
   }
 
-  if (as.numeric(format(Sys.Date(), "%w")) == 1 && inRegularSeason()) {
+  if (
+    as.numeric(format(Sys.Date(), "%w")) == 1 && inRegularSeason(league = "NHL")
+  ) {
     # On monday post pace plots
     post_results[[length(post_results) + 1]] <- tweetPace(
       delay = delay,
@@ -230,13 +218,17 @@
     )
   }
 
-  if (as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason()) {
+  if (
+    as.numeric(format(Sys.Date(), "%w")) == 0 && inRegularSeason(league = "NHL")
+  ) {
     message("Tweeting Metrics")
     # On Sunday post metrics
     post_results[[length(post_results) + 1]] <- tweetMetrics()
   }
 
-  if (as.numeric(format(Sys.Date(), "%w")) == 2 && inRegularSeason()) {
+  if (
+    as.numeric(format(Sys.Date(), "%w")) == 2 && inRegularSeason(league = "NHL")
+  ) {
     message("Tweeting Likelihoods")
     # On Tuesday post expected points (likelihood)
     post_results[[length(post_results) + 1]] <- tweetLikelihoods(
@@ -283,7 +275,9 @@
 #' @param delay (`double(1)`) Delay between social-media posts in seconds.
 #' @param league (`character(1)` or `NULL`) Which league front-end to run. Can
 #'   be one of:
-#'   * `NULL`, `NA`, or `"both"`: Run both leagues.
+#'   * `NULL` or `NA`: Run whichever leagues are currently active (regular
+#'     season or playoffs).
+#'   * `"both"`: Run both leagues regardless of activity.
 #'   * `"nhl"`: Run the NHL workflow only.
 #'   * `"pwhl"`: Run the PWHL workflow only.
 #'
@@ -297,7 +291,7 @@ dailySummary <- function(
   league = NULL
 ) {
   graphic_dir_missing <- missing(graphic_dir)
-  leagues <- .resolve_frontend_leagues(league)
+  leagues <- .resolve_frontend_leagues(league, active_only = TRUE)
   result <- list()
 
   if ("NHL" %in% leagues) {

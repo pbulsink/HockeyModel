@@ -1,0 +1,62 @@
+{
+  "permission": {
+    "bash": {
+      "gh issue view *": "allow",
+      "head *": "allow",
+      "grep *": "allow",
+      "echo *": "allow",
+      "sed *": "allow",
+      "cat *": "allow",
+      "ls *": "allow",
+      "gh api user *": "allow",
+      "git branch *": "allow",
+      "git checkout *": "allow",
+      "Rscript *": "allow",
+      "air *": "allow",
+      "tail *": "allow",
+      "git add *": "allow",
+      "git commit *": "allow",
+      "git push *": "allow",
+      "gh api *": "allow",
+      "gh auth status *": "allow",
+      "git remote *": "allow",
+      "gh repo view *": "allow",
+      "git status *": "allow",
+      "gh issue list *": "allow",
+      "gh pr view *": "allow",
+      "gh pr checks *": "allow",
+      "sleep *": "allow",
+      "git fetch *": "allow",
+      "git log *": "allow",
+      "gh api repos/pbulsink/HockeyModel/issues/90/timeline *": "allow",
+      "sort *": "allow",
+      "uniq *": "allow",
+      "awk *": "allow",
+      "gh issue comment *": "allow"
+    },
+    "skill": {
+      "skills:plan-review": "allow",
+      "skills:grill-me": "allow",
+      "skills:r-code": "allow",
+      "skills:tdd-workflow": "allow",
+      "skills:implement-issue": "allow",
+      "skills:github": "allow",
+      "skills:document": "allow",
+      "skills:agent-md-refactor": "allow",
+      "skills:review": "allow",
+      "skills:test-coverage": "allow",
+      "skills:vignette": "allow",
+      "implement-issue": "allow"
+    },
+    "edit": {
+      "*.md": "allow",
+      "*.R": "allow"
+    },
+    "executeCode": {
+      "*": "allow"
+    },
+    "positronCommand": {
+      "workbench.action.language.runtime.restartActiveSession": "allow"
+    }
+  }
+}

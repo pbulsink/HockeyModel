@@ -136,16 +136,9 @@ getNHLSchedule <- function(
     unique() |>
     dplyr::arrange(.data$Date, .data$GameID)
 
-  if (
-    nrow(sched[
-      sched$GameStatus %in% c("FUT", "PPD") & sched$Date < Sys.Date(),
-    ]) >
-      0
-  ) {
-    sched[
-      sched$GameStatus %in% c("FUT", "PPD") & sched$Date < Sys.Date(),
-    ]$Date <- max(sched$Date)
-  }
+  # Delegate postponed-game handling to the shared helper so all schedule
+  # functions agree on what counts as postponed (#80).
+  sched <- .add_postponed_to_schedule_end(sched)
 
   return(sched)
 }
@@ -231,9 +224,9 @@ games_today <- function(
 
   # Filter games if all_games = FALSE
   if (!all_games) {
-    # Exclude postponed and rescheduled games
+    # Exclude postponed and rescheduled games (#80: shared status source)
     todaygames <- todaygames |>
-      dplyr::filter(!(.data$GameStatus %in% c("PPD", "RESCHEDULED")))
+      dplyr::filter(!(.data$GameStatus %in% .postponed_statuses()))
   }
 
   if (nrow(todaygames) == 0) {

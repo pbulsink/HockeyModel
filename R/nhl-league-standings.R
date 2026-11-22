@@ -1,5 +1,35 @@
 # NHL league standings/points table construction
 
+#' Rank teams by the NHL standings tiebreakers
+#'
+#' @description Orders `nrow(df)` teams using the official NHL criteria —
+#'   points, point percentage (points / games played), wins, regulation wins
+#'   (`ROW`), and regulation/OT/SO wins (`ROSW`) — with a random draw as the
+#'   final tie-break so exact ties get a stable-per-run order. Shared by
+#'   `buildStats()` and `sim_engine()` so both simulation engines rank teams
+#'   identically (#71).
+#'
+#' @param df (`data.frame`) One row per team, with columns `Points`, `GP`,
+#'   `W`, `OTW`, and `SOW`.
+#' @return (`integer`) A vector of ranks, one per row, where 1 is best.
+#' @keywords internal
+.rank_by_tiebreakers <- function(df) {
+  points <- df$Points
+  point_percent <- points / df$GP
+  w <- df$W
+  row_wins <- w + df$OTW
+  rosow <- w + df$OTW + df$SOW
+  order(order(
+    -points,
+    -point_percent,
+    -w,
+    -row_wins,
+    -rosow,
+    # random draw only breaks exact ties, so tied teams don't always rank in input order
+    stats::runif(nrow(df))
+  ))
+}
+
 #' Bulid Stats Table
 #'
 #' @param scores scores to use to build stats table
@@ -96,20 +126,13 @@ buildStats <- function(scores) {
   team_stats <- team_stats |>
     dtplyr::lazy_dt() |>
     dplyr::mutate(
-      PointPercent = .data$Points / .data$GP,
-      ROW = .data$W + .data$OTW,
-      ROSW = .data$W + .data$OTW + .data$SOW,
-      Rand = stats::runif(dplyr::n())
-    ) |>
-    dplyr::mutate(
-      Rank = order(order(
-        -.data$Points,
-        -.data$PointPercent,
-        -.data$W,
-        -.data$ROW,
-        -.data$ROSW,
-        .data$Rand
-      )), # include Random for random ties sorting, else Anaheim will always beat Vegas if they're tied.
+      Rank = .rank_by_tiebreakers(tibble::tibble(
+        Points = .data$Points,
+        GP = .data$GP,
+        W = .data$W,
+        OTW = .data$OTW,
+        SOW = .data$SOW
+      )), # shared NHL tiebreakers; random only breaks exact ties (#71)
       Conf = .getTeamConferences(.data$Team), # convenience data, dropped later
       Div = .getTeamDivisions(.data$Team)
     ) |>
@@ -123,13 +146,13 @@ buildStats <- function(scores) {
     dplyr::group_by(.data$Conf, .data$Playoffs) |>
     dplyr::mutate(
       Playoffs = ifelse(
-        .data$Rank %in% utils::tail(sort(.data$Rank), 2),
+        .data$Rank %in% utils::head(sort(.data$Rank), 2),
         1,
         .data$Playoffs
       )
-    ) |> ## Renaming top two playoff teams as 'in' doesn't matter, because they're in already
+    ) |> # Mark the two best-ranked non-divisional teams per conference as wildcards (#70)
     dplyr::ungroup() |>
-    dplyr::select(-c("Conf", "Div", "PointPercent", "ROW", "ROSW", "Rand")) |>
+    dplyr::select(-"Conf", -"Div") |>
     tibble::as_tibble()
 
   return(team_stats)

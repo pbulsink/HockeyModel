@@ -131,10 +131,16 @@ playoffSeriesOdds <- function(
   if (is.null(ngames)) {
     ngames <- 7
   }
-  if (is.null(game_home) && ngames == 7) {
-    game_home <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE)
-  } else {
-    game_home <- rep(c(TRUE, FALSE), as.integer(ngames + 1 / 2))[1:ngames]
+  # A supplied game_home is honoured verbatim for custom series formats; only
+  # fall back to a default pattern when it was omitted.
+  if (is.null(game_home)) {
+    if (ngames == 7) {
+      game_home <- c(TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE)
+    } else {
+      # (ngames + 1) / 2 rounds up to the number of home games in an alternating
+      # pattern; the trailing [1:ngames] trims it back to ngames entries.
+      game_home <- rep(c(TRUE, FALSE), as.integer((ngames + 1) / 2))[1:ngames]
+    }
   }
 
   game_to <- ceiling(ngames / 2)
@@ -336,20 +342,15 @@ simulatePlayoffs <- function(
     "series15" = character()
   )
 
-  # currentSeries<-getAPISeries()
-
-  currentSeries <- data.frame(
-    "Round" = integer(),
-    "Series" = integer(),
-    "HomeTeam" = character(),
-    "AwayTeam" = character(),
-    "HomeWins" = integer(),
-    "AwayWins" = integer(),
-    "HomeSeed" = integer(),
-    "AwaySeed" = integer(),
-    "Status" = character(),
-    "SeriesID" = integer()
-  )
+  currentSeries <- getAPISeries()
+  # The API reports series as letters (A-O); the engine and solvers key off
+  # numeric IDs, so map them here.
+  if (nrow(currentSeries) > 0 && is.character(currentSeries$Series)) {
+    currentSeries$SeriesID <- match(
+      currentSeries$Series,
+      LETTERS[1:15]
+    )
+  }
 
   if (nrow(currentSeries) == 0) {
     message("too early to mix in real-life series")
@@ -360,7 +361,7 @@ simulatePlayoffs <- function(
     )
     currentSeries <- data.frame(
       "Round" = integer(),
-      "Series" = integer(),
+      "Series" = character(),
       "HomeTeam" = character(),
       "AwayTeam" = character(),
       "HomeWins" = integer(),
@@ -402,19 +403,24 @@ simulatePlayoffs <- function(
     `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD Check
     i <- NA_real_ # This hack passes R CMD Check
 
+    # Split nsims exactly across `cores` tasks so the total number of
+    # simulations is not rounded up to a multiple of a fixed task count (#75).
+    chunk_sizes <- .simulation_chunks(nsims, cores)
+
     simresults <- foreach::foreach(
-      i = 1:(cores * 100),
+      i = seq_len(cores),
       .combine = "rbind"
     ) %dopar%
       {
         simresults <- playoffSolverEngine(
-          nsims = ceiling(nsims / (cores * 100)),
+          nsims = chunk_sizes[i],
           completedSeries = completedSeries,
           east_results = east_results,
           west_results = west_results,
           currentSeries = currentSeries,
           summary_results = summary_results,
-          homeAwayOdds = homeAwayOdds
+          homeAwayOdds = homeAwayOdds,
+          params = params
         )
         return(simresults)
       }
@@ -430,7 +436,8 @@ simulatePlayoffs <- function(
       west_results = west_results,
       currentSeries = currentSeries,
       summary_results = summary_results,
-      homeAwayOdds = homeAwayOdds
+      homeAwayOdds = homeAwayOdds,
+      params = params
     )
   }
 
@@ -493,7 +500,11 @@ simulatePlayoffs <- function(
   t1p <- summary_results[summary_results$Team == team1, ]$meanPoints
   t2p <- summary_results[summary_results$Team == team2, ]$meanPoints
 
-  if (!is.null(p1) && !is.null(nrow(p1)) && nrow(p1) > 0) {
+  # nrow() on a character vector is always NULL, so the old check here never
+  # triggered. Honour p1 only when it is exactly one non-empty team name; NULL,
+  # zero-length (an empty currentSeries yields character(0) for a TBD slot), ""
+  # and NA all fall back to meanPoints / coin-flip.
+  if (!is.null(p1) && length(p1) == 1 && !is.na(p1) && nzchar(p1)) {
     if (team1 == p1) {
       return(c(team1, team2))
     } else if (team2 == p1) {
@@ -532,7 +543,9 @@ simulatePlayoffs <- function(
   params = NULL
 ) {
   params <- .parse_dc_params(params)
-  if (is.na(currentSeries) || nrow(currentSeries) == 0) {
+  # is.na() on a data frame errors (coercion to logical(1)), so test NULL and
+  # row count explicitly instead.
+  if (is.null(currentSeries) || nrow(currentSeries) == 0) {
     return(randomSeriesWinner(
       homeTeam,
       awayTeam,
@@ -562,12 +575,7 @@ simulatePlayoffs <- function(
       series$HomeTeam,
       series$AwayTeam
     ))
-  } else if (
-    nrow(currentSeries[
-      currentSeries == series_number & currentSeries$Status == "Ongoing",
-    ]) ==
-      1
-  ) {
+  } else if (nrow(series) == 1 && series$Status == "Ongoing") {
     if (series$HomeTeam != homeTeam || series$AwayTeam != awayTeam) {
       warning(
         "Team Mismatch series ",

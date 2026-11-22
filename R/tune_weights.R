@@ -167,3 +167,250 @@
 
 # Determining performance with xi = 0.00426
 # Accuracy = 0.6007, LogLoss = 0.6669.
+
+#' One refit walk over the held-out b2b test period (#64)
+#'
+#' @description Refits `m` for every date in the held-out NHL test period (same
+#'   scheme as [.tune_dc_weight()]: data from 2010-08-01, test start 2022-10-01),
+#'   and stores each game's *base* expected goals (`lambda`/`mu`, before any b2b
+#'   scaling) together with its home/away b2b flags and `Result`.  The expensive
+#'   refits happen once here; the cheap per-game b2b scaling in [.b2b_eval()] can
+#'   then be applied for many candidate magnitudes without re-refitting.
+#'
+#' @returns (`data.frame`) One row per test-period game with columns `base_lambda`,
+#'   `base_mu`, `home_b2b`, `away_b2b`, and `Result`.
+#' @keywords internal
+.b2b_base_walk <- function() {
+  all_scores <- HockeyModel::scores
+  all_scores <- unique(all_scores[all_scores$Date > as.Date("2010-08-01"), ])
+  test_start <- as.Date("2022-10-01")
+
+  truth <- all_scores[all_scores$Date >= test_start, ]
+  test_dates <- sort(unique(truth$Date))
+
+  # Compute b2b flags serially (cheap) so the parallel workers only need to call
+  # exported functions (getM / predict); internal helpers aren't visible there.
+  flag_table <- lapply(
+    test_dates,
+    function(d) {
+      sch <- truth[truth$Date == d, ]
+      prior <- all_scores[
+        all_scores$Date < d,
+        c("Date", "HomeTeam", "AwayTeam")
+      ]
+      fl <- .b2b_flags(games = sch, history = prior)
+      c(fl$home_b2b, fl$away_b2b)
+    }
+  )
+  names(flag_table) <- format(test_dates)
+
+  # Base lambda/mu for every game on date d (no b2b scaling yet). Only exported
+  # functions are called here so it runs inside parallel workers; unseen teams
+  # fall back to the historical league-average goal rate.
+  .get_base <- function(d, flags) {
+    current_m <- getM(
+      scores = all_scores[all_scores$Date < d, ],
+      currentDate = d
+    )
+    sch <- truth[truth$Date == d, ]
+
+    lam <- vapply(
+      seq_len(nrow(sch)),
+      function(i) {
+        x <- tryCatch(
+          as.numeric(stats::predict(
+            current_m,
+            data.frame(
+              Home = 1,
+              Team = sch$HomeTeam[i],
+              Opponent = sch$AwayTeam[i]
+            ),
+            type = "response"
+          )),
+          error = function(e) NA_real_
+        )
+        if (is.na(x)) {
+          3.32 # historical home goals fallback for unseen teams
+        } else {
+          x
+        }
+      },
+      numeric(1)
+    )
+    mu <- vapply(
+      seq_len(nrow(sch)),
+      function(i) {
+        x <- tryCatch(
+          as.numeric(stats::predict(
+            current_m,
+            data.frame(
+              Home = 0,
+              Team = sch$AwayTeam[i],
+              Opponent = sch$HomeTeam[i]
+            ),
+            type = "response"
+          )),
+          error = function(e) NA_real_
+        )
+        if (is.na(x)) {
+          2.83 # historical away goals fallback for unseen teams
+        } else {
+          x
+        }
+      },
+      numeric(1)
+    )
+
+    data.frame(
+      base_lambda = lam,
+      base_mu = mu,
+      home_b2b = flags[seq_len(nrow(sch))],
+      away_b2b = flags[(nrow(sch) + 1):(2 * nrow(sch))],
+      Result = sch$Result
+    )
+  }
+
+  cl <- parallel::makeCluster(.parseCores(4))
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+  doSNOW::registerDoSNOW(cl)
+  `%dopar%` <- foreach::`%dopar%` # This hack passes R CMD CHK
+  i <- 0 # This hack passes R CMD CHK
+  base <- foreach::foreach(
+    i = seq_along(test_dates),
+    .combine = "rbind"
+  ) %dopar%
+    (.get_base(test_dates[i], flag_table[[format(test_dates[i])]]))
+
+  return(base)
+}
+
+#' Evaluate b2b log-loss for a magnitude pair from a precomputed base frame (#64)
+#'
+#' @description Applies the exp(+/- eps) scaling to each game's stored base
+#'   `lambda`/`mu`, rebuilds the Dixon-Coles score matrix, and returns the
+#'   home-win log-loss on the test period.  This is cheap (no refits), so it can
+#'   be called for many candidate magnitudes against a single [.b2b_base_walk()]
+#'   result.  The `draws = FALSE` redistribution matches [DCPredict()] exactly.
+#'
+#' @param base (`data.frame`) Output of [.b2b_base_walk()].
+#' @param eps_home (`double(1)`) Home b2b magnitude.
+#' @param eps_away (`double(1)`) Away b2b magnitude.
+#'
+#' @returns (`double(1)`) Log-loss on the held-out test period (lower is better).
+#' @keywords internal
+.b2b_eval <- function(base, eps_home = B2B_HOME_NHL, eps_away = B2B_AWAY_NHL) {
+  fixed_params <- list(
+    rho = HockeyModel::rho,
+    beta = HockeyModel::beta,
+    eta = HockeyModel::eta,
+    k = HockeyModel::k
+  )
+
+  hw <- vapply(
+    seq_len(nrow(base)),
+    function(i) {
+      b2b <- .apply_b2b(
+        base$base_lambda[i],
+        base$base_mu[i],
+        home_b2b = base$home_b2b[i],
+        away_b2b = base$away_b2b[i],
+        eps_home = eps_home,
+        eps_away = eps_away
+      )
+      pm <- .prob_matrix(
+        lambda = b2b$lambda,
+        mu = b2b$mu,
+        params = fixed_params,
+        maxgoal = 10
+      )
+      hw_raw <- sum(pm[lower.tri(pm)])
+      dw_raw <- sum(diag(pm))
+      aw_raw <- sum(pm[upper.tri(pm)])
+      # draws = FALSE: redistribute the draw mass proportionally (matches DCPredict).
+      pair <- hw_raw + aw_raw
+      hw2 <- hw_raw + hw_raw / pair * dw_raw
+      aw2 <- aw_raw + aw_raw / pair * dw_raw
+      normalizeOdds(c(hw2, aw2))[1]
+    },
+    numeric(1)
+  )
+
+  ll <- logLoss(hw, base$Result > 0.5)
+  acc <- accuracy(hw > 0.5, actual = base$Result > 0.5)
+  cli::cli_alert_info(
+    "eps_home={round(eps_home, 4)}, eps_away={round(eps_away, 4)}: Accuracy = {round(acc, 4)}, LogLoss = {round(ll, 4)}."
+  )
+  return(ll)
+}
+
+#' Tune the back-to-back (b2b) adjustment magnitudes (#64)
+#'
+#' @description Runs one refit walk over the held-out NHL test period and returns
+#'   the log-loss for a given pair of b2b magnitudes.  Because it returns a scalar
+#'   (lower is better) it can be passed to an optimiser; [.tune_b2b_grid()] runs a
+#'   coarse grid followed by L-BFGS-B refinement and records the optimum into
+#'   [B2B_HOME_NHL] / [B2B_AWAY_NHL].
+#'
+#' @param eps_home (`double(1)`) Log-scale b2b magnitude for a team playing at
+#'   home.  Defaults to [B2B_HOME_NHL].
+#' @param eps_away (`double(1)`) Log-scale b2b magnitude for a team on the road.
+#'   Defaults to [B2B_AWAY_NHL].
+#'
+#' @returns (`double(1)`) Log-loss on the held-out test period (lower is better).
+#' @keywords internal
+.tune_b2b <- function(eps_home = B2B_HOME_NHL, eps_away = B2B_AWAY_NHL) {
+  base <- .b2b_base_walk()
+  return(.b2b_eval(base, eps_home = eps_home, eps_away = eps_away))
+}
+
+#' Coarse grid + L-BFGS-B search for the b2b magnitudes (#64)
+#'
+#' @description Runs a single refit walk ([.b2b_base_walk()]), then sweeps a coarse
+#'   grid over `(eps_home, eps_away)` in `[0, 0.4]` (step `~0.1`) and refines around
+#'   the best cell with L-BFGS-B — all cheap evaluations against that one walk.
+#'   Returns the optimal magnitudes as a named list; record them into
+#'   [B2B_HOME_NHL] / [B2B_AWAY_NHL].
+#'
+#' @returns (`list`) A named list with `eps_home` and `eps_away`.
+#' @keywords internal
+.tune_b2b_grid <- function() {
+  base <- .b2b_base_walk() # one expensive walk, reused for every evaluation
+
+  grid <- seq(0, 0.4, by = 0.1)
+  results <- expand.grid(eps_home = grid, eps_away = grid)
+
+  ll_vec <- vapply(
+    seq_len(nrow(results)),
+    function(i) {
+      cli::cli_alert_info(
+        "Grid point {i}/{nrow(results)}: eps_home={results$eps_home[i]}, eps_away={results$eps_away[i]}"
+      )
+      .b2b_eval(
+        base,
+        eps_home = results$eps_home[i],
+        eps_away = results$eps_away[i]
+      )
+    },
+    numeric(1)
+  )
+
+  best_i <- which.min(ll_vec)
+  best_h <- results$eps_home[best_i]
+  best_a <- results$eps_away[best_i]
+  cli::cli_alert_info(
+    "Best grid cell: eps_home={best_h}, eps_away={best_a} (LogLoss = {min(ll_vec)})"
+  )
+
+  opt <- stats::optim(
+    par = c(best_h, best_a),
+    fn = function(p) .b2b_eval(base, eps_home = p[1], eps_away = p[2]),
+    method = "L-BFGS-B",
+    lower = c(0, 0),
+    upper = c(0.4, 0.4)
+  )
+
+  cli::cli_alert_info(
+    "Optimized: eps_home={round(opt$par[1], 4)}, eps_away={round(opt$par[2], 4)} (LogLoss = {round(opt$value, 4)})"
+  )
+  return(list(eps_home = opt$par[1], eps_away = opt$par[2]))
+}

@@ -11,7 +11,9 @@
   maxgoal = 10,
   expected_mean = NULL,
   season_percent = NULL,
-  draws = TRUE
+  draws = TRUE,
+  home_b2b = FALSE,
+  away_b2b = FALSE
 )
 }
 \arguments{
@@ -34,6 +36,14 @@ regression.}
 \item{draws}{(\code{logical(1)}) Whether to return a 3-column (home, draw, away)
 matrix; if \code{FALSE}, returns a 2-column (home, away) matrix with the draw
 probability distributed proportionally.}
+
+\item{home_b2b}{(\code{logical(n)}) Per-game flag for whether the home team is on
+a back-to-back; scales that game's expected goals by exp(+/- \code{B2B_HOME_NHL}).
+Defaults to all \code{FALSE}.}
+
+\item{away_b2b}{(\code{logical(n)}) Per-game flag for whether the away team is on
+a back-to-back; scales that game's expected goals by exp(+/- \code{B2B_AWAY_NHL}).
+Defaults to all \code{FALSE}.}
 }
 \value{
 (\verb{matrix(n x 3)} or \verb{matrix(n x 2)}) Probability columns.

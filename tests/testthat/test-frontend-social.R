@@ -52,7 +52,7 @@ test_that(".summarize_post_results() handles an empty batch without warning (#no
 test_that(".tweet() reports (not silently swallows) a failed post (#noissue)", {
   withr::local_options(list(HockeyModel.graphics.path = withr::local_tempdir()))
   local_mocked_bindings(
-    inRegularSeason = function() TRUE,
+    inRegularSeason = function(...) TRUE,
     .package = "HockeyModel"
   )
   local_mocked_bindings(
@@ -68,7 +68,7 @@ test_that(".tweet() reports (not silently swallows) a failed post (#noissue)", {
 
 test_that(".tweet() does nothing outside the regular season (#noissue)", {
   local_mocked_bindings(
-    inRegularSeason = function() FALSE,
+    inRegularSeason = function(...) FALSE,
     .package = "HockeyModel"
   )
 

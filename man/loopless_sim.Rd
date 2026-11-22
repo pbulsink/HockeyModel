@@ -12,7 +12,8 @@ loopless_sim(
   params = NULL,
   season_sofar = NULL,
   likelihood_graphic = TRUE,
-  odds_table = NULL
+  odds_table = NULL,
+  chunk_size = 1000L
 )
 }
 \arguments{
@@ -32,6 +33,10 @@ loopless_sim(
 
 \item{odds_table}{a table of odds for all games in schedule. Null, unless provided. Should be similar to the output of \code{remainderSeasonDC(odds=TRUE)},
 which is a data.frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID and Date}
+
+\item{chunk_size}{Maximum number of simulations per parallel task. The run is
+split into fixed-size chunks so peak memory per worker stays bounded
+regardless of \code{nsims}.}
 }
 \value{
 a two member list, of all results and summary results

@@ -173,6 +173,42 @@ is.Date <- function(date) {
 }
 
 
+#' Coerce a date-like value to `Date`
+#'
+#' @description Accepts a single `Date`, `POSIXt`, or character string
+#'   parseable by [as.Date()], and returns it as `Date`. Anything else
+#'   (including bare numerics, which would otherwise be silently read as days
+#'   since the epoch) raises an error. Shared by the league season-state
+#'   internals so date validation lives in one place.
+#'
+#' @param date (`Date` or `character(1)`) Date to check. Defaults to [Sys.Date()].
+#' @returns (`Date`) The coerced date.
+#' @keywords internal
+.coerce_date <- function(date = Sys.Date()) {
+  # Check length first so vector input errors cleanly instead of inside is.Date()
+  if (length(date) != 1L || !is.Date(date)) {
+    cli::cli_abort("{.arg date} must be a Date or date-like value.")
+  }
+  suppressWarnings(as.Date(date))
+}
+
+
+#' Validate a single logical flag argument
+#'
+#' @description Shared by the league season-state internals so `boolean`
+#'   validation lives in one place.
+#'
+#' @param boolean (`logical(1)`) Value to validate.
+#' @returns (`logical(1)`) The validated value, invisibly.
+#' @keywords internal
+.validate_boolean <- function(boolean) {
+  if (!is.logical(boolean) || length(boolean) != 1L || is.na(boolean)) {
+    cli::cli_abort("{.arg boolean} must be a single TRUE/FALSE value.")
+  }
+  invisible(boolean)
+}
+
+
 #' Split draw probability into overtime/shootout outcomes
 #'
 #' @param home_win (`double`) Regulation home-win probabilities.
@@ -201,6 +237,19 @@ is.Date <- function(date) {
 }
 
 
+#' Postponed game statuses returned by the NHL API
+#'
+#' @description Single source of truth for the `GameStatus` values that mark a
+#'   postponed game. The API marks postponements as `"PPD"` (and occasionally
+#'   `"RESCHEDULED"`) — it does not return `"Postponed"` — so every function
+#'   that special-cases postponed games must compare against these values.
+#'
+#' @returns (`character`) The postponed status strings.
+#' @keywords internal
+.postponed_statuses <- function() {
+  c("PPD", "RESCHEDULED")
+}
+
 #' Add Postponed Games to Schedule End
 #'
 #' @description Sometimes games are postponed without a makeup date initially announced. The model just drops those games if this function is not employed to move the games to the end of the season
@@ -210,18 +259,20 @@ is.Date <- function(date) {
 #'
 #' @return a schedule with postponed games moved to the end of the schedule - helps to not drop games that are otherwise in the past but weren't played.
 .add_postponed_to_schedule_end <- function(schedule = HockeyModel::schedule) {
-  if (!any(schedule$GameStatus == "Postponed")) {
+  postponed <- .postponed_statuses()
+
+  if (!any(schedule$GameStatus %in% postponed)) {
     # no postponed games
     return(schedule)
   } else if (
-    all(schedule[schedule$GameStatus == "Postponed", "Date"] > Sys.Date())
+    all(schedule[schedule$GameStatus %in% postponed, "Date"] > Sys.Date())
   ) {
     # all game postponements are in future games - just play them.
     return(schedule)
   }
 
   for (g in schedule[
-    schedule$GameStatus == "Postponed" & schedule$Date < Sys.Date(),
+    schedule$GameStatus %in% postponed & schedule$Date < Sys.Date(),
   ]$GameID) {
     # The model doesn't (currently) account for what games are back to back or anything - so they can all be played on the same (last) date of the schedule
     # Using the last date of the regular season to not interfere with playoffs
@@ -233,4 +284,47 @@ is.Date <- function(date) {
   schedule <- schedule |>
     dplyr::arrange(.data$Date, .data$GameID)
   return(schedule)
+}
+
+#' Determine back-to-back (b2b) status for a set of games
+#'
+#' @description A team is on a b2b for a game on date `d` if it played any game
+#'   exactly one day earlier (`d - 1`).  Given today's games and a frame of prior
+#'   games, returns per-game logical flags for whether the home or away team is
+#'   on a back-to-back.  Only rows dated exactly one day before each game are
+#'   used; future-dated or older rows are ignored.
+#'
+#' @param games (`data.frame`) Today's games with `Date`, `HomeTeam`, and
+#'   `AwayTeam` columns (one row per game).
+#' @param history (`data.frame`) Prior games with `Date`, `HomeTeam`, and
+#'   `AwayTeam` columns.  May be empty; only rows dated exactly one day before a
+#'   game's date are used to flag that game.
+#'
+#' @returns (`list`) A named list with elements `home_b2b` and `away_b2b`, each a
+#'   logical vector of length `nrow(games)` that is `TRUE` when the team played
+#'   exactly one day before its game in `games`.
+#' @keywords internal
+.b2b_flags <- function(games, history) {
+  n <- nrow(games)
+  if (n == 0) {
+    return(list(home_b2b = logical(0), away_b2b = logical(0)))
+  }
+
+  # Plain integer day numbers avoid slow Date method dispatch; restricting
+  # history to the needed "yesterdays" keeps this cheap when called per day.
+  game_days <- as.integer(as.Date(games$Date))
+  hist_days <- as.integer(as.Date(history$Date))
+  keep <- hist_days %in% (game_days - 1L)
+  hist_days <- hist_days[keep]
+
+  played <- paste(
+    c(hist_days, hist_days),
+    c(history$HomeTeam[keep], history$AwayTeam[keep])
+  )
+  yesterday <- game_days - 1L
+
+  home_b2b <- paste(yesterday, games$HomeTeam) %in% played
+  away_b2b <- paste(yesterday, games$AwayTeam) %in% played
+
+  return(list(home_b2b = home_b2b, away_b2b = away_b2b))
 }

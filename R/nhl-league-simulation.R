@@ -7,21 +7,26 @@
 #'   two-draw `res1`/`res2` scheme. Only the sampled columns are built here; the
 #'   invariant odds columns are not copied, so callers can reuse the same
 #'   `odds_table` across simulations without re-copying it each iteration.
+#'   The `odds_table` is produced by `remainderSeasonDC()`.
 #'
 #' @param odds_table (`data.frame`) Odds table with `HomeWin`, `HOT`, `AOT`
 #'   (and any other columns). Used for its row count and the per-game odds.
 #' @return `list(res1 = <double>, res2 = <double>, Result = <double>)` each of
 #'   length `nrow(odds_table)`.
 #' @keywords internal
-.sim_odds_results <- function(odds_table) {
+.sim_odds_results <- function(odds_table = remainderSeasonDC(odds = TRUE)) {
   res1 <- stats::runif(n = nrow(odds_table))
   res2 <- stats::runif(n = nrow(odds_table))
   home_win <- odds_table$HomeWin
+  # HOT and AOT aren't provided by odds_table anymore.
   hot <- odds_table$HOT
   aot <- odds_table$AOT
-  in_ot <- as.numeric(res1 > home_win & res1 < (home_win + hot))
-  in_so <- as.numeric(
-    res1 > home_win &
+  # The extra-time windows must be mutually exclusive: with overlapping masks a
+  # home ET win scores 0.75 + 0.25 = 1 (or 0.6 + 0.4 = 1), so no OT/SO results
+  # are ever produced and the away team's extra-time point is lost (#68).
+  in_home_et <- as.numeric(res1 >= home_win & res1 < (home_win + hot))
+  in_away_et <- as.numeric(
+    res1 >= (home_win + hot) &
       res1 < (home_win + hot + aot)
   )
   away_sos <- as.numeric(res2 > 0.6858606)
@@ -29,10 +34,10 @@
   Result <-
     1 *
     (res1 < home_win) +
-    0.75 * in_ot * away_ot +
-    0.6 * in_ot * away_sos +
-    0.4 * in_so * away_sos +
-    0.25 * in_so * away_ot
+    0.75 * in_home_et * away_ot +
+    0.6 * in_home_et * away_sos +
+    0.4 * in_away_et * away_sos +
+    0.25 * in_away_et * away_ot
   return(list(res1 = res1, res2 = res2, Result = Result))
 }
 
@@ -108,18 +113,15 @@ simulateSeasonParallel <- function(
   progress = FALSE,
   params = NULL
 ) {
-  teamlist <- c()
+  # Local schedule, so the lookup works offline (#87).
   if (!is.null(scores)) {
-    season_sofar <- scores[scores$Date > as.Date(getSeasonStartDate()), ]
+    season_sofar <- scores[
+      scores$Date > as.Date(getSeasonStartDate(schedule = schedule)),
+    ]
     season_sofar <- season_sofar[, c("Date", "HomeTeam", "AwayTeam", "Result")]
   } else {
     season_sofar <- NULL
   }
-
-  teamlist <- c(
-    teamlist,
-    sort(unique(c(as.character(schedule$Home), as.character(schedule$Away))))
-  )
 
   cores <- .parseCores(cores)
 
@@ -156,17 +158,22 @@ simulateSeasonParallel <- function(
       out <- lapply(sim_ids, function(i) {
         res1 <- stats::runif(n = nrow(odds_table))
         res2 <- stats::runif(n = nrow(odds_table))
-        in_ot <- as.numeric(res1 > home_win & res1 < (home_win + hot))
-        in_so <- as.numeric(res1 > home_win & res1 < (home_win + hot + aot))
+        # Mutually exclusive extra-time windows (#68): overlapping masks made a
+        # home ET win score 1 and dropped the away team's extra-time point.
+        in_home_et <- as.numeric(res1 >= home_win & res1 < (home_win + hot))
+        in_away_et <- as.numeric(
+          res1 >= (home_win + hot) &
+            res1 < (home_win + hot + aot)
+        )
         away_sos <- as.numeric(res2 > 0.6858606)
         away_ot <- as.numeric(res2 < 0.6858606)
         Result <-
           1 *
           (res1 < home_win) +
-          0.75 * in_ot * away_ot +
-          0.6 * in_ot * away_sos +
-          0.4 * in_so * away_sos +
-          0.25 * in_so * away_ot
+          0.75 * in_home_et * away_ot +
+          0.6 * in_home_et * away_sos +
+          0.4 * in_away_et * away_sos +
+          0.25 * in_away_et * away_ot
         score_table <- dplyr::bind_cols(
           season_sofar,
           base_cols,
@@ -283,6 +290,9 @@ compile_predictions <- function(
 #' @param likelihood_graphic whether to create a likelihood graphic
 #' @param odds_table a table of odds for all games in schedule. Null, unless provided. Should be similar to the output of `remainderSeasonDC(odds=TRUE)`,
 #' which is a data.frame of HomeTeam, AwayTeam, HomeWin, AwayWin, Draw, GameID and Date
+#' @param chunk_size Maximum number of simulations per parallel task. The run is
+#'   split into fixed-size chunks so peak memory per worker stays bounded
+#'   regardless of `nsims`.
 #'
 #' @return a two member list, of all results and summary results
 #' @keywords internal
@@ -294,8 +304,10 @@ loopless_sim <- function(
   params = NULL,
   season_sofar = NULL,
   likelihood_graphic = TRUE,
-  odds_table = NULL
+  odds_table = NULL,
+  chunk_size = 1000L
 ) {
+  cli::cli_inform("Preparing data for season simulations")
   params <- .parse_dc_params(params)
 
   cores <- .parseCores(cores)
@@ -328,9 +340,15 @@ loopless_sim <- function(
     )
   }
 
+  # Pass the local schedule so the season lookup works offline (#87).
   season_sofar <- scores[
     scores$Date >=
-      as.Date(getSeasonStartDate(getSeason(schedule[, "Date"][1]))),
+      as.Date(
+        getSeasonStartDate(
+          getSeason(schedule[, "Date"][1], schedule = schedule),
+          schedule = schedule
+        )
+      ),
   ]
 
   if (nrow(season_sofar) > 0) {
@@ -357,13 +375,14 @@ loopless_sim <- function(
   all_season$HomeSO <- oddsseason[, 2] * 0.3141394
   all_season$AwaySO <- oddsseason[, 3] * 0.3141394
   all_season$AwayOT <- oddsseason[, 3] * 0.6858606
-
+  cli::cli_inform("Done preparing data for season simulations")
   rm(oddsseason, season_sofar, odds_table)
 
   if (cores == 1 || !requireNamespace("parallel", quietly = TRUE)) {
     if (cores > 1) {
-      message("Multi-core processing requires the parallel package.")
+      cli::cli_inform("Multi-core processing requires the parallel package.")
     }
+    cli::cli_inform("Simulating {nsims} seasons in a single core.")
     # for testing only, really.
     all_results <- sim_engine(
       all_season = all_season,
@@ -372,6 +391,9 @@ loopless_sim <- function(
     )
   } else {
     # this fixes CRAN checks
+    cli::cli_inform(
+      "Simulating {nsims} seasons in parallel across {cores} cores."
+    )
     `%dopar%` <- foreach::`%dopar%`
     i <- NA_real_
     # `%do%` <- foreach::`%do%`
@@ -379,15 +401,15 @@ loopless_sim <- function(
     cl <- parallel::makeCluster(cores)
     doSNOW::registerDoSNOW(cl)
 
-    # Distribute exactly `nsims` simulations across `cores` chunks so the
-    # remainder is not dropped and the total matches the requested count
-    # (previously `floor(nsims / cores)` lost the remainder, and `cores * 100`
-    # tasks each ran `ceiling(nsims / 100)` simulations, so the total rarely
-    # matched `nsims`). Each task also runs many simulations before returning,
-    # reducing serialisation round-trips (#51, #49).
-    chunk_sizes <- .simulation_chunks(nsims, cores)
+    # Split `nsims` into fixed-size chunks (at most `chunk_size` simulations
+    # each) and dispatch one task per chunk, so peak memory per worker is
+    # bounded regardless of `nsims`. Each chunk's SimNo is offset by the
+    # number of earlier simulations so every simulation keeps a unique ID.
+    n_chunks <- ceiling(nsims / chunk_size)
+    chunk_sizes <- .simulation_chunks(nsims, n_chunks)
+    sim_offsets <- c(0L, cumsum(chunk_sizes[-length(chunk_sizes)]))
     all_results <- foreach::foreach(
-      i = seq_len(cores),
+      i = seq_len(n_chunks),
       .combine = "rbind",
       .packages = "HockeyModel"
     ) %dopar%
@@ -395,14 +417,18 @@ loopless_sim <- function(
         sim_engine(
           all_season = all_season,
           nsims = chunk_sizes[i],
-          params = params
+          params = params,
+          sim_offset = sim_offsets[i]
         )
       }
 
     parallel::stopCluster(cl)
     gc(verbose = FALSE)
   }
-
+  cli::cli_inform("Simulated {nsims} seasons in parallel across {cores} cores.")
+  cli::cli_inform(
+    "Compiling summary statistics for {nrow(all_results)} sim results."
+  )
   summary_results <- all_results |>
     dplyr::mutate(
       Conference = .getTeamConferences(.data$Team)
@@ -466,13 +492,19 @@ loopless_sim <- function(
 
 #' Simulation engine to be parallelized or used in single core
 #'
+#' @description Simulates a season given scores and odds, returns results. This is
+#'   exported because doSNOW needs to access it for parallel runs. It's not particularly
+#'   meant for direct calling by users.
 #' @param all_season One seasons' scores & odds schedule
 #' @param nsims Number of simulations to run
 #' @param params The named list containing m, rho, beta, eta, and k. See [updateModel()] for information on the params list
+#' @param sim_offset Integer added to every `SimNo` so that chunks run by
+#'   separate workers keep unique simulation IDs when their results are
+#'   combined.
 #'
 #' @return results of `nsims` season simulations, as one long data frame score table.
 #' @export
-sim_engine <- function(all_season, nsims, params = NULL) {
+sim_engine <- function(all_season, nsims, params = NULL, sim_offset = 0L) {
   params <- .parse_dc_params(params)
 
   season_length <- nrow(all_season)
@@ -546,9 +578,17 @@ sim_engine <- function(all_season, nsims, params = NULL) {
     out
   }
 
+  # Per-team games played, used by the shared tiebreaker for PointPercent.
+  games_played <- unname(unlist(mapply(
+    function(t) length(home_games[[t]]) + length(away_games[[t]]),
+    seq_along(teamlist),
+    SIMPLIFY = FALSE
+  )))
+
   all_results <- data.frame(
-    SimNo = rep(1:nsims, length(teamlist)),
-    Team = rep(teamlist, each = nsims)
+    SimNo = rep(seq_len(nsims) + sim_offset, length(teamlist)),
+    Team = rep(teamlist, each = nsims),
+    GP = games_played[match(rep(teamlist, each = nsims), teamlist)]
   )
   # Each team's W/OTW/SOW counts both home and away wins; L/OTL/SOL counts
   # both home and away losses. The away result is `1 - home_result`, so e.g.
@@ -616,7 +656,15 @@ sim_engine <- function(all_season, nsims, params = NULL) {
   all_results <- all_results |>
     dtplyr::lazy_dt() |>
     dplyr::group_by(.data$SimNo) |>
-    dplyr::mutate(Rank = rank(-.data$Points, ties.method = "random")) |>
+    dplyr::mutate(
+      Rank = .rank_by_tiebreakers(tibble::tibble(
+        Points = .data$Points,
+        GP = .data$GP,
+        W = .data$W,
+        OTW = .data$OTW,
+        SOW = .data$SOW
+      ))
+    ) |> # shared NHL tiebreakers (#71)
     dplyr::ungroup() |>
     dplyr::group_by(.data$SimNo, .data$Conference) |>
     dplyr::mutate(ConfRank = rank(.data$Rank)) |>

@@ -82,6 +82,9 @@
 #' @param draws (`logical(1)`) If `TRUE` (default), return `HomeWin`,
 #'   `AwayWin`, and `Draw`; if `FALSE`, renormalise to a two-way `HomeWin` /
 #'   `AwayWin`.
+#' @param history (`data.frame` or `NULL`) Prior games with `Date`, `HomeTeam`,
+#'   and `AwayTeam` used to determine back-to-back status.  When `NULL` (default)
+#'   it is derived from the rows of `schedule` dated before `today`.
 #'
 #' @returns (`data.frame`) One row per game on the given date with `HomeTeam`,
 #'   `AwayTeam`, `HomeWin`, `AwayWin`, `Draw`, and `GameID`; or `NULL` if no
@@ -94,7 +97,8 @@
   expected_mean = NULL,
   season_percent = NULL,
   include_xG = FALSE,
-  draws = TRUE
+  draws = TRUE,
+  history = NULL
 ) {
   if (!is.Date(today)) {
     cli::cli_abort("{.arg today} must be a Date or date-like value.")
@@ -105,6 +109,14 @@
   if (nrow(games) == 0) {
     return(NULL)
   }
+
+  # Back-to-back flags (#64): a team is on a b2b if it played exactly one day
+  # before `today`. When no explicit history is supplied, derive it from the
+  # games in `schedule` dated before today.
+  if (is.null(history)) {
+    history <- schedule[schedule$Date < today, ]
+  }
+  b2b <- .b2b_flags(games = games, history = history)
 
   preds <- data.frame(
     HomeTeam = games$HomeTeam,
@@ -126,7 +138,9 @@
     params = params,
     expected_mean = expected_mean,
     season_percent = season_percent,
-    draws = draws
+    draws = draws,
+    home_b2b = b2b$home_b2b,
+    away_b2b = b2b$away_b2b
   )
   if (draws) {
     preds$HomeWin <- odds[, "HomeWin"]
@@ -142,15 +156,13 @@
       xg <- .dcxG(
         home = preds$HomeTeam[[i]],
         away = preds$AwayTeam[[i]],
-        params = params
+        params = params,
+        home_b2b = b2b$home_b2b[i],
+        away_b2b = b2b$away_b2b[i]
       )
       preds$Home_xG[[i]] <- xg$home
       preds$Away_xG[[i]] <- xg$away
     }
-  }
-
-  if (include_xG) {
-    preds$GameID <- NULL
   }
 
   return(preds)
@@ -244,6 +256,12 @@ remainderSeasonDC <- function(
 
   last_game_date <- as.Date(max(scores$Date))
   schedule <- .add_postponed_to_schedule_end(schedule)
+  #Type correct for bind_rows, else convert scores$Date to character
+  schedule$Date <- as.Date(schedule$Date)
+
+  # Full context (played + scheduled games) for back-to-back detection (#64),
+  # built before the future-only filter so projected b2b pairs are flagged.
+  history <- dplyr::distinct(dplyr::bind_rows(scores, schedule))
   schedule <- schedule[schedule$Date > last_game_date, ]
   schedule <- schedule |>
     dplyr::arrange(.data$Date, .data$GameID)
@@ -262,9 +280,11 @@ remainderSeasonDC <- function(
 
   if (regress) {
     season_end_date <- as.Date(max(schedule[schedule$GameType == "R", ]$Date))
+    # Local schedule, so the lookup works offline (#87).
+    season_start <- getSeasonStartDate(schedule = schedule)
     season_start_date <- as.Date(min(c(
-      scores[scores$Date > as.Date(getSeasonStartDate()), "Date"],
-      schedule[schedule$Date > as.Date(getSeasonStartDate()), "Date"]
+      scores[scores$Date > as.Date(season_start), "Date"],
+      schedule[schedule$Date > as.Date(season_start), "Date"]
     )))
     season_length <- as.integer(season_end_date) - as.integer(season_start_date)
     remaining_length <- as.integer(season_end_date) - as.integer(last_game_date)
@@ -288,7 +308,8 @@ remainderSeasonDC <- function(
       schedule = schedule,
       season_percent = season_percent,
       expected_mean = expected_mean,
-      params = params
+      params = params,
+      history = history
     )
     preds$Date <- d
     pred_list <- c(pred_list, list(preds))
@@ -319,12 +340,17 @@ remainderSeasonDC <- function(
     odds_table$mu <- NA
     odds_table$lambda <- NA
 
+    # Back-to-back flags for every projected game (#64), computed once against
+    # the full context so future b2b pairs are captured.
+    b2b_all <- .b2b_flags(games = odds_table, history = history)
+
     for (g in seq_len(nrow(odds_table))) {
       d <- as.Date(odds_table[g, "Date"], origin = "1970-01-01")
-      # Expected goals home
+      # params$m, not the bundled fit, so backtests don't leak current-season
+      # coefficients into their expected-goals calculations (#81).
       lambda <- try(
         stats::predict(
-          HockeyModel::m,
+          params$m,
           data.frame(
             Home = 1,
             Team = odds_table$HomeTeam[g],
@@ -338,7 +364,7 @@ remainderSeasonDC <- function(
       # Expected goals away
       mu <- try(
         stats::predict(
-          HockeyModel::m,
+          params$m,
           data.frame(
             Home = 0,
             Team = odds_table$AwayTeam[g],
@@ -353,14 +379,16 @@ remainderSeasonDC <- function(
         lambda <- .DCPredictErrorRecover(
           team = odds_table$HomeTeam[g],
           opponent = odds_table$AwayTeam[g],
-          homeiceadv = TRUE
+          homeiceadv = TRUE,
+          m = params$m
         )
       }
       if (!is.numeric(mu)) {
         mu <- .DCPredictErrorRecover(
           team = odds_table$AwayTeam[g],
           opponent = odds_table$HomeTeam[g],
-          homeiceadv = FALSE
+          homeiceadv = FALSE,
+          m = params$m
         )
       }
 
@@ -377,6 +405,18 @@ remainderSeasonDC <- function(
           (1 - 1 / 3 * season_percent) +
           expected_mean * (1 / 3 * season_percent)
       }
+
+      # Back-to-back adjustment (#64), applied after the regression blend so it
+      # is not shrunk by `season_percent`. Mirrors [.dcLambda()].
+      if (b2b_all$home_b2b[g]) {
+        lambda <- lambda * exp(-B2B_HOME_NHL)
+        mu <- mu * exp(B2B_HOME_NHL)
+      }
+      if (b2b_all$away_b2b[g]) {
+        mu <- mu * exp(-B2B_AWAY_NHL)
+        lambda <- lambda * exp(B2B_AWAY_NHL)
+      }
+
       odds_table[g, "lambda"] <- lambda
       odds_table[g, "mu"] <- mu
     }
@@ -388,7 +428,8 @@ remainderSeasonDC <- function(
     nsims = nsims,
     cores = cores,
     scores = scores,
-    schedule = schedule
+    schedule = schedule,
+    params = params
   )
 
   return(summary_results)
@@ -472,8 +513,7 @@ dcPredictMultipleDays <- function(
         )
       },
       error = function(error) {
-        message("An error occurred:")
-        message(error)
+        message("An error occurred: ", conditionMessage(error))
         return(NULL)
       }
     )
@@ -488,6 +528,12 @@ dcPredictMultipleDays <- function(
         plot_point_likelihood(preds = preds$raw_results)
       }
     } else {
+      # The fallback is kept (it can recover partial days), but it must be
+      # visible: the legacy engine has historically produced inconsistent
+      # results (#68).
+      cli::cli_warn(
+        "loopless_sim() failed for {.date {d}}; falling back to the legacy simulation engine (remainderSeasonDC())."
+      )
       message("An error occurred, retrying ", d, ".")
       preds <- NULL
       preds <- tryCatch(
@@ -501,8 +547,7 @@ dcPredictMultipleDays <- function(
           )
         },
         error = function(error) {
-          message("An error occurred:")
-          message(error)
+          message("An error occurred: ", conditionMessage(error))
           return(NULL)
         }
       )
@@ -544,13 +589,14 @@ getSeasonMetricsDC <- function(
 ) {
   sched <- schedule
   sched$Home.WLD <- sched$Away.WLD <- sched$Draw.WLD <- sched$Home.WL <- sched$Away.WL <- sched$Result <- NA
+  season_start <- getSeasonStartDate(schedule = schedule)
   season_sofar <- scores[
-    scores$Date > as.Date(getSeasonStartDate()),
+    scores$Date > as.Date(season_start),
     c("GameID", "Result")
   ]
 
   sched <- predictMultipleDaysResultsDC(
-    startDate = getSeasonStartDate(),
+    startDate = season_start,
     endDate = Sys.Date()
   )
   sched <- dplyr::left_join(sched, season_sofar, by = "GameID", )
@@ -622,7 +668,13 @@ predictMultipleDaysResultsDC <- function(
     params$eta <- w.day$eta
     params$k <- w.day$k
 
-    p <- .todayDC(today = d, params = params)
+    # Pass the actual prior games as history so back-to-back status (#64) is
+    # correct for historical dates even if the bundled schedule lacks them.
+    p <- .todayDC(
+      today = d,
+      params = params,
+      history = scores[scores$Date < day, ]
+    )
 
     sched[sched$Date == d, "HomeWin"] <- p$HomeWin
     sched[sched$Date == d, "AwayWin"] <- p$AwayWin

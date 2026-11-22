@@ -4,7 +4,14 @@
 \alias{.dcxG}
 \title{Compute expected goals from the Dixon-Coles probability matrix}
 \usage{
-.dcxG(home, away, params = NULL, maxgoal = 10)
+.dcxG(
+  home,
+  away,
+  params = NULL,
+  maxgoal = 10,
+  home_b2b = FALSE,
+  away_b2b = FALSE
+)
 }
 \arguments{
 \item{home}{(\code{character(1)}) Home team name.}
@@ -18,6 +25,13 @@ for parsing once (#47).  \code{NULL} triggers a fallback parse (for direct
 test calls).}
 
 \item{maxgoal}{(\code{integer(1)}) Maximum goals included per team.}
+
+\item{home_b2b}{(\code{logical(1)}) Whether the home team is on a back-to-back;
+passed to \code{\link[=.dcProbMatrix]{.dcProbMatrix()}} so the displayed xG matches the adjusted odds.
+Defaults to \code{FALSE}.}
+
+\item{away_b2b}{(\code{logical(1)}) Whether the away team is on a back-to-back;
+passed to \code{\link[=.dcProbMatrix]{.dcProbMatrix()}}.  Defaults to \code{FALSE}.}
 }
 \value{
 (\code{list}) A named list with elements \code{home} and \code{away}, each the

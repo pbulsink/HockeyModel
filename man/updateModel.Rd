@@ -9,8 +9,8 @@ updateModel(save_data = TRUE, league = NULL)
 \arguments{
 \item{save_data}{whether to save data to the package file}
 
-\item{league}{which league front-end to run: \code{NULL}, \code{NA}, or \code{"both"} runs
-both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
+\item{league}{which league front-end to run: \code{NULL}, \code{NA}, and \code{"both"}
+update both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
 }
 \value{
 For a single league, a list of scores, schedule, and params. For
@@ -18,5 +18,7 @@ both leagues, a named list with \code{nhl} and \code{pwhl} entries of that same 
 }
 \description{
 Updates the requested league model data. With \code{league = NULL},
-\code{NA}, or \code{"both"}, both NHL and PWHL models are updated in one call.
+\code{NA}, or \code{"both"}, both leagues are updated in one call — including out of
+season, so league schedules stay current; \code{"nhl"} and \code{"pwhl"} run one
+league only.
 }

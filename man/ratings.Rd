@@ -9,12 +9,14 @@ ratings(m = HockeyModel::m, league = NULL)
 \arguments{
 \item{m}{HockeyModel::m or a custom value}
 
-\item{league}{which league front-end to run: \code{NULL}, \code{NA}, or \code{"both"} runs
+\item{league}{which league front-end to run: \code{NULL} and \code{NA} run whichever
+leagues are currently active (regular season or playoffs); \code{"both"} runs
 both leagues; \code{"nhl"} and \code{"pwhl"} run one league only}
 }
 \value{
 Today's ratings ggplot object for a single league, or a named list of
-league plots when both leagues are requested.
+plots for the currently active leagues when \code{league} is \code{NULL}/\code{NA}, or
+for both leagues when \code{"both"}.
 }
 \description{
 Current ratings

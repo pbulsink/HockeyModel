@@ -11,7 +11,8 @@
   expected_mean = NULL,
   season_percent = NULL,
   include_xG = FALSE,
-  draws = TRUE
+  draws = TRUE,
+  history = NULL
 )
 }
 \arguments{
@@ -37,6 +38,10 @@ complete, used only for the regression-to-mean shrinkage.  Defaults to
 \item{draws}{(\code{logical(1)}) If \code{TRUE} (default), return \code{HomeWin},
 \code{AwayWin}, and \code{Draw}; if \code{FALSE}, renormalise to a two-way \code{HomeWin} /
 \code{AwayWin}.}
+
+\item{history}{(\code{data.frame} or \code{NULL}) Prior games with \code{Date}, \code{HomeTeam},
+and \code{AwayTeam} used to determine back-to-back status.  When \code{NULL} (default)
+it is derived from the rows of \code{schedule} dated before \code{today}.}
 }
 \value{
 (\code{data.frame}) One row per game on the given date with \code{HomeTeam},

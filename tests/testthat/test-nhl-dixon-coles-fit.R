@@ -183,6 +183,68 @@ test_that("getM with nu = 0 and nu = 2 produce same team coefficient names", {
   expect_false(all(m0$coefficients == m2$coefficients))
 })
 
+# ============ getRho expectation alignment tests ============
+test_that("getRho scores home goals against the home expected-goals rate", {
+  # Regression test for #69: .DCRhoLogLik() contracts `lambda` as the HOME
+  # expected-goals rate (it evaluates dpois(y1 = HomeGoals, lambda)), so
+  # getRho() must pass lambda = home expectation and mu = away expectation.
+  set.seed(17)
+  teams <- c("Alpha", "Beta", "Gamma")
+  n <- 300L
+  home <- sample(teams, n, replace = TRUE)
+  away <- vapply(
+    seq_len(n),
+    function(i) {
+      setdiff(teams, home[i])[sample.int(length(setdiff(teams, home[i])), 1)]
+    },
+    character(1)
+  )
+  # Asymmetric scores so the two alignments give measurably different rho.
+  scor <- data.frame(
+    Date = as.Date("2024-10-01") + sample(60:200, n, replace = TRUE),
+    GameID = paste0("G", seq_len(n)),
+    HomeTeam = home,
+    AwayTeam = away,
+    HomeGoals = rpois(n, 3.2),
+    AwayGoals = rpois(n, 2.5)
+  )
+
+  m <- suppressWarnings(
+    getM(scores = scor, currentDate = as.Date("2025-03-15"), nu = 0)
+  )
+  n_games <- nrow(scor)
+  expected <- stats::fitted(m)
+  home_exp <- as.vector(expected[seq_len(n_games)])
+  away_exp <- as.vector(expected[(n_games + 1):(n_games * 2)])
+  weights <- m$data$Weight[seq_len(n_games)]
+
+  fit_rho <- function(lambda, mu) {
+    stats::optim(
+      0,
+      function(rho) {
+        -sum(.DCRhoLogLik(
+          y1 = scor$HomeGoals,
+          y2 = scor$AwayGoals,
+          lambda = lambda,
+          mu = mu,
+          rho = rho,
+          weights = weights
+        ))
+      },
+      method = "Brent",
+      lower = -0.5,
+      upper = 0.5
+    )$par
+  }
+
+  rho_correct <- fit_rho(home_exp, away_exp) # contract: lambda is home
+  rho_swapped <- fit_rho(away_exp, home_exp) # the bug in #69
+
+  expect_equal(getRho(m = m, scores = scor), rho_correct, tolerance = 1e-4)
+  # The swapped alignment must be distinguishable from the correct one.
+  expect_gt(abs(rho_correct - rho_swapped), 1e-3)
+})
+
 test_that("getM starting values match model rank", {
   # Team and Opponent are constructed from the same home/away union, so their
   # factor levels are always identical and the design matrix for

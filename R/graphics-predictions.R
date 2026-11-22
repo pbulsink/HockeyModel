@@ -60,14 +60,16 @@ plot_prediction_points_by_team <- function(
     levels = .prediction_facet_levels(all_predictions$Division)
   )
   # make team label appear properly later with ggrepel
-  all_predictions$label <- ifelse(
+  all_predictions$label <- dplyr::if_else(
     all_predictions$predictionDate == max(all_predictions$predictionDate),
     as.character(paste0(
       .getShortTeam(all_predictions$Team, teamColours = teamColours),
       "\n",
       round(all_predictions$meanPoints, digits = 0)
     )),
-    NA_character_
+    NA_character_,
+    missing = NA_character_,
+    ptype = character()
   )
 
   # Build and trim team colours for plot
@@ -289,7 +291,7 @@ plot_prediction_presidents_by_team <- function(
     levels = .prediction_facet_levels(all_predictions$Division)
   )
   # make team label appear properly later with ggrepel
-  all_predictions$label <- ifelse(
+  all_predictions$label <- dplyr::if_else(
     all_predictions$predictionDate == max(all_predictions$predictionDate),
     as.character(paste0(
       .getShortTeam(all_predictions$Team, teamColours = teamColours),
@@ -297,7 +299,8 @@ plot_prediction_presidents_by_team <- function(
       signif(all_predictions$Presidents * 100, digits = 2),
       "%"
     )),
-    NA_character_
+    NA_character_,
+    ptype = character()
   )
 
   # Build and trim team colours for plot

@@ -11,7 +11,11 @@
   maxgoal = 10,
   scores = HockeyModel::scores,
   expected_mean = NULL,
-  season_percent = NULL
+  season_percent = NULL,
+  home_b2b = FALSE,
+  away_b2b = FALSE,
+  eps_home = NULL,
+  eps_away = NULL
 )
 }
 \arguments{
@@ -36,6 +40,20 @@ used only together with \code{season_percent} for the regression blend.}
 
 \item{season_percent}{(\code{double} or \code{NULL}) Fraction of the season complete
 for the regression blend.}
+
+\item{home_b2b}{(\code{logical(1)}) Whether the home team is on a back-to-back.
+When \code{TRUE}, \code{\link[=.apply_b2b]{.apply_b2b()}} scales the expected goals by exp(+/-
+\code{B2B_HOME_NHL}).  Defaults to \code{FALSE}.}
+
+\item{away_b2b}{(\code{logical(1)}) Whether the away team is on a back-to-back.
+When \code{TRUE}, \code{\link[=.apply_b2b]{.apply_b2b()}} scales the expected goals by exp(+/-
+\code{B2B_AWAY_NHL}).  Defaults to \code{FALSE}.}
+
+\item{eps_home}{(\code{double} or \code{NULL}) Home b2b magnitude; defaults to
+\link{B2B_HOME_NHL}.  Overridable for tuning.}
+
+\item{eps_away}{(\code{double} or \code{NULL}) Away b2b magnitude; defaults to
+\link{B2B_AWAY_NHL}.  Overridable for tuning.}
 }
 \value{
 (\code{matrix}) A square \verb{(maxgoal + 1) x (maxgoal + 1)} probability

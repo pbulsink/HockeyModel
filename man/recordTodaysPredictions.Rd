@@ -10,7 +10,8 @@ recordTodaysPredictions(
   schedule = HockeyModel::schedule,
   params = NULL,
   include_xG = FALSE,
-  draws = TRUE
+  draws = TRUE,
+  history = NULL
 )
 }
 \arguments{
@@ -25,6 +26,10 @@ recordTodaysPredictions(
 \item{include_xG}{Whether to record daily XG values}
 
 \item{draws}{whether to record draw odds (True) or not (False). Default is True}
+
+\item{history}{Prior games (\code{Date}, \code{HomeTeam}, \code{AwayTeam}) used for
+back-to-back detection. When \code{NULL} (default), \code{.todayDC()} derives it from
+the rows of \code{schedule} dated before \code{today}.}
 }
 \description{
 Record today's predictions to file (for easy later retrieval). Run \code{cleanupPredictionsFile} periodically to tidy

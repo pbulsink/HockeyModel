@@ -12,7 +12,11 @@ DCPredict(
   scores = HockeyModel::scores,
   expected_mean = NULL,
   season_percent = NULL,
-  draws = TRUE
+  draws = TRUE,
+  home_b2b = FALSE,
+  away_b2b = FALSE,
+  eps_home = NULL,
+  eps_away = NULL
 )
 }
 \arguments{
@@ -42,6 +46,23 @@ used only together with \code{expected_mean} for the regression blend.}
 \item{draws}{(\code{logical(1)}) Whether draws are an allowed outcome.  Defaults
 to \code{TRUE}.  When \code{FALSE}, the draw probability is redistributed to home
 and away and a two-element result is returned.}
+
+\item{home_b2b}{(\code{logical(1)}) Whether the home team is on a back-to-back
+(played its previous game exactly one day earlier).  When \code{TRUE}, the home
+expected goals are scaled by \code{exp(-B2B_HOME_NHL)} and the away expected
+goals against it by \code{exp(+B2B_HOME_NHL)}.  Defaults to \code{FALSE} (no
+adjustment), so existing calls are unchanged.}
+
+\item{away_b2b}{(\code{logical(1)}) Whether the away team is on a back-to-back.
+When \code{TRUE}, the away expected goals are scaled by \code{exp(-B2B_AWAY_NHL)} and
+the home expected goals against it by \code{exp(+B2B_AWAY_NHL)}.  Defaults to
+\code{FALSE} (no adjustment).}
+
+\item{eps_home}{(\code{double} or \code{NULL}) Home b2b magnitude; defaults to
+\link{B2B_HOME_NHL}.  Overridable for tuning.}
+
+\item{eps_away}{(\code{double} or \code{NULL}) Away b2b magnitude; defaults to
+\link{B2B_AWAY_NHL}.  Overridable for tuning.}
 }
 \value{
 (\code{numeric}) A named probability vector — \code{HomeWin}, \code{Draw}, and

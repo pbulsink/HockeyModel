@@ -76,6 +76,31 @@ test_that("remainderSeasonDC returns odds table directly", {
   expect_true(nrow(result) > 0)
 })
 
+# #82: .todayDC() must keep GameID even when include_xG = TRUE. A prior version
+# dropped GameID on the xG path (`preds$GameID <- NULL`), which broke downstream
+# joins that key games by ID. The drop was removed, so both columns survive.
+test_that(".todayDC keeps GameID alongside xG columns (#82)", {
+  # Use a real matchup from the bundled scores so DCPredict has known teams.
+  first <- HockeyModel::scores[1, ]
+
+  result <- .todayDC(
+    today = as.Date("2025-11-06"),
+    schedule = data.frame(
+      Date = as.Date("2025-11-06"),
+      HomeTeam = first$HomeTeam,
+      AwayTeam = first$AwayTeam,
+      GameID = "G1",
+      stringsAsFactors = FALSE
+    ),
+    include_xG = TRUE
+  )
+
+  expect_true("GameID" %in% names(result))
+  expect_equal(result$GameID, "G1")
+  # xG columns are present on the same rows as GameID (not a separate table).
+  expect_true(all(c("Home_xG", "Away_xG") %in% names(result)))
+})
+
 test_that("remainderSeasonDC accumulates every day's games in order", {
   # Build a 3-day schedule with 2 games each day so the per-day
   # accumulation is exercised across multiple list elements.
@@ -163,6 +188,107 @@ test_that("remainderSeasonDC accumulates every day's games in order", {
   expect_type(result$GameID, "double")
 })
 
+test_that("dcPredictMultipleDays warns when falling back from loopless_sim (#68)", {
+  # When the primary engine fails, dcPredictMultipleDays() silently fell back
+  # to the legacy engine and saved its (potentially inconsistent) results. The
+  # fallback is kept (it can recover partial days), but it must be visible.
+  days <- seq.Date(as.Date("2025-11-01"), by = "day", length.out = 3)
+  teams <- c(
+    "Team A",
+    "Team B",
+    "Team C"
+  )
+  sched <- data.frame(
+    Date = rep(days, each = 2),
+    HomeTeam = c(
+      teams[1],
+      teams[2],
+      teams[3]
+    ),
+    AwayTeam = c(
+      teams[2],
+      teams[3],
+      teams[1]
+    ),
+    GameID = 1:6,
+    GameType = rep("R", 6),
+    GameStatus = rep("FUT", 6),
+    stringsAsFactors = FALSE
+  )
+  scor <- data.frame(
+    Date = as.Date("2025-10-20"),
+    HomeTeam = "Team A",
+    AwayTeam = "Team B",
+    GameID = 0,
+    GameType = "R",
+    GameStatus = "FUT",
+    stringsAsFactors = FALSE
+  )
+
+  local_mocked_bindings(
+    .update_dc_nhl = function(...) {
+      list(m = NULL, rho = 0, beta = 1, eta = 1, k = 1)
+    },
+    loopless_sim = function(...) stop("simulated cluster failure"),
+    remainderSeasonDC = function(...) {
+      list(
+        summary_results = data.frame(
+          Team = teams[1:2],
+          Playoffs = 0.5,
+          meanPoints = 40,
+          maxPoints = 60,
+          minPoints = 20,
+          meanWins = 15,
+          maxWins = 30,
+          Presidents = 0,
+          meanRank = 8,
+          bestRank = 1,
+          meanDivRank = 4,
+          bestDivRank = 1,
+          sdPoints = 5,
+          sdWins = 3,
+          sdRank = 2,
+          sdDivRank = 1
+        )
+      )
+    },
+    .package = "HockeyModel"
+  )
+
+  dir <- tempfile("dcPredictMultipleDays-test")
+  msgs <- character()
+  warns <- character()
+  out <- withCallingHandlers(
+    dcPredictMultipleDays(
+      start = days[1],
+      end = days[3],
+      scores = scor,
+      schedule = sched,
+      filedir = dir,
+      nsims = 2,
+      cores = 1,
+      likelihood_graphic = FALSE
+    ),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    },
+    warning = function(w) {
+      warns <<- c(warns, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  # The fallback fired on every day and each firing is reported as a warning.
+  expect_equal(length(warns), length(days))
+  expect_true(all(grepl("falling back", warns, ignore.case = TRUE)))
+  # And the legacy engine's results were still saved for those days.
+  expect_equal(
+    length(list.files(dir, pattern = "-predictions\\.RDS$")),
+    length(days)
+  )
+})
+
 test_that("loopless_sim returns summary and raw results", {
   sched <- HockeyModel::scores[
     HockeyModel::scores$Date >= as.Date("2025-10-07") &
@@ -189,7 +315,9 @@ test_that("loopless_sim returns summary and raw results", {
 
   local_mocked_bindings(
     getSeason = function(gamedate = Sys.Date()) "20192020",
-    getSeasonStartDate = function(season = NULL) as.Date("2025-10-07"),
+    getSeasonStartDate = function(season = NULL, schedule = NULL) {
+      as.Date("2025-10-07")
+    },
     sim_engine = function(all_season, nsims, params = NULL) {
       teams <- sort(unique(c(all_season$HomeTeam, all_season$AwayTeam)))
       data.frame(
@@ -316,4 +444,72 @@ test_that(".todayDC returns correct columns when PWHL games exist", {
 
 test_that(".todayDC rejects non-Date today", {
   expect_error(.todayDC(today = "not-a-date"), class = "rlang_error")
+})
+
+# #81: remainderSeasonDC(mu_lambda = TRUE) must compute expected goals from the
+# supplied params$m, not the bundled HockeyModel::m, so backtests at historical
+# dates don't leak current-season coefficients.
+test_that("remainderSeasonDC(mu_lambda = TRUE) uses params$m, not package data (#81)", {
+  # A model whose known teams are disjoint from the schedule's teams: every
+  # game takes the both-unseen recovery path and must yield the historical
+  # constants computed against this model, not HockeyModel::m.
+  fake_m <- list(
+    coefficients = c(
+      `TeamZebra` = 0.1,
+      `OpponentZebra` = -0.2,
+      Home = 0.3
+    ),
+    data = data.frame(Team = "Zebra", Opponent = "Zebra")
+  )
+
+  days <- seq.Date(as.Date("2025-11-01"), by = "1 day", length.out = 2)
+  sched <- data.frame(
+    Date = rep(days, each = 1),
+    HomeTeam = c("Alpha City", "Beta Town"),
+    AwayTeam = c("Gamma Village", "Delta County"),
+    GameID = 1:2,
+    GameType = c("R", "R"),
+    GameStatus = c("FUT", "FUT"),
+    stringsAsFactors = FALSE
+  )
+  scor <- data.frame(
+    Date = as.Date("2025-10-20"),
+    HomeTeam = "Alpha City",
+    AwayTeam = "Beta Town",
+    GameID = 0,
+    GameType = "R",
+    GameStatus = "Final",
+    stringsAsFactors = FALSE
+  )
+
+  local_mocked_bindings(
+    .todayDC = function(today, schedule, ...) {
+      day_games <- schedule[schedule$Date == as.Date(today), ]
+      data.frame(
+        HomeTeam = day_games$HomeTeam,
+        AwayTeam = day_games$AwayTeam,
+        HomeWin = 0.5,
+        AwayWin = 0.3,
+        Draw = 0.2,
+        GameID = day_games$GameID
+      )
+    },
+    .package = "HockeyModel"
+  )
+
+  result <- remainderSeasonDC(
+    nsims = 1,
+    cores = 1,
+    scores = scor,
+    schedule = sched,
+    params = list(m = fake_m),
+    odds = FALSE,
+    regress = FALSE,
+    mu_lambda = TRUE
+  )
+
+  expect_equal(nrow(result), 2)
+  # Both-unseen recovery constants (see .DCPredictErrorRecover()).
+  expect_equal(unname(result$lambda), rep(3.319624, 2))
+  expect_equal(unname(result$mu), rep(2.827417, 2))
 })
