@@ -315,12 +315,12 @@ daily_odds_table <- function(
       table.border.top.color = "white"
     ) |>
     gt::cols_align(
-      align = "left", 
-      columns = c(2,6,7,8)
+      align = "left",
+      columns = c(2, 6, 7, 8)
     ) |>
     gt::cols_align(
       align = "right",
-      columns = c(3,4,5,9)
+      columns = c(3, 4, 5, 9)
     )
 
   if (include_images) {
@@ -617,13 +617,13 @@ series_odds_table <- function(
 
   return(series_gt)
 }
- 
+
 
 #' Season Finishing Position Table
 #'
 #' @description Takes a per-team season simulation summary and returns a gt table of each team's probability of finishing in positions 1-8 within its conference, plus the probability of missing the playoffs entirely. Teams are grouped by conference and sorted by mean conference rank. If `summary_results` is not supplied, it is read from the most recent prediction `.RDS` file under the `HockeyModel.prediction.path` option; if no (recent) prediction files exist, the function returns `NULL`.
 #'
-#' @param summary_results A data frame of per-team season simulation summaries with columns `Team`, `meanConfRank`, and `p_rank1` through `p_rank8`. Defaults to `NULL`, in which case it is loaded from the most recent prediction `.RDS` file.
+#' @param summary_results A data frame of per-team season simulation summaries with columns `Team`, `meanConfRank`, and `p_rank1` through `p_rank8`. Defaults to `NULL`, in which case it is loaded from the most recent prediction `.RDS` file. Legacy files containing only pooled `p_rank_34`/`p_rank_56` are supported; each is split evenly across seeds 3-4 and 5-6.
 #' @param caption_text Additional text to prepend to the table title, e.g. `"Eastern Conference"` if only one conference is shown.
 #' @param include_images Whether to include a team logo alongside each team name. Default `TRUE`.
 #' @param league League identifier. `"NHL"` (default) or `"PWHL"`. When `"PWHL"`, PWHL team colours and logos are used; note the PWHL finishing position table is not yet fully implemented, so results may be meaningless.
@@ -636,7 +636,6 @@ season_finish_table <- function(
   include_images = TRUE,
   league = "NHL"
 ) {
-
   # TODO use compile_predictions for this?
   if (is.null(summary_results)) {
     pdates <- .get_prediction_dates(getOption("HockeyModel.prediction.path"))
@@ -659,11 +658,35 @@ season_finish_table <- function(
     ))
   }
 
+  # Legacy prediction files only carry pooled p_rank_34/p_rank_56; split them
+  # evenly so both schemas render (matches how simulatePlayoffs() bridges them)
+  if (
+    !all(
+      c("p_rank3", "p_rank4", "p_rank5", "p_rank6") %in% names(summary_results)
+    )
+  ) {
+    if (all(c("p_rank_34", "p_rank_56") %in% names(summary_results))) {
+      summary_results <- summary_results |>
+        dplyr::mutate(
+          p_rank3 = .data$p_rank_34 / 2,
+          p_rank4 = .data$p_rank_34 / 2,
+          p_rank5 = .data$p_rank_56 / 2,
+          p_rank6 = .data$p_rank_56 / 2
+        )
+    } else {
+      cli::cli_abort(
+        "summary_results must contain columns `p_rank1` through `p_rank8`."
+      )
+    }
+  }
+
   # TODO: Rssolve league
   if (league == "PWHL") {
     teamColours <- HockeyModel::pwhlTeamColours
     table_title <- paste(caption_text, "PWHL Season Finishing Position")
-    cli::cli_alert_warning("PWHL finishing position table is not yet implemented; Results may be meaningless.")
+    cli::cli_alert_warning(
+      "PWHL finishing position table is not yet implemented; Results may be meaningless."
+    )
   } else {
     teamColours <- HockeyModel::teamColours
     table_title <- paste(caption_text, "NHL Season Finishing Position")
@@ -672,12 +695,12 @@ season_finish_table <- function(
   finish_tbl <- summary_results |>
     dplyr::mutate(
       Conference = .getTeamConferences(.data$Team),
-      miss_playoffs = 1-.data$Playoffs
+      miss_playoffs = 1 - .data$Playoffs
     ) |>
     dplyr::arrange(
       .data$Conference,
       .data$meanConfRank
-    ) |>  
+    ) |>
     dplyr::select(
       .data$Team,
       .data$Conference,
@@ -724,19 +747,42 @@ season_finish_table <- function(
       "miss_playoffs" = "Miss Playoffs"
     ) |>
     gt::data_color(
-      columns = c("p_rank1", "p_rank2", "p_rank3", "p_rank4", "p_rank5", "p_rank6", "p_rank7", "p_rank8", "miss_playoffs"),
+      columns = c(
+        "p_rank1",
+        "p_rank2",
+        "p_rank3",
+        "p_rank4",
+        "p_rank5",
+        "p_rank6",
+        "p_rank7",
+        "p_rank8",
+        "miss_playoffs"
+      ),
       fn = scales::col_numeric(
         palette = c("#ffffff", "#68c400"),
         domain = c(0, 1)
       )
     ) |>
-    gt::fmt_percent(columns = c("p_rank1", "p_rank2", "p_rank3", "p_rank4", "p_rank5", "p_rank6", "p_rank7", "p_rank8", "miss_playoffs"), decimals = 1) |>
+    gt::fmt_percent(
+      columns = c(
+        "p_rank1",
+        "p_rank2",
+        "p_rank3",
+        "p_rank4",
+        "p_rank5",
+        "p_rank6",
+        "p_rank7",
+        "p_rank8",
+        "miss_playoffs"
+      ),
+      decimals = 1
+    ) |>
     gt::tab_options(
       heading.align = "left",
       table.border.bottom.color = "white",
       table.border.top.color = "white"
     )
-  
+
   if (include_images) {
     finish_gt <- finish_gt |>
       gt::cols_label("teamimage" = " ")
@@ -763,32 +809,32 @@ season_finish_table <- function(
               height = "30px"
             )
           }
-        ) 
+        )
     }
   }
   finish_gt
 }
 
 #' Resolve team name to logo path
-#' 
+#'
 #' @description Resolve a team name to its local logo path (falls back to nhl or pwhl logo)
 #' @param team_name Name of the team
 #' @param league League of the team (e.g., "NHL" or "PWHL")
 #' @return File path to the team's logo
 #' @keywords internal
 .team_logo_path <- function(team_name, league) {
-    candidate <- file.path(
+  candidate <- file.path(
+    getOption("HockeyModel.data.path"),
+    "logos",
+    paste0(tolower(gsub(" ", "_", team_name)), ".png")
+  )
+  ifelse(
+    file.exists(candidate),
+    candidate,
+    file.path(
       getOption("HockeyModel.data.path"),
       "logos",
-      paste0(tolower(gsub(" ", "_", team_name)), ".png")
+      paste0(tolower(league), ".png")
     )
-    ifelse(
-      file.exists(candidate),
-      candidate,
-      file.path(
-        getOption("HockeyModel.data.path"),
-        "logos",
-        paste0(tolower(league), ".png")
-      )
-    )
+  )
 }

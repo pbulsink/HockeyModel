@@ -12,7 +12,7 @@ season_finish_table(
 )
 }
 \arguments{
-\item{summary_results}{A data frame of per-team season simulation summaries with columns \code{Team}, \code{meanConfRank}, and \code{p_rank1} through \code{p_rank8}. Defaults to \code{NULL}, in which case it is loaded from the most recent prediction \code{.RDS} file.}
+\item{summary_results}{A data frame of per-team season simulation summaries with columns \code{Team}, \code{meanConfRank}, and \code{p_rank1} through \code{p_rank8}. Defaults to \code{NULL}, in which case it is loaded from the most recent prediction \code{.RDS} file. Legacy files containing only pooled \code{p_rank_34}/\code{p_rank_56} are supported; each is split evenly across seeds 3-4 and 5-6.}
 
 \item{caption_text}{Additional text to prepend to the table title, e.g. \code{"Eastern Conference"} if only one conference is shown.}
 
