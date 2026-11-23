@@ -56,6 +56,13 @@ getM <- function(
 
   scores <- scores[scores$Date >= (currentDate - 4000), ] # auto-trim to ~11 years of data, past then the model doesn't get better, just bigger
 
+  # Fit on regulation-time scores: the Dixon-Coles low-score correction (rho)
+  # is only estimable when tied games exist, and final (OT/SO) scores have none
+  # (#103). The OT/SO decider goal is removed so tied games re-enter the fit.
+  if ("Result" %in% names(scores)) {
+    scores <- .regulation_scores(scores)
+  }
+
   # Derive per-season start dates when cross-season discounting is active
   season_start_dates <- if (nu != 0) {
     .derive_season_starts(scores$Date)
@@ -137,6 +144,12 @@ getRho <- function(m = HockeyModel::m, scores = HockeyModel::scores) {
     m <- getM(scores)
   }
   scores <- scores[scores$GameID %in% unique(m$data$GameID), ]
+  # Evaluate against regulation-time scores to match getM()'s fit: rho's
+  # low-score cells (0-0, 1-1) only exist in regulation, and on final scores
+  # the likelihood is monotone in rho and pins it to the boundary (#103).
+  if ("Result" %in% names(scores)) {
+    scores <- .regulation_scores(scores)
+  }
   expected <- stats::fitted(m)
   home.expected <- as.vector(expected[seq_len(nrow(scores))])
   away.expected <- as.vector(expected[(nrow(scores) + 1):(nrow(scores) * 2)])
@@ -232,6 +245,12 @@ getWeibullParams <- function(
   # Have to grab the 'low score' of each tie game, then add one for modelling purposes (Weibull @ x=0 is 0)
   scores <- scores |>
     dplyr::filter(.data$GameID %in% unique(m$data$GameID)) |>
+    # Match getM()/getRho()'s regulation-time basis: the tie diagonal is built
+    # from regulation-tied games, so the final-score OT/SO decider is removed
+    # before the tie low-score is reconstructed (#103).
+    {
+      \(x) if ("Result" %in% names(x)) .regulation_scores(x) else x
+    }() |>
     dplyr::mutate(
       "weight" = m$data$Weight[seq_len(dplyr::n())],
       "mu" = stats::fitted(m)[seq_len(dplyr::n())],
@@ -274,16 +293,48 @@ getWeibullParams <- function(
     return(sum((goalratios - weibulldist)^2))
   }
 
+  # Bounds: shape/scale must stay non-negative (Weibull domain), but the
+  # 1e-6 lower floor + upper cap added in f558a41d flattened the gradient and
+  # pinned beta/eta to the corner. Restoring the open bounds lets L-BFGS-B
+  # reach the interior least-squares minimum (#103).
   res <- stats::optim(
     par = c(3, 1, 6),
     fn = .DCoptimTheta.fast,
-    lower = c(1e-6, 1e-6, -2),
-    upper = c(10, 10, 100),
+    lower = c(-Inf, 0, -Inf),
     # control = list(fnscale=-1),
     method = "L-BFGS-B"
   )
 
   return(list("beta" = res$par[1], "eta" = res$par[2], "k" = res$par[3]))
+}
+
+#' Reconstruct regulation-time scores from final scores
+#'
+#' @description NHL `scores` record the *final* (OT/SO-decided) score, in which
+#'   a tie is impossible.  The Dixon-Coles low-score parameter `rho` is only
+#'   estimable from regulation-time scores, where tied games (0-0, 1-1, ...)
+#'   exist; on final scores the likelihood is monotone in `rho` and pins it to
+#'   its boundary (#103).  This helper subtracts the extra time winner's goal
+#'   so that OT/SO games become regulation ties:
+#'
+#'   * `Result` 0.25 / 0.4 (away OT/SO win): the away team scored the decider,
+#'     so `AwayGoals - 1`, leaving a regulation tie.
+#'   * `Result` 0.6 / 0.75 (home OT/SO win): the home team scored the decider,
+#'     so `HomeGoals - 1`, leaving a regulation tie.
+#'   * Regulation-decided games (`Result` 0, 0.5, 1) are unchanged.
+#'
+#' @param scores (`data.frame`) Historical scores with `HomeGoals`,
+#'   `AwayGoals`, and `Result`.
+#'
+#' @returns (`data.frame`) `scores` with `HomeGoals`/`AwayGoals` adjusted to
+#'   regulation time.
+#' @keywords internal
+.regulation_scores <- function(scores) {
+  ot_home <- scores$Result %in% c(0.6, 0.75)
+  ot_away <- scores$Result %in% c(0.25, 0.4)
+  scores$HomeGoals[ot_home] <- scores$HomeGoals[ot_home] - 1L
+  scores$AwayGoals[ot_away] <- scores$AwayGoals[ot_away] - 1L
+  scores
 }
 
 #' Compute one Dixon-Coles low-score adjustment factor
