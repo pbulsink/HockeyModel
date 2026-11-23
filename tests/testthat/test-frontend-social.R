@@ -75,3 +75,46 @@ test_that(".tweet() does nothing outside the regular season (#noissue)", {
   result <- .tweet(delay = 0)
   expect_equal(nrow(result), 0)
 })
+
+test_that("tweetSeasonFinish() posts nothing when no recent predictions exist (#noissue)", {
+  withr::local_options(list(
+    HockeyModel.prediction.path = withr::local_tempdir()
+  ))
+  local_mocked_bindings(
+    post = function(...) invisible(NULL),
+    .package = "atrrr"
+  )
+
+  result <- suppressMessages(tweetSeasonFinish())
+  expect_equal(nrow(result), 0)
+})
+
+test_that("tweetSeasonFinish() saves and posts the finishing position table (#noissue)", {
+  graphic_dir <- withr::local_tempdir()
+  withr::local_options(list(HockeyModel.graphics.path = graphic_dir))
+  local_mocked_bindings(
+    season_finish_table = function(...) "fake_gt",
+    .package = "HockeyModel"
+  )
+  local_mocked_bindings(
+    save_gt_as_png = function(gt_table, filename, ...) invisible(filename),
+    .package = "HockeyModel"
+  )
+  posted <- new.env()
+  local_mocked_bindings(
+    post = function(...) {
+      posted$args <- list(...)
+      invisible(NULL)
+    },
+    .package = "atrrr"
+  )
+
+  result <- suppressMessages(tweetSeasonFinish())
+  expect_equal(nrow(result), 1)
+  expect_true(result$success)
+  expect_equal(
+    posted$args$image,
+    file.path(graphic_dir, "season_finish_table.png")
+  )
+  expect_match(posted$args$text, "Season Finishing Position")
+})

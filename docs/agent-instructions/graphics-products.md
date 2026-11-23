@@ -36,6 +36,7 @@ Reference for every plot, table, image file, and text product made by HockeyMode
 | `format_playoff_odds()` | graphics-tables.R | gt | NHL, PWHL (`league=`) | no |
 | `daily_odds_table()` | graphics-tables.R | gt (or NULL if no games) | NHL, PWHL | no |
 | `series_odds_table()` | graphics-tables.R | gt | NHL, PWHL | no |
+| `season_finish_table()` | graphics-tables.R | gt (or NULL if no recent predictions) | NHL, PWHL (`league=`) | no |
 | `save_gt_as_png()` | gt_image_export.R | PNG file; returns filename invisibly | — | yes |
 | `.formatPredsForHockeyVisContest()` | utils-export.R | character(1) | NHL only | no |
 
@@ -53,6 +54,7 @@ All ggplot PNGs use `grDevices::png(width = 11, height = 8.5, units = "in", res 
 | `point_predict.png` | `pointPredict()` | daily | NHL |
 | `eastern_playoff_odds.png`, `western_playoff_odds.png` | `format_playoff_odds()` per conference | `tweetPlayoffOdds()` | NHL |
 | `series_odds.png`, `series_odds_table.png` | series plot / table | `tweetSeries()` | NHL |
+| `season_finish_table.png` | `season_finish_table()` | `.daily_summary_nhl` (regular season, via `tweetSeasonFinish()`) | NHL |
 | `predicted_goals.png` (deleted after posting) | `plot_game()` | `tweetGames()` | NHL |
 | `pace/<team_lower_underscored>.png` | `plot_pace_by_team()` | itself | NHL |
 | `pace/<division_lower>_pace.png` | `plot_pace_by_division()` | itself | NHL |
@@ -89,6 +91,7 @@ flowchart LR
   DN --> PPL[plot_point_likelihood]
   DN --> TW[.tweet]
   DN --> TPO[tweetPlayoffOdds] --> FPO[format_playoff_odds]
+  DN --> TSF[tweetSeasonFinish] --> SFT[season_finish_table]
   DN --> TPa[tweetPace] --> PBT & PBD
   DN --> TM[tweetMetrics]
   DN --> TL[tweetLikelihoods] --> PPL
@@ -225,6 +228,11 @@ These are `plot_prediction_points_by_team` (~L26), `plot_prediction_playoffs_by_
 - **League differences:** the source note is hard-coded as "Best of 7" (NHL) or "Best of 5" (PWHL).
 - **Bug:** `gt::md()` is applied twice (`series_note` is already md).
 
+### `season_finish_table(summary_results = NULL, caption_text = "", include_images = TRUE, league = "NHL")` — graphics-tables.R ~L633
+- **Columns:** team colour block, logo (if `include_images`), Team, Conference, then `p_rank1`–`p_rank8` and `miss_playoffs`. Grouped by conference, sorted by `meanConfRank`. Green heat scale on all probability columns.
+- **Data:** uses `summary_results` when supplied; otherwise reads the most recent `<prediction.path>/<date>-predictions.RDS`, returning `NULL` (with an info message) if none exists or the newest is more than 7 days old. Legacy files with only pooled `p_rank_34`/`p_rank_56` are split evenly across seeds 3-4 / 5-6; anything else aborts.
+- **League differences:** PWHL swaps colours/logos and warns that the table is not yet fully implemented (results may be meaningless).
+
 ### `save_gt_as_png(gt_table, filename, width = NULL, height = NULL, dpi = 150, scale = 1, padding = 20)` — gt_image_export.R ~L26
 1. **First tries `gt::gtsave()`**, which uses webshot2/chromote. On error it only prints an alert.
 2. If the file was written after the start time, it returns.
@@ -275,7 +283,7 @@ Season predicates in frontend-season.R (`inRegularSeason`, `inPlayoffs`, `inOffS
    - Run the pace-by-team, pace-by-division, and likelihood generators. The likelihood generator runs a fresh 1e4-sim run.
 5. **`.tweet()`** (regular season only) posts point_predict, playoff_odds, and president_odds, with `delay` between each. Then `Sys.sleep(delay)`.
 6. **Playoff odds:**
-   - Regular season: `tweetPlayoffOdds(params)` runs `simulatePlayoffs`, saves East/West gt tables, and posts both. Then it sleeps `delay/2`.
+   - Regular season: `tweetPlayoffOdds(params)` runs `simulatePlayoffs`, saves East/West gt tables, and posts both. Then it sleeps `delay/2`. After that, `tweetSeasonFinish()` saves `season_finish_table.png` from the snapshot just written by `updatePredictions()` and posts it (skipped silently if no recent prediction file exists).
    - Playoffs: `tweetPlayoffOdds(trimcup = TRUE)` builds a single table, saves it to `playoff_odds.png`, and posts it.
 7. **Weekday extras** (regular season only):
    - Monday: `tweetPace()`. It re-runs `updateScoresAPI` and both pace generators, then posts each team (text includes initial vs current meanPoints and the team Hashtag), a recap text post (above/below expectation), and each division image.

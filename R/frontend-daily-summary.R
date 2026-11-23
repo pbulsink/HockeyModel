@@ -200,6 +200,14 @@
 
     message("Delaying ", delay / 2, " seconds to space tweets...")
     Sys.sleep(delay / 2)
+
+    # updatePredictions() above wrote today's snapshot, so the table reads it
+    post_results[[length(post_results) + 1]] <- tweetSeasonFinish(
+      graphic_dir = graphic_dir
+    )
+
+    message("Delaying ", delay / 2, " seconds to space tweets...")
+    Sys.sleep(delay / 2)
   } else if (inPlayoffs(league = "NHL")) {
     message("Calculating Playoff Odds")
     post_results[[length(post_results) + 1]] <- tweetPlayoffOdds(

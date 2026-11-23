@@ -664,3 +664,54 @@ tweetPlayoffOdds <- function(
 
   invisible(.summarize_post_results(post_results))
 }
+
+
+#' Tweet Season Finishing Position Table
+#'
+#' @description Tweet a graphic of each team's probability of finishing in
+#'   positions 1-8 within its conference, plus the chance of missing the
+#'   playoffs entirely. Built from `summary_results` when supplied, otherwise
+#'   from the most recent prediction file (skipped if none is recent enough).
+#'
+#' @param summary_results A per-team season simulation summary with columns
+#'   `Team`, `meanConfRank`, and `p_rank1` through `p_rank8`; otherwise the
+#'   most recent prediction file is loaded
+#' @param graphic_dir Graphic dir
+#'
+#' @return (`data.frame`) A summary of each attempted post (see
+#'   `.summarize_post_results()`), invisibly.
+#' @export
+tweetSeasonFinish <- function(
+  summary_results = NULL,
+  graphic_dir = getOption("HockeyModel.graphics.path")
+) {
+  if (!requireNamespace("gt", quietly = TRUE)) {
+    cli::cli_abort(
+      "Package {.pkg gt} is required. Install it with {.code install.packages('gt')}."
+    )
+  }
+
+  post_results <- list()
+  plt <- season_finish_table(summary_results = summary_results)
+  if (is.null(plt)) {
+    return(invisible(.summarize_post_results(post_results)))
+  }
+
+  save_gt_as_png(
+    plt,
+    filename = file.path(graphic_dir, "season_finish_table.png")
+  )
+
+  post_results[[length(post_results) + 1]] <- .safe_post(
+    "season finishing position table",
+    text = paste0(
+      "#NHL Season Finishing Position odds before games on ",
+      Sys.Date(),
+      ". #HockeyTwitter"
+    ),
+    image = file.path(graphic_dir, "season_finish_table.png"),
+    image_alt = "Season Finishing Position"
+  )
+
+  invisible(.summarize_post_results(post_results))
+}
