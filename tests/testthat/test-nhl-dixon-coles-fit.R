@@ -1,5 +1,53 @@
 context("test-nhl-dixon-coles-fit")
 
+# ============ #103: model-collapse regression tests ============
+test_that("getWeibullParams reaches the interior least-squares minimum (#103)", {
+  # The 1e-6 lower floor + upper cap added in f558a41d flattened the gradient
+  # and pinned beta/eta to the corner (SSE far above the attainable minimum).
+  # With the restored open bounds, L-BFGS-B must land off its lower bounds and
+  # near the historically-observed hockey values (beta ~ 3, eta ~ 4, k ~ 6).
+  wp <- suppressWarnings(getWeibullParams(
+    m = HockeyModel::m,
+    rho = HockeyModel::rho
+  ))
+  expect_gt(wp$beta, 0.5)
+  expect_gt(wp$eta, 0.5)
+  expect_lt(wp$beta, 20)
+  expect_lt(wp$eta, 20)
+})
+
+test_that("getRho returns a negative, off-boundary estimate (#103)", {
+  # On regulation-time scores the Dixon-Coles low-score dependence is negative
+  # for hockey (observed ~ -0.15 to -0.28). It must not pin to the +0.5 bound.
+  rho <- suppressWarnings(getRho(m = HockeyModel::m))
+  expect_lt(rho, 0)
+  expect_gt(rho, -0.5)
+})
+
+test_that(".regulation_scores reconstructs ties from OT/SO final scores", {
+  scor <- data.frame(
+    Date = as.Date(c("2024-10-10", "2024-10-11", "2024-10-12", "2024-10-13")),
+    GameID = c("G1", "G2", "G3", "G4"),
+    HomeTeam = c("A", "B", "C", "D"),
+    AwayTeam = c("E", "F", "G", "H"),
+    HomeGoals = c(3, 2, 4, 1),
+    AwayGoals = c(1, 3, 3, 2),
+    Result = c(1, 0.25, 0.75, 0) # reg home win, away OT win, home OT win, reg away win
+  )
+  reg <- .regulation_scores(scor)
+  # Regulation win unchanged
+  expect_equal(reg$HomeGoals[1], 3)
+  expect_equal(reg$AwayGoals[1], 1)
+  # Away OT win (0.25): away scored the OT winner -> regulation 2-2 tie
+  expect_equal(reg$HomeGoals[2], 2)
+  expect_equal(reg$AwayGoals[2], 2)
+  # Home OT win (0.75): home scored the OT winner -> regulation 3-3 tie
+  expect_equal(reg$HomeGoals[3], 3)
+  expect_equal(reg$AwayGoals[3], 3)
+  # Ties now exist where OT/SO games were decided
+  expect_true(any(reg$HomeGoals == reg$AwayGoals))
+})
+
 test_that("Package weighting constants are numeric and in expected ranges", {
   expect_true(is.numeric(DC_XI_NHL))
   expect_true(is.numeric(DC_UPSILON_NHL))
