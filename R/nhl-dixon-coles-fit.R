@@ -305,6 +305,18 @@ getWeibullParams <- function(
     method = "L-BFGS-B"
   )
 
+  # A fit pinned to the Weibull domain boundary (beta/eta ~ 0) makes every
+  # dweibull diagonal weight ~ 0, so .prob_matrix() silently discards the tie
+  # mass and simulations lose wins/points league-wide. Warn loudly instead of
+  # returning a degenerate fit that poisons downstream predictions (#103).
+  if (res$par[1] < 0.1 || res$par[2] < 0.1) {
+    cli::cli_warn(c(
+      "Weibull tie-enhancement fit collapsed to the parameter boundary.",
+      "x" = "beta = {round(res$par[1], 4)}, eta = {round(res$par[2], 4)}.",
+      "i" = "Check that {.arg scores} contains regulation-time ties (see {.fn .regulation_scores}) before trusting predictions."
+    ))
+  }
+
   return(list("beta" = res$par[1], "eta" = res$par[2], "k" = res$par[3]))
 }
 

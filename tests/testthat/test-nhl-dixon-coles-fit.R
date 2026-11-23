@@ -16,6 +16,30 @@ test_that("getWeibullParams reaches the interior least-squares minimum (#103)", 
   expect_lt(wp$eta, 20)
 })
 
+test_that("getWeibullParams warns when the fit collapses to the boundary", {
+  # A fit pinned to the Weibull domain boundary (beta/eta ~ 0) zeroes the
+  # score-matrix diagonal and silently drains wins/points from simulations
+  # downstream (#103), so it must warn. Mock optim to return such a fit.
+  testthat::local_mocked_bindings(
+    optim = function(...) list(par = c(1e-6, 1e-6, -2)),
+    .package = "stats"
+  )
+  expect_warning(
+    getWeibullParams(m = HockeyModel::m, rho = HockeyModel::rho),
+    "collapsed to the parameter boundary"
+  )
+})
+
+test_that("getWeibullParams does not warn for a healthy fit", {
+  testthat::local_mocked_bindings(
+    optim = function(...) list(par = c(3.04, 4.29, 6.68)),
+    .package = "stats"
+  )
+  expect_no_warning(
+    getWeibullParams(m = HockeyModel::m, rho = HockeyModel::rho)
+  )
+})
+
 test_that("getRho returns a negative, off-boundary estimate (#103)", {
   # On regulation-time scores the Dixon-Coles low-score dependence is negative
   # for hockey (observed ~ -0.15 to -0.28). It must not pin to the +0.5 bound.
