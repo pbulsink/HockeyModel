@@ -79,6 +79,8 @@ getCurrentPWHLSeason <- function() {
 
   # Use only regular or playoff seasons
   reg <- seasons[seasons$career == 1, ]
+  # 2026-2027 has 'career == 1' for preseason as of 2026-11-23
+  reg <- reg[!grepl("pre", tolower(reg$name)),]
   if (nrow(reg) == 0) {
     return(NULL)
   }

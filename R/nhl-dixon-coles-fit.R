@@ -270,6 +270,7 @@ getWeibullParams <- function(
     beta <- par[1]
     eta <- par[2]
     k <- par[3]
+    #message("beta: ", beta, ", eta: ", eta, ", k: ", k)
     # This gets multiplied by two because each tie game has 2 teams getting x goals, whereas non-tie games where either team get x goals get pulled in.
     goalratios <- purrr::map_dbl(
       1:max(scores$Goals, na.rm = TRUE),
@@ -297,10 +298,12 @@ getWeibullParams <- function(
   # 1e-6 lower floor + upper cap added in f558a41d flattened the gradient and
   # pinned beta/eta to the corner. Restoring the open bounds lets L-BFGS-B
   # reach the interior least-squares minimum (#103).
+  # But negative range for beta / eta crashed PWHL fits, so .Machine$double.eps
+  # is the next logical limit.
   res <- stats::optim(
     par = c(3, 1, 6),
     fn = .DCoptimTheta.fast,
-    lower = c(-Inf, 0, -Inf),
+    lower = c(.Machine$double.eps, .Machine$double.eps, -Inf),
     # control = list(fnscale=-1),
     method = "L-BFGS-B"
   )
