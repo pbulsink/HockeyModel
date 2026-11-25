@@ -9,7 +9,6 @@
 #' @returns (`integer(1)`) Core count constrained to available resources.
 #' @keywords internal
 .parseCores <- function(cores) {
-  cores <- cores
   if (is.null(cores)) {
     if (!requireNamespace("parallel", quietly = TRUE)) {
       message(
@@ -18,11 +17,10 @@
       cores <- 1
     } else {
       cores <- parallel::detectCores()
+      # Applied silently: a full daily run resolves cores at several call
+      # sites, so messaging each one was chatty (#107).
       opt <- getOption("HockeyModel.cores")
       if (is.numeric(opt) && opt %% 1 == 0 && opt > 0 && opt < cores) {
-        cli::cli_inform(
-          "Using {.val {opt}} core(s) per the `HockeyModel.cores` option."
-        )
         cores <- as.integer(opt)
       }
     }

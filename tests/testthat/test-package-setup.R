@@ -13,6 +13,13 @@ test_that(".parseCores honours the HockeyModel.cores option (#90)", {
   expect_equal(HockeyModel:::.parseCores(NULL), 1L)
 })
 
+test_that(".parseCores stays silent when the option is applied (#107)", {
+  # A full daily run resolves cores at several call sites; messaging each one
+  # was chatty, so the cap now applies without notice.
+  withr::local_options("HockeyModel.cores" = 1)
+  expect_silent(HockeyModel:::.parseCores(NULL))
+})
+
 test_that(".parseCores caps the option at detectCores() (#90)", {
   withr::local_options(
     "HockeyModel.cores" = parallel::detectCores() + 5
