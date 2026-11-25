@@ -674,9 +674,13 @@ season_finish_table <- function(
           p_rank6 = .data$p_rank_56 / 2
         )
     } else {
-      cli::cli_abort(
-        "summary_results must contain columns `p_rank1` through `p_rank8`."
+      # Fallback-day files from the legacy engine carry no rank-probability
+      # columns at all; skip like the no-file/stale paths rather than abort
+      # (#105).
+      cli::cli_alert_info(
+        "Prediction file has a legacy schema (no `p_rank1` through `p_rank8`); skipping season finishing position table."
       )
+      return(invisible(NULL))
     }
   }
 
@@ -698,21 +702,25 @@ season_finish_table <- function(
       miss_playoffs = 1 - .data$Playoffs
     ) |>
     dplyr::arrange(
-      .data$Conference,
-      .data$meanConfRank
+      "Conference",
+      "meanConfRank"
     ) |>
+    # Explicit names (not a range): the legacy bridge appends p_rank3-6 after
+    # p_rank7/8, so a p_rank1:p_rank8 select would drop them (#105).
     dplyr::select(
-      .data$Team,
-      .data$Conference,
-      .data$p_rank1,
-      .data$p_rank2,
-      .data$p_rank3,
-      .data$p_rank4,
-      .data$p_rank5,
-      .data$p_rank6,
-      .data$p_rank7,
-      .data$p_rank8,
-      .data$miss_playoffs
+      "Team",
+      "Conference",
+      c(
+        "p_rank1",
+        "p_rank2",
+        "p_rank3",
+        "p_rank4",
+        "p_rank5",
+        "p_rank6",
+        "p_rank7",
+        "p_rank8"
+      ),
+      "miss_playoffs"
     ) |>
     tibble::add_column("teamcolour" = "  ", .before = 1)
 

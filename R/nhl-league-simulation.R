@@ -294,7 +294,13 @@ compile_predictions <- function(
 #'   split into fixed-size chunks so peak memory per worker stays bounded
 #'   regardless of `nsims`.
 #'
-#' @return a two member list, of all results and summary results
+#' @return A named list with:
+#'   * `summary_results` – per-team season statistics (means, SDs, playoff
+#'     odds, seeding probabilities)
+#'   * `raw_results` – one row per team per simulation, thinned to the four
+#'     columns read downstream (`SimNo`, `Team`, `Points`, `Rank`); all other
+#'     per-sim columns are consumed by the summarisation above and dropped so
+#'     the parent's largest transient is freed before plotting (#90)
 #' @keywords internal
 loopless_sim <- function(
   nsims = 1e5,
@@ -482,6 +488,16 @@ loopless_sim <- function(
       # p_rank_56 = sum(.data$p_rank5, .data$p_rank6, na.rm = TRUE),
     ) |>
     tibble::as_tibble()
+
+  # Free the columns only the summarise above needed; everything downstream
+  # reads just SimNo/Team/Points/Rank (#90).
+  all_results <- dplyr::select(
+    all_results,
+    "SimNo",
+    "Team",
+    "Points",
+    "Rank"
+  )
 
   if (likelihood_graphic) {
     plot_point_likelihood(preds = all_results)

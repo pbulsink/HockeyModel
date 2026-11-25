@@ -39,7 +39,15 @@ split into fixed-size chunks so peak memory per worker stays bounded
 regardless of \code{nsims}.}
 }
 \value{
-a two member list, of all results and summary results
+A named list with:
+\itemize{
+\item \code{summary_results} – per-team season statistics (means, SDs, playoff
+odds, seeding probabilities)
+\item \code{raw_results} – one row per team per simulation, thinned to the four
+columns read downstream (\code{SimNo}, \code{Team}, \code{Points}, \code{Rank}); all other
+per-sim columns are consumed by the summarisation above and dropped so
+the parent's largest transient is freed before plotting (#90)
+}
 }
 \description{
 'Loopless' simulation

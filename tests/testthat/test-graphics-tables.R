@@ -292,3 +292,62 @@ test_that("Playoff Table is ok", {
   expect_equal(p$`_heading`$title, " NHL Playoff Odds")
   expect_equal(p$`_data`$Team[1], "Tampa Bay Lightning")
 })
+
+# ============ season_finish_table schema handling (#105) ============
+
+test_that("season_finish_table skips legacy-schema summaries with an info message (#105)", {
+  # Fallback-day files from the legacy engine carry no rank-probability
+  # columns at all; these must skip (invisible NULL + info), not abort.
+  legacy_summary <- data.frame(
+    Team = c("Boston Bruins", "Detroit Red Wings"),
+    Playoffs = c(0.5, 0.2),
+    meanPoints = c(95, 80),
+    maxPoints = c(110, 100),
+    minPoints = c(70, 60),
+    meanWins = c(40, 30),
+    maxWins = c(55, 50),
+    Presidents = c(0.2, 0),
+    meanRank = c(2, 8),
+    bestRank = c(1, 3),
+    meanConfRank = c(2, 7),
+    bestConfRank = c(1, 4),
+    sdPoints = c(5, 6),
+    sdWins = c(3, 4),
+    sdRank = c(2, 3),
+    stringsAsFactors = FALSE
+  )
+
+  msgs <- character()
+  out <- withCallingHandlers(
+    season_finish_table(summary_results = legacy_summary),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+
+  expect_null(out)
+  expect_true(any(grepl("legacy", msgs, ignore.case = TRUE)))
+})
+
+test_that("season_finish_table still renders pooled p_rank_34/p_rank_56 files (#105)", {
+  # The intermediate schema (pooled seeds 3-4 / 5-6) must keep splitting.
+  pooled_summary <- data.frame(
+    Team = c("Boston Bruins", "Detroit Red Wings"),
+    Playoffs = c(0.9, 0.1),
+    meanPoints = c(95, 80),
+    Presidents = c(0.2, 0),
+    meanConfRank = c(2, 7),
+    p_rank1 = c(0.3, 0.05),
+    p_rank2 = c(0.2, 0.1),
+    p_rank_34 = c(0.25, 0.3),
+    p_rank_56 = c(0.1, 0.2),
+    p_rank7 = c(0.05, 0.1),
+    p_rank8 = c(0.1, 0.25),
+    stringsAsFactors = FALSE
+  )
+
+  out <- season_finish_table(summary_results = pooled_summary)
+  expect_true("gt_tbl" %in% class(out))
+  expect_equal(length(out$`_data`$p_rank3), 2)
+})

@@ -7,7 +7,10 @@
 .parseCores(cores)
 }
 \arguments{
-\item{cores}{(\code{integer(1)} or \code{NULL}) Requested core count.}
+\item{cores}{(\code{integer(1)} or \code{NULL}) Requested core count. When \code{NULL},
+the option \code{HockeyModel.cores} (if set to a positive integer) caps the
+default so operators on memory-constrained machines can limit parallel
+workers without editing call sites (#90).}
 }
 \value{
 (\code{integer(1)}) Core count constrained to available resources.

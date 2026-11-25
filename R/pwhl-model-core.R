@@ -241,7 +241,10 @@ pwhl_in_season <- function(
 #' @returns A named list with:
 #'   * `summary_results` – per-team season statistics (means, SDs, playoff
 #'     odds)
-#'   * `raw_results` – one row per team per simulation
+#'   * `raw_results` – one row per team per simulation, thinned to the four
+#'     columns read downstream (`SimNo`, `Team`, `Points`, `Rank`); all other
+#'     per-sim columns are consumed by the summarisation and dropped so the
+#'     parent's largest transient is freed (#90)
 #' @export
 pwhl_loopless_sim <- function(
   nsims = 1e4,
@@ -449,6 +452,16 @@ pwhl_loopless_sim <- function(
       bestRank = min(.data$Rank, na.rm = TRUE)
     ) |>
     tibble::as_tibble()
+
+  # Free the columns only the summarise above needed; .pwhl_prediction_summary()
+  # reads just Rank (and Team). (#90)
+  all_results <- dplyr::select(
+    all_results,
+    "SimNo",
+    "Team",
+    "Points",
+    "Rank"
+  )
 
   list(summary_results = summary_results, raw_results = all_results)
 }
