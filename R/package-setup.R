@@ -2,7 +2,10 @@
 
 #' Resolve a safe worker-core count
 #'
-#' @param cores (`integer(1)` or `NULL`) Requested core count.
+#' @param cores (`integer(1)` or `NULL`) Requested core count. When `NULL`,
+#'   the option `HockeyModel.cores` (if set to a positive integer) caps the
+#'   default so operators on memory-constrained machines can limit parallel
+#'   workers without editing call sites (#90).
 #' @returns (`integer(1)`) Core count constrained to available resources.
 #' @keywords internal
 .parseCores <- function(cores) {
@@ -15,6 +18,13 @@
       cores <- 1
     } else {
       cores <- parallel::detectCores()
+      opt <- getOption("HockeyModel.cores")
+      if (is.numeric(opt) && opt %% 1 == 0 && opt > 0 && opt < cores) {
+        cli::cli_inform(
+          "Using {.val {opt}} core(s) per the `HockeyModel.cores` option."
+        )
+        cores <- as.integer(opt)
+      }
     }
   } else {
     if (!requireNamespace("parallel", quietly = TRUE)) {

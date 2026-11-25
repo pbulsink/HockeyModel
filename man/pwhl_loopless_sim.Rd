@@ -31,7 +31,10 @@ A named list with:
 \itemize{
 \item \code{summary_results} – per-team season statistics (means, SDs, playoff
 odds)
-\item \code{raw_results} – one row per team per simulation
+\item \code{raw_results} – one row per team per simulation, thinned to the four
+columns read downstream (\code{SimNo}, \code{Team}, \code{Points}, \code{Rank}); all other
+per-sim columns are consumed by the summarisation and dropped so the
+parent's largest transient is freed (#90)
 }
 }
 \description{

@@ -226,6 +226,135 @@ test_that("simulateSeasonParallel() worker scores extra-time correctly (#68)", {
   expect_true(all(per_sim$total == 2 * G + per_sim$et_games))
 })
 
+# ============ loopless_sim raw_results contract (#90) ============
+
+test_that("loopless_sim thins raw_results to SimNo, Team, Points, Rank (#90)", {
+  # The per-sim result table is the parent's largest transient; only these
+  # four columns are read downstream (plot_point_likelihood, tests), so
+  # everything else is dropped right after summarisation.
+  mk_fixture <- function() {
+    sched <- HockeyModel::scores[
+      HockeyModel::scores$Date >= as.Date("2025-10-07") &
+        HockeyModel::scores$Date <= as.Date("2025-10-10"),
+      c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+    ]
+    sched$GameStatus <- "FUT"
+    scor <- HockeyModel::scores[
+      HockeyModel::scores$Date < as.Date("2025-10-07"),
+    ]
+    odds_table <- sched[, c("Date", "HomeTeam", "AwayTeam", "GameID")]
+    odds_table$HomeWin <- 0.5
+    odds_table$AwayWin <- 0.3
+    odds_table$Draw <- 0.2
+    odds_table <- odds_table[, c(
+      "HomeTeam",
+      "AwayTeam",
+      "HomeWin",
+      "AwayWin",
+      "Draw",
+      "GameID",
+      "Date"
+    )]
+    list(sched = sched, scor = scor, odds_table = odds_table)
+  }
+
+  local_mocked_bindings(
+    getSeason = function(gamedate = Sys.Date()) "20192020",
+    getSeasonStartDate = function(season = NULL, schedule = NULL) {
+      as.Date("2025-10-07")
+    },
+    .package = "HockeyModel"
+  )
+
+  fx <- mk_fixture()
+  result <- loopless_sim(
+    nsims = 7,
+    cores = 1,
+    schedule = fx$sched,
+    scores = fx$scor,
+    odds_table = fx$odds_table,
+    likelihood_graphic = FALSE
+  )
+
+  expect_setequal(
+    names(result$raw_results),
+    c(
+      "SimNo",
+      "Team",
+      "Points",
+      "Rank"
+    )
+  )
+  # One row per team per simulation, with unique sim IDs.
+  nteams <- length(unique(result$raw_results$Team))
+  expect_equal(nrow(result$raw_results), 7 * nteams)
+  expect_setequal(result$raw_results$SimNo, 1:7)
+})
+
+test_that("loopless_sim parallel branch returns the thinned schema (#90)", {
+  # The worker contract (sim_engine columns) is unchanged; thinning happens in
+  # the parent after summarisation, so the combined result must carry only
+  # the four downstream columns.
+  mk_fixture <- function() {
+    sched <- HockeyModel::scores[
+      HockeyModel::scores$Date >= as.Date("2025-10-07") &
+        HockeyModel::scores$Date <= as.Date("2025-10-10"),
+      c("Date", "HomeTeam", "AwayTeam", "GameID", "GameType", "GameStatus")
+    ]
+    sched$GameStatus <- "FUT"
+    scor <- HockeyModel::scores[
+      HockeyModel::scores$Date < as.Date("2025-10-07"),
+    ]
+    odds_table <- sched[, c("Date", "HomeTeam", "AwayTeam", "GameID")]
+    odds_table$HomeWin <- 0.5
+    odds_table$AwayWin <- 0.3
+    odds_table$Draw <- 0.2
+    odds_table <- odds_table[, c(
+      "HomeTeam",
+      "AwayTeam",
+      "HomeWin",
+      "AwayWin",
+      "Draw",
+      "GameID",
+      "Date"
+    )]
+    list(sched = sched, scor = scor, odds_table = odds_table)
+  }
+
+  local_mocked_bindings(
+    getSeason = function(gamedate = Sys.Date()) "20192020",
+    getSeasonStartDate = function(season = NULL, schedule = NULL) {
+      as.Date("2025-10-07")
+    },
+    .package = "HockeyModel"
+  )
+
+  expect_true(requireNamespace("parallel", quietly = TRUE))
+  fx <- mk_fixture()
+  result <- loopless_sim(
+    nsims = 8,
+    cores = 2,
+    schedule = fx$sched,
+    scores = fx$scor,
+    odds_table = fx$odds_table,
+    likelihood_graphic = FALSE,
+    chunk_size = 3
+  )
+
+  expect_setequal(
+    names(result$raw_results),
+    c(
+      "SimNo",
+      "Team",
+      "Points",
+      "Rank"
+    )
+  )
+  nteams <- length(unique(result$raw_results$Team))
+  expect_equal(nrow(result$raw_results), 8 * nteams)
+  expect_setequal(result$raw_results$SimNo, 1:8)
+})
+
 # ============ .sim_odds_results tests ============
 test_that(".sim_odds_results returns one outcome per game (#45)", {
   odds_table <- data.frame(

@@ -202,3 +202,46 @@ test_that(".update_model_pwhl returns list with scores, schedule, params", {
   expect_equal(nrow(result$schedule), 1)
   expect_equal(nrow(result$scores), 30)
 })
+
+test_that("pwhl_loopless_sim thins raw_results to SimNo, Team, Points, Rank (#90)", {
+  # Only .pwhl_prediction_summary() reads the per-sim table (for its Rank
+  # tally); the dropped columns are computed only inside the sim loop.
+  scores <- make_pwhl_scores(30)
+  params <- make_pwhl_params(scores)
+  sched <- make_pwhl_schedule(scores)
+  full_sched <- dplyr::bind_rows(
+    scores[, c(
+      "Date",
+      "HomeTeam",
+      "AwayTeam",
+      "GameID",
+      "GameType",
+      "GameStatus"
+    )],
+    sched
+  )
+  result <- pwhl_loopless_sim(
+    nsims = 20,
+    scores = scores,
+    schedule = full_sched,
+    params = params
+  )
+
+  expect_setequal(
+    names(result$raw_results),
+    c(
+      "SimNo",
+      "Team",
+      "Points",
+      "Rank"
+    )
+  )
+  nteams <- length(unique(result$raw_results$Team))
+  expect_equal(nrow(result$raw_results), 20 * nteams)
+  # The Presidents tally that .pwhl_prediction_summary() derives from the
+  # raw table is unchanged by thinning.
+  presidents <- result$raw_results |>
+    dplyr::group_by(.data$Team) |>
+    dplyr::summarise(P = mean(.data$Rank == 1), .groups = "drop")
+  expect_true(all(presidents$P >= 0 & presidents$P <= 1))
+})

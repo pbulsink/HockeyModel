@@ -503,13 +503,16 @@ dcPredictMultipleDays <- function(
     preds <- tryCatch(
       expr = {
         message("Predicting with Loopless Sim")
+        # The graphic is produced once, after saving below (#106); plotting
+        # inside loopless_sim() would build it a second time while the raw
+        # results are still live.
         loopless_sim(
           nsims = nsims,
           cores = cores,
           scores = score,
           schedule = sched,
           params = params,
-          likelihood_graphic = likelihood_graphic
+          likelihood_graphic = FALSE
         )
       },
       error = function(error) {
@@ -524,9 +527,13 @@ dcPredictMultipleDays <- function(
         preds$summary_results,
         file = file.path(filedir, paste0(d, "-predictions.RDS"))
       )
-      if (d == Sys.Date()) {
+      if (d == Sys.Date() && likelihood_graphic) {
         plot_point_likelihood(preds = preds$raw_results)
       }
+      # Release the large per-sim results before the next day's simulation so
+      # peak memory does not stack across days (#90).
+      rm(preds)
+      gc(verbose = FALSE)
     } else {
       # The fallback is kept (it can recover partial days), but it must be
       # visible: the legacy engine has historically produced inconsistent

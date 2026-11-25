@@ -513,3 +513,133 @@ test_that("remainderSeasonDC(mu_lambda = TRUE) uses params$m, not package data (
   expect_equal(unname(result$lambda), rep(3.319624, 2))
   expect_equal(unname(result$mu), rep(2.827417, 2))
 })
+
+# ============ dcPredictMultipleDays likelihood plot (#106) ============
+
+test_that("dcPredictMultipleDays plots the point likelihood exactly once for today (#106)", {
+  # Previously the graphic was built twice on the current day: inside
+  # loopless_sim() and again from this function. The inner call is disabled;
+  # only the post-save plot in this function should run, and saving must be
+  # unaffected by releasing the raw results early.
+  plot_calls <- new.env()
+  plot_calls$n <- 0L
+
+  local_mocked_bindings(
+    .update_dc_nhl = function(...) {
+      list(m = NULL, rho = 0, beta = 1, eta = 1, k = 1)
+    },
+    loopless_sim = function(...) {
+      teams <- c("Team A", "Team B")
+      list(
+        summary_results = data.frame(
+          Team = teams,
+          Playoffs = 0.5,
+          meanPoints = 40
+        ),
+        raw_results = data.frame(SimNo = 1:2, Team = rep(teams, each = 2))
+      )
+    },
+    plot_point_likelihood = function(...) {
+      plot_calls$n <- plot_calls$n + 1L
+      invisible(NULL)
+    },
+    .package = "HockeyModel"
+  )
+
+  days <- seq.Date(Sys.Date() - 2, by = "day", length.out = 3)
+  teams <- c("Team A", "Team B")
+  sched <- data.frame(
+    Date = days,
+    HomeTeam = teams[1],
+    AwayTeam = teams[2],
+    GameID = 1:3,
+    GameType = rep("R", 3),
+    GameStatus = rep("FUT", 3),
+    stringsAsFactors = FALSE
+  )
+  scor <- data.frame(
+    Date = days[1] - 1,
+    HomeTeam = teams[1],
+    AwayTeam = teams[2],
+    GameID = 0,
+    GameType = "R",
+    GameStatus = "FUT",
+    stringsAsFactors = FALSE
+  )
+
+  dir <- tempfile("dcPredictMultipleDays-plot-test")
+  out <- dcPredictMultipleDays(
+    start = days[1],
+    end = Sys.Date(),
+    scores = scor,
+    schedule = sched,
+    filedir = dir,
+    nsims = 2,
+    cores = 1,
+    likelihood_graphic = TRUE
+  )
+
+  expect_true(out)
+  # Exactly one plot for the whole multi-day run (today only).
+  expect_equal(plot_calls$n, 1L)
+  # Early release of raw results must not break saving.
+  expect_equal(length(list.files(dir, pattern = "-predictions\\.RDS$")), 3L)
+})
+
+test_that("dcPredictMultipleDays(likelihood_graphic = FALSE) never plots (#106)", {
+  plot_calls <- new.env()
+  plot_calls$n <- 0L
+
+  local_mocked_bindings(
+    .update_dc_nhl = function(...) {
+      list(m = NULL, rho = 0, beta = 1, eta = 1, k = 1)
+    },
+    loopless_sim = function(...) {
+      teams <- c("Team A", "Team B")
+      list(
+        summary_results = data.frame(Team = teams, Playoffs = 0.5),
+        raw_results = data.frame(SimNo = 1:2, Team = rep(teams, each = 2))
+      )
+    },
+    plot_point_likelihood = function(...) {
+      plot_calls$n <- plot_calls$n + 1L
+      invisible(NULL)
+    },
+    .package = "HockeyModel"
+  )
+
+  days <- seq.Date(Sys.Date() - 1, by = "day", length.out = 2)
+  teams <- c("Team A", "Team B")
+  sched <- data.frame(
+    Date = days,
+    HomeTeam = teams[1],
+    AwayTeam = teams[2],
+    GameID = 1:2,
+    GameType = rep("R", 2),
+    GameStatus = rep("FUT", 2),
+    stringsAsFactors = FALSE
+  )
+  scor <- data.frame(
+    Date = days[1] - 1,
+    HomeTeam = teams[1],
+    AwayTeam = teams[2],
+    GameID = 0,
+    GameType = "R",
+    GameStatus = "FUT",
+    stringsAsFactors = FALSE
+  )
+
+  dir <- tempfile("dcPredictMultipleDays-noplot-test")
+  dcPredictMultipleDays(
+    start = days[1],
+    end = Sys.Date(),
+    scores = scor,
+    schedule = sched,
+    filedir = dir,
+    nsims = 2,
+    cores = 1,
+    likelihood_graphic = FALSE
+  )
+
+  expect_equal(plot_calls$n, 0L)
+})
