@@ -245,3 +245,150 @@ test_that("pwhl_loopless_sim thins raw_results to SimNo, Team, Points, Rank (#90
     dplyr::summarise(P = mean(.data$Rank == 1), .groups = "drop")
   expect_true(all(presidents$P >= 0 & presidents$P <= 1))
 })
+
+test_that("pwhl_loopless_sim breaks point ties with regulation wins (#94)", {
+  # Four teams, all twelve results fixed (nsims = 1). A and B are tied on
+  # points (8) but A has more regulation wins (2 vs 1), so A ranks above B.
+  games <- data.frame(
+    Date = as.Date(c(
+      "2024-01-01",
+      "2024-01-03",
+      "2024-01-05",
+      "2024-01-07",
+      "2024-01-09",
+      "2024-01-11",
+      "2024-01-13",
+      "2024-01-15",
+      "2024-01-17",
+      "2024-01-19",
+      "2024-01-21",
+      "2024-01-23"
+    )),
+    HomeTeam = c("A", "B", "C", "D", "A", "C", "A", "D", "B", "C", "B", "D"),
+    AwayTeam = c("B", "A", "D", "C", "C", "A", "D", "A", "C", "B", "D", "B")
+  )
+  # Result codes are home-perspective: 1 reg win, .75 OT win, .6 SO win,
+  # .4/.25 extra-time loss (away wins), 0 regulation loss.
+  # g3 C>D SO win; g4 D>C OT win (C/D mutual games, so all four teams qualify)
+  res <- c(1, 0.75, 0.6, 0.25, 0, 1, 0.75, 1, 0.4, 0.75, 0.4, 0.75)
+  # .pwhl_add_result() derives Result from goals + OT status; these scores
+  # reproduce exactly the intended result codes (regulation 2-0/OT 3-2/SO 2-1).
+  to_score <- function(r) {
+    strsplit(
+      c(
+        `1` = "2,0",
+        `0.75` = "3,2",
+        `0.6` = "2,1",
+        `0.4` = "1,2",
+        `0.25` = "2,3",
+        `0` = "0,1"
+      )[as.character(r)],
+      ","
+    )[[1]]
+  }
+  goals <- t(vapply(res, to_score, character(2)))
+  scores <- data.frame(
+    Date = games$Date,
+    HomeTeam = games$HomeTeam,
+    AwayTeam = games$AwayTeam,
+    GameID = seq_len(nrow(games)),
+    HomeGoals = as.integer(goals[, 1]),
+    AwayGoals = as.integer(goals[, 2]),
+    OTStatus = ifelse(
+      res %in% c(0.6, 0.4),
+      "SO",
+      ifelse(res %in% c(1, 0), "", "OT")
+    ),
+    GameType = "R",
+    GameStatus = "Final",
+    stringsAsFactors = FALSE
+  )
+  full_sched <- dplyr::bind_rows(
+    scores[, c(
+      "Date",
+      "HomeTeam",
+      "AwayTeam",
+      "GameID",
+      "GameType",
+      "GameStatus"
+    )],
+    make_pwhl_schedule(scores)
+  )
+
+  result <- pwhl_loopless_sim(nsims = 1, scores = scores, schedule = full_sched)
+  ranks <- result$raw_results$Rank[match(c("A", "B"), result$raw_results$Team)]
+  expect_true(ranks[1] < ranks[2]) # A: P8 W2; B: P8 W1 -> regulation wins break the tie
+})
+
+test_that("pwhl_loopless_sim breaks exact ties with head-to-head results (#94)", {
+  # Four teams, all twelve results fixed (nsims = 1). All four are tied on
+  # every criterion (points 9 each; W/OTW/SOW all 2-0-1): A beats B in both
+  # meetings (H2H points 5 to 0) and C beats D in both, so H2H puts A above B.
+  games <- data.frame(
+    Date = as.Date(c(
+      "2024-01-01",
+      "2024-01-03",
+      "2024-01-05",
+      "2024-01-07",
+      "2024-01-09",
+      "2024-01-11",
+      "2024-01-13",
+      "2024-01-15",
+      "2024-01-17",
+      "2024-01-19",
+      "2024-01-21",
+      "2024-01-23"
+    )),
+    HomeTeam = c("A", "B", "C", "D", "A", "C", "A", "D", "B", "C", "B", "D"),
+    AwayTeam = c("B", "A", "D", "C", "C", "A", "D", "A", "C", "B", "D", "B")
+  )
+  # g3 C>D OT win; g4 D>C regulation win (C/D mutual games, so all four qualify)
+  res <- c(1, 0.4, 0.75, 0, 0.4, 1, 1, 1, 1, 0.4, 1, 1)
+  # .pwhl_add_result() derives Result from goals + OT status; these scores
+  # reproduce exactly the intended result codes (regulation 2-0/OT 3-2/SO 2-1).
+  to_score <- function(r) {
+    strsplit(
+      c(
+        `1` = "2,0",
+        `0.75` = "3,2",
+        `0.6` = "2,1",
+        `0.4` = "1,2",
+        `0.25` = "2,3",
+        `0` = "0,1"
+      )[as.character(r)],
+      ","
+    )[[1]]
+  }
+  goals <- t(vapply(res, to_score, character(2)))
+  scores <- data.frame(
+    Date = games$Date,
+    HomeTeam = games$HomeTeam,
+    AwayTeam = games$AwayTeam,
+    GameID = seq_len(nrow(games)),
+    HomeGoals = as.integer(goals[, 1]),
+    AwayGoals = as.integer(goals[, 2]),
+    OTStatus = ifelse(
+      res %in% c(0.6, 0.4),
+      "SO",
+      ifelse(res %in% c(1, 0), "", "OT")
+    ),
+    GameType = "R",
+    GameStatus = "Final",
+    stringsAsFactors = FALSE
+  )
+  full_sched <- dplyr::bind_rows(
+    scores[, c(
+      "Date",
+      "HomeTeam",
+      "AwayTeam",
+      "GameID",
+      "GameType",
+      "GameStatus"
+    )],
+    make_pwhl_schedule(scores)
+  )
+
+  result <- pwhl_loopless_sim(nsims = 1, scores = scores, schedule = full_sched)
+  ranks <- result$raw_results$Rank[match(c("A", "B"), result$raw_results$Team)]
+  expect_true(ranks[1] < ranks[2]) # A beats B in both meetings -> H2H breaks the tie
+})

@@ -390,19 +390,61 @@ pwhl_loopless_sim <- function(
         (away_games$Result == 0.6), # SO loss: 1 pt
         na.rm = TRUE
       )
+      # regulation-only / OT / SO win counts feed the shared tiebreakers (#94)
       wins <- sum(home_games$Result == 1, away_games$Result == 0, na.rm = TRUE)
+      ot_wins <- sum(
+        home_games$Result == 0.75,
+        away_games$Result == 0.25,
+        na.rm = TRUE
+      )
+      so_wins <- sum(
+        home_games$Result == 0.6,
+        away_games$Result == 0.4,
+        na.rm = TRUE
+      )
 
       data.frame(
         Team = team,
         SimNo = sim,
         Points = pts,
         W = wins,
+        OTW = ot_wins,
+        SOW = so_wins,
+        GP = nrow(sim_data),
         stringsAsFactors = FALSE
       )
     })
 
-    # Rank teams within this simulation by points
-    team_results$Rank <- rank(-team_results$Points, ties.method = "random")
+    # Shared NHL/PWHL tiebreakers incl. head-to-head (#71, #94). PWHL points
+    # are not linear in the Result code (reg win = 3, OT/SO win = 2, extra-
+    # time loss = 1), so each side's share is looked up from a fixed map.
+    res_code <- as.character(sim_data$Result)
+    home_points <- c(
+      `1` = 3L,
+      `0.75` = 2L,
+      `0.6` = 2L,
+      `0.4` = 1L,
+      `0.25` = 1L,
+      `0` = 0L
+    )[res_code]
+    away_points <- c(
+      `1` = 0L,
+      `0.75` = 1L,
+      `0.6` = 1L,
+      `0.4` = 2L,
+      `0.25` = 2L,
+      `0` = 3L
+    )[res_code]
+    team_results$Rank <- .rank_by_tiebreakers(
+      team_results,
+      games = data.frame(
+        HomeTeam = sim_data$HomeTeam,
+        AwayTeam = sim_data$AwayTeam,
+        Date = sim_data$Date,
+        home_points = home_points,
+        away_points = away_points
+      )
+    )
     team_results$MakePlayoffs <- as.integer(team_results$Rank <= 4)
 
     # Simulate PWHL playoffs (best-of-5, 2-2-1 format)

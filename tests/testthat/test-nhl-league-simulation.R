@@ -852,6 +852,112 @@ test_that(".rank_by_tiebreakers applies the NHL criteria in order (#71)", {
   # More points always outranks fewer.
   r <- .rank_by_tiebreakers(rbind(mk(6, 3, 3), mk(4, 2, 0)))
   expect_equal(r[1], 1L)
+
+  # Head-to-head is consulted only after the first five criteria: A leads on
+  # regulation wins (3 > 1) even though it lost both H2H meetings, so the
+  # wins criterion must keep A ahead.
+  games <- data.frame(
+    HomeTeam = c("A", "B"),
+    AwayTeam = c("B", "A"),
+    Date = as.Date(c("2025-11-01", "2026-01-01")),
+    home_points = c(0, 2), # B beats A in both meetings
+    away_points = c(2, 0)
+  )
+  df <- rbind(mk(4, 2, 3), mk(4, 2, 1))
+  df$Team <- c("A", "B")
+  r <- .rank_by_tiebreakers(df, games = games)
+  expect_true(r[1] < r[2])
+})
+
+test_that(".rank_by_tiebreakers breaks exact ties with head-to-head points (#94)", {
+  mk <- function(Points, GP, W, OTW = 0L, SOW = 0L) {
+    data.frame(
+      Team = "A",
+      Points = Points,
+      GP = GP,
+      W = W,
+      OTW = OTW,
+      SOW = SOW,
+      stringsAsFactors = FALSE
+    )
+  }
+  # A beats B in both meetings: H2H points 4 to 0 decide the order.
+  games <- data.frame(
+    HomeTeam = c("A", "B"),
+    AwayTeam = c("B", "A"),
+    Date = as.Date(c("2025-11-01", "2026-01-01")),
+    home_points = c(2, 0),
+    away_points = c(0, 2)
+  )
+  df <- rbind(mk(4, 2, 2), mk(4, 2, 2))
+  df$Team <- c("A", "B")
+  r <- .rank_by_tiebreakers(df, games = games)
+  expect_true(r[1] < r[2])
+})
+
+test_that(".rank_by_tiebreakers excludes the first odd meeting at the extra venue (#94)", {
+  mk <- function(Points, GP, W, OTW = 0L, SOW = 0L) {
+    data.frame(
+      Team = "A",
+      Points = Points,
+      GP = GP,
+      W = W,
+      OTW = OTW,
+      SOW = SOW,
+      stringsAsFactors = FALSE
+    )
+  }
+  # Three A-B meetings: two in B's city (games 1-2), one in A's (game 3). The
+  # city with the extra meeting is B's, so the first game played there (game
+  # 1) is excluded. Counting all three games the H2H points tie 4-4; after
+  # excluding game 1 they are A 4 to B 2, which separates the teams.
+  games <- data.frame(
+    HomeTeam = c("B", "B", "A"),
+    AwayTeam = c("A", "A", "B"),
+    Date = as.Date(c("2025-11-01", "2025-12-01", "2026-01-01")),
+    home_points = c(2, 1, 2), # g1 B reg win; g2/g3 A OT wins (loser gets 1)
+    away_points = c(0, 2, 1)
+  )
+  df <- rbind(mk(4, 3, 2), mk(4, 3, 2))
+  df$Team <- c("A", "B")
+  r <- .rank_by_tiebreakers(df, games = games)
+  expect_true(r[1] < r[2]) # A's H2H points (4) beat B's (2) after exclusion
+})
+
+test_that(".rank_by_tiebreakers uses H2H point percentage for multi-way ties (#94)", {
+  mk <- function(Points, GP, W, OTW = 0L, SOW = 0L) {
+    data.frame(
+      Team = "A",
+      Points = Points,
+      GP = GP,
+      W = W,
+      OTW = OTW,
+      SOW = SOW,
+      stringsAsFactors = FALSE
+    )
+  }
+  # Three teams tied on every criterion. A beats B twice and C twice; B beats
+  # C twice; each pair meets an even number of times so nothing is excluded.
+  # H2H points among themselves (A 8, B 4, C 0) set the order A > B > C.
+  games <- data.frame(
+    HomeTeam = c("A", "A", "B", "B", "C", "C"),
+    AwayTeam = c("B", "B", "C", "C", "A", "A"),
+    Date = as.Date(c(
+      "2025-11-01",
+      "2025-11-03",
+      "2025-11-05",
+      "2025-11-07",
+      "2025-11-09",
+      "2025-11-11"
+    )),
+    home_points = c(2, 2, 2, 2, 0, 0),
+    away_points = c(0, 0, 0, 0, 2, 2)
+  )
+  df <- rbind(mk(6, 6, 3), mk(6, 6, 3), mk(6, 6, 3))
+  df$Team <- c("A", "B", "C")
+  r <- .rank_by_tiebreakers(df, games = games)
+  expect_true(r[1] < r[2]) # A beats B among themselves
+  expect_true(r[2] < r[3]) # B beats C among themselves
 })
 
 test_that("buildStats() wildcards are the best-ranked non-divisional teams (#70)", {

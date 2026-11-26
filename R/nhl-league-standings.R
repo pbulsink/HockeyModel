@@ -2,31 +2,138 @@
 
 #' Rank teams by the NHL standings tiebreakers
 #'
-#' @description Orders `nrow(df)` teams using the official NHL criteria —
-#'   points, point percentage (points / games played), wins, regulation wins
-#'   (`ROW`), and regulation/OT/SO wins (`ROSW`) — with a random draw as the
-#'   final tie-break so exact ties get a stable-per-run order. Shared by
-#'   `buildStats()` and `sim_engine()` so both simulation engines rank teams
-#'   identically (#71).
+#' @description Orders `nrow(df)` teams using the official criteria — points,
+#'   point percentage (points / games played), regulation wins (`ROW`),
+#'   regulation/OT/SO wins (`ROSW`), and head-to-head points among tied clubs
+#'   (#94) — with a random draw as the final tie-break so exact ties get a
+#'   stable-per-run order. Shared by `buildStats()` and `sim_engine()` so both
+#'   simulation engines rank teams identically (#71); the PWHL engine uses it
+#'   too, since the PWHL procedure follows the same criterion order.
 #'
 #' @param df (`data.frame`) One row per team, with columns `Points`, `GP`,
-#'   `W`, `OTW`, and `SOW`.
+#'   `W` (regulation wins), `OTW`, and `SOW`. A `Team` column is also required
+#'   when head-to-head points must be computed from `games`.
+#' @param games (`data.frame` or `NULL`) One row per game between teams in
+#'   `df`, with columns `HomeTeam`, `AwayTeam`, `Date`, and the points each
+#'   side earned in that game under the relevant league's scoring system
+#'   (`home_points`, `away_points`). When supplied, head-to-head points are
+#'   used to separate teams tied on every other criterion: for a two-way tie
+#'   this is points earned against each other (excluding the first meeting at
+#'   the venue that hosted the extra game when the number of meetings is odd),
+#'   and for larger ties the percentage of available points among themselves.
+#' @param h2h (`numeric` or `NULL`) Pre-computed head-to-head values, one per
+#'   row of `df`. Used as-is in place of `games`; supplied by `sim_engine()`,
+#'   which sums per-game result vectors directly to avoid materializing a
+#'   games-by-sims table. Ignored when `NULL`.
 #' @return (`integer`) A vector of ranks, one per row, where 1 is best.
 #' @keywords internal
-.rank_by_tiebreakers <- function(df) {
+.rank_by_tiebreakers <- function(df, games = NULL, h2h = NULL) {
+  n <- nrow(df)
   points <- df$Points
   point_percent <- points / df$GP
   w <- df$W
   row_wins <- w + df$OTW
   rosow <- w + df$OTW + df$SOW
+
+  # H2H only separates teams tied on every criterion above, so the group key
+  # (the five criteria) partitions the teams into independent tie groups. A
+  # factor over all rows is used so each row keeps its own index even when
+  # several teams share an identical key.
+  if (is.null(h2h)) {
+    h2h <- rep(0, n)
+  }
+  if (!is.null(games)) {
+    grp <- factor(paste(points, df$GP, w, row_wins, rosow, sep = "\r"))
+    gi <- match(games$HomeTeam, df$Team)
+    gj <- match(games$AwayTeam, df$Team)
+    for (g in split(seq_len(n), grp)) {
+      if (length(g) < 2L) {
+        next
+      }
+      members <- df$Team[g]
+
+      # Games played between pairs of clubs inside this tie group.
+      idx <- seq_len(nrow(games))[
+        vapply(
+          seq_len(nrow(games)),
+          function(k) {
+            games$HomeTeam[k] %in% members && games$AwayTeam[k] %in% members
+          },
+          logical(1)
+        )
+      ]
+
+      earned <- rep(0, length(g)) # H2H points per member so far
+      # Outer stops at length-1: seq(n+1, n) returns c(n+1, n), not empty.
+      for (ti in seq_len(length(members) - 1L)) {
+        for (tj in seq(ti + 1L, length(members))) {
+          pi <- g[ti]
+          pj <- g[tj]
+          pair_idx <- idx[(gi == pi & gj == pj) | (gi == pj & gj == pi)]
+          if (length(pair_idx) == 0L) {
+            next
+          }
+
+          # Odd number of meetings: drop the first game played in the city
+          # that hosted the extra meeting (NHL/PWHL procedure). A single
+          # meeting is dropped entirely, leaving both sides at 0 H2H points.
+          if (length(pair_idx) %% 2L == 1L) {
+            venue <- games$HomeTeam[pair_idx] # a game's "city" is its home team's
+            extra_city <- names(which.max(table(venue)))
+            first_at_extra <- pair_idx[venue == extra_city]
+            if (length(first_at_extra) > 0L) {
+              pair_idx <- setdiff(pair_idx, min(first_at_extra))
+            }
+          }
+
+          for (k in pair_idx) {
+            h <- games$HomeTeam[k]
+            earned[ti] <- earned[ti] +
+              ifelse(
+                h == members[ti],
+                games$home_points[k],
+                games$away_points[k]
+              )
+            earned[tj] <- earned[tj] +
+              ifelse(
+                h == members[ti],
+                games$away_points[k],
+                games$home_points[k]
+              )
+          }
+        }
+      }
+
+      # Percentage of available points among themselves for multi-way ties;
+      # two-way groups compare raw points directly (equal denominators). The
+      # denominator is the actual points on offer in each meeting, so this is
+      # correct under any scoring system.
+      if (length(g) > 2L) {
+        available <- rep(0, length(g))
+        for (k in idx) {
+          a <- match(games$HomeTeam[k], members)
+          b <- match(games$AwayTeam[k], members)
+          total_k <- games$home_points[k] + games$away_points[k]
+          available[a] <- available[a] + total_k
+          available[b] <- available[b] + total_k
+        }
+        earned[available > 0] <- earned[available > 0] /
+          available[available > 0]
+      }
+
+      h2h[g] <- earned
+    }
+  }
+
   order(order(
     -points,
     -point_percent,
     -w,
     -row_wins,
     -rosow,
+    -h2h,
     # random draw only breaks exact ties, so tied teams don't always rank in input order
-    stats::runif(nrow(df))
+    stats::runif(n)
   ))
 }
 
@@ -123,16 +230,39 @@ buildStats <- function(scores) {
     stringsAsFactors = FALSE
   )
 
+  # Per-game points for the head-to-head tiebreaker (#94); NHL games always
+  # award 2 points in total, so the away side's share is the complement.
+  if ("HomeGoals" %in% colnames(scores)) {
+    home_points <- ifelse(
+      scores$HomeGoals > scores$AwayGoals,
+      2L,
+      ifelse(scores$OTStatus != "", 1L, 0L)
+    )
+  } else {
+    home_points <- ifelse(
+      scores$Result >= 0.6,
+      2L,
+      ifelse(scores$Result > 0, 1L, 0L)
+    )
+  }
+  # Odd-meeting exclusion orders games chronologically; row order is the time
+  # proxy when no dates are supplied (synthetic fixtures).
+  game_date <- if (!is.null(scores$Date)) scores$Date else seq_len(nrow(scores))
+  h2h_games <- data.frame(
+    HomeTeam = as.character(scores$HomeTeam),
+    AwayTeam = as.character(scores$AwayTeam),
+    Date = game_date,
+    home_points = home_points,
+    away_points = 2L - home_points
+  )
+
+  # Ranked before the lazy pipeline: the tiebreaker reads whole columns and
+  # returns a per-row vector, which dtplyr's scalar mutate can't recycle.
+  team_stats$Rank <- .rank_by_tiebreakers(team_stats, games = h2h_games)
+
   team_stats <- team_stats |>
     dtplyr::lazy_dt() |>
     dplyr::mutate(
-      Rank = .rank_by_tiebreakers(tibble::tibble(
-        Points = .data$Points,
-        GP = .data$GP,
-        W = .data$W,
-        OTW = .data$OTW,
-        SOW = .data$SOW
-      )), # shared NHL tiebreakers; random only breaks exact ties (#71)
       Conf = .getTeamConferences(.data$Team), # convenience data, dropped later
       Div = .getTeamDivisions(.data$Team)
     ) |>

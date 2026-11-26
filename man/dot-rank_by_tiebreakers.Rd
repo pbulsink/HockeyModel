@@ -4,21 +4,37 @@
 \alias{.rank_by_tiebreakers}
 \title{Rank teams by the NHL standings tiebreakers}
 \usage{
-.rank_by_tiebreakers(df)
+.rank_by_tiebreakers(df, games = NULL, h2h = NULL)
 }
 \arguments{
 \item{df}{(\code{data.frame}) One row per team, with columns \code{Points}, \code{GP},
-\code{W}, \code{OTW}, and \code{SOW}.}
+\code{W} (regulation wins), \code{OTW}, and \code{SOW}. A \code{Team} column is also required
+when head-to-head points must be computed from \code{games}.}
+
+\item{games}{(\code{data.frame} or \code{NULL}) One row per game between teams in
+\code{df}, with columns \code{HomeTeam}, \code{AwayTeam}, \code{Date}, and the points each
+side earned in that game under the relevant league's scoring system
+(\code{home_points}, \code{away_points}). When supplied, head-to-head points are
+used to separate teams tied on every other criterion: for a two-way tie
+this is points earned against each other (excluding the first meeting at
+the venue that hosted the extra game when the number of meetings is odd),
+and for larger ties the percentage of available points among themselves.}
+
+\item{h2h}{(\code{numeric} or \code{NULL}) Pre-computed head-to-head values, one per
+row of \code{df}. Used as-is in place of \code{games}; supplied by \code{sim_engine()},
+which sums per-game result vectors directly to avoid materializing a
+games-by-sims table. Ignored when \code{NULL}.}
 }
 \value{
 (\code{integer}) A vector of ranks, one per row, where 1 is best.
 }
 \description{
-Orders \code{nrow(df)} teams using the official NHL criteria —
-points, point percentage (points / games played), wins, regulation wins
-(\code{ROW}), and regulation/OT/SO wins (\code{ROSW}) — with a random draw as the
-final tie-break so exact ties get a stable-per-run order. Shared by
-\code{buildStats()} and \code{sim_engine()} so both simulation engines rank teams
-identically (#71).
+Orders \code{nrow(df)} teams using the official criteria — points,
+point percentage (points / games played), regulation wins (\code{ROW}),
+regulation/OT/SO wins (\code{ROSW}), and head-to-head points among tied clubs
+(#94) — with a random draw as the final tie-break so exact ties get a
+stable-per-run order. Shared by \code{buildStats()} and \code{sim_engine()} so both
+simulation engines rank teams identically (#71); the PWHL engine uses it
+too, since the PWHL procedure follows the same criterion order.
 }
 \keyword{internal}
