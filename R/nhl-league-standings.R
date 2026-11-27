@@ -63,7 +63,11 @@
         )
       ]
 
-      earned <- rep(0, length(g)) # H2H points per member so far
+      earned <- rep(0, length(g)) # H2H points per member from kept meetings
+      # Points on offer in each kept meeting; the multi-way denominator. Both
+      # are built only from kept (non-odd) meetings so the official "not
+      # including any odd games" exclusion applies to numerator and denominator.
+      available <- rep(0, length(g))
       # Outer stops at length-1: seq(n+1, n) returns c(n+1, n), not empty.
       for (ti in seq_len(length(members) - 1L)) {
         for (tj in seq(ti + 1L, length(members))) {
@@ -87,6 +91,12 @@
           }
 
           for (k in pair_idx) {
+            available[ti] <- available[ti] +
+              games$home_points[k] +
+              games$away_points[k]
+            available[tj] <- available[tj] +
+              games$home_points[k] +
+              games$away_points[k]
             h <- games$HomeTeam[k]
             earned[ti] <- earned[ti] +
               ifelse(
@@ -106,17 +116,9 @@
 
       # Percentage of available points among themselves for multi-way ties;
       # two-way groups compare raw points directly (equal denominators). The
-      # denominator is the actual points on offer in each meeting, so this is
-      # correct under any scoring system.
+      # denominator is the actual points on offer in each kept meeting, so this
+      # is correct under any scoring system.
       if (length(g) > 2L) {
-        available <- rep(0, length(g))
-        for (k in idx) {
-          a <- match(games$HomeTeam[k], members)
-          b <- match(games$AwayTeam[k], members)
-          total_k <- games$home_points[k] + games$away_points[k]
-          available[a] <- available[a] + total_k
-          available[b] <- available[b] + total_k
-        }
         earned[available > 0] <- earned[available > 0] /
           available[available > 0]
       }
