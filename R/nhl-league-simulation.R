@@ -665,6 +665,75 @@ sim_engine <- function(all_season, nsims, params = NULL, sim_offset = 0L) {
     all_results$OTL +
     all_results$SOL
 
+  # Head-to-head points for the tiebreaker (#94), vectorized across sims.
+  # Rows of `all_results` are team-major: each sim's rows sit at offsets
+  # (t-1)*nsims..(t-1)*nsims+nsims in `teamlist` order, so a matrix with one
+  # row per team and one column per sim mirrors the layout.
+  n_teams <- length(teamlist)
+  # One packed integer per row encodes all five criteria, so "tied on every
+  # criterion" reduces to a single equality test per team pair. byrow=TRUE
+  # because the rows are laid out in `teamlist` order, one sim at a time.
+  crit_key <- matrix(
+    all_results$Points +
+      1e3 * all_results$GP +
+      1e6 * all_results$W +
+      1e9 * all_results$OTW +
+      1e12 * all_results$SOW,
+    nrow = nsims,
+    byrow = TRUE
+  )
+
+  # Games in which team i is home against team j; index (i-1)*T + j with T =
+  # n_teams, so the list has n_teams^2 slots (one per ordered pair).
+  hi_vs <- vector("list", n_teams * n_teams)
+  for (g in seq_len(season_length)) {
+    k <- (home_idx[g] - 1L) * n_teams + away_idx[g]
+    hi_vs[[k]] <- c(hi_vs[[k]], g)
+  }
+
+  # NHL games always award exactly 2 points in total.
+  .res_pts <- function(r) ifelse(r >= 0.6, 2L, ifelse(r > 0, 1L, 0L))
+
+  h2h_m <- matrix(0, n_teams, nsims) # H2H points per team per sim
+  gs <- matrix(0L, n_teams, nsims) # count of other clubs tied with each row
+  gt <- matrix(0L, n_teams, nsims) # games played vs those tied clubs
+  # Outer loop stops at n_teams - 1: seq(i+1, n_teams) is non-empty exactly
+  # then, and seq(n+1, n) would silently return c(n+1, n), not empty.
+  for (i in seq_len(n_teams - 1L)) {
+    for (j in seq(i + 1L, n_teams)) {
+      gij <- c(hi_vs[[(i - 1L) * n_teams + j]], hi_vs[[(j - 1L) * n_teams + i]])
+      if (!length(gij)) {
+        next
+      }
+      eq <- as.integer(crit_key[, i] == crit_key[, j])
+      if (!any(eq)) {
+        next
+      }
+
+      v <- rep(0L, nsims) # i's points against j in each sim
+      for (g in gij[home_idx[gij] == i]) {
+        v <- v + .res_pts(home_res[[g]])
+      }
+      for (g in gij[away_idx[gij] == i]) {
+        v <- v + .res_pts(away_res[[g]])
+      }
+
+      h2h_m[i, ] <- h2h_m[i, ] + v * eq
+      h2h_m[j, ] <- h2h_m[j, ] + (2L * length(gij) - v) * eq
+      gs[i, ] <- gs[i, ] + eq
+      gs[j, ] <- gs[j, ] + eq
+      gt[i, ] <- gt[i, ] + length(gij) * eq
+      gt[j, ] <- gt[j, ] + length(gij) * eq
+    }
+  }
+
+  # Two-way ties compare raw H2H points (equal denominators); larger ties use
+  # the percentage of available points among themselves.
+  h2h_m[gs == 0L] <- 0
+  multi <- gs >= 2L & gt > 0L
+  h2h_m[multi] <- h2h_m[multi] / (2 * gt[multi])
+  all_results$h2h <- as.vector(t(h2h_m))
+
   all_results$Conference <- unlist(.getTeamConferences(all_results$Team))
   all_results$Division <- .getTeamDivisions(all_results$Team)
   all_results$Wildcard <- 100
@@ -673,14 +742,17 @@ sim_engine <- function(all_season, nsims, params = NULL, sim_offset = 0L) {
     dtplyr::lazy_dt() |>
     dplyr::group_by(.data$SimNo) |>
     dplyr::mutate(
-      Rank = .rank_by_tiebreakers(tibble::tibble(
-        Points = .data$Points,
-        GP = .data$GP,
-        W = .data$W,
-        OTW = .data$OTW,
-        SOW = .data$SOW
-      ))
-    ) |> # shared NHL tiebreakers (#71)
+      Rank = .rank_by_tiebreakers(
+        tibble::tibble(
+          Points = .data$Points,
+          GP = .data$GP,
+          W = .data$W,
+          OTW = .data$OTW,
+          SOW = .data$SOW
+        ),
+        h2h = .data$h2h
+      )
+    ) |> # shared NHL tiebreakers incl. head-to-head (#71, #94); per-sim H2H pre-computed above
     dplyr::ungroup() |>
     dplyr::group_by(.data$SimNo, .data$Conference) |>
     dplyr::mutate(ConfRank = rank(.data$Rank)) |>
